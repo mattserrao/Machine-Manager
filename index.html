@@ -54,6 +54,7 @@
   .open{display:flex;justify-content:flex-end;font-size:12px;font-weight:500;color:var(--accent);padding:0 2px}
 
   footer{margin-top:40px;font-size:12px;color:var(--muted)}
+  #ver{text-align:right;margin-top:18px;font-size:10.5px;color:rgba(0,0,0,.28);letter-spacing:.02em}
 </style>
 </head>
 <body>
@@ -68,17 +69,14 @@
 
   <h2>Tools</h2>
   <div class="grid">
-    <a class="card" href="Whiteboard.html">
+    <a class="card" href="ConsumablesTracker.html">
       <div class="body">
-        <span class="ver">v0.3.2</span>
-        <p class="title">Whiteboard</p>
-        <p class="desc">Free-form board of notes: checklists, status, owners and due dates, arrows, frames, stacks up to 4 levels deep. Outage and handover templates; export, import and print.</p>
+        <span class="ver">v0.1.0</span>
+        <p class="title">Consumables Tracker</p>
+        <p class="desc">Track doctor blades, shower nozzles and other wear items. Coming soon.</p>
       </div>
       <div class="tucked">
-        <div class="mini" style="--c:#fff4b8">Outage plan
-          <div class="sub"><div class="mini" style="--c:#d4ecff">Critical tasks</div></div>
-        </div>
-        <div class="mini" style="--c:#d9f3d3">Reports</div>
+        <div class="mini" style="--c:#ffe2c4">Consumables</div>
         <div class="open">Open →</div>
       </div>
     </a>
@@ -99,18 +97,6 @@
       </div>
     </a>
 
-    <a class="card" href="VendorReports.html">
-      <div class="body">
-        <span class="ver">v0.1.0</span>
-        <p class="title">Vendor Reports</p>
-        <p class="desc">Placeholder for supplier reports. Coming soon.</p>
-      </div>
-      <div class="tucked">
-        <div class="mini" style="--c:#d9f3d3">Reports</div>
-        <div class="open">Open →</div>
-      </div>
-    </a>
-
     <a class="card" href="OperationsOutagePlanning.html">
       <div class="body">
         <span class="ver">v0.1.1</span>
@@ -119,6 +105,18 @@
       </div>
       <div class="tucked">
         <div class="mini" style="--c:#fff4b8">Outage planning</div>
+        <div class="open">Open →</div>
+      </div>
+    </a>
+
+    <a class="card" href="PM1LLM.html">
+      <div class="body">
+        <span class="ver">v0.1.0</span>
+        <p class="title">PM1 LLM</p>
+        <p class="desc">Search and ask questions across all PM1 data. Coming soon.</p>
+      </div>
+      <div class="tucked">
+        <div class="mini" style="--c:#e9e0ff">Ask PM1</div>
         <div class="open">Open →</div>
       </div>
     </a>
@@ -135,26 +133,29 @@
       </div>
     </a>
 
-    <a class="card" href="ConsumablesTracker.html">
+    <a class="card" href="VendorReports.html">
       <div class="body">
         <span class="ver">v0.1.0</span>
-        <p class="title">Consumables Tracker</p>
-        <p class="desc">Track doctor blades, shower nozzles and other wear items. Coming soon.</p>
+        <p class="title">Vendor Reports</p>
+        <p class="desc">Placeholder for supplier reports. Coming soon.</p>
       </div>
       <div class="tucked">
-        <div class="mini" style="--c:#ffe2c4">Consumables</div>
+        <div class="mini" style="--c:#d9f3d3">Reports</div>
         <div class="open">Open →</div>
       </div>
     </a>
 
-    <a class="card" href="PM1LLM.html">
+    <a class="card" href="Whiteboard.html">
       <div class="body">
-        <span class="ver">v0.1.0</span>
-        <p class="title">PM1 LLM</p>
-        <p class="desc">Search and ask questions across all PM1 data. Coming soon.</p>
+        <span class="ver">v0.3.2</span>
+        <p class="title">Whiteboard</p>
+        <p class="desc">Free-form board of notes: checklists, status, owners and due dates, arrows, frames, stacks up to 4 levels deep. Outage and handover templates; export, import and print.</p>
       </div>
       <div class="tucked">
-        <div class="mini" style="--c:#e9e0ff">Ask PM1</div>
+        <div class="mini" style="--c:#fff4b8">Outage plan
+          <div class="sub"><div class="mini" style="--c:#d4ecff">Critical tasks</div></div>
+        </div>
+        <div class="mini" style="--c:#d9f3d3">Reports</div>
         <div class="open">Open →</div>
       </div>
     </a>
@@ -173,6 +174,12 @@
   </div>
 
   <footer>More tools coming soon.</footer>
+
+  <div id="ver"></div>
 </div>
+<script>
+  const VERSION = 'v0.1.0';
+  document.getElementById('ver').textContent = 'Machine Manager ' + VERSION;
+</script>
 </body>
 </html>
