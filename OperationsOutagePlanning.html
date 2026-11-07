@@ -81,11 +81,22 @@
   .chip.bad{color:#b91c1c;background:#fee2e2}
   .sum .peek{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .sum .open{font-size:12px;font-weight:500;color:var(--accent);margin-top:8px}
-  .card.big{grid-column:1 / -1;cursor:default}
-  .card.big .body{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
-  .card.big .body > .sec + .sec{border-top:0}
-  .card.big .body > .sec{border-left:1px dashed rgba(0,0,0,.12);border-top:0}
-  .card.big .body > .sec:first-child{border-left:0}
+  /* opened card: fills the screen below the top bar; page behind stops scrolling */
+  body.focus{overflow:hidden}
+  body.focus .card:not(.big),body.focus .lane-h,body.focus .foot{visibility:hidden}
+  .card.big{position:fixed;z-index:45;left:14px;right:14px;top:var(--topH,72px);bottom:14px;display:flex;flex-direction:column;cursor:default;
+    outline:none;box-shadow:0 2px 6px rgba(0,0,0,.08),0 24px 60px rgba(0,0,0,.18)}
+  body.panel-open .card.big{right:328px}
+  .card.big .ch{flex:none}
+  .card.big .body{flex:1;min-height:0;overflow:auto}
+  .card.big .body > .sec + .sec{border-top:1px dashed rgba(0,0,0,.12)}
+  @media (min-width:900px){
+    .card.big .body{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:100%;overflow:hidden}
+    .card.big .body > .sec{overflow:auto;min-height:0;border-left:1px dashed rgba(0,0,0,.12)}
+    .card.big .body > .sec + .sec{border-top:0}
+    .card.big .body > .sec:first-child{border-left:0}
+  }
+  .card.big .ch .date{font-size:28px}
   .shrink{border:1px solid var(--line);background:#fff;border-radius:8px;width:30px;height:30px;display:grid;place-items:center;color:#57534e;flex:none}
   .shrink:hover{background:#f5f5f4;color:var(--ink)}
   .ch .d{flex:1;min-width:0}
@@ -413,7 +424,7 @@
   $('main').addEventListener('focusout', () => { if (pending){ pending = false; setTimeout(softRender, 0); } });
 
   function gate(icon, title, text, btn){
-    const main = $('main'); main.textContent = '';
+    const main = $('main'); main.textContent = ''; document.body.classList.remove('focus');
     const g = el('div', 'gate'), b = el('div', 'box');
     b.append(el('div', 'icon', icon), el('h2', '', title), el('p', '', text));
     if (btn){ const x = btn.href ? Object.assign(el('a', 'btn primary', btn.label), { href: btn.href }) : el('button', 'btn primary', btn.label);
@@ -459,6 +470,7 @@
     if (later.length) bits.push(`${later.length} fabric${later.length === 1 ? '' : 's'}/roll${later.length === 1 ? '' : 's'} not due until after the last planned outage.`);
     if (unset.length) bits.push(`${unset.length} position${unset.length === 1 ? ' has' : 's have'} no install date or target life, so ${unset.length === 1 ? 'it isn’t' : 'they aren’t'} planned yet.`);
     if (bits.length){ f.append(bits.join(' ') + ' '); const a = el('a', '', 'Open My Machine'); a.href = 'MyMachine.html'; f.appendChild(a); main.appendChild(f); }
+    fitOpenCard();
   }
 
   function card(o, due, cls, isNext){
@@ -552,15 +564,32 @@
     return c;
   }
   // Which cards are opened up (this browser only).
-  const bigCards = new Set((() => { try { return JSON.parse(localStorage.getItem('mm-op-big')) || []; } catch (e) { return []; } })());
+  const bigCards = new Set((() => { try { return (JSON.parse(localStorage.getItem('mm-op-big')) || []).slice(-1); } catch (e) { return []; } })());
   function setBig(id, on, scroll){
     if (on === bigCards.has(id)) return;
-    on ? bigCards.add(id) : bigCards.delete(id);
+    bigCards.clear();                 // one opened card at a time: it fills the screen
+    if (on) bigCards.add(id);
     try { localStorage.setItem('mm-op-big', JSON.stringify([...bigCards])); } catch (e) {}
     render();
     const c = document.querySelector(`.card[data-id="${id}"]`);
-    if (c){ if (scroll) c.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); if (!on) c.focus({ preventScroll: true }); else { const s = c.querySelector('.shrink'); if (s) s.focus({ preventScroll: true }); } }
+    if (c){ if (!on){ c.scrollIntoView({ block: 'nearest' }); c.focus({ preventScroll: true }); } else { const s = c.querySelector('.shrink'); if (s) s.focus({ preventScroll: true }); } }
   }
+  // While a card is open: lock the page behind it and keep it just under the top bar.
+  function fitOpenCard(){
+    const open = !!document.querySelector('.card.big');
+    document.body.classList.toggle('focus', open);
+    if (!open) return;
+    window.scrollTo(0, 0);
+    const top = document.querySelector('.top');
+    document.documentElement.style.setProperty('--topH', Math.round(top.getBoundingClientRect().bottom) + 'px');
+  }
+  window.addEventListener('resize', fitOpenCard);
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || !bigCards.size || !$('picker').hidden || !$('editor').hidden) return;
+    const a = document.activeElement;
+    if (a && (a.isContentEditable || a.tagName === 'INPUT')) return;      // Escape there cancels the edit
+    setBig([...bigCards][0], false);
+  });
 
   function dueRow(o, x, today){
     const r = el('div', 'due' + (x.changed ? ' done' : ''));
