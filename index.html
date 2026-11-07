@@ -31,7 +31,7 @@
 
   .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:22px}
 
-  .card{display:block;text-decoration:none;color:inherit;background:#fff;border-radius:10px;
+  .card{display:flex;flex-direction:column;text-decoration:none;color:inherit;background:#fff;border-radius:10px;
     border:1px solid rgba(0,0,0,.07);
     box-shadow:0 1px 2px rgba(0,0,0,.06),0 6px 16px rgba(0,0,0,.07);
     transition:box-shadow .15s,transform .15s}
@@ -43,15 +43,13 @@
   .title{font-weight:600;font-size:15px;line-height:1.35;margin:0 0 4px}
   .desc{font-size:13px;line-height:1.45;color:#3f3f46;margin:0}
 
-  /* tucked-notes strip, echoing the whiteboard's subnotes */
-  .tucked{display:flex;flex-direction:column;gap:5px;padding:9px 9px 10px;border-top:1px dashed rgba(0,0,0,.14);
-    background:rgba(0,0,0,.025);border-radius:0 0 10px 10px}
-  .mini{position:relative;background:var(--c);border-radius:7px;padding:5px 9px 5px 11px;font-size:12px;font-weight:500;
-    border:1px solid rgba(0,0,0,.10);box-shadow:0 1px 3px rgba(0,0,0,.10)}
-  .mini::before{content:"";position:absolute;left:0;top:5px;bottom:5px;width:3px;border-radius:2px;background:rgba(0,0,0,.18)}
-  .sub{margin:4px 0 0 2px;padding-top:4px;border-top:1px dashed rgba(0,0,0,.12)}
-  .sub .mini{font-size:11px;padding:3px 7px 3px 9px;border-radius:5px}
-  .open{display:flex;justify-content:flex-end;font-size:12px;font-weight:500;color:var(--accent);padding:0 2px}
+  /* pictogram strip: a small drawing of what's inside each tool */
+  .pict{margin-top:auto;border-top:1px dashed rgba(0,0,0,.14);background:rgba(0,0,0,.025);border-radius:0 0 10px 10px;padding:10px 12px 8px}
+  .pict svg{display:block;width:100%;height:78px}
+  .pict svg .s{fill:none;stroke:#52525b;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+  .pict svg .l{fill:none;stroke:#a1a1aa;stroke-width:1.2;stroke-linecap:round}
+  .pict svg text{font-family:Inter,system-ui,sans-serif}
+  .open{display:flex;justify-content:flex-end;font-size:12px;font-weight:500;color:var(--accent);margin-top:4px;padding:0 2px}
 
 
   .top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
@@ -81,8 +79,27 @@
         <p class="title">Consumables Tracker</p>
         <p class="desc">Track doctor blades, shower nozzles and other wear items. Coming soon.</p>
       </div>
-      <div class="tucked">
-        <div class="mini" style="--c:#ffe2c4">Consumables</div>
+      <div class="pict">
+        <svg viewBox="0 0 240 78">
+  <!-- row 1: doctor blade -->
+  <rect x="6" y="2" width="228" height="22" rx="5" fill="#fff" stroke="rgba(0,0,0,.1)"/>
+  <path d="M14 16 H44 L48 10 H14 Z" fill="#e4e4e7" class="s"/>
+  <text x="56" y="16.5" font-size="9.5" fill="#3f3f46">Doctor blades</text>
+  <rect x="140" y="10" width="64" height="6" rx="3" fill="#e4e4e7"/><rect x="140" y="10" width="28" height="6" rx="3" fill="#22c55e"/>
+  <text x="210" y="16" font-size="8.5" fill="#71717a">ok</text>
+  <!-- row 2: shower nozzle -->
+  <rect x="6" y="28" width="228" height="22" rx="5" fill="#fff" stroke="rgba(0,0,0,.1)"/>
+  <path d="M22 32 h8 v5 h-8z" fill="#d4ecff" class="s"/><path d="M26 37 l-7 9 M26 37 v9 M26 37 l7 9" class="l"/>
+  <text x="56" y="42.5" font-size="9.5" fill="#3f3f46">Shower nozzles</text>
+  <rect x="140" y="36" width="64" height="6" rx="3" fill="#e4e4e7"/><rect x="140" y="36" width="52" height="6" rx="3" fill="#facc15"/>
+  <text x="210" y="42" font-size="8.5" fill="#71717a">due</text>
+  <!-- row 3: other -->
+  <rect x="6" y="54" width="228" height="22" rx="5" fill="#fff" stroke="rgba(0,0,0,.1)"/>
+  <circle cx="26" cy="65" r="6" fill="#ffe2c4" class="s"/><circle cx="26" cy="65" r="2" fill="#52525b"/>
+  <text x="56" y="68.5" font-size="9.5" fill="#3f3f46">Other wear items</text>
+  <rect x="140" y="62" width="64" height="6" rx="3" fill="#e4e4e7"/><rect x="140" y="62" width="64" height="6" rx="3" fill="#ef4444"/>
+  <text x="210" y="68" font-size="8.5" fill="#71717a">over</text>
+</svg>
         <div class="open">Open →</div>
       </div>
     </a>
@@ -93,12 +110,30 @@
         <p class="title">My Machine</p>
         <p class="desc">Diagram of your paper machine, set up to match it. Track days on for each fabric, roll and refiner plate set against a target life: yellow when due within 6 weeks, red when overdue. Signed in, shared live with your team.</p>
       </div>
-      <div class="tucked">
-        <div class="mini" style="--c:#d4ecff">Fabrics
-          <div class="sub"><div class="mini" style="--c:#ffe2c4">Press &amp; dryer felts</div></div>
-        </div>
-        <div class="mini" style="--c:#e9e0ff">Rolls</div>
-        <div class="mini" style="--c:#ffffff">Refiners</div>
+      <div class="pict">
+        <svg viewBox="0 0 240 78">
+        <!-- ground -->
+        <path d="M16 72 H224" stroke="#a1a1aa" stroke-width="1.4" stroke-linecap="round"/>
+        <!-- steam -->
+        <path d="M74 12 q-6 -6 0 -9 q5 -3 9 1 q6 -2 8 4" fill="none" stroke="#a1a1aa" stroke-width="1.3" stroke-linecap="round"/>
+        <!-- stack -->
+        <path d="M70 72 V16 h10 V72" fill="#e7e5e4" stroke="#52525b" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M70 26 h10 M70 30 h10" stroke="#ef4444" stroke-width="1.6"/>
+        <!-- silos -->
+        <path d="M30 72 V36 a8 4 0 0 1 16 0 V72" fill="#f5f5f4" stroke="#52525b" stroke-width="1.6" stroke-linejoin="round"/>
+        <path d="M48 72 V42 a7 3.5 0 0 1 14 0 V72" fill="#f5f5f4" stroke="#52525b" stroke-width="1.6" stroke-linejoin="round"/>
+        <!-- main machine hall, sawtooth roof -->
+        <path d="M84 72 V40 l18 -10 v10 l18 -10 v10 l18 -10 v10 l18 -10 v10 l18 -10 V72 Z" fill="#e7e5e4" stroke="#52525b" stroke-width="1.6" stroke-linejoin="round"/>
+        <g fill="#fff" stroke="#52525b" stroke-width="1.2"><rect x="92" y="50" width="12" height="9" rx="1"/><rect x="112" y="50" width="12" height="9" rx="1"/><rect x="132" y="50" width="12" height="9" rx="1"/><rect x="152" y="50" width="12" height="9" rx="1"/></g>
+        <!-- paper roll out front -->
+        <path d="M196 72 h26" stroke="#52525b" stroke-width="1.6" stroke-linecap="round"/>
+        <circle cx="200" cy="58" r="13" fill="#f5e6c8" stroke="#52525b" stroke-width="1.6"/>
+        <circle cx="200" cy="58" r="7" fill="none" stroke="#c08a5a" stroke-width="1"/>
+        <circle cx="200" cy="58" r="2.5" fill="#52525b"/>
+        <!-- status pips -->
+        <circle cx="174" cy="30" r="4" fill="#facc15" stroke="#fff" stroke-width="1.2"/>
+        <circle cx="212" cy="46" r="4" fill="#22c55e" stroke="#fff" stroke-width="1.2"/>
+      </svg>
         <div class="open">Open →</div>
       </div>
     </a>
@@ -109,8 +144,19 @@
         <p class="title">Operations Outage Planning</p>
         <p class="desc">A card for each upcoming outage, every 6 weeks: the fabrics and rolls from My Machine due before the next one, plus task packages from the library, the outage-day task list and shift manning. Requires sign-in.</p>
       </div>
-      <div class="tucked">
-        <div class="mini" style="--c:#fff4b8">Outage planning</div>
+      <div class="pict">
+        <svg viewBox="0 0 240 78">
+      <line x1="8" y1="66" x2="232" y2="66" class="l"/>
+      <g fill="#a1a1aa"><circle cx="20" cy="66" r="3"/><circle cx="92" cy="66" r="3"/><circle cx="164" cy="66" r="3"/><circle cx="226" cy="66" r="3"/></g>
+      <circle cx="92" cy="66" r="5" fill="#2563eb"/>
+      <rect x="54" y="4" width="132" height="50" rx="6" fill="#fff4b8" stroke="rgba(0,0,0,.18)"/>
+      <line x1="92" y1="54" x2="92" y2="61" class="l"/>
+      <rect x="62" y="10" width="44" height="6" rx="3" fill="#a16207" opacity=".55"/>
+      <g fill="#fff" stroke="#52525b" stroke-width="1.2"><rect x="62" y="22" width="7" height="7" rx="1.5"/><rect x="62" y="36" width="7" height="7" rx="1.5"/></g>
+      <path d="M63.5 25.5l2 2 3-4" stroke="#16a34a" stroke-width="1.6" fill="none"/>
+      <g fill="#d4d4d8"><rect x="74" y="23" width="50" height="5" rx="2.5"/><rect x="74" y="37" width="40" height="5" rx="2.5"/></g>
+      <g><rect x="140" y="22" width="38" height="8" rx="4" fill="#ffe2c4"/><rect x="140" y="35" width="30" height="8" rx="4" fill="#e9e0ff"/></g>
+    </svg>
         <div class="open">Open →</div>
       </div>
     </a>
@@ -121,8 +167,14 @@
         <p class="title">PM1 LLM</p>
         <p class="desc">Search and ask questions across all PM1 data. Coming soon.</p>
       </div>
-      <div class="tucked">
-        <div class="mini" style="--c:#e9e0ff">Ask PM1</div>
+      <div class="pict">
+        <svg viewBox="0 0 240 78">
+      <g class="s" fill="#fff"><rect x="30" y="18" width="40" height="52" rx="4"/><rect x="38" y="12" width="40" height="52" rx="4"/><rect x="46" y="6" width="40" height="52" rx="4"/></g>
+      <g fill="#d4d4d8"><rect x="52" y="14" width="26" height="4" rx="2"/><rect x="52" y="23" width="22" height="4" rx="2"/><rect x="52" y="32" width="28" height="4" rx="2"/></g>
+      <path d="M92 36 h16" class="l" stroke-dasharray="3 3"/>
+      <path d="M116 10 h104 a8 8 0 0 1 8 8 v22 a8 8 0 0 1 -8 8 h-84 l-12 10 v-10 h-8 a8 8 0 0 1 -8 -8 v-22 a8 8 0 0 1 8 -8z" fill="#e9e0ff" stroke="rgba(0,0,0,.18)"/>
+      
+    </svg>
         <div class="open">Open →</div>
       </div>
     </a>
@@ -133,8 +185,19 @@
         <p class="title">Task Package Library</p>
         <p class="desc">Reusable outage work packages: pick one or build your own as step cards by phase, with who, time and checklists. Five examples to start from.</p>
       </div>
-      <div class="tucked">
-        <div class="mini" style="--c:#d4ecff">Task packages</div>
+      <div class="pict">
+        <svg viewBox="0 0 240 78">
+      <path d="M10 26 l22 -10 22 10 v28 l-22 10 -22 -10z" fill="#ffe2c4" class="s"/>
+      <path d="M10 26 l22 10 22 -10 M32 36 v28" class="s"/>
+      <path d="M60 40 h14" class="s"/><path d="M70 36 l4 4 -4 4" class="s"/>
+      <g font-size="9" fill="#71717a"><text x="84" y="10">Shutdown</text><text x="136" y="10">Day</text><text x="186" y="10">Startup</text></g>
+      <g stroke="rgba(0,0,0,.15)">
+        <rect x="84" y="16" width="44" height="16" rx="3" fill="#d4ecff"/><rect x="84" y="36" width="44" height="16" rx="3" fill="#d4ecff"/>
+        <rect x="136" y="16" width="44" height="16" rx="3" fill="#d9f3d3"/><rect x="136" y="36" width="44" height="16" rx="3" fill="#d9f3d3"/><rect x="136" y="56" width="44" height="16" rx="3" fill="#d9f3d3"/>
+        <rect x="186" y="16" width="44" height="16" rx="3" fill="#fff4b8"/>
+      </g>
+      <g fill="rgba(0,0,0,.25)"><rect x="89" y="22" width="26" height="4" rx="2"/><rect x="89" y="42" width="20" height="4" rx="2"/><rect x="141" y="22" width="30" height="4" rx="2"/><rect x="141" y="42" width="22" height="4" rx="2"/><rect x="141" y="62" width="26" height="4" rx="2"/><rect x="191" y="22" width="24" height="4" rx="2"/></g>
+    </svg>
         <div class="open">Open →</div>
       </div>
     </a>
@@ -145,8 +208,16 @@
         <p class="title">Vendor Reports</p>
         <p class="desc">Placeholder for supplier reports. Coming soon.</p>
       </div>
-      <div class="tucked">
-        <div class="mini" style="--c:#d9f3d3">Reports</div>
+      <div class="pict">
+        <svg viewBox="0 0 240 78">
+      <path d="M70 4 h44 l12 12 v58 h-56z" fill="#fff" class="s"/><path d="M114 4 v12 h12" class="s"/>
+      <rect x="76" y="10" width="26" height="5" rx="2.5" fill="#d9f3d3" stroke="rgba(0,0,0,.15)"/>
+      <g fill="#86efac"><rect x="78" y="48" width="8" height="18"/><rect x="90" y="38" width="8" height="28"/><rect x="102" y="44" width="8" height="22"/><rect x="114" y="30" width="8" height="36"/></g>
+      <g fill="#d4d4d8"><rect x="76" y="22" width="42" height="4" rx="2"/></g>
+      <path d="M150 20 v24" class="s"/><path d="M143 37 l7 7 7 -7" class="s"/>
+      <path d="M134 50 h32 v18 h-32z M134 50 l8 -8 h16 l8 8" fill="#f4f4f5" class="s"/>
+      
+    </svg>
         <div class="open">Open →</div>
       </div>
     </a>
@@ -157,11 +228,22 @@
         <p class="title">Whiteboard</p>
         <p class="desc">Free-form board of notes: checklists, status, owners and due dates, arrows, frames, stacks up to 4 levels deep. Outage and handover templates; export, import and print. Signed in, boards are shared live with your team.</p>
       </div>
-      <div class="tucked">
-        <div class="mini" style="--c:#fff4b8">Outage plan
-          <div class="sub"><div class="mini" style="--c:#d4ecff">Critical tasks</div></div>
-        </div>
-        <div class="mini" style="--c:#d9f3d3">Reports</div>
+      <div class="pict">
+        <svg viewBox="0 0 240 78">
+      <defs><pattern id="wbdots" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".8" fill="#d6d3d1"/></pattern></defs>
+      <rect x="0" y="0" width="240" height="78" fill="url(#wbdots)"/>
+      <rect x="8" y="6" width="104" height="66" rx="6" fill="none" stroke="#93c5fd" stroke-dasharray="4 3"/>
+      <rect x="16" y="14" width="44" height="26" rx="4" fill="#fff4b8" stroke="rgba(0,0,0,.15)"/>
+      <rect x="22" y="44" width="40" height="20" rx="4" fill="#d4ecff" stroke="rgba(0,0,0,.15)"/>
+      <rect x="66" y="22" width="40" height="22" rx="4" fill="#d9f3d3" stroke="rgba(0,0,0,.15)"/>
+      <g fill="rgba(0,0,0,.25)"><rect x="21" y="20" width="30" height="4" rx="2"/><rect x="21" y="28" width="22" height="4" rx="2"/></g>
+      <path d="M118 40 C140 40 140 22 164 22" class="s"/><path d="M158 17 l6 5 -6 5" class="s"/>
+      <rect x="168" y="10" width="60" height="30" rx="4" fill="#ffe2c4" stroke="rgba(0,0,0,.15)"/>
+      <g fill="#fff" stroke="#52525b" stroke-width="1.1"><rect x="174" y="17" width="6" height="6" rx="1.2"/><rect x="174" y="28" width="6" height="6" rx="1.2"/></g>
+      <path d="M175.2 20l1.8 1.8 2.5-3.3" stroke="#16a34a" stroke-width="1.4" fill="none"/>
+      <g fill="rgba(0,0,0,.25)"><rect x="184" y="18" width="34" height="4" rx="2"/><rect x="184" y="29" width="26" height="4" rx="2"/></g>
+      <circle cx="220" cy="54" r="8" fill="#e9e0ff" stroke="rgba(0,0,0,.15)"/><text x="216.5" y="57.5" font-size="9" fill="#3f3f46">M</text>
+    </svg>
         <div class="open">Open →</div>
       </div>
     </a>
@@ -170,10 +252,25 @@
       <div class="body">
         <span class="ver">Local</span>
         <p class="title">FieldAgent</p>
-        <p class="desc">Locally hosted on the mill network. Only loads when you're on site or connected to the network.</p>
+        <p class="desc">Monitor assets in real-time.</p>
       </div>
-      <div class="tucked">
-        <div class="mini" style="--c:#ffe2c4">10.15.212.124:8000</div>
+      <div class="pict">
+        <svg viewBox="0 0 240 78">
+  <rect x="10" y="4" width="220" height="70" rx="6" fill="#fff" stroke="rgba(0,0,0,.18)"/>
+  <path d="M10 10 a6 6 0 0 1 6 -6 h208 a6 6 0 0 1 6 6 v10 H10z" fill="#f4f4f5"/>
+  <line x1="10" y1="20" x2="230" y2="20" stroke="rgba(0,0,0,.12)"/>
+  <g fill="#d4d4d8"><circle cx="19" cy="12" r="2.4"/><circle cx="27" cy="12" r="2.4"/><circle cx="35" cy="12" r="2.4"/></g>
+  <rect x="46" y="7" width="150" height="10" rx="5" fill="#fff" stroke="rgba(0,0,0,.12)"/>
+  <!-- LAN plug icon -->
+  <path d="M52 9.5 h6 v3 h-1 v2 h-4 v-2 h-1z" fill="#52525b"/>
+  <text x="62" y="15" font-size="7.5" fill="#3f3f46">10.15.212.124:8000</text>
+  <!-- page body skeleton -->
+  <rect x="20" y="28" width="60" height="7" rx="3.5" fill="#ffe2c4"/>
+  <g fill="#e4e4e7"><rect x="20" y="42" width="120" height="5" rx="2.5"/><rect x="20" y="52" width="96" height="5" rx="2.5"/><rect x="20" y="62" width="108" height="5" rx="2.5"/></g>
+  <!-- network tree -->
+  <g class="l"><path d="M190 36 v8 M174 52 v-8 h32 v8"/></g>
+  <g fill="#f4f4f5" class="s"><rect x="182" y="28" width="16" height="9" rx="2"/><rect x="167" y="52" width="14" height="9" rx="2"/><rect x="199" y="52" width="14" height="9" rx="2"/></g>
+</svg>
         <div class="open">Open ↗</div>
       </div>
     </a>
@@ -187,7 +284,7 @@
 <script src="mm-config.js"></script>
 <script src="mm-cloud.js"></script>
 <script>
-  const VERSION = 'v0.3.0';
+  const VERSION = 'v0.3.1';
   document.getElementById('ver').textContent = 'Machine Manager ' + VERSION;
 
   MMCloud.mountAccount(document.getElementById('acct'));
