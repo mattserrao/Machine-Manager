@@ -69,6 +69,36 @@
   .card.past{opacity:.8}
   .card.next{outline:2px solid var(--ink);outline-offset:3px}
   .ch{padding:16px 18px 12px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--line)}
+  /* compact (default) vs expanded cards */
+  .card.small{cursor:pointer;transition:box-shadow .15s,transform .15s}
+  .card.small:hover{box-shadow:0 1px 2px rgba(0,0,0,.08),0 14px 30px rgba(0,0,0,.12);transform:translateY(-2px)}
+  .card.small:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  .card.small .ch{border-bottom:0;padding-bottom:6px}
+  .sum{padding:0 18px 16px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-size:11.5px;font-weight:600;color:#44403c;background:#f5f5f4;border-radius:999px;padding:3px 9px}
+  .chip.warn{color:#b45309;background:#fef3c7}
+  .chip.bad{color:#b91c1c;background:#fee2e2}
+  .sum .peek{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sum .open{font-size:12px;font-weight:500;color:var(--accent);margin-top:8px}
+  /* opened card: fills the screen below the top bar; page behind stops scrolling */
+  body.focus{overflow:hidden}
+  body.focus .card:not(.big),body.focus .lane-h,body.focus .foot{visibility:hidden}
+  .card.big{position:fixed;z-index:45;left:14px;right:14px;top:var(--topH,72px);bottom:14px;display:flex;flex-direction:column;cursor:default;
+    outline:none;box-shadow:0 2px 6px rgba(0,0,0,.08),0 24px 60px rgba(0,0,0,.18)}
+  body.panel-open .card.big{right:328px}
+  .card.big .ch{flex:none}
+  .card.big .body{flex:1;min-height:0;overflow:auto}
+  .card.big .body > .sec + .sec{border-top:1px dashed rgba(0,0,0,.12)}
+  @media (min-width:900px){
+    .card.big .body{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:100%;overflow:hidden}
+    .card.big .body > .sec{overflow:auto;min-height:0;border-left:1px dashed rgba(0,0,0,.12)}
+    .card.big .body > .sec + .sec{border-top:0}
+    .card.big .body > .sec:first-child{border-left:0}
+  }
+  .card.big .ch .date{font-size:28px}
+  .shrink{border:1px solid var(--line);background:#fff;border-radius:8px;width:30px;height:30px;display:grid;place-items:center;color:#57534e;flex:none}
+  .shrink:hover{background:#f5f5f4;color:var(--ink)}
   .ch .d{flex:1;min-width:0}
   .ch .wd{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
   .ch .date{font-size:24px;font-weight:600;line-height:1.15;margin-top:1px}
@@ -114,10 +144,79 @@
   .addtask input{flex:1;border:1px dashed #d6d3d1;border-radius:9px;padding:8px 10px;font-size:13px;background:rgba(255,255,255,.7)}
   .addtask input:focus{outline:none;border:1px solid #a8a29e;background:#fff}
 
+  /* task packages (copied from the Task Package Library) */
+  .pk{border:1px solid rgba(0,0,0,.09);border-radius:9px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .pk + .pk{margin-top:6px}
+  .pk-h{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 10px;cursor:pointer;user-select:none;border-radius:9px}
+  .pk-h:hover{background:#fafaf9}
+  .pk-h .tw{width:14px;color:#78716c;font-size:11px;flex:none;transition:transform .15s}
+  .pk.open .pk-h .tw{transform:rotate(90deg)}
+  .pk-h .nm{flex:1;min-width:0;font-size:13px;font-weight:600}
+  .pk-h .nm small{display:block;font-size:11.5px;font-weight:400;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pk-h .x{border:0;background:transparent;border-radius:6px;padding:2px 6px;color:#a8a29e;font-size:12px}
+  .pk-h .x:hover{background:#f5f5f4;color:var(--bad)}
+  .pk-b{padding:2px 12px 10px 12px;border-top:1px dashed rgba(0,0,0,.12)}
+  .pk-desc{font-size:12px;color:var(--muted);margin:8px 0 2px;line-height:1.45}
+  .ph{margin-top:10px}
+  .ph-t{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#57534e;margin-bottom:5px}
+  .ph-t i{width:8px;height:8px;border-radius:2px;background:var(--pc,#a8a29e)}
+  .st{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:8px;background:#fafaf9;border:1px solid #f0efed}
+  .st + .st{margin-top:5px}
+  .st input{margin:2px 0 0;accent-color:var(--ink);flex:none}
+  .st .bd{flex:1;min-width:0}
+  .st .tt{font-size:12.5px;font-weight:600;line-height:1.35}
+  .st.done .tt{text-decoration:line-through;color:#78716c}
+  .st .mt{font-size:11px;color:var(--muted);margin-top:1px}
+  .st .ln{font-size:12px;color:#44403c;line-height:1.45}
+  .st .sb{font-size:11.5px;color:#57534e;background:#fff;border:1px solid #e7e5e4;border-radius:6px;padding:4px 7px;margin-top:4px;white-space:pre-wrap}
+  .card.drop{outline:2px dashed var(--accent);outline-offset:3px}
+  .card.drop .sec.pks{background:#eff6ff}
+  /* package panel + picker */
+  #panel{position:fixed;z-index:60;top:76px;right:14px;bottom:14px;width:300px;background:#fff;border:1px solid var(--line);border-radius:14px;
+    box-shadow:0 8px 30px rgba(0,0,0,.12);display:flex;flex-direction:column;overflow:hidden}
+  body.panel-open main{margin-right:320px}
+  #panel .ph2{padding:12px 14px 8px;border-bottom:1px solid var(--line)}
+  #panel h2{margin:0;font-size:14px;display:flex;align-items:center;gap:8px}
+  #panel h2 .sp{flex:1}
+  #panel p{margin:4px 0 8px;font-size:12px;color:var(--muted);line-height:1.45}
+  #panel input{width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:13px}
+  #pkgList{overflow:auto;padding:8px;flex:1}
+  .lib{display:block;width:100%;text-align:left;border:1px solid rgba(0,0,0,.09);background:#fff;border-radius:9px;padding:8px 10px;margin-bottom:6px;cursor:grab;
+    box-shadow:0 1px 3px rgba(0,0,0,.06);font-size:13px;font-weight:600}
+  .lib:hover{border-color:#d6d3d1;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+  .lib small{display:block;font-size:11.5px;font-weight:400;color:var(--muted);margin-top:1px}
+  .lib.dragging{opacity:.5}
+  #panel .foot2{padding:8px 14px 12px;border-top:1px solid var(--line);font-size:12px}
+  #panel .foot2 a{color:var(--accent)}
+  #picker{position:fixed;z-index:400;min-width:260px;max-height:340px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;
+    box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px}
+  #picker .ml{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:6px 8px 4px}
+  #picker button{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:8px;padding:7px 8px;font-size:13px;font-weight:500}
+  #picker button:hover,#picker button:focus-visible{background:#f5f5f4;outline:none}
+  #picker button small{display:block;font-size:11px;font-weight:400;color:var(--muted)}
+  #picker button:disabled{color:#a8a29e;cursor:default;background:transparent}
+  /* manning */
+  .mh{cursor:pointer;user-select:none}
+  .mh .tw{width:14px;color:#78716c;font-size:11px;transition:transform .15s}
+  .sec.man.open .mh .tw{transform:rotate(90deg)}
+  .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:2px 0 10px}
+  .tab{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 4px;font-size:11.5px;font-weight:600;line-height:1.2;text-align:center;color:#57534e}
+  .tab small{display:block;font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+  .tab .c{display:block;font-size:10.5px;font-weight:500;color:#a8a29e;margin-top:1px}
+  .tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .tab.on small,.tab.on .c{color:rgba(255,255,255,.7)}
+  .mgrid{display:grid;grid-template-columns:62px 1fr;gap:5px 8px;align-items:center}
+  .mgrid label{font-size:11.5px;font-weight:600;color:#57534e;letter-spacing:.03em}
+  .mgrid input{border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:13px;width:100%}
+  .mgrid input:focus{outline:none;border-color:#a8a29e}
+  .mgrid input.inh{background:#fafaf9;color:#78716c}
+  .mgrid input[readonly]{background:#fafaf9;border-color:transparent}
+  .mnote{font-size:11.5px;color:var(--muted);margin-top:8px}
+
   .foot{font-size:12px;color:var(--muted);margin:26px 2px 0;line-height:1.6}
   .foot a{color:var(--accent)}
 
-  /* ---------- Schedule editor ---------- */
+  /* ---------- Schedule editor (styles) ---------- */
   .backdrop{position:fixed;inset:0;z-index:300;background:rgba(28,25,23,.35);display:grid;place-items:center;padding:16px}
   .sheet{background:#fff;border-radius:14px;width:min(520px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;
     box-shadow:0 20px 60px rgba(0,0,0,.25)}
@@ -135,7 +234,8 @@
   .err{color:var(--bad);font-size:12.5px}
 
   @media print{
-    .top,.addtask,.task .x,.btn,#toast{display:none!important}
+    .top,.addtask,.task .x,.btn,#toast,#panel,.pk-h .x{display:none!important}
+    body.panel-open main{margin-right:0}
     html,body{background:#fff}
     .card{box-shadow:none;break-inside:avoid;border:1px solid #d6d3d1}
   }
@@ -150,6 +250,7 @@
     </div>
     <div class="bar" id="toolbar" hidden>
       <button class="btn" id="schedBtn">Edit schedule</button>
+      <button class="btn" id="pkgBtn" title="Drag task packages onto an outage">Packages</button>
       <button class="btn" id="pastBtn" title="Show outages that have already happened">Past</button>
       <button class="btn" id="printBtn" title="Print the upcoming outage cards">Print</button>
       <span id="saveState"></span>
@@ -177,6 +278,17 @@
   </div>
 </div>
 
+<aside id="panel" hidden aria-label="Task packages">
+  <div class="ph2">
+    <h2>Task packages <span class="sp"></span><button class="btn sm" id="panelClose" aria-label="Close">✕</button></h2>
+    <p>Drag a package onto an outage card, or use <b>+ Package</b> on the card.</p>
+    <input id="pkgSearch" type="search" placeholder="Search packages" autocomplete="off">
+  </div>
+  <div id="pkgList"></div>
+  <div class="foot2"><a href="TaskPackageLibrary.html">Open the Task Package Library</a></div>
+</aside>
+<div id="picker" hidden role="menu"></div>
+
 <div id="toast"></div>
 <div id="ver"></div>
 
@@ -187,7 +299,7 @@
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.2.0';
+  const VERSION = 'v0.3.0';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'Operations Outage Planning ' + VERSION;
 
@@ -201,7 +313,9 @@
   /* ---------- State ---------- */
   let session = null, oStore = null, mStore = null;
   let machineRaw = null, machine = null, items = {};             // from My Machine (shared)
-  let O = { settings: null, outages: {}, tasks: {} };            // this tool's records
+  let O = { settings: null, outages: {}, tasks: {}, pkgs: {}, pdone: {}, man: {} };   // this tool's records
+  let tpStore = null, tp = {};                                   // Task Package Library records (read only here)
+  const openPk = new Set(), openMan = new Set(), manTab = {};    // what's expanded (this browser only)
   let showPast = false;
   const canEdit = () => !!(oStore && oStore.edit);
 
@@ -261,6 +375,9 @@
     if (O.settings) r.settings = O.settings;
     for (const [id, o] of Object.entries(O.outages)) r['outage:' + id] = o;
     for (const [id, t] of Object.entries(O.tasks)) r['task:' + id] = t;
+    for (const [id, k] of Object.entries(O.pkgs)) r['pkg:' + id] = k;
+    for (const [id, d] of Object.entries(O.pdone)) r['pkd:' + id] = d;
+    for (const [id, m] of Object.entries(O.man)) r['man:' + id] = m;
     return r;
   };
   const mRecords = () => {
@@ -273,8 +390,11 @@
     if (id === 'settings') O.settings = data;
     else if (id.startsWith('outage:')){ const k = id.slice(7); if (data) O.outages[k] = data; else delete O.outages[k]; }
     else if (id.startsWith('task:')){ const k = id.slice(5); if (data) O.tasks[k] = data; else delete O.tasks[k]; }
+    else for (const [pre, bag] of [['pkg:', O.pkgs], ['pkd:', O.pdone], ['man:', O.man]])
+      if (id.startsWith(pre)){ const k = id.slice(pre.length); if (data) bag[k] = data; else delete bag[k]; }
     softRender();
   }
+  function onTP(id, data){ if (data) tp[id] = data; else delete tp[id]; drawPanel(); }
   function onM(id, data){
     if (id === 'machine'){ machineRaw = data; machine = data ? MM.normalize(JSON.parse(JSON.stringify(data))) : null; }
     else if (id.startsWith('item:')){ const k = id.slice(5); if (data) items[k] = data; else delete items[k]; }
@@ -298,13 +418,13 @@
   let pending = false;
   function softRender(){
     const a = document.activeElement;
-    if (a && $('main').contains(a) && (a.isContentEditable || a.tagName === 'INPUT')){ pending = true; return; }
+    if (a && $('main').contains(a) && (a.isContentEditable || (a.tagName === 'INPUT' && a.type !== 'checkbox'))){ pending = true; return; }
     requestAnimationFrame(render);
   }
   $('main').addEventListener('focusout', () => { if (pending){ pending = false; setTimeout(softRender, 0); } });
 
   function gate(icon, title, text, btn){
-    const main = $('main'); main.textContent = '';
+    const main = $('main'); main.textContent = ''; document.body.classList.remove('focus');
     const g = el('div', 'gate'), b = el('div', 'box');
     b.append(el('div', 'icon', icon), el('h2', '', title), el('p', '', text));
     if (btn){ const x = btn.href ? Object.assign(el('a', 'btn primary', btn.label), { href: btn.href }) : el('button', 'btn primary', btn.label);
@@ -350,25 +470,62 @@
     if (later.length) bits.push(`${later.length} fabric${later.length === 1 ? '' : 's'}/roll${later.length === 1 ? '' : 's'} not due until after the last planned outage.`);
     if (unset.length) bits.push(`${unset.length} position${unset.length === 1 ? ' has' : 's have'} no install date or target life, so ${unset.length === 1 ? 'it isn’t' : 'they aren’t'} planned yet.`);
     if (bits.length){ f.append(bits.join(' ') + ' '); const a = el('a', '', 'Open My Machine'); a.href = 'MyMachine.html'; f.appendChild(a); main.appendChild(f); }
+    fitOpenCard();
   }
 
   function card(o, due, cls, isNext){
     const today = todayStr();
-    const c = el('section', 'card' + (o.type === 'annual' ? ' annual' : '') + (cls ? ' ' + cls : '') + (isNext ? ' next' : ''));
+    const big = bigCards.has(o.id);
+    const c = el('section', 'card' + (big ? ' big' : ' small') + (o.type === 'annual' ? ' annual' : '') + (cls ? ' ' + cls : '') + (isNext ? ' next' : ''));
     c.dataset.id = o.id;
+    // Drop a package from the side panel onto the card (compact or expanded).
+    c.addEventListener('dragover', e => { if (canEdit() && e.dataTransfer.types.includes(DND)){ e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; c.classList.add('drop'); } });
+    c.addEventListener('dragleave', e => { if (!c.contains(e.relatedTarget)) c.classList.remove('drop'); });
+    c.addEventListener('drop', e => { c.classList.remove('drop'); const id = e.dataTransfer.getData(DND); if (id){ e.preventDefault(); setBig(o.id, true, true); addPackage(o, id); } });
     // header
     const h = el('div', 'ch'), d = el('div', 'd');
     d.append(el('div', 'wd', fmt(o.date, { weekday: 'long' })), el('div', 'date', fmtLong(o.date)));
     const rel = el('div', 'rel'); const rb = el('b', '', relDay(o.date)); rel.append(rb);
     const tasks = Object.entries(O.tasks).filter(([, t]) => t.outage === o.id).map(([id, t]) => ({ ...t, id })).sort((a, b) => (a.at || 0) - (b.at || 0));
     const open = due.filter(x => !x.changed).length, tdone = tasks.filter(t => t.done).length;
-    rel.append(` · ${open} due · ${tdone}/${tasks.length} tasks done`);
+    if (big) rel.append(` · ${open} due · ${tdone}/${tasks.length} tasks done`);
     d.appendChild(rel);
     const bd = el('div', 'badges');
     const ty = el('span', 'pill', o.type === 'annual' ? 'Annual outage' : 'Outage'); if (o.type === 'annual') ty.style.setProperty('--sc', 'var(--annual)');
     bd.appendChild(ty);
     if (isNext){ const n = el('span', 'pill', 'Next'); n.style.setProperty('--sc', 'var(--ink)'); bd.appendChild(n); }
-    h.append(d, bd); c.appendChild(h);
+    h.append(d, bd);
+    if (big){
+      const x = el('button', 'shrink'); x.title = 'Make smaller'; x.setAttribute('aria-label', 'Make ' + fmtLong(o.date) + ' card smaller');
+      x.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M9.5 2.5v4h4M6.5 13.5v-4h-4M9.5 6.5l4.5-4.5M6.5 9.5L2 14" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      x.addEventListener('click', e => { e.stopPropagation(); setBig(o.id, false); });
+      h.appendChild(x);
+    }
+    c.appendChild(h);
+
+    if (!big){
+      // Compact: a summary; click anywhere to open it up.
+      const pk = Object.entries(O.pkgs).filter(([, k]) => k.outage === o.id);
+      const pkSteps = pk.reduce((t, [, k]) => t + pkgSteps(k), 0), pkDone = pk.reduce((t, [id, k]) => t + pkgDone(id, k), 0);
+      const late = due.filter(x => !x.changed && (x.missed || x.due < o.date)).length;
+      const crewN = SHIFTS.reduce((t, sh) => t + filled(o, sh.k), 0);
+      const sm = el('div', 'sum'), chips = el('div', 'chips');
+      const chip = (t, k) => chips.appendChild(el('span', 'chip' + (k ? ' ' + k : ''), t));
+      chip(`${open} fabric${open === 1 ? '' : 's'}/roll${open === 1 ? '' : 's'} due`, late ? 'bad' : open ? 'warn' : '');
+      chip(`${pk.length} package${pk.length === 1 ? '' : 's'}${pk.length ? ` · ${pkDone}/${pkSteps} steps` : ''}`);
+      chip(`${tdone}/${tasks.length} tasks`);
+      chip(`Manning ${crewN}/${POS.length * SHIFTS.length}`);
+      sm.appendChild(chips);
+      const names = [...due.filter(x => !x.changed).map(x => x.p.name), ...pk.map(([, k]) => k.name)];
+      if (names.length) sm.appendChild(el('div', 'peek', names.join(' · ')));
+      sm.appendChild(el('div', 'open', 'Open outage →'));
+      c.appendChild(sm);
+      c.tabIndex = 0; c.setAttribute('role', 'button'); c.setAttribute('aria-label', `Open the ${fmtLong(o.date)} outage`);
+      c.addEventListener('click', () => setBig(o.id, true, true));
+      c.addEventListener('keydown', e => { if (e.target === c && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); setBig(o.id, true, true); } });
+      return c;
+    }
+    const body = el('div', 'body'); c.appendChild(body);
 
     // fabrics & rolls from My Machine
     const s1 = el('div', 'sec'), sh1 = el('div', 'sh');
@@ -376,7 +533,9 @@
     s1.appendChild(sh1);
     if (!due.length) s1.appendChild(el('div', 'none', 'Nothing due before the next outage.'));
     for (const x of due) s1.appendChild(dueRow(o, x, today));
-    c.appendChild(s1);
+    body.appendChild(s1);
+
+    body.appendChild(pkgSection(o));
 
     // tasks
     const s2 = el('div', 'sec'), sh2 = el('div', 'sh');
@@ -398,9 +557,39 @@
       });
       add.appendChild(inp); s2.appendChild(add);
     }
-    c.appendChild(s2);
+    // Tasks and manning share a column when the card is wide.
+    const col = el('div', 'sec col'); col.style.padding = '0';
+    s2.style.borderTop = '0'; col.appendChild(s2); col.appendChild(manSection(o));
+    body.appendChild(col);
     return c;
   }
+  // Which cards are opened up (this browser only).
+  const bigCards = new Set((() => { try { return (JSON.parse(localStorage.getItem('mm-op-big')) || []).slice(-1); } catch (e) { return []; } })());
+  function setBig(id, on, scroll){
+    if (on === bigCards.has(id)) return;
+    bigCards.clear();                 // one opened card at a time: it fills the screen
+    if (on) bigCards.add(id);
+    try { localStorage.setItem('mm-op-big', JSON.stringify([...bigCards])); } catch (e) {}
+    render();
+    const c = document.querySelector(`.card[data-id="${id}"]`);
+    if (c){ if (!on){ c.scrollIntoView({ block: 'nearest' }); c.focus({ preventScroll: true }); } else { const s = c.querySelector('.shrink'); if (s) s.focus({ preventScroll: true }); } }
+  }
+  // While a card is open: lock the page behind it and keep it just under the top bar.
+  function fitOpenCard(){
+    const open = !!document.querySelector('.card.big');
+    document.body.classList.toggle('focus', open);
+    if (!open) return;
+    window.scrollTo(0, 0);
+    const top = document.querySelector('.top');
+    document.documentElement.style.setProperty('--topH', Math.round(top.getBoundingClientRect().bottom) + 'px');
+  }
+  window.addEventListener('resize', fitOpenCard);
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || !bigCards.size || !$('picker').hidden || !$('editor').hidden) return;
+    const a = document.activeElement;
+    if (a && (a.isContentEditable || a.tagName === 'INPUT')) return;      // Escape there cancels the edit
+    setBig([...bigCards][0], false);
+  });
 
   function dueRow(o, x, today){
     const r = el('div', 'due' + (x.changed ? ' done' : ''));
@@ -489,6 +678,233 @@
     return n;
   }
 
+
+  /* ---------- Task packages ----------
+     The Task Package Library keeps each package as phases (frames) of step cards. Adding one to
+     an outage copies it (name, details and the steps in reading order) so later library edits
+     don't change an outage's plan. Each step can be checked off; checks are separate records
+     so two people ticking different steps never collide. */
+  const DND = 'application/x-mm-package';
+  const firstLine = t => { const ls = (t || '').split('\n'); const i = ls.findIndex(l => l.trim()); return { title: i < 0 ? '' : ls[i].replace(/^#+\s*/, '').trim(), rest: i < 0 ? [] : ls.slice(i + 1) }; };
+  function libPackages(){
+    const out = [];
+    for (const [k, d] of Object.entries(tp)) if (k.startsWith('p:')) out.push({ id: k.slice(2), name: d.name || 'Untitled package', meta: d.meta || {} });
+    for (const p of out) p.steps = Object.keys(tp).filter(k => k.startsWith(`n:${p.id}:`) && !tp[k].parent).length;
+    return out.sort((a, b) => a.name.localeCompare(b.name));
+  }
+  // Steps in reading order: phases left to right, steps top to bottom (as the library prints them).
+  function libPhases(pid){
+    const notes = {}, frames = [];
+    for (const [k, d] of Object.entries(tp)){
+      if (k.startsWith(`n:${pid}:`)) notes[k.slice(pid.length + 3)] = { ...d, id: k.slice(pid.length + 3) };
+      else if (k.startsWith(`f:${pid}:`)) frames.push(d);
+    }
+    const tops = Object.values(notes).filter(n => !n.parent || !notes[n.parent]);
+    const cx = n => (n.x || 0) + (n.w || 236) / 2, cy = n => (n.y || 0) + 50;
+    const byPos = (a, b) => ((a.y || 0) - (b.y || 0)) || ((a.x || 0) - (b.x || 0));
+    const step = n => {
+      const { title, rest } = firstLine(n.text);
+      return { id: n.id, title: title || 'Untitled step', lines: rest.filter(l => l.trim()), who: n.owner || null, hrs: Number(n.hrs) > 0 ? Number(n.hrs) : null,
+        subs: (n.children || []).map(c => notes[c]).filter(Boolean).map(c => (c.text || '').trim()).filter(Boolean) };
+    };
+    const used = new Set(), phases = [];
+    for (const f of frames.slice().sort((a, b) => ((a.x || 0) - (b.x || 0)) || ((a.y || 0) - (b.y || 0)))){
+      const inF = tops.filter(n => !used.has(n.id) && cx(n) >= f.x && cx(n) <= f.x + f.w && cy(n) >= f.y && cy(n) <= f.y + f.h).sort(byPos);
+      inF.forEach(n => used.add(n.id));
+      if (inF.length) phases.push({ title: f.title || 'Phase', color: f.color || null, steps: inF.map(step) });
+    }
+    const rest = tops.filter(n => !used.has(n.id)).sort(byPos);
+    if (rest.length) phases.push({ title: phases.length ? 'Other steps' : 'Steps', color: null, steps: rest.map(step) });
+    return phases;
+  }
+  function addPackage(o, pid){
+    const lp = libPackages().find(p => p.id === pid);
+    if (!lp) return toast('That package isn’t in the library any more.');
+    if (Object.values(O.pkgs).some(k => k.outage === o.id && k.source === pid)) return toast(`${lp.name} is already in the ${fmtShort(o.date)} outage.`);
+    const id = uid(), m = lp.meta;
+    O.pkgs[id] = { outage: o.id, source: pid, name: lp.name, area: m.area || null, desc: m.desc || null,
+      hours: Number(m.hours) || null, crew: Number(m.crew) || null, at: Date.now(), phases: libPhases(pid) };
+    saveO(); render(); closePicker();
+    toast(`Added ${lp.name} to ${fmtShort(o.date)}`, { label: 'Undo', fn: () => removePackage(id, true) });
+  }
+  function removePackage(id, quiet){
+    const was = O.pkgs[id]; if (!was) return;
+    const checks = Object.entries(O.pdone).filter(([k]) => k.startsWith(id + ':'));
+    delete O.pkgs[id]; checks.forEach(([k]) => delete O.pdone[k]);
+    saveO(); render();
+    if (!quiet) toast(`Removed ${was.name}`, { label: 'Undo', fn: () => { O.pkgs[id] = was; checks.forEach(([k, v]) => O.pdone[k] = v); saveO(); render(); } });
+  }
+  const pkgSteps = k => k.phases.reduce((t, p) => t + p.steps.length, 0);
+  const pkgDone = (id, k) => k.phases.reduce((t, p) => t + p.steps.filter(st => O.pdone[`${id}:${st.id}`]).length, 0);
+  function pkgSection(o){
+    const sec = el('div', 'sec pks'), sh = el('div', 'sh');
+    const list = Object.entries(O.pkgs).filter(([, k]) => k.outage === o.id).sort((a, b) => (a[1].at || 0) - (b[1].at || 0));
+    sh.append(el('h3', '', 'Task packages'), el('span', 'n', String(list.length)), el('span', 'sp'));
+    if (canEdit()){
+      const b = el('button', 'btn sm', '+ Package'); b.title = 'Add a package from the Task Package Library';
+      b.addEventListener('click', e => { e.stopPropagation(); openPicker(b, o); });
+      sh.appendChild(b);
+    }
+    sec.appendChild(sh);
+    if (!list.length) sec.appendChild(el('div', 'none', canEdit() ? 'Drag a package here from the Packages panel, or use + Package.' : 'No packages yet.'));
+    for (const [id, k] of list){
+      const box = el('div', 'pk' + (openPk.has(id) ? ' open' : '')), h = el('div', 'pk-h');
+      h.setAttribute('role', 'button'); h.tabIndex = 0; h.setAttribute('aria-expanded', String(openPk.has(id)));
+      const total = pkgSteps(k), done = pkgDone(id, k);
+      const nm = el('div', 'nm', k.name);
+      nm.appendChild(el('small', '', [k.area, `${done}/${total} steps done`, k.hours && `${k.hours} h window`, k.crew && `${k.crew} crew`].filter(Boolean).join(' · ')));
+      h.append(el('span', 'tw', '▶'), nm);
+      if (canEdit()){
+        const x = el('button', 'x', '✕'); x.title = 'Remove from this outage'; x.setAttribute('aria-label', 'Remove ' + k.name);
+        x.addEventListener('click', e => { e.stopPropagation(); removePackage(id); });
+        h.appendChild(x);
+      }
+      const toggle = () => { openPk.has(id) ? openPk.delete(id) : openPk.add(id); render(); };
+      h.addEventListener('click', toggle);
+      h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); } });
+      box.appendChild(h);
+      if (openPk.has(id)){
+        const body = el('div', 'pk-b');
+        if (k.desc) body.appendChild(el('div', 'pk-desc', k.desc));
+        for (const ph of k.phases){
+          const pw = el('div', 'ph'), pt = el('div', 'ph-t'), dot = el('i');
+          if (ph.color) dot.style.setProperty('--pc', ph.color);
+          pt.append(dot, ph.title); pw.appendChild(pt);
+          for (const st of ph.steps){
+            const key = `${id}:${st.id}`, on = !!O.pdone[key];
+            const row = el('div', 'st' + (on ? ' done' : ''));
+            const cb = el('input'); cb.type = 'checkbox'; cb.checked = on; cb.disabled = !canEdit(); cb.setAttribute('aria-label', 'Done: ' + st.title);
+            cb.addEventListener('change', () => { if (cb.checked) O.pdone[key] = { done: true, at: Date.now() }; else delete O.pdone[key]; saveO(); requestAnimationFrame(render); });
+            const bd = el('div', 'bd');
+            bd.appendChild(el('div', 'tt', st.title));
+            const mt = [st.who && '👤 ' + st.who, st.hrs && '⏱ ' + st.hrs + ' h'].filter(Boolean);
+            if (mt.length) bd.appendChild(el('div', 'mt', mt.join('  ·  ')));
+            for (const l of st.lines){
+              const m = /^\s*[-*] \[( |x|X)\] ?(.*)$/.exec(l), b = /^\s*[-*] (.*)$/.exec(l);
+              bd.appendChild(el('div', 'ln', m ? '☐ ' + m[2] : b ? '• ' + b[1] : l.trim()));
+            }
+            st.subs.forEach(t => bd.appendChild(el('div', 'sb', t)));
+            row.append(cb, bd); pw.appendChild(row);
+          }
+          body.appendChild(pw);
+        }
+        if (!k.phases.length) body.appendChild(el('div', 'none', 'This package has no steps.'));
+        box.appendChild(body);
+      }
+      sec.appendChild(box);
+    }
+    return sec;
+  }
+
+  // Side panel to drag packages from
+  function drawPanel(){
+    const list = $('pkgList'); if (!list || $('panel').hidden) return;
+    const q = $('pkgSearch').value.trim().toLowerCase();
+    const pk = libPackages().filter(p => !q || [p.name, p.meta.area, p.meta.desc].join(' ').toLowerCase().includes(q));
+    list.textContent = '';
+    if (!pk.length) list.appendChild(el('div', 'none', q ? 'No packages match.' : 'No packages in the library yet.'));
+    for (const p of pk){
+      const b = el('div', 'lib', p.name); b.draggable = canEdit(); b.title = canEdit() ? 'Drag onto an outage' : '';
+      b.appendChild(el('small', '', [p.meta.area, `${p.steps} step${p.steps === 1 ? '' : 's'}`, p.meta.hours && `${p.meta.hours} h`, p.meta.crew && `${p.meta.crew} crew`].filter(Boolean).join(' · ')));
+      b.addEventListener('dragstart', e => { e.dataTransfer.setData(DND, p.id); e.dataTransfer.setData('text/plain', p.name); e.dataTransfer.effectAllowed = 'copy'; b.classList.add('dragging'); });
+      b.addEventListener('dragend', () => { b.classList.remove('dragging'); document.querySelectorAll('.card.drop').forEach(c => c.classList.remove('drop')); });
+      list.appendChild(b);
+    }
+  }
+  function setPanel(open){
+    $('panel').hidden = !open; document.body.classList.toggle('panel-open', open); $('pkgBtn').classList.toggle('on', open);
+    try { localStorage.setItem('mm-op-panel', open ? '1' : ''); } catch (e) {}
+    if (open) drawPanel();
+  }
+  $('pkgBtn').addEventListener('click', () => setPanel($('panel').hidden));
+  $('panelClose').addEventListener('click', () => setPanel(false));
+  $('pkgSearch').addEventListener('input', drawPanel);
+
+  // "+ Package" picker on a card (works without dragging: touch screens, keyboards)
+  function openPicker(btn, o){
+    const pk = $('picker'); pk.textContent = '';
+    pk.appendChild(el('div', 'ml', `Add to ${fmtShort(o.date)}`));
+    const list = libPackages();
+    if (!list.length) pk.appendChild(el('div', 'none', 'No packages in the library yet.'));
+    for (const p of list){
+      const has = Object.values(O.pkgs).some(k => k.outage === o.id && k.source === p.id);
+      const b = el('button', '', p.name); b.disabled = has; b.setAttribute('role', 'menuitem');
+      b.appendChild(el('small', '', has ? 'Already in this outage' : [p.meta.area, `${p.steps} steps`].filter(Boolean).join(' · ')));
+      b.addEventListener('click', () => addPackage(o, p.id));
+      pk.appendChild(b);
+    }
+    const r = btn.getBoundingClientRect();
+    pk.hidden = false;
+    pk.style.left = Math.max(8, Math.min(r.right - pk.offsetWidth, innerWidth - pk.offsetWidth - 8)) + 'px';
+    pk.style.top = (r.bottom + 6 + pk.offsetHeight > innerHeight ? Math.max(8, r.top - 6 - pk.offsetHeight) : r.bottom + 6) + 'px';
+    const f = pk.querySelector('button:not(:disabled)'); if (f) f.focus();
+  }
+  function closePicker(){ $('picker').hidden = true; }
+  document.addEventListener('pointerdown', e => { if (!$('picker').hidden && !$('picker').contains(e.target)) closePicker(); }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePicker(); });
+  window.addEventListener('scroll', closePicker, { passive: true });
+
+  /* ---------- Manning ----------
+     Every outage: Shutdown (Nights) · Short Off · Day Shift · Startup (Nights). Startup starts out
+     as the Shutdown crew; any Startup position can be changed, and cleared to go back to Shutdown's.
+     One record per outage and shift. */
+  const POS = ['SPOT', 'WET', 'DET', 'SPAT', 'WT', 'WAT', 'IB1', 'IB2', 'OB1', 'EXTRA'];
+  const SHIFTS = [
+    { k: 'shutdown', grp: 'Shutdown', name: 'Nights' },
+    { k: 'shortoff', grp: 'Outage', name: 'Short Off' },
+    { k: 'day', grp: 'Outage', name: 'Day Shift' },
+    { k: 'startup', grp: 'Startup', name: 'Nights' },
+  ];
+  const crew = (o, k) => O.man[`${o.id}:${k}`] || {};
+  function seat(o, k, pos){
+    if (k === 'startup' && !(pos in crew(o, 'startup'))) return { v: crew(o, 'shutdown')[pos] || '', inherited: true };
+    return { v: crew(o, k)[pos] || '', inherited: false };
+  }
+  const filled = (o, k) => POS.filter(p => seat(o, k, p).v).length;
+  function setSeat(o, k, pos, v){
+    const key = `${o.id}:${k}`, m = { ...(O.man[key] || {}) };
+    v = v.trim();
+    if (k === 'startup' && (!v || v === (crew(o, 'shutdown')[pos] || ''))) delete m[pos];   // back to Shutdown's
+    else if (v) m[pos] = v; else delete m[pos];
+    if (Object.keys(m).length) O.man[key] = m; else delete O.man[key];
+    saveO(); pending = true;          // refresh the counts once focus leaves the manning list
+  }
+  function manSection(o){
+    const open = openMan.has(o.id), sec = el('div', 'sec man' + (open ? ' open' : ''));
+    const total = SHIFTS.reduce((t, s) => t + filled(o, s.k), 0);
+    const sh = el('div', 'sh mh'); sh.setAttribute('role', 'button'); sh.tabIndex = 0; sh.setAttribute('aria-expanded', String(open));
+    sh.append(el('span', 'tw', '▶'), el('h3', '', 'Manning'), el('span', 'n', `${total}/${POS.length * SHIFTS.length}`));
+    const toggle = () => { open ? openMan.delete(o.id) : openMan.add(o.id); render(); };
+    sh.addEventListener('click', toggle);
+    sh.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); } });
+    sec.appendChild(sh);
+    if (!open) return sec;
+    const cur = manTab[o.id] || 'shutdown';
+    const tabs = el('div', 'tabs'); tabs.setAttribute('role', 'tablist');
+    for (const s of SHIFTS){
+      const t = el('button', 'tab' + (s.k === cur ? ' on' : '')); t.setAttribute('role', 'tab'); t.setAttribute('aria-selected', String(s.k === cur));
+      t.append(el('small', '', s.grp), s.name, el('span', 'c', `${filled(o, s.k)}/${POS.length}`));
+      t.addEventListener('click', () => { manTab[o.id] = s.k; render(); });
+      tabs.appendChild(t);
+    }
+    sec.appendChild(tabs);
+    const g = el('div', 'mgrid');
+    for (const pos of POS){
+      const { v, inherited } = seat(o, cur, pos), id = `m-${o.id}-${cur}-${pos}`;
+      const lb = el('label', '', pos); lb.htmlFor = id;
+      const inp = el('input'); inp.id = id; inp.autocomplete = 'off';
+      if (inherited){ inp.value = ''; inp.placeholder = v; if (v) inp.classList.add('inh'); }
+      else inp.value = v;
+      if (!canEdit()){ inp.readOnly = true; if (inherited) inp.value = v; }
+      inp.addEventListener('change', () => setSeat(o, cur, pos, inp.value));
+      inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); });
+      g.append(lb, inp);
+    }
+    sec.appendChild(g);
+    if (cur === 'startup') sec.appendChild(el('div', 'mnote', 'Startup uses the Shutdown crew. Type a name to change a position; clear it to go back to Shutdown’s.'));
+    return sec;
+  }
+
   /* ---------- Schedule editor ---------- */
   let rows = [];
   function cadenceFrom(d){ let x = ANCHOR; if (d) { while (x <= d) x = addDays(x, CADENCE_DAYS); return x; } while (x < todayStr()) x = addDays(x, CADENCE_DAYS); return x; }
@@ -500,7 +916,7 @@
     $('edTitle').textContent = first ? 'Set up your outage schedule' : 'Outage schedule';
     $('edHelp').textContent = first
       ? `Normal outages repeat every 6 weeks from Nov 11. Check these dates, change any that are different, and mark annual outages. You can change them later.`
-      : 'Change a date, mark an outage annual, or remove one. Removing an outage also removes its tasks. Older past outages aren’t shown here.';
+      : 'Change a date, mark an outage annual, or remove one. Removing an outage also removes its tasks, packages and manning. Older past outages aren’t shown here.';
     $('edErr').textContent = '';
     drawRows(); $('editor').hidden = false;
     const f = $('edRows').querySelector('input'); if (f) f.focus();
@@ -536,8 +952,16 @@
     const keep = new Set(rows.filter(r => r.id).map(r => r.id));
     const removed = [...shown].filter(id => !keep.has(id));
     const lostTasks = Object.values(O.tasks).filter(t => removed.includes(t.outage)).length;
-    if (lostTasks && !confirm(`Removing ${removed.length === 1 ? 'that outage' : 'those outages'} also deletes ${lostTasks} task${lostTasks === 1 ? '' : 's'}. Continue?`)) return;
-    for (const id of removed){ delete O.outages[id]; for (const [k, t] of Object.entries(O.tasks)) if (t.outage === id) delete O.tasks[k]; }
+    const lostPkgs = Object.values(O.pkgs).filter(p => removed.includes(p.outage)).length;
+    const lostMan = Object.keys(O.man).filter(k => removed.includes(k.split(':')[0])).length;
+    const lost = [lostTasks && `${lostTasks} task${lostTasks === 1 ? '' : 's'}`, lostPkgs && `${lostPkgs} task package${lostPkgs === 1 ? '' : 's'}`, lostMan && 'its manning'].filter(Boolean);
+    if (lost.length && !confirm(`Removing ${removed.length === 1 ? 'that outage' : 'those outages'} also deletes ${lost.join(', ')}. Continue?`)) return;
+    for (const id of removed){
+      delete O.outages[id];
+      for (const [k, t] of Object.entries(O.tasks)) if (t.outage === id) delete O.tasks[k];
+      for (const [k, p] of Object.entries(O.pkgs)) if (p.outage === id){ delete O.pkgs[k]; for (const d of Object.keys(O.pdone)) if (d.startsWith(k + ':')) delete O.pdone[d]; }
+      for (const k of Object.keys(O.man)) if (k.startsWith(id + ':')) delete O.man[k];
+    }
     for (const r of rows){
       const id = r.id || uid();
       O.outages[id] = Object.assign({}, O.outages[id] || {}, { date: r.date, type: r.type });
@@ -569,14 +993,20 @@
     gate('⏳', 'Loading…', 'Getting your outages and machine.');
     oStore = MMCloud.openStore('outages', { snapshot: oRecords, onChange: onO, onStatus: status });
     mStore = MMCloud.openStore('mymachine', { snapshot: mRecords, onChange: onM, onStatus: status });
-    let od, md;
-    try { [od, md] = await Promise.all([oStore.ready, mStore.ready]); }
+    // Read only here: snapshot hands back exactly what was loaded, and save() is never called on it.
+    tpStore = MMCloud.openStore('task-packages', { snapshot: () => tp, onChange: onTP });
+    let od, md, td;
+    try { [od, md, td] = await Promise.all([oStore.ready, mStore.ready, tpStore.ready]); }
     catch (e) { return gate('⚠️', 'Couldn’t load', (e && e.message ? e.message + ' — ' : '') + 'reload to try again.', { label: 'Reload', fn: () => location.reload() }); }
     for (const [k, v] of Object.entries(md || {})) onM(k, v);
     for (const [k, v] of Object.entries(od || {})) onO(k, v);
+    tp = Object.assign({}, td || {});
     if (!machine)
       return gate('⚙', 'Set up My Machine first', `Outage Planning uses ${session.org.name}’s machine layout and fabric and roll dates from My Machine to show what’s due at each outage.`, { label: 'Open My Machine', href: 'MyMachine.html' });
     render();
+    $('pkgBtn').hidden = !canEdit();
+    let wantPanel = false; try { wantPanel = !!localStorage.getItem('mm-op-panel'); } catch (e) {}
+    if (canEdit() && wantPanel && outages().length) setPanel(true);
     if (!outages().length && canEdit()) openEditor();
   })();
 })();
