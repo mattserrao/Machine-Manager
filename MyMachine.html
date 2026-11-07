@@ -263,7 +263,7 @@
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.2.2';
+  const VERSION = 'v0.2.3';
   const KEY = 'machine-manager-mymachine';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'My Machine ' + VERSION;
@@ -487,14 +487,11 @@
         for (const [list, ry, by] of rows) {
           if (!list.length) continue;
           const xs = list.map((r, i) => x1 - 8 - 42 - i * 84);
-          back.push(`<path class="pipe" d="M${xs[0]} ${ry} L${x0 - GAP - 6} ${ry} L${x0 - GAP - 6} ${ry < Y && twin ? 200 : 336} L${x0 - GAP} ${ry < Y && twin ? 200 : 336}"/>`);
+          back.push(`<path class="pipe" d="M${xs[0]} ${ry} L${x0 - GAP - 6} ${ry} L${x0 - GAP - 6} ${ry < Y && twin ? 200 : 336} L${x0 - GAP - 70} ${ry < Y && twin ? 200 : 336}"/>`);
           list.forEach((r, i) => items.push(refiner(`ref-${r.id}`, r.name, xs[i], ry, by)));
         }
       } else if (s.t === 'former') {
-        // headboxes are part of their ply's section: base ply headbox at the base ply wire, top ply headbox up by the top ply wire
-        back.push(`<path class="hb" d="M${x1-2} 290 L${x1-2} 362 L${x1-44} 362 L${x1-44} 334 L${x1-66} 305 L${x1-66} 299 L${x1-44} 290 Z"/>`);
-        if (twin) back.push(`<path class="hb" d="M${x1-2} 150 L${x1-2} 226 L${x1-44} 226 L${x1-44} 206 L${x1-66} 189 L${x1-66} 183 L${x1-44} 168 L${x1-44} 150 Z"/>`);
-        sheet.push([x1 - 66, Y]);
+        sheet.push([x1 - 70, Y]);
         items.push(belt('form-bottom', x0 + 4, Y + 4, x1 - 70, 410, ['tl', 'tr', 'bl', 'br'], (x0 + 4 + x1 - 70) / 2, 410));
         if (twin) items.push(belt('form-top', x0 + 105, 186, x1 - 70, Y - 4, ['tl', 'tr', 'bl', 'br'], (x0 + 105 + x1 - 70) / 2, 186));
         if (m.former.lumpbreaker) items.push(roll('lumpbreaker', x0 + 40, Y - 4 - 20, 20, x0 + 40, 230));
