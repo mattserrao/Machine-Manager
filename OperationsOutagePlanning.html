@@ -69,6 +69,25 @@
   .card.past{opacity:.8}
   .card.next{outline:2px solid var(--ink);outline-offset:3px}
   .ch{padding:16px 18px 12px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--line)}
+  /* compact (default) vs expanded cards */
+  .card.small{cursor:pointer;transition:box-shadow .15s,transform .15s}
+  .card.small:hover{box-shadow:0 1px 2px rgba(0,0,0,.08),0 14px 30px rgba(0,0,0,.12);transform:translateY(-2px)}
+  .card.small:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+  .card.small .ch{border-bottom:0;padding-bottom:6px}
+  .sum{padding:0 18px 16px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-size:11.5px;font-weight:600;color:#44403c;background:#f5f5f4;border-radius:999px;padding:3px 9px}
+  .chip.warn{color:#b45309;background:#fef3c7}
+  .chip.bad{color:#b91c1c;background:#fee2e2}
+  .sum .peek{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sum .open{font-size:12px;font-weight:500;color:var(--accent);margin-top:8px}
+  .card.big{grid-column:1 / -1;cursor:default}
+  .card.big .body{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+  .card.big .body > .sec + .sec{border-top:0}
+  .card.big .body > .sec{border-left:1px dashed rgba(0,0,0,.12);border-top:0}
+  .card.big .body > .sec:first-child{border-left:0}
+  .shrink{border:1px solid var(--line);background:#fff;border-radius:8px;width:30px;height:30px;display:grid;place-items:center;color:#57534e;flex:none}
+  .shrink:hover{background:#f5f5f4;color:var(--ink)}
   .ch .d{flex:1;min-width:0}
   .ch .wd{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
   .ch .date{font-size:24px;font-weight:600;line-height:1.15;margin-top:1px}
@@ -444,21 +463,57 @@
 
   function card(o, due, cls, isNext){
     const today = todayStr();
-    const c = el('section', 'card' + (o.type === 'annual' ? ' annual' : '') + (cls ? ' ' + cls : '') + (isNext ? ' next' : ''));
+    const big = bigCards.has(o.id);
+    const c = el('section', 'card' + (big ? ' big' : ' small') + (o.type === 'annual' ? ' annual' : '') + (cls ? ' ' + cls : '') + (isNext ? ' next' : ''));
     c.dataset.id = o.id;
+    // Drop a package from the side panel onto the card (compact or expanded).
+    c.addEventListener('dragover', e => { if (canEdit() && e.dataTransfer.types.includes(DND)){ e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; c.classList.add('drop'); } });
+    c.addEventListener('dragleave', e => { if (!c.contains(e.relatedTarget)) c.classList.remove('drop'); });
+    c.addEventListener('drop', e => { c.classList.remove('drop'); const id = e.dataTransfer.getData(DND); if (id){ e.preventDefault(); setBig(o.id, true, true); addPackage(o, id); } });
     // header
     const h = el('div', 'ch'), d = el('div', 'd');
     d.append(el('div', 'wd', fmt(o.date, { weekday: 'long' })), el('div', 'date', fmtLong(o.date)));
     const rel = el('div', 'rel'); const rb = el('b', '', relDay(o.date)); rel.append(rb);
     const tasks = Object.entries(O.tasks).filter(([, t]) => t.outage === o.id).map(([id, t]) => ({ ...t, id })).sort((a, b) => (a.at || 0) - (b.at || 0));
     const open = due.filter(x => !x.changed).length, tdone = tasks.filter(t => t.done).length;
-    rel.append(` · ${open} due · ${tdone}/${tasks.length} tasks done`);
+    if (big) rel.append(` · ${open} due · ${tdone}/${tasks.length} tasks done`);
     d.appendChild(rel);
     const bd = el('div', 'badges');
     const ty = el('span', 'pill', o.type === 'annual' ? 'Annual outage' : 'Outage'); if (o.type === 'annual') ty.style.setProperty('--sc', 'var(--annual)');
     bd.appendChild(ty);
     if (isNext){ const n = el('span', 'pill', 'Next'); n.style.setProperty('--sc', 'var(--ink)'); bd.appendChild(n); }
-    h.append(d, bd); c.appendChild(h);
+    h.append(d, bd);
+    if (big){
+      const x = el('button', 'shrink'); x.title = 'Make smaller'; x.setAttribute('aria-label', 'Make ' + fmtLong(o.date) + ' card smaller');
+      x.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M9.5 2.5v4h4M6.5 13.5v-4h-4M9.5 6.5l4.5-4.5M6.5 9.5L2 14" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      x.addEventListener('click', e => { e.stopPropagation(); setBig(o.id, false); });
+      h.appendChild(x);
+    }
+    c.appendChild(h);
+
+    if (!big){
+      // Compact: a summary; click anywhere to open it up.
+      const pk = Object.entries(O.pkgs).filter(([, k]) => k.outage === o.id);
+      const pkSteps = pk.reduce((t, [, k]) => t + pkgSteps(k), 0), pkDone = pk.reduce((t, [id, k]) => t + pkgDone(id, k), 0);
+      const late = due.filter(x => !x.changed && (x.missed || x.due < o.date)).length;
+      const crewN = SHIFTS.reduce((t, sh) => t + filled(o, sh.k), 0);
+      const sm = el('div', 'sum'), chips = el('div', 'chips');
+      const chip = (t, k) => chips.appendChild(el('span', 'chip' + (k ? ' ' + k : ''), t));
+      chip(`${open} fabric${open === 1 ? '' : 's'}/roll${open === 1 ? '' : 's'} due`, late ? 'bad' : open ? 'warn' : '');
+      chip(`${pk.length} package${pk.length === 1 ? '' : 's'}${pk.length ? ` · ${pkDone}/${pkSteps} steps` : ''}`);
+      chip(`${tdone}/${tasks.length} tasks`);
+      chip(`Manning ${crewN}/${POS.length * SHIFTS.length}`);
+      sm.appendChild(chips);
+      const names = [...due.filter(x => !x.changed).map(x => x.p.name), ...pk.map(([, k]) => k.name)];
+      if (names.length) sm.appendChild(el('div', 'peek', names.join(' · ')));
+      sm.appendChild(el('div', 'open', 'Open outage →'));
+      c.appendChild(sm);
+      c.tabIndex = 0; c.setAttribute('role', 'button'); c.setAttribute('aria-label', `Open the ${fmtLong(o.date)} outage`);
+      c.addEventListener('click', () => setBig(o.id, true, true));
+      c.addEventListener('keydown', e => { if (e.target === c && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); setBig(o.id, true, true); } });
+      return c;
+    }
+    const body = el('div', 'body'); c.appendChild(body);
 
     // fabrics & rolls from My Machine
     const s1 = el('div', 'sec'), sh1 = el('div', 'sh');
@@ -466,9 +521,9 @@
     s1.appendChild(sh1);
     if (!due.length) s1.appendChild(el('div', 'none', 'Nothing due before the next outage.'));
     for (const x of due) s1.appendChild(dueRow(o, x, today));
-    c.appendChild(s1);
+    body.appendChild(s1);
 
-    c.appendChild(pkgSection(o));
+    body.appendChild(pkgSection(o));
 
     // tasks
     const s2 = el('div', 'sec'), sh2 = el('div', 'sh');
@@ -490,14 +545,21 @@
       });
       add.appendChild(inp); s2.appendChild(add);
     }
-    c.appendChild(s2);
-    c.appendChild(manSection(o));
-
-    // Drop a package from the side panel onto the card.
-    c.addEventListener('dragover', e => { if (canEdit() && e.dataTransfer.types.includes(DND)){ e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; c.classList.add('drop'); } });
-    c.addEventListener('dragleave', e => { if (!c.contains(e.relatedTarget)) c.classList.remove('drop'); });
-    c.addEventListener('drop', e => { c.classList.remove('drop'); const id = e.dataTransfer.getData(DND); if (id){ e.preventDefault(); addPackage(o, id); } });
+    // Tasks and manning share a column when the card is wide.
+    const col = el('div', 'sec col'); col.style.padding = '0';
+    s2.style.borderTop = '0'; col.appendChild(s2); col.appendChild(manSection(o));
+    body.appendChild(col);
     return c;
+  }
+  // Which cards are opened up (this browser only).
+  const bigCards = new Set((() => { try { return JSON.parse(localStorage.getItem('mm-op-big')) || []; } catch (e) { return []; } })());
+  function setBig(id, on, scroll){
+    if (on === bigCards.has(id)) return;
+    on ? bigCards.add(id) : bigCards.delete(id);
+    try { localStorage.setItem('mm-op-big', JSON.stringify([...bigCards])); } catch (e) {}
+    render();
+    const c = document.querySelector(`.card[data-id="${id}"]`);
+    if (c){ if (scroll) c.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); if (!on) c.focus({ preventScroll: true }); else { const s = c.querySelector('.shrink'); if (s) s.focus({ preventScroll: true }); } }
   }
 
   function dueRow(o, x, today){
