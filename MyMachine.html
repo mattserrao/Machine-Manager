@@ -79,6 +79,20 @@
   .days{display:inline-block;min-width:54px;text-align:center;font-weight:600;font-size:12px;padding:2px 9px;border-radius:999px;
     background:#f5f5f4;font-variant-numeric:tabular-nums}
   .days.unset{color:#a8a29e;font-weight:500}
+  .days.soon{background:#fde047;color:#713f12}
+  .days.over{background:#dc2626;color:#fff}
+  .left{font-size:11px;color:var(--muted);margin-top:3px;white-space:nowrap}
+  .left.soon{color:#a16207;font-weight:600}
+  .left.over{color:#b91c1c;font-weight:600}
+  tbody tr.soon td{background:#fefce8}
+  tbody tr.over td{background:#fef2f2}
+  tbody tr.soon:hover td{background:#fef9c3}
+  tbody tr.over:hover td{background:#fee2e2}
+  tbody tr.sel td{box-shadow:inset 0 0 0 9999px rgba(37,99,235,.06)}
+  .chip.soon{background:#fef08a;color:#713f12}
+  .chip.over{background:#fee2e2;color:#b91c1c}
+  .legend{display:flex;gap:10px;align-items:center;font-size:11.5px;color:var(--muted)}
+  .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .dt{color:#57534e;font-variant-numeric:tabular-nums;white-space:nowrap}
 
   /* ---------- Diagram (SVG) ---------- */
@@ -99,6 +113,12 @@
   .bdg rect{fill:#fff;stroke:var(--fc);stroke-width:2}
   .bdg text{font-size:19px;font-weight:600;fill:var(--ink);text-anchor:middle;dominant-baseline:central;font-variant-numeric:tabular-nums}
   .bdg.unset text{fill:#a8a29e;font-weight:500}
+  .halo{fill:none;stroke:transparent;stroke-width:18;stroke-linejoin:round;pointer-events:none}
+  .it.soon .halo{stroke:rgba(250,204,21,.55)}
+  .it.over .halo{stroke:rgba(239,68,68,.45)}
+  .it.soon .bdg rect,.it.sel.soon .bdg rect{fill:#fde047;stroke:#ca8a04}
+  .it.over .bdg rect,.it.sel.over .bdg rect{fill:#dc2626;stroke:#991b1b}
+  .it.over .bdg text{fill:#fff}
   .it.sel .bdg rect{stroke:var(--accent);fill:#eff6ff}
   .sec-ln{stroke:#d6d3d1;stroke-width:1.5;fill:none}
   .sec-tx{font-size:15px;font-weight:600;fill:#78716c;text-anchor:middle;letter-spacing:.05em;text-transform:uppercase}
@@ -109,6 +129,12 @@
   .drawer{position:fixed;top:14px;right:14px;bottom:14px;width:360px;z-index:100;display:flex;flex-direction:column;background:#fff;
     border-radius:14px;border:1px solid var(--line);box-shadow:0 24px 60px rgba(0,0,0,.18);overflow:hidden}
   .d-head{display:flex;align-items:center;gap:8px;padding:12px 12px 12px 16px;border-bottom:1px solid var(--line)}
+  .due{border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.45;background:#f5f5f4;color:#44403c}
+  .due b{font-weight:600}
+  .due.soon{background:#fef9c3;color:#713f12;border:1px solid #fde047}
+  .due.over{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+  .fld input[type=number]{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:13px;outline:none;width:96px}
+  .fld input[type=number]:focus{border-color:#a8a29e}
   .d-head .kind{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fc)}
   .d-head .where{font-size:12px;color:var(--muted)}
   .x{border:0;background:transparent;font-size:18px;line-height:1;padding:4px 6px;border-radius:6px;color:rgba(0,0,0,.6);margin-left:auto}
@@ -175,7 +201,8 @@
   <section class="card">
     <div class="card-head">
       <h2>Machine</h2>
-      <span class="md">Click a fabric or roll to set its install date</span>
+      <span class="md">Click a fabric or roll to set its install date and target life</span>
+      <span class="legend"><span><i style="background:#fde047"></i>Due within 6 wks</span><span><i style="background:#dc2626"></i>Overdue</span></span>
       <span class="spacer"></span>
       <span id="summary" class="row"></span>
       <div class="zoom">
@@ -190,11 +217,11 @@
   <div class="tables">
     <section class="card">
       <div class="card-head"><h2>Fabrics</h2></div>
-      <table><thead><tr><th>Position</th><th>Installed</th><th class="r">Days on</th></tr></thead><tbody id="fabRows"></tbody></table>
+      <table><thead><tr><th>Position</th><th>Installed</th><th>Target</th><th class="r">Days on</th></tr></thead><tbody id="fabRows"></tbody></table>
     </section>
     <section class="card">
       <div class="card-head"><h2>Rolls</h2></div>
-      <table><thead><tr><th>Position</th><th>Installed</th><th class="r">Days on</th></tr></thead><tbody id="rollRows"></tbody></table>
+      <table><thead><tr><th>Position</th><th>Installed</th><th>Target</th><th class="r">Days on</th></tr></thead><tbody id="rollRows"></tbody></table>
     </section>
   </div>
   <div id="ver"></div>
@@ -206,7 +233,7 @@
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.1.0';
+  const VERSION = 'v0.2.0';
   const KEY = 'machine-manager-mymachine';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'My Machine ' + VERSION;
@@ -255,6 +282,17 @@
   const parseDay = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
   function daysBetween(a, b){ return Math.round((parseDay(b) - parseDay(a)) / 864e5); }
   function daysOn(id){ const it = S.items[id]; return it && it.installed ? Math.max(0, daysBetween(it.installed, todayStr())) : null; }
+  const WARN_DAYS = 42; // 6 weeks
+  function addDays(s, n){ const d = parseDay(s); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+  function lifeDays(id){ const it = S.items[id]; return it && it.target > 0 ? Math.round(it.target * (it.targetUnit === 'days' ? 1 : 7)) : null; }
+  function status(id){
+    const d = daysOn(id), L = lifeDays(id);
+    if (d == null || L == null) return null;
+    const left = L - d;
+    return { left, due: addDays(S.items[id].installed, L), level: left < 0 ? 'over' : left <= WARN_DAYS ? 'soon' : 'ok' };
+  }
+  const fmtSpan = n => { n = Math.abs(n); return n <= 60 ? `${n} day${n === 1 ? '' : 's'}` : `${Math.round(n / 7)} weeks`; };
+  const fmtTarget = id => { const it = S.items[id]; return it && it.target > 0 ? `${it.target} ${it.targetUnit === 'days' ? 'd' : 'wk'}` : '—'; };
   const fmtDate = s => s ? parseDay(s).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
   const ord = n => n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th');
 
@@ -322,19 +360,19 @@
       const w = Math.max(44, txt.length * 11.5 + 22);
       return `<g class="bdg${d == null ? ' unset' : ''}"><rect x="${bx - w/2}" y="${by - 15}" width="${w}" height="30" rx="15"/><text x="${bx}" y="${by + 0.5}">${txt}</text></g>`;
     };
-    const cls = id => `it ${byId[id].kind}${selected === id ? ' sel' : ''}`;
+    const cls = id => { const st = status(id); return `it ${byId[id].kind}${selected === id ? ' sel' : ''}${st && st.level !== 'ok' ? ' ' + st.level : ''}`; };
     const open = (id) => `<g class="${cls(id)}" data-id="${id}" tabindex="0" role="button" aria-label="${esc(byId[id].name)}" style="--fc:${CAT_COLOR[byId[id].cat]}"><title>${esc(byId[id].name)}</title>`;
     // fabric as a belt (rounded rectangle) with optional corner rolls
     const belt = (id, x0, y0, x1, y1, corners, bx, by) => {
       const r = 24, cr = 9;
-      let s = open(id) + `<rect class="hit" x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="${r}"/>`;
+      let s = open(id) + `<rect class="halo" x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="${r}"/>` + `<rect class="hit" x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="${r}"/>`;
       s += `<rect class="belt" x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="${r}"/>`;
       const pts = { tl: [x0 + r, y0 + r], tr: [x1 - r, y0 + r], bl: [x0 + r, y1 - r], br: [x1 - r, y1 - r] };
       for (const c of corners) s += `<circle class="deco" cx="${pts[c][0]}" cy="${pts[c][1]}" r="${cr}"/>`;
       return s + badge(id, bx, by) + '</g>';
     };
     const roll = (id, cx, cy, r, bx = cx, by = cy) =>
-      open(id) + `<circle class="rl" cx="${cx}" cy="${cy}" r="${r}"/>` + badge(id, bx, by) + '</g>';
+      open(id) + `<circle class="halo" cx="${cx}" cy="${cy}" r="${r + 6}" style="stroke-width:12"/><circle class="rl" cx="${cx}" cy="${cy}" r="${r}"/>` + badge(id, bx, by) + '</g>';
 
     for (const s of segs) {
       const { x0, x1, cx } = s;
@@ -369,7 +407,7 @@
         if (uno) {
           const id = `d${s.s}-felt`;
           const d = `M${x1-6} 307 L${tops[0]} 279 L${bots[0]} 334 L${tops[1]} 279 L${bots[1]} 334 L${tops[2]} 279 L${x0+6} 307 L${x0+6} 392 L${x1-6} 392 Z`;
-          items.push(open(id) + `<path class="hit" d="${d}"/><path class="belt" d="${d}"/>` + badge(id, cx, 392) + '</g>');
+          items.push(open(id) + `<path class="halo" d="${d}"/><path class="hit" d="${d}"/><path class="belt" d="${d}"/>` + badge(id, cx, 392) + '</g>');
         } else {
           items.push(belt(`d${s.s}-felt-top`, x0 + 6, 154, x1 - 6, 207, ['tl', 'tr'], cx, 154));
           items.push(belt(`d${s.s}-felt-bottom`, x0 + 6, 393, x1 - 6, 446, ['bl', 'br'], cx, 446));
@@ -418,17 +456,23 @@
   function renderTables(m){
     const P = positions(m);
     const row = p => {
-      const it = S.items[p.id] || {}, d = daysOn(p.id);
-      return `<tr data-id="${p.id}" class="${selected === p.id ? 'sel' : ''}">
+      const it = S.items[p.id] || {}, d = daysOn(p.id), st = status(p.id), lv = st ? st.level : '';
+      const left = st ? `<div class="left ${lv}">${st.left < 0 ? fmtSpan(st.left) + ' overdue' : st.left === 0 ? 'due today' : fmtSpan(st.left) + ' left'}</div>` : '';
+      return `<tr data-id="${p.id}" class="${selected === p.id ? 'sel ' : ''}${lv}">
         <td><div class="pname" style="--fc:${CAT_COLOR[p.cat]}"><span class="sw"></span>${esc(p.name)}</div><div class="psec">${esc(p.section)}</div></td>
         <td class="dt">${fmtDate(it.installed)}</td>
-        <td class="r"><span class="days${d == null ? ' unset' : ''}">${d == null ? 'not set' : d + ' d'}</span></td></tr>`;
+        <td class="dt">${fmtTarget(p.id)}</td>
+        <td class="r"><span class="days${d == null ? ' unset' : ''} ${lv}">${d == null ? 'not set' : d + ' d'}</span>${left}</td></tr>`;
     };
     $('fabRows').innerHTML = P.filter(p => p.kind === 'fabric').map(row).join('');
     $('rollRows').innerHTML = P.filter(p => p.kind === 'roll').map(row).join('');
     const fab = P.filter(p => p.kind === 'fabric').length, rl = P.length - fab;
     const unset = P.filter(p => daysOn(p.id) == null).length;
+    const over = P.filter(p => (status(p.id) || {}).level === 'over').length;
+    const soon = P.filter(p => (status(p.id) || {}).level === 'soon').length;
     $('summary').innerHTML = `<span class="chip">${fab} fabrics</span><span class="chip">${rl} rolls</span>` +
+      (over ? `<span class="chip over">${over} overdue</span>` : '') +
+      (soon ? `<span class="chip soon">${soon} due within 6 wks</span>` : '') +
       (unset ? `<span class="chip warn">${unset} not set</span>` : '');
     $('machName').textContent = m.name ? `${m.name} · fabric & roll ages` : 'Fabric & roll ages';
   }
@@ -463,6 +507,12 @@
     const it = S.items[id] || {};
     const d = daysOn(id);
     const hist = (it.history || []).slice().reverse();
+    const st = status(id);
+    const dueBox = st
+      ? `<div class="due ${st.level}">${st.level === 'over'
+          ? `<b>Overdue by ${fmtSpan(st.left)}</b><br>Change was due ${fmtDate(st.due)}`
+          : `<b>${st.left === 0 ? 'Due today' : fmtSpan(st.left) + ' left'}</b><br>Change due ${fmtDate(st.due)}`}</div>`
+      : (it.target > 0 ? '<div class="due">Set an install date to see when this is due.</div>' : '');
     openDrawer(`
       <div class="d-head" style="--fc:${CAT_COLOR[p.cat]}">
         <div><div class="kind">${p.kind === 'fabric' ? 'Fabric' : 'Roll'}</div><div class="where">${esc(p.section)}</div></div>
@@ -479,6 +529,15 @@
             ${it.installed ? '<button class="btn sm" data-act="clear">Clear</button>' : ''}
           </div>
         </div>
+        <div class="fld">
+          <label for="tgt">Target life</label>
+          <div class="row">
+            <input id="tgt" type="number" min="1" step="1" inputmode="numeric" value="${it.target > 0 ? it.target : ''}" placeholder="e.g. 26">
+            <select id="tgtUnit"><option value="weeks"${it.targetUnit !== 'days' ? ' selected' : ''}>weeks</option><option value="days"${it.targetUnit === 'days' ? ' selected' : ''}>days</option></select>
+          </div>
+          <span class="hint">Turns yellow within 6 weeks of the target, red once it’s past.</span>
+        </div>
+        ${dueBox}
         <div class="fld">
           <label for="note">Notes</label>
           <textarea id="note" placeholder="Vendor, style, serial number, condition…">${esc(it.note || '')}</textarea>
@@ -497,7 +556,7 @@
 
   function setItem(id, patch){
     const it = S.items[id] = Object.assign({ installed: '', note: '', history: [] }, S.items[id] || {}, patch);
-    if (!it.installed && !it.note && !(it.history || []).length) delete S.items[id];
+    if (!it.installed && !it.note && !(it.target > 0) && !(it.history || []).length) delete S.items[id];
     save();
   }
 
@@ -531,6 +590,10 @@
       let v = e.target.value;
       if (v && v > todayStr()) { v = todayStr(); toast('Install date can’t be in the future'); }
       setItem(drawer.dataset.id, { installed: v }); openItem(drawer.dataset.id);
+    } else if (e.target.id === 'tgt' || e.target.id === 'tgtUnit') {
+      const n = Math.round(Number($('tgt').value));
+      setItem(drawer.dataset.id, { target: n > 0 ? n : 0, targetUnit: $('tgtUnit').value });
+      openItem(drawer.dataset.id);
     }
   });
   drawer.addEventListener('input', e => {
@@ -620,7 +683,10 @@
       machine: S.machine, items: S.items,
       // flattened, human/LLM-readable view of current state (ignored on import)
       positions: P.map(p => ({ id: p.id, name: p.name, type: p.kind, section: p.section,
-        installed: (S.items[p.id] || {}).installed || null, daysOn: daysOn(p.id), note: (S.items[p.id] || {}).note || '' }))
+        installed: (S.items[p.id] || {}).installed || null, daysOn: daysOn(p.id), targetLifeDays: lifeDays(p.id),
+        dueDate: (status(p.id) || {}).due || null, daysLeft: status(p.id) ? status(p.id).left : null,
+        status: status(p.id) ? { ok: 'ok', soon: 'due within 6 weeks', over: 'overdue' }[status(p.id).level] : null,
+        note: (S.items[p.id] || {}).note || '' }))
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
