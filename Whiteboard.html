@@ -261,8 +261,9 @@
     body > *{display:none!important}
     html,body{height:auto;overflow:visible;background:#fff}
     #printArea{display:block!important}
-    #printArea .paper{box-shadow:none;padding:0;max-width:none;aspect-ratio:auto;width:100%}
-    #printArea img{max-height:var(--pmax,6.4in)}
+    #printArea .ppage{box-shadow:none!important;margin:0!important;break-after:page;page-break-after:always}
+    #printArea .ppage:last-child{break-after:auto;page-break-after:auto}
+    #printArea .rpage{width:auto!important;min-height:0!important;padding:0!important;box-shadow:none!important;margin:0!important}
   }
   /* frames */
   .frame{position:absolute;border-radius:14px;border:1.5px solid color-mix(in srgb,var(--fc) 40%,transparent);
@@ -292,28 +293,63 @@
   .seg button{border:0;padding:5px 11px;font-size:12.5px;font-weight:500;background:#fff}
   .seg button + button{border-left:1px solid var(--line)}
   .seg button.on{background:var(--ink);color:#fff}
-  #printDlg .sheet{width:min(860px,100%)}
-  .pd-stage{background:#e7e5e4;border-radius:10px;padding:18px;display:grid;place-items:center;max-height:62vh;overflow:auto}
-  .paper{background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.18);width:100%;padding:28px 30px;overflow:hidden}
-  .paper.landscape{aspect-ratio:11/8.5;max-width:760px}
-  .paper.portrait{aspect-ratio:8.5/11;max-width:470px}
-  .paper.report{aspect-ratio:auto;min-height:300px}
-  .paper img{display:block;max-width:100%;max-height:100%;margin:0 auto}
-  .pp-head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #e7e5e4;padding-bottom:6px;margin-bottom:12px}
-  .pp-head h1{font-size:16px;margin:0}
-  .pp-head span{font-size:10.5px;color:#78716c}
-  .rep{font-size:11.5px;line-height:1.45;color:#1f2328}
-  .rep h2{font-size:12.5px;margin:14px 0 6px;padding:3px 8px;border-radius:5px;background:color-mix(in srgb,var(--fc,#64748b) 12%,#fff);color:color-mix(in srgb,var(--fc,#64748b) 80%,#000);break-after:avoid}
+  #printDlg .sheet{width:min(1080px,100%);max-height:calc(100vh - 30px)}
+  #printDlg .sheet-body{flex-direction:row;gap:16px;align-items:stretch;min-height:0;flex:1;overflow:hidden}
+  .pd-opts{width:250px;flex:none;overflow:auto;display:flex;flex-direction:column;gap:10px;padding-right:4px}
+  .pd-opts h5{margin:6px 0 0;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .pd-opts .orow{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#44403c;font-weight:500}
+  .pd-opts select{border:1px solid var(--line);border-radius:7px;padding:5px 6px;font-size:12.5px;background:#fff}
+  .pd-opts .seg{display:flex}
+  .pd-opts .seg button{flex:1;padding:5px 6px;font-size:12px}
+  .pd-opts .ck{display:flex;align-items:center;gap:7px;font-size:12.5px;color:#292524;cursor:pointer}
+  .pd-opts .ck input{margin:0;accent-color:var(--ink)}
+  .pd-opts [data-only][hidden]{display:none!important}
+  .pd-right{flex:1;display:flex;flex-direction:column;min-width:0;gap:6px}
+  .pd-info{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}
+  .pd-stage{flex:1;background:#d6d3d1;border-radius:10px;padding:18px;overflow:auto;display:flex;flex-direction:column;align-items:center;gap:16px;min-height:300px}
+  .pbreak{position:absolute;left:0;right:0;border-top:1.5px dashed #a8a29e;font-size:9px;color:#a8a29e;text-align:right;padding-right:4px;pointer-events:none;z-index:2}
+  .pwrap{flex:none;position:relative;box-shadow:0 2px 12px rgba(0,0,0,.25);background:#fff}
+  .pwrap > .ppage,.pwrap > .rpage{position:absolute;left:0;top:0;transform-origin:0 0}
+  .ppage{position:relative;background:#fff;overflow:hidden;overflow:clip;contain:strict;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink)}
+  .ppage *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .ph{position:absolute;display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #d6d3d1;padding-bottom:4px}
+  .ph b{font-size:14px;font-weight:600}
+  .ph span,.pf span{font-size:9.5px;color:#78716c}
+  .pf{position:absolute;display:flex;justify-content:space-between;align-items:flex-end}
+  .pvp{position:absolute;overflow:hidden;overflow:clip;contain:strict}
+  .pvp.grid{background-image:radial-gradient(#d6d3d1 1px,transparent 1.2px)}
+  .pworld{position:absolute;left:0;top:0;transform-origin:0 0}
+  .pworld .note{box-shadow:none!important;border:1px solid rgba(0,0,0,.2);transition:none;opacity:1!important;outline:none!important}
+  .pworld .mini{box-shadow:none!important;transition:none}
+  .pworld .frame .frz{display:none}
+  .ink .pworld .frame{background:none!important;border:1.5px solid #a8a29e!important}
+  .ink .pworld .frame .ft{color:#292524!important}
+  .ink .pworld .note,.ink .pworld .mini{background:#fff!important}
+  .ink .pworld .note{border-color:#78716c}
+  .ink .pworld .tucked{background:none!important}
+  .ink .pworld .chip,.ink .pworld .pill{background:none!important;border:1px solid #a8a29e}
+  .ink .pworld .link-label{box-shadow:none}
+  .rpage{background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink)}
+  .rhead{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid #d6d3d1;padding-bottom:5px;margin-bottom:10px}
+  .rhead b{font-size:16px;font-weight:600}
+  .rhead span{font-size:10px;color:#78716c}
+  .rep.sz-s{font-size:10px} .rep.sz-m{font-size:11.5px} .rep.sz-l{font-size:13px}
+  .rep.cols2{column-count:2;column-gap:.3in}
+  .rep.cols2 h2{break-inside:avoid}
+  .ink .rep h2{background:none;border-bottom:1.5px solid #78716c;border-radius:0;color:#1f2328}
+  .ink .rep .rn{border-left-color:#a8a29e}
+  .rep{line-height:1.45;color:#1f2328}
+  .rep h2{font-size:1.1em;margin:14px 0 6px;padding:3px 8px;border-radius:5px;background:color-mix(in srgb,var(--fc,#64748b) 12%,#fff);color:color-mix(in srgb,var(--fc,#64748b) 80%,#000);break-after:avoid}
   .rep .rn{border-left:3px solid var(--nc,#d6d3d1);padding:3px 0 3px 9px;margin:5px 0;break-inside:avoid}
   .rep .rn .rn{margin-left:14px}
-  .rep .rt{font-weight:600}
-  .rep .rs{font-size:10px;font-weight:600;margin-left:6px}
-  .rep .rm{font-size:10.5px;color:#57534e}
+  .rep .rt{font-weight:600;font-size:1.05em}
+  .rep .rs{font-size:.85em;font-weight:600;margin-left:6px}
+  .rep .rm{font-size:.9em;color:#57534e}
   .rep .rm .late{color:#b91c1c;font-weight:600}
   .rep .rl{margin:1px 0}
-  .rep .ra{font-size:10.5px;color:#57534e}
+  .rep .ra{font-size:.9em;color:#57534e}
   .rep .links li{margin:2px 0}
-  .rep .sum{font-size:11px;color:#57534e;margin-bottom:6px}
+  .rep .sum{font-size:.95em;color:#57534e;margin-bottom:6px}
   #printArea{display:none}
 
   @media (max-width:720px){ #search{width:110px} #toolbar .wide{display:none} }
@@ -474,16 +510,45 @@
   <div class="sheet" role="dialog" aria-modal="true" aria-label="Print or save as PDF">
     <div class="sheet-head" style="--c:#fff"><b style="font-size:14px">Print / PDF</b><span class="spacer"></span><button class="x" id="pdClose" aria-label="Close">✕</button></div>
     <div class="sheet-body">
-      <div class="frow">
-        <span class="kbd-hint">Content</span>
-        <div class="seg" id="pdKind"><button data-v="picture">Board picture</button><button data-v="report">Written report</button></div>
-        <span class="kbd-hint" id="pdOrientLbl">Page</span>
-        <div class="seg" id="pdOrient"><button data-v="landscape">Landscape</button><button data-v="portrait">Portrait</button></div>
+      <div class="pd-opts" id="pdOpts">
+        <div class="orow">Content<div class="seg" data-k="kind"><button data-v="picture">Board picture</button><button data-v="report">Written report</button></div></div>
+        <div class="orow">Paper<select data-k="paper">
+          <option value="letter">Letter (8.5 × 11 in)</option><option value="legal">Legal (8.5 × 14 in)</option>
+          <option value="tabloid">Tabloid (11 × 17 in)</option><option value="a4">A4</option><option value="a3">A3</option></select></div>
+        <div class="orow">Orientation<div class="seg" data-k="orient"><button data-v="auto">Auto</button><button data-v="portrait">Portrait</button><button data-v="landscape">Landscape</button></div></div>
+        <div class="orow">Margins<div class="seg" data-k="margin"><button data-v="narrow">Narrow</button><button data-v="normal">Normal</button><button data-v="wide">Wide</button></div></div>
+
+        <h5 data-only="picture">Picture</h5>
+        <div class="orow" data-only="picture">Print area<select data-k="area">
+          <option value="board">Whole board</option><option value="view">What’s on screen now</option>
+          <option value="frames">Each frame on its own page</option><option value="selection">Selected notes</option></select></div>
+        <div class="orow" data-only="picture" id="pdTilesRow">Size<select data-k="tiles">
+          <option value="1x1">Fit on 1 page</option><option value="2x1">Spread over 2 pages (side by side)</option>
+          <option value="1x2">Spread over 2 pages (top to bottom)</option><option value="2x2">Spread over 4 pages (2 × 2)</option>
+          <option value="3x2">Spread over 6 pages (3 × 2)</option></select></div>
+        <label class="ck" data-only="picture"><input type="checkbox" data-k="arrows"> Arrows and labels</label>
+        <label class="ck" data-only="picture"><input type="checkbox" data-k="grid"> Dot grid background</label>
+
+        <h5 data-only="report">Report</h5>
+        <label class="ck" data-only="report"><input type="checkbox" data-k="rGroup"> Group by frame</label>
+        <label class="ck" data-only="report"><input type="checkbox" data-k="rChecks"> Checklist items</label>
+        <label class="ck" data-only="report"><input type="checkbox" data-k="rDone"> Include notes marked Done</label>
+        <label class="ck" data-only="report"><input type="checkbox" data-k="rLinks"> Connections list</label>
+        <div class="orow" data-only="report">Text size<div class="seg" data-k="rSize"><button data-v="s">Small</button><button data-v="m">Medium</button><button data-v="l">Large</button></div></div>
+        <div class="orow" data-only="report">Columns<div class="seg" data-k="rCols"><button data-v="1">One</button><button data-v="2">Two</button></div></div>
+
+        <h5>Page</h5>
+        <label class="ck"><input type="checkbox" data-k="header"> Title and date</label>
+        <label class="ck"><input type="checkbox" data-k="pageNums"> Page numbers</label>
+        <label class="ck"><input type="checkbox" data-k="ink"> Ink saver (no fills or shadows)</label>
       </div>
-      <div class="pd-stage"><div id="pdPaper" class="paper"></div></div>
+      <div class="pd-right">
+        <div class="pd-info"><span id="pdCount"></span><span id="pdNote"></span></div>
+        <div class="pd-stage" id="pdStage"></div>
+      </div>
     </div>
     <div class="sheet-foot">
-      <span class="kbd-hint">To make a PDF, choose “Save as PDF” in the print dialog.</span>
+      <span class="kbd-hint">In the print dialog choose the same paper size, keep Scale at 100%, and pick “Save as PDF” for a PDF.</span>
       <span class="spacer"></span>
       <button class="btn" id="pdCancel">Cancel</button>
       <button class="btn primary" id="pdPrint">Print…</button>
@@ -496,7 +561,7 @@
 </script>
 <script>
 (() => {
-  const VERSION = 'v0.3.0';
+  const VERSION = 'v0.3.1';
   const MAX_TUCK = 3;      // subnotes per note, at every level
   const MAX_DEPTH = 4;     // main note = level 1
   const DEFAULT_W = 236;
@@ -868,6 +933,7 @@
       const hiddenEnd = ea.dataset.id !== l.from || eb.dataset.id !== l.to;
       const path = document.createElementNS(SVGNS, 'path');
       path.setAttribute('d', d); path.setAttribute('class', 'lk' + (on ? ' sel' : '') + (hiddenEnd ? ' hidden' : ''));
+      path.dataset.from = rootOf(N(l.from)).id; path.dataset.to = rootOf(N(l.to)).id;
       if (hiddenEnd){ const tt = document.createElementNS(SVGNS, 'title'); tt.textContent = 'Points into a collapsed stack'; path.appendChild(tt); }
       path.setAttribute('marker-end', on ? 'url(#arrowSel)' : 'url(#arrow)');
       const hit = document.createElementNS(SVGNS, 'path');
@@ -877,6 +943,7 @@
       lg.append(path, hit);
       if (l.label){
         const lb = el('div', 'link-label' + (on ? ' sel' : ''), l.label);
+        lb.dataset.from = rootOf(N(l.from)).id; lb.dataset.to = rootOf(N(l.to)).id;
         lb.style.left = (p1.x + p2.x)/2 + 'px'; lb.style.top = (p1.y + p2.y)/2 + 'px';
         lb.addEventListener('pointerdown', ev => { ev.stopPropagation(); ev.preventDefault(); selectLink(l.id, ev.clientX, ev.clientY); });
         world.appendChild(lb);
@@ -2093,51 +2160,204 @@
     catch (e) { toast('Image export failed: ' + e.message); }
   }
   /* ---------- Print / PDF ---------- */
-  const pd = { kind:'picture', orient:'landscape', png:null };
-  async function openPrint(){
-    closeMenu();
-    pd.png = null;
+  const PAPERS = { letter:[8.5, 11], legal:[8.5, 14], tabloid:[11, 17], a4:[8.27, 11.69], a3:[11.69, 16.54] };
+  const MARGINS = { narrow:.25, normal:.5, wide:.75 };
+  const PO_DEFAULT = { kind:'picture', paper:'letter', orient:'auto', margin:'normal', area:'board', tiles:'1x1',
+    arrows:true, grid:false, header:true, pageNums:true, ink:false,
+    rGroup:true, rChecks:true, rDone:true, rLinks:true, rSize:'m', rCols:'1' };
+  let po = { ...PO_DEFAULT };
+  const PX = 96;   // CSS px per inch
+
+  function openPrint(){
+    closeMenu(); hideLinkPop();
+    po = { ...PO_DEFAULT, ...(app.printOpts || {}) };
+    if (po.area === 'selection' && !sel.size) po.area = 'board';
+    if (po.area === 'frames' && !B.frames.length) po.area = 'board';
     $('printDlg').hidden = false;
     paintPrint();
-    try { pd.png = await boardPNG(); } catch (e) { pd.png = ''; pd.err = e.message; }
-    paintPrint();
   }
-  function closePrint(){ $('printDlg').hidden = true; }
-  function printHead(){
-    const d = new Date().toLocaleString(undefined, { dateStyle:'medium', timeStyle:'short' });
-    return `<div class="pp-head"><h1>${esc(B.name)}</h1><span>Printed ${esc(d)}</span></div>`;
+  function closePrint(){ $('printDlg').hidden = true; $('pdStage').textContent = ''; }
+
+  function syncOpts(){
+    const box = $('pdOpts');
+    box.querySelectorAll('.seg[data-k]').forEach(sg => { for (const b of sg.children) b.classList.toggle('on', String(po[sg.dataset.k]) === b.dataset.v); });
+    box.querySelectorAll('select[data-k]').forEach(x => { x.value = po[x.dataset.k]; });
+    box.querySelectorAll('input[type=checkbox][data-k]').forEach(x => { x.checked = !!po[x.dataset.k]; });
+    box.querySelectorAll('[data-only]').forEach(x => { x.hidden = x.dataset.only !== po.kind; });
+    const areaSel = box.querySelector('select[data-k=area]');
+    areaSel.querySelector('option[value=frames]').disabled = !B.frames.length;
+    areaSel.querySelector('option[value=selection]').disabled = !sel.size;
+    $('pdTilesRow').style.opacity = po.area === 'frames' ? .45 : 1;
+    box.querySelector('select[data-k=tiles]').disabled = po.area === 'frames';
   }
-  function pageContent(){
-    if (pd.kind === 'report') return printHead() + reportHTML();
-    if (pd.png === null) return printHead() + '<p style="color:#78716c;font-size:12px">Rendering board…</p>';
-    if (!pd.png) return printHead() + `<p style="color:#b91c1c;font-size:12px">Couldn’t draw the board: ${esc(pd.err || 'unknown error')}</p>`;
-    return printHead() + `<img src="${pd.png}" alt="Board picture">`;
+  $('pdOpts').addEventListener('click', e => {
+    const b = e.target.closest('.seg[data-k] button'); if (!b) return;
+    po[b.parentElement.dataset.k] = b.dataset.v; app.printOpts = { ...po }; save(); paintPrint();
+  });
+  $('pdOpts').addEventListener('change', e => {
+    const x = e.target; if (!x.dataset.k) return;
+    po[x.dataset.k] = x.type === 'checkbox' ? x.checked : x.value; app.printOpts = { ...po }; save(); paintPrint();
+  });
+
+  function pageSize(landscape){ const [w, h] = PAPERS[po.paper]; return landscape ? [h, w] : [w, h]; }
+
+  // What areas of the board to print: [{ bb, sub, cols, rows }]
+  function pictureJobs(){
+    const pad = 20;
+    const padBox = r => ({ x:r.x - pad, y:r.y - pad, w:r.w + pad*2, h:r.h + pad*2 });
+    const [cols, rows] = po.tiles.split('x').map(Number);
+    if (po.area === 'frames' && B.frames.length){
+      return [...B.frames].sort((a, b) => (a.y - b.y) || (a.x - b.x)).map(f => ({ bb:padBox({ x:f.x, y:f.y, w:f.w, h:f.h }), sub:f.title, cols:1, rows:1, only:new Set(notesInFrame(f).map(n => n.id)), frameId:f.id }));
+    }
+    if (po.area === 'view'){
+      const r = board.getBoundingClientRect();
+      const a = toWorld(r.left, r.top), z = toWorld(r.right, r.bottom);
+      return [{ bb:{ x:a.x, y:a.y, w:z.x - a.x, h:z.y - a.y }, sub:'', cols, rows }];
+    }
+    if (po.area === 'selection' && sel.size){
+      const rs = [...sel].map(id => noteEl(id)).filter(Boolean).map(worldRect);
+      const x1 = Math.min(...rs.map(r => r.x)), y1 = Math.min(...rs.map(r => r.y)), x2 = Math.max(...rs.map(r => r.x + r.w)), y2 = Math.max(...rs.map(r => r.y + r.h));
+      return [{ bb:padBox({ x:x1, y:y1, w:x2 - x1, h:y2 - y1 }), sub:'Selected notes', cols, rows, only:new Set(sel) }];
+    }
+    const bb = contentBox();
+    return bb ? [{ bb:padBox(bb), sub:'', cols, rows }] : [];
   }
+
+  function cleanClone(pageNo, only, frameId){
+    const c = world.cloneNode(true);
+    c.removeAttribute('id'); c.className = 'pworld'; c.style.transform = '';
+    c.querySelectorAll('.rz, .lh, .frz, .lk-hit, .tmp, #tmpLink').forEach(e => e.remove());
+    c.querySelectorAll('.selected, .hit, .dim, .editing, .expanded, .link-target, .file-over').forEach(e => e.classList.remove('selected', 'hit', 'dim', 'editing', 'expanded', 'link-target', 'file-over'));
+    c.querySelectorAll('[id]').forEach(e => { e.id = e.id + '-p' + pageNo; });
+    c.querySelectorAll('[marker-end]').forEach(e => e.setAttribute('marker-end', e.getAttribute('marker-end').replace(/#(\w+)\)/, `#$1-p${pageNo})`)));
+    if (!po.arrows){ c.querySelectorAll('.link-label').forEach(e => e.remove()); const g = c.querySelector('g'); if (g) g.textContent = ''; }
+    if (only){
+      c.querySelectorAll(':scope > .note').forEach(e => { if (!only.has(e.dataset.id)) e.remove(); });
+      c.querySelectorAll(':scope > .frame').forEach(e => { if (e.dataset.id !== frameId) e.remove(); });
+      c.querySelectorAll('.lk, .link-label').forEach(e => { if (!only.has(e.dataset.from) || !only.has(e.dataset.to)) e.remove(); });
+    }
+    return c;
+  }
+
+  // Build print pages for the board picture. Returns { pages:[el], W, H }
+  function buildPicturePages(){
+    const jobs = pictureJobs();
+    if (!jobs.length) return { pages:[], W:0, H:0 };
+    let landscape;
+    if (po.orient === 'auto'){
+      let votes = 0;
+      jobs.forEach(j => { if ((j.bb.w / j.cols) >= (j.bb.h / j.rows)) votes++; });
+      landscape = votes * 2 >= jobs.length;
+    } else landscape = po.orient === 'landscape';
+    const [W, H] = pageSize(landscape);
+    const m = MARGINS[po.margin];
+    const hdr = po.header ? .42 : 0, ftr = po.pageNums ? .3 : 0;
+    const cw = (W - 2*m) * PX, ch = (H - 2*m - hdr - ftr) * PX;
+    const total = jobs.reduce((s, j) => s + j.cols * j.rows, 0);
+    const date = new Date().toLocaleDateString(undefined, { dateStyle:'medium' });
+    const pages = [];
+    let no = 0;
+    for (const j of jobs){
+      let s = Math.min(cw * j.cols / j.bb.w, ch * j.rows / j.bb.h);
+      if (po.area !== 'view') s = Math.min(s, 1.6);
+      const tw = cw / s, th = ch / s;
+      const ox0 = j.bb.x - (j.cols * tw - j.bb.w) / 2, oy0 = j.bb.y - (j.rows * th - j.bb.h) / 2;
+      for (let r = 0; r < j.rows; r++) for (let c = 0; c < j.cols; c++){
+        no++;
+        const pg = el('div', 'ppage' + (po.ink ? ' ink' : ''));
+        pg.style.width = W + 'in'; pg.style.height = H + 'in';
+        if (po.header){
+          const ph = el('div', 'ph');
+          ph.style.left = ph.style.right = m + 'in'; ph.style.top = m + 'in';
+          const tile = j.cols * j.rows > 1 ? `  ·  part ${r * j.cols + c + 1} of ${j.cols * j.rows}` : '';
+          ph.appendChild(el('b', '', B.name + (j.sub ? ' — ' + j.sub : '') + tile));
+          ph.appendChild(el('span', '', date));
+          pg.appendChild(ph);
+        }
+        const vp = el('div', 'pvp' + (po.grid ? ' grid' : ''));
+        vp.style.left = m + 'in'; vp.style.top = (m + hdr) + 'in';
+        vp.style.width = cw + 'px'; vp.style.height = ch + 'px';
+        const ox = ox0 + c * tw, oy = oy0 + r * th;
+        if (po.grid){ vp.style.backgroundSize = `${24 * s}px ${24 * s}px`; vp.style.backgroundPosition = `${-ox * s}px ${-oy * s}px`; }
+        const cl = cleanClone(no, j.only, j.frameId);
+        cl.style.transform = `scale(${s}) translate(${-ox}px,${-oy}px)`;
+        vp.appendChild(cl);
+        pg.appendChild(vp);
+        if (po.pageNums){
+          const pf = el('div', 'pf');
+          pf.style.left = pf.style.right = m + 'in'; pf.style.bottom = m + 'in';
+          pf.appendChild(el('span', '', 'Machine Manager · Whiteboard'));
+          pf.appendChild(el('span', '', `Page ${no} of ${total}`));
+          pg.appendChild(pf);
+        }
+        pages.push(pg);
+      }
+    }
+    return { pages, W, H, landscape };
+  }
+
+  function buildReportPage(){
+    const landscape = po.orient === 'landscape';
+    const [W, H] = pageSize(landscape);
+    const m = MARGINS[po.margin];
+    const pg = el('div', 'rpage' + (po.ink ? ' ink' : ''));
+    pg.style.width = W + 'in'; pg.style.minHeight = H + 'in'; pg.style.padding = m + 'in';
+    let h = '';
+    if (po.header) h += `<div class="rhead"><b>${esc(B.name)}</b><span>Printed ${esc(new Date().toLocaleString(undefined, { dateStyle:'medium', timeStyle:'short' }))}</span></div>`;
+    pg.innerHTML = h + reportHTML(po);
+    return { pages:[pg], W, H, landscape };
+  }
+
   function paintPrint(){
-    for (const b of $('pdKind').children) b.classList.toggle('on', b.dataset.v === pd.kind);
-    for (const b of $('pdOrient').children) b.classList.toggle('on', b.dataset.v === pd.orient);
-    const paper = $('pdPaper');
-    paper.className = 'paper ' + pd.orient + (pd.kind === 'report' ? ' report' : '');
-    paper.innerHTML = pageContent();
-    $('pdPrint').disabled = pd.kind === 'picture' && !pd.png;
+    syncOpts();
+    const stage = $('pdStage'); stage.textContent = '';
+    const out = po.kind === 'report' ? buildReportPage() : buildPicturePages();
+    if (!out.pages.length){ stage.appendChild(el('div', 'kbd-hint', po.area === 'selection' ? 'Select some notes first.' : 'Nothing to print — the board is empty.')); $('pdCount').textContent = ''; $('pdPrint').disabled = true; return; }
+    $('pdPrint').disabled = false;
+    const stageW = Math.max(300, stage.clientWidth - 40);
+    const k = Math.min(1, stageW / (out.W * PX), po.kind === 'picture' ? (stage.clientHeight - 40) / (out.H * PX) : 1);
+    for (const pg of out.pages){
+      const wrap = el('div', 'pwrap');
+      wrap.appendChild(pg);
+      pg.style.transform = `scale(${k})`;
+      stage.appendChild(wrap);
+      const h = po.kind === 'report' ? pg.offsetHeight : out.H * PX;
+      wrap.style.width = (out.W * PX * k) + 'px'; wrap.style.height = (h * k) + 'px';
+      if (po.kind === 'report'){
+        const m = MARGINS[po.margin] * PX * k, step = (out.H * PX - 2 * MARGINS[po.margin] * PX) * k;
+        for (let y = m + step, i = 1; y < h * k - 4; y += step, i++){
+          const g = el('div', 'pbreak', `page ${i + 1}`); g.style.top = y + 'px'; wrap.appendChild(g);
+        }
+      }
+    }
+    const [pw, ph] = PAPERS[po.paper];
+    const paperName = $('pdOpts').querySelector('select[data-k=paper] option:checked').textContent.split(' (')[0];
+    $('pdCount').textContent = po.kind === 'report' ? 'Report — dashed lines show about where pages break' : `${out.pages.length} page${out.pages.length > 1 ? 's' : ''}`;
+    $('pdNote').textContent = `${paperName}, ${out.landscape ? 'landscape' : 'portrait'}`;
+    paintPrint.last = out;
   }
-  $('pdKind').addEventListener('click', e => { const v = e.target.dataset.v; if (v){ pd.kind = v; paintPrint(); } });
-  $('pdOrient').addEventListener('click', e => { const v = e.target.dataset.v; if (v){ pd.orient = v; paintPrint(); } });
+  window.addEventListener('resize', () => { if (!$('printDlg').hidden) paintPrint(); });
+
   $('pdClose').addEventListener('click', closePrint);
   $('pdCancel').addEventListener('click', closePrint);
   $('printDlg').addEventListener('pointerdown', e => { if (e.target.id === 'printDlg') closePrint(); });
   $('pdPrint').addEventListener('click', () => {
-    const area = $('printArea');
-    area.innerHTML = `<div class="paper">${pageContent()}</div>`;
-    $('pageStyle').textContent = `@page{size:letter ${pd.orient};margin:12mm}`;
-    area.style.setProperty('--pmax', pd.orient === 'landscape' ? '6.3in' : '8.9in');
-    const img = area.querySelector('img');
+    const out = po.kind === 'report' ? buildReportPage() : buildPicturePages();
+    if (!out.pages.length) return;
+    const area = $('printArea'); area.textContent = '';
+    out.pages.forEach(p => area.appendChild(p));
+    const m = MARGINS[po.margin];
+    let css = `@page{size:${out.W}in ${out.H}in;margin:${po.kind === 'report' ? m + 'in' : '0'}}`;
+    if (po.kind === 'report' && po.pageNums) css = `@page{size:${out.W}in ${out.H}in;margin:${m}in;@bottom-right{content:"Page " counter(page) " of " counter(pages);font:9px Inter,system-ui,sans-serif;color:#78716c}}`;
+    $('pageStyle').textContent = css;
+    const imgs = [...area.querySelectorAll('img')].filter(i => !i.complete);
     const go = () => { try { window.print(); } catch (e) { toast('Printing isn’t available here.'); } };
-    if (img && !img.complete) img.onload = go; else go();
+    if (imgs.length) Promise.all(imgs.map(i => i.decode().catch(() => {}))).then(go); else go();
   });
-  window.addEventListener('afterprint', () => { $('printArea').innerHTML = ''; });
+  window.addEventListener('afterprint', () => { $('printArea').textContent = ''; });
 
-  function reportHTML(){
+  function reportHTML(o){
+    o = o || PO_DEFAULT;
     const all = Object.values(B.notes);
     const done = all.filter(n => n.status === 'done').length, late = all.filter(isLate).length;
     const rects = {};
@@ -2147,7 +2367,7 @@
     const used = new Set();
     const lineHTML = s => {
       let m;
-      if ((m = /^(\s*)[-*] \[( |x|X)\] ?(.*)$/.exec(s))) return `<div class="rl" style="padding-left:${lineIndent(m[1])*14}px">${m[2] !== ' ' ? '☑' : '☐'} ${inline(m[3])}</div>`;
+      if ((m = /^(\s*)[-*] \[( |x|X)\] ?(.*)$/.exec(s))){ if (!o.rChecks) return ''; return `<div class="rl" style="padding-left:${lineIndent(m[1])*14}px">${m[2] !== ' ' ? '☑' : '☐'} ${inline(m[3])}</div>`; }
       if ((m = /^(\s*)[-*] (.*)$/.exec(s))) return `<div class="rl" style="padding-left:${lineIndent(m[1])*14}px">• ${inline(m[2])}</div>`;
       return s.trim() ? `<div class="rl">${inline(s)}</div>` : '';
     };
@@ -2163,20 +2383,22 @@
       if (meta.length) h += `<div class="rm">${meta.join(' · ')}</div>`;
       h += rest.map(r => lineHTML(r.s)).join('');
       if (n.attachments.length) h += `<div class="ra">📎 ${n.attachments.map(a => esc(a.name)).join(', ')}</div>`;
-      h += n.children.map(c => N(c) ? noteHTML(N(c)) : '').join('');
+      h += n.children.map(c => N(c) && keep(N(c)) ? noteHTML(N(c)) : '').join('');
       return h + '</div>';
     };
-    let out = `<div class="rep"><div class="sum">${all.length} notes · ${done} done${late ? ` · <b style="color:#b91c1c">${late} overdue</b>` : ''}${B.links.length ? ` · ${B.links.length} connections` : ''}</div>`;
-    const frames = [...B.frames].sort((a, b) => (a.y - b.y) || (a.x - b.x));
+    const keep = n => o.rDone || n.status !== 'done';
+    let out = `<div class="rep sz-${o.rSize || 'm'}${o.rCols == 2 ? ' cols2' : ''}"><div class="sum">${all.length} notes · ${done} done${late ? ` · <b style="color:#b91c1c">${late} overdue</b>` : ''}${B.links.length ? ` · ${B.links.length} connections` : ''}</div>`;
+    const frames = o.rGroup ? [...B.frames].sort((a, b) => (a.y - b.y) || (a.x - b.x)) : [];
     for (const f of frames){
       const ns = tops().filter(n => !used.has(n.id) && inFrame(f, n.id)).sort(byPos);
       ns.forEach(n => used.add(n.id));
-      out += `<h2 style="--fc:${f.color}">${esc(f.title || 'Frame')}</h2>` + (ns.length ? ns.map(noteHTML).join('') : '<div class="rm">No notes</div>');
+      const shown = ns.filter(keep);
+      out += `<h2 style="--fc:${f.color}">${esc(f.title || 'Frame')}</h2>` + (shown.length ? shown.map(noteHTML).join('') : '<div class="rm">No notes</div>');
     }
-    const rest = tops().filter(n => !used.has(n.id)).sort(byPos);
+    const rest = tops().filter(n => !used.has(n.id) && keep(n)).sort(byPos);
     if (rest.length) out += (frames.length ? '<h2>Other notes</h2>' : '') + rest.map(noteHTML).join('');
     if (!all.length) out += '<div class="rm">This board is empty.</div>';
-    if (B.links.length){
+    if (o.rLinks && B.links.length){
       const nm = id => esc(parseText(N(id)?.text).title || 'Untitled');
       out += '<h2>Connections</h2><ul class="links">' + B.links.filter(l => N(l.from) && N(l.to)).map(l => `<li>${nm(l.from)} → ${nm(l.to)}${l.label ? ` — <i>${esc(l.label)}</i>` : ''}</li>`).join('') + '</ul>';
     }
