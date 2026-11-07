@@ -1,6 +1,7 @@
 // Machine Manager — machine model shared by My Machine and Operations Outage Planning.
 // Positions (fabrics, rolls, refiner plates) come from the machine setup; an item is the
-// saved state of one position: { installed:'YYYY-MM-DD', target, targetUnit, note, history:[] }.
+// saved state of one position: { installed:'YYYY-MM-DD', target, targetUnit, note, vendor, style, serial,
+// condition:'good'|'wear'|'worn'|'damaged', conditionNote, conditionDate, history:[] }.
 (() => {
   const DEFAULT_MACHINE = {
     name: 'PM1',
@@ -89,15 +90,58 @@
   }
   function lifeDays(it, id){ const t = targetOf(it, id); return t ? Math.round(t.target * (t.unit === 'days' ? 1 : 7)) : null; }
   const dueDate = (it, id) => { const L = lifeDays(it, id); return it && it.installed && L != null ? addDays(it.installed, L) : null; };
-  // A new run starting on `date`: the current run moves into history (same as "Replaced today" in My Machine).
-  function replaced(it, date){
+  // Condition of what's on the machine now. Anything but Good flags it to be changed at the next outage.
+  const CONDITIONS = [
+    { id: 'good', label: 'Good' },
+    { id: 'wear', label: 'Wear' },
+    { id: 'worn', label: 'Worn' },
+    { id: 'damaged', label: 'Damaged' }
+  ];
+  const condLabel = c => (CONDITIONS.find(x => x.id === c) || {}).label || '';
+  const flagged = it => !!(it && it.condition && it.condition !== 'good');
+  // Why a run came off the machine.
+  const REASONS = [
+    { id: 'planned', label: 'Planned – target life' },
+    { id: 'worn', label: 'Worn out' },
+    { id: 'damaged', label: 'Damaged' },
+    { id: 'performance', label: 'Performance / quality' },
+    { id: 'other', label: 'Other' }
+  ];
+  const reasonLabel = r => (REASONS.find(x => x.id === r) || {}).label || '';
+  const defaultReason = it => !flagged(it) ? 'planned' : it.condition === 'damaged' ? 'damaged' : 'worn';
+
+  // A new run starting on `date`: the current run moves into history (same as "Log change-out" in My Machine).
+  // History entry: { installed, removed, days, vendor, style, serial, reason, condition, note }.
+  // `extra` can override the logged entry (reason, condition, note) and the new run (vendor, style, serial).
+  function replaced(it, date, extra = {}){
     it = Object.assign({ installed: '', note: '', history: [] }, it || {});
     const history = (it.history || []).slice();
-    if (it.installed) history.push({ installed: it.installed, removed: date, days: Math.max(0, daysBetween(it.installed, date)) });
-    return Object.assign({}, it, { installed: date, history });
+    if (it.installed) history.push({
+      installed: it.installed, removed: date, days: Math.max(0, daysBetween(it.installed, date)),
+      vendor: it.vendor || '', style: it.style || '', serial: it.serial || '',
+      reason: extra.reason || defaultReason(it),
+      condition: extra.condition || it.condition || 'good',
+      note: extra.note != null ? extra.note : [it.note, it.conditionNote].filter(Boolean).join(' — ')
+    });
+    const next = Object.assign({}, it, {
+      installed: date, history, note: '', condition: 'good', conditionNote: '', conditionDate: '',
+      vendor: extra.vendor != null ? extra.vendor : (it.vendor || ''),
+      style: extra.style != null ? extra.style : (it.style || ''),
+      serial: extra.serial || ''
+    });
+    return next;
+  }
+  // Undo the last change-out: the last history entry becomes the current run again.
+  function unreplaced(it){
+    it = JSON.parse(JSON.stringify(it));
+    const last = (it.history || []).pop();
+    if (!last) return it;
+    return Object.assign(it, { installed: last.installed, vendor: last.vendor || '', style: last.style || '', serial: last.serial || '',
+      condition: last.condition || 'good', conditionNote: '', note: last.note || '' });
   }
 
   window.MMMachine = { DEFAULT_MACHINE, DEFAULT_REFINERS, DEFAULT_TARGET, WARN_DAYS,
-    normalize, sections, positions, targetOf, lifeDays, dueDate, replaced,
+    CONDITIONS, condLabel, flagged, REASONS, reasonLabel, defaultReason,
+    normalize, sections, positions, targetOf, lifeDays, dueDate, replaced, unreplaced,
     todayStr, parseDay, daysBetween, addDays, ord, ymd };
 })();
