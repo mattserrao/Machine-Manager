@@ -263,7 +263,7 @@
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.2.1';
+  const VERSION = 'v0.2.2';
   const KEY = 'machine-manager-mymachine';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'My Machine ' + VERSION;
@@ -433,8 +433,7 @@
     const refCols = Math.max(tpRef.length, bpRef.length);
     const segs = [
       ...(m.refiners.length ? [{ t: 'refiners', w: refCols * 84 + 16, secs: [{ id: 'sec-refiners', label: 'Refiners' }] }] : []),
-      { t: 'headbox', w: 70, plain: 'Headbox' },
-      { t: 'former', w: 300, secs: twin
+      { t: 'former', w: 370, secs: twin
           ? [{ id: 'sec-topply', label: 'Top ply wire', part: 'top' }, { id: 'sec-baseply', label: 'Base ply wire', part: 'bottom' }]
           : [{ id: 'sec-forming', label: 'Forming' }] },
       { t: 'press', w: m.press.nips * 130, secs: [{ id: 'sec-press', label: 'Press section' }] },
@@ -481,7 +480,6 @@
         `<rect class="rf" x="${rx - 28}" y="${ry - 19}" width="56" height="38" rx="9"/><text class="rf-tx" x="${rx}" y="${ry + 1}">${esc(name)}</text>` +
         badge(id, rx, by) + '</g>';
 
-    let hbX1 = null;
     for (const s of segs) {
       const { x0, x1, cx } = s;
       if (s.t === 'refiners') {
@@ -489,16 +487,16 @@
         for (const [list, ry, by] of rows) {
           if (!list.length) continue;
           const xs = list.map((r, i) => x1 - 8 - 42 - i * 84);
-          back.push(`<path class="pipe" d="M${xs[0]} ${ry} L${x0 - GAP - 6} ${ry} L${x0 - GAP - 6} ${ry < Y ? 252 : 332} L${x0 - GAP} ${ry < Y ? 252 : 332}"/>`);
+          back.push(`<path class="pipe" d="M${xs[0]} ${ry} L${x0 - GAP - 6} ${ry} L${x0 - GAP - 6} ${ry < Y && twin ? 200 : 336} L${x0 - GAP} ${ry < Y && twin ? 200 : 336}"/>`);
           list.forEach((r, i) => items.push(refiner(`ref-${r.id}`, r.name, xs[i], ry, by)));
         }
-      } else if (s.t === 'headbox') {
-        hbX1 = x1;
-        back.push(`<path class="hb" d="M${x1} 238 L${x1} 346 L${x0+34} 346 L${x0+34} 318 L${x0+4} 303 L${x0+4} 297 L${x0+34} 270 L${x0+34} 238 Z"/>`);
-        sheet.push([x0 + 4, Y]);
       } else if (s.t === 'former') {
-        items.push(belt('form-bottom', x0 + 4, Y + 4, x1 - 4, 410, ['tl', 'tr', 'bl', 'br'], s.cx, 410));
-        if (twin) items.push(belt('form-top', x0 + 105, 186, x1 - 8, Y - 4, ['tl', 'tr', 'bl', 'br'], (x0 + 105 + x1 - 8) / 2, 186));
+        // headboxes are part of their ply's section: base ply headbox at the base ply wire, top ply headbox up by the top ply wire
+        back.push(`<path class="hb" d="M${x1-2} 290 L${x1-2} 362 L${x1-44} 362 L${x1-44} 334 L${x1-66} 305 L${x1-66} 299 L${x1-44} 290 Z"/>`);
+        if (twin) back.push(`<path class="hb" d="M${x1-2} 150 L${x1-2} 226 L${x1-44} 226 L${x1-44} 206 L${x1-66} 189 L${x1-66} 183 L${x1-44} 168 L${x1-44} 150 Z"/>`);
+        sheet.push([x1 - 66, Y]);
+        items.push(belt('form-bottom', x0 + 4, Y + 4, x1 - 70, 410, ['tl', 'tr', 'bl', 'br'], (x0 + 4 + x1 - 70) / 2, 410));
+        if (twin) items.push(belt('form-top', x0 + 105, 186, x1 - 70, Y - 4, ['tl', 'tr', 'bl', 'br'], (x0 + 105 + x1 - 70) / 2, 186));
         if (m.former.lumpbreaker) items.push(roll('lumpbreaker', x0 + 40, Y - 4 - 20, 20, x0 + 40, 230));
         sheet.push([x0, Y]);
       } else if (s.t === 'press') {
@@ -587,8 +585,8 @@
       if (s.plain) return `<path class="sec-ln" d="M${s.x0} 480 L${s.x0} 486 L${s.x1} 486 L${s.x1} 480"/><text class="sec-tx plain" x="${s.cx}" y="510">${esc(s.plain)}</text>`;
       return s.secs.map(q => {
         const isTop = q.part === 'top';
-        const y0 = isTop ? VB_TOP : q.part === 'bottom' ? Y : VB_TOP, y1 = isTop ? Y : VB_BOT;
-        const lx0 = isTop ? s.x0 + 105 : s.x0, lx1 = isTop ? s.x1 - 8 : s.x1, lcx = (lx0 + lx1) / 2;
+        const y0 = isTop ? VB_TOP : q.part === 'bottom' ? 288 : VB_TOP, y1 = isTop ? 288 : VB_BOT;
+        const lx0 = isTop ? s.x0 + 105 : s.x0, lx1 = isTop ? s.x1 - 2 : s.x1, lcx = (lx0 + lx1) / 2;
         const lbl = isTop
           ? `<path class="sec-ln" d="M${lx0} 160 L${lx0} 154 L${lx1} 154 L${lx1} 160"/><text class="sec-tx" x="${lcx}" y="140">${esc(q.label)}</text>`
           : `<path class="sec-ln" d="M${lx0} 480 L${lx0} 486 L${lx1} 486 L${lx1} 480"/><text class="sec-tx" x="${lcx}" y="510">${esc(q.label)}</text>`;
