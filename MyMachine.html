@@ -10,7 +10,7 @@
   :root{
     --ink:#1f2328; --muted:#6b7280; --line:#e5e7eb; --accent:#2563eb;
     --ok:#16a34a; --bad:#dc2626; --board:#fafaf9; --dot:#d6d3d1;
-    --c-forming:#0891b2; --c-press:#d97706; --c-dryer:#9333ea; --c-roll:#44403c;
+    --c-forming:#0891b2; --c-press:#d97706; --c-dryer:#9333ea; --c-roll:#44403c; --c-refiner:#475569;
     color-scheme:light only;
   }
   *{box-sizing:border-box}
@@ -105,11 +105,27 @@
   .rl{fill:#e7e5e4;stroke:var(--c-roll);stroke-width:2.5;transition:fill .12s}
   .it.roll:hover .rl,.it.roll:focus-visible .rl{fill:#d6d3d1}
   .it.sel .rl{stroke:var(--accent);stroke-width:4;fill:#dbeafe}
-  .deco{fill:#fff;stroke:#a8a29e;stroke-width:2;pointer-events:none}
+  .deco{fill:#fff;stroke:#a8a29e;stroke-width:2}
+  .it:hover .deco{stroke:#78716c}
+  .core{fill:#fff;stroke:#a8a29e;stroke-width:2;pointer-events:none}
+  .rf{fill:#f1f5f9;stroke:var(--c-refiner);stroke-width:2.5;transition:fill .12s}
+  .it.refiner:hover .rf,.it.refiner:focus-visible .rf{fill:#e2e8f0}
+  .it.sel .rf{stroke:var(--accent);stroke-width:3.5;fill:#dbeafe}
+  .rf-tx{font-size:14px;font-weight:600;fill:#334155;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+  .pipe{fill:none;stroke:#d6d3d1;stroke-width:4;stroke-linejoin:round;pointer-events:none}
+  .sec{cursor:pointer}
+  .sec:focus{outline:none}
+  .secbg{fill:transparent;pointer-events:all;transition:fill .12s}
+  .sec:hover .secbg,.sec:focus-visible .secbg{fill:rgba(0,0,0,.028)}
+  .sec.sel .secbg{fill:rgba(37,99,235,.06)}
+  .sec:hover .sec-tx{fill:#44403c}
+  .sec.sel .sec-tx{fill:var(--accent)}
+  .sec.sel .sec-ln{stroke:#93c5fd}
+  .md{pointer-events:none}
   .cyl{fill:#f5f5f4;stroke:#a8a29e;stroke-width:2;pointer-events:none}
-  .hb{fill:#f5f5f4;stroke:#78716c;stroke-width:2;stroke-linejoin:round}
+  .hb{fill:#f5f5f4;stroke:#78716c;stroke-width:2;stroke-linejoin:round;pointer-events:none}
   .sheet-ln{fill:none;stroke:#b45309;stroke-width:2;stroke-linejoin:round;opacity:.8;pointer-events:none}
-  .spool{fill:#f5e6c8;stroke:#a16207;stroke-width:2}
+  .spool{fill:#f5e6c8;stroke:#a16207;stroke-width:2;pointer-events:none}
   .bdg rect{fill:#fff;stroke:var(--fc);stroke-width:2}
   .bdg text{font-size:19px;font-weight:600;fill:var(--ink);text-anchor:middle;dominant-baseline:central;font-variant-numeric:tabular-nums}
   .bdg.unset text{fill:#a8a29e;font-weight:500}
@@ -167,6 +183,16 @@
   .dsec{display:flex;align-items:center;gap:8px}
   .dsec .n{font-size:12px;font-weight:600;color:#57534e;width:62px}
   .dsec select{flex:1;border:1px solid var(--line);border-radius:8px;padding:5px 7px;font-size:12.5px}
+  .slist{display:flex;flex-direction:column;gap:6px}
+  .srow{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:9px;padding:7px 9px 7px 11px;text-align:left;font-size:13px}
+  .srow:hover{background:#fafaf9}
+  .srow.soon{background:#fefce8;border-color:#fde047}
+  .srow.over{background:#fef2f2;border-color:#fca5a5}
+  .srow .sw{width:9px;height:9px;border-radius:50%;background:var(--fc);flex:none}
+  .srow .nm{flex:1;min-width:0;font-weight:500;display:flex;flex-direction:column}
+  .srow .nm small{font-size:11.5px;color:var(--muted);font-weight:400}
+  .dsec input.rname{flex:1;border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:12.5px;outline:none}
+  .dsec input.rname:focus{border-color:#a8a29e}
   .welcome{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5;color:#1e3a8a}
 
   #toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:500;
@@ -201,7 +227,7 @@
   <section class="card">
     <div class="card-head">
       <h2>Machine</h2>
-      <span class="md">Click a fabric or roll to set its install date and target life</span>
+      <span class="md">Click a fabric, roll or refiner to set dates and target life; click a section name for its card</span>
       <span class="legend"><span><i style="background:#fde047"></i>Due within 6 wks</span><span><i style="background:#dc2626"></i>Overdue</span></span>
       <span class="spacer"></span>
       <span id="summary" class="row"></span>
@@ -223,6 +249,10 @@
       <div class="card-head"><h2>Rolls</h2></div>
       <table><thead><tr><th>Position</th><th>Installed</th><th>Target</th><th class="r">Days on</th></tr></thead><tbody id="rollRows"></tbody></table>
     </section>
+    <section class="card" id="refCard">
+      <div class="card-head"><h2>Refiners</h2><span class="md">Plate life</span></div>
+      <table><thead><tr><th>Refiner</th><th>Plates in</th><th>Target</th><th class="r">Days on</th></tr></thead><tbody id="refRows"></tbody></table>
+    </section>
   </div>
   <div id="ver"></div>
 </div>
@@ -233,7 +263,7 @@
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.2.0';
+  const VERSION = 'v0.2.1';
   const KEY = 'machine-manager-mymachine';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'My Machine ' + VERSION;
@@ -243,14 +273,19 @@
     former: { type: 'twin', lumpbreaker: true },
     press: { nips: 2, tandem: true },
     dryers: [{ type: 'uno' }, { type: 'double' }, { type: 'double' }],
-    calender: true
+    calender: true,
+    refiners: null      // filled from DEFAULT_REFINERS
   };
-  const CAT_COLOR = { forming: 'var(--c-forming)', press: 'var(--c-press)', dryer: 'var(--c-dryer)', roll: 'var(--c-roll)' };
+  const DEFAULT_REFINERS = [{ id: 'bp1', name: 'BP 1' }, { id: 'bp2', name: 'BP 2' }, { id: 'tp1', name: 'TP 1' }, { id: 'tp2', name: 'TP 2' }];
+  const DEFAULT_TARGET = { refiner: { target: 12, unit: 'weeks' } };   // plate life
+  const CAT_COLOR = { forming: 'var(--c-forming)', press: 'var(--c-press)', dryer: 'var(--c-dryer)', roll: 'var(--c-roll)', refiner: 'var(--c-refiner)' };
+  const KIND_LABEL = { fabric: 'Fabric', roll: 'Roll', refiner: 'Refiner' };
 
   /* ---------- State & storage ---------- */
   let S = { machine: null, items: {} };
   let draft = null;           // machine config while Setup is open
   let selected = null;        // selected position id
+  let selectedSec = null;     // selected section id
   let zoom = 'fit';
 
   function load(){
@@ -258,7 +293,7 @@
       const raw = localStorage.getItem(KEY);
       if (raw) {
         const d = JSON.parse(raw);
-        if (d && d.machine) S = { machine: d.machine, items: d.items || {} };
+        if (d && d.machine) S = { machine: normalize(d.machine), items: d.items || {} };
       }
     } catch (e) { /* storage unavailable or corrupt: start fresh */ }
   }
@@ -284,7 +319,13 @@
   function daysOn(id){ const it = S.items[id]; return it && it.installed ? Math.max(0, daysBetween(it.installed, todayStr())) : null; }
   const WARN_DAYS = 42; // 6 weeks
   function addDays(s, n){ const d = parseDay(s); d.setDate(d.getDate() + n); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
-  function lifeDays(id){ const it = S.items[id]; return it && it.target > 0 ? Math.round(it.target * (it.targetUnit === 'days' ? 1 : 7)) : null; }
+  function targetOf(id){
+    const it = S.items[id];
+    if (it && it.target > 0) return { target: it.target, unit: it.targetUnit === 'days' ? 'days' : 'weeks', dflt: false };
+    const d = id.startsWith('ref-') ? DEFAULT_TARGET.refiner : null;
+    return d ? { target: d.target, unit: d.unit, dflt: true } : null;
+  }
+  function lifeDays(id){ const t = targetOf(id); return t ? Math.round(t.target * (t.unit === 'days' ? 1 : 7)) : null; }
   function status(id){
     const d = daysOn(id), L = lifeDays(id);
     if (d == null || L == null) return null;
@@ -292,30 +333,47 @@
     return { left, due: addDays(S.items[id].installed, L), level: left < 0 ? 'over' : left <= WARN_DAYS ? 'soon' : 'ok' };
   }
   const fmtSpan = n => { n = Math.abs(n); return n <= 60 ? `${n} day${n === 1 ? '' : 's'}` : `${Math.round(n / 7)} weeks`; };
-  const fmtTarget = id => { const it = S.items[id]; return it && it.target > 0 ? `${it.target} ${it.targetUnit === 'days' ? 'd' : 'wk'}` : '—'; };
+  const fmtTarget = id => { const t = targetOf(id); return t ? `${t.target} ${t.unit === 'days' ? 'd' : 'wk'}` : '—'; };
   const fmtDate = s => s ? parseDay(s).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
   const ord = n => n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th');
 
-  /* ---------- Positions (derived from machine config) ---------- */
+  /* ---------- Positions & sections (derived from machine config) ---------- */
+  function normalize(m){
+    if (!Array.isArray(m.refiners)) m.refiners = clone(DEFAULT_REFINERS);
+    return m;
+  }
+  const twinFormer = m => m.former.type === 'twin';
+  function sections(m){
+    const S2 = [];
+    if (m.refiners.length) S2.push({ id: 'sec-refiners', name: 'Refiners' });
+    if (twinFormer(m)) S2.push({ id: 'sec-topply', name: 'Top ply wire' }, { id: 'sec-baseply', name: 'Base ply wire' });
+    else S2.push({ id: 'sec-forming', name: 'Forming' });
+    S2.push({ id: 'sec-press', name: 'Press section' });
+    m.dryers.forEach((d, i) => S2.push({ id: `sec-dryer-${i + 1}`, name: `${ord(i + 1)} dryer section` }));
+    if (m.calender) S2.push({ id: 'sec-calender', name: 'Calender' });
+    S2.push({ id: 'sec-reel', name: 'Reel' });
+    return S2;
+  }
   function positions(m){
     const P = [];
     const add = (id, name, kind, cat, section) => P.push({ id, name, kind, cat, section });
-    if (m.former.type === 'twin') {
-      add('form-top', 'Top forming fabric', 'fabric', 'forming', 'Forming');
-      add('form-bottom', 'Bottom forming fabric', 'fabric', 'forming', 'Forming');
+    m.refiners.forEach(r => add(`ref-${r.id}`, `${r.name} refiner`, 'refiner', 'refiner', 'Refiners'));
+    if (twinFormer(m)) {
+      add('form-top', 'Top ply forming fabric', 'fabric', 'forming', 'Top ply wire');
+      add('form-bottom', 'Base ply forming fabric', 'fabric', 'forming', 'Base ply wire');
     } else {
       add('form-bottom', 'Forming fabric', 'fabric', 'forming', 'Forming');
     }
-    if (m.former.lumpbreaker) add('lumpbreaker', 'Lumpbreaker roll', 'roll', 'roll', 'Forming');
+    if (m.former.lumpbreaker) add('lumpbreaker', 'Lumpbreaker roll', 'roll', 'roll', twinFormer(m) ? 'Base ply wire' : 'Forming');
     const tandem = m.press.tandem && m.press.nips > 1;
     for (let n = 1; n <= m.press.nips; n++) {
-      add(`p${n}-felt-top`, `${ord(n)} press top felt`, 'fabric', 'press', 'Press');
-      if (!tandem) add(`p${n}-felt-bottom`, `${ord(n)} press bottom felt`, 'fabric', 'press', 'Press');
+      add(`p${n}-felt-top`, `${ord(n)} press top felt`, 'fabric', 'press', 'Press section');
+      if (!tandem) add(`p${n}-felt-bottom`, `${ord(n)} press bottom felt`, 'fabric', 'press', 'Press section');
     }
-    if (tandem) add('p-tandem-felt', 'Tandem felt', 'fabric', 'press', 'Press');
+    if (tandem) add('p-tandem-felt', 'Tandem felt', 'fabric', 'press', 'Press section');
     for (let n = 1; n <= m.press.nips; n++) {
-      add(`p${n}-roll-top`, `${ord(n)} press top roll`, 'roll', 'roll', 'Press');
-      add(`p${n}-roll-bottom`, `${ord(n)} press bottom roll`, 'roll', 'roll', 'Press');
+      add(`p${n}-roll-top`, `${ord(n)} press top roll`, 'roll', 'roll', 'Press section');
+      add(`p${n}-roll-bottom`, `${ord(n)} press bottom roll`, 'roll', 'roll', 'Press section');
     }
     m.dryers.forEach((d, i) => {
       const s = i + 1, sec = `${ord(s)} dryer section`;
@@ -333,27 +391,65 @@
   }
 
   /* ---------- Diagram ---------- */
-  // Laid out in flow order (headbox first) from right to left: headbox on the right, reel on the left.
+  // Laid out in flow order (stock prep first) from right to left: refiners and headbox on the right, reel on the left.
   const Y = 300, PAD = 20, GAP = 18, VB_TOP = 106, VB_BOT = 520;
   let W = 1000;
+  const f1 = n => Math.round(n * 10) / 10;
+  const pt = p => `${f1(p[0])} ${f1(p[1])}`;
+
+  // Path of a belt (fabric or sheet) wrapping a sequence of circles {x,y,r,s}.
+  // s = +1 wraps clockwise on screen, -1 counter-clockwise; r = 0 is a plain point.
+  function wrapPath(cs, closed){
+    const n = cs.length, pairs = closed ? n : n - 1, T = [];
+    for (let i = 0; i < pairs; i++) {
+      const a = cs[i], b = cs[(i + 1) % n];
+      const dx = b.x - a.x, dy = b.y - a.y, L = Math.hypot(dx, dy);
+      const K = a.r * a.s - b.r * b.s;
+      const ph = Math.atan2(dy, dx) + Math.asin(Math.max(-1, Math.min(1, K / L)));
+      const mx = Math.sin(ph), my = -Math.cos(ph);
+      T.push({ p1: [a.x + a.r * a.s * mx, a.y + a.r * a.s * my], p2: [b.x + b.r * b.s * mx, b.y + b.r * b.s * my] });
+    }
+    const arc = (c, from, to) => {
+      if (!c.r) return '';
+      const a1 = Math.atan2(from[1] - c.y, from[0] - c.x), a2 = Math.atan2(to[1] - c.y, to[0] - c.x);
+      let dl = c.s > 0 ? a2 - a1 : a1 - a2;
+      dl = ((dl % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
+      return ` A${c.r} ${c.r} 0 ${dl > Math.PI ? 1 : 0} ${c.s > 0 ? 1 : 0} ${pt(to)}`;
+    };
+    let d = `M${pt(T[0].p1)}`;
+    if (closed) {
+      for (let i = 0; i < n; i++) d += ` L${pt(T[i].p2)}` + arc(cs[(i + 1) % n], T[i].p2, T[(i + 1) % n].p1);
+      return d + ' Z';
+    }
+    for (let i = 0; i < pairs; i++) { if (i > 0) d += arc(cs[i], T[i - 1].p2, T[i].p1); d += ` L${pt(T[i].p2)}`; }
+    return d;
+  }
 
   function buildDiagram(m){
     const P = positions(m), byId = Object.fromEntries(P.map(p => [p.id, p]));
     const tandem = m.press.tandem && m.press.nips > 1;
+    const twin = twinFormer(m);
+    const tpRef = m.refiners.filter(r => /^t/i.test(r.name.trim())), bpRef = m.refiners.filter(r => !/^t/i.test(r.name.trim()));
+    const refCols = Math.max(tpRef.length, bpRef.length);
     const segs = [
-      { t: 'headbox', w: 70, label: 'Headbox' },
-      { t: 'former', w: 300, label: 'Forming' },
-      { t: 'press', w: m.press.nips * 130, label: 'Press' },
-      ...m.dryers.map((d, i) => ({ t: 'dryer', w: 210, d, s: i + 1, label: `Dryer ${i + 1}${d.type === 'uno' ? ' · Unorun' : ''}` })),
-      ...(m.calender ? [{ t: 'calender', w: 90, label: 'Calender' }] : []),
-      { t: 'reel', w: 90, label: 'Reel' }
+      ...(m.refiners.length ? [{ t: 'refiners', w: refCols * 84 + 16, secs: [{ id: 'sec-refiners', label: 'Refiners' }] }] : []),
+      { t: 'headbox', w: 70, plain: 'Headbox' },
+      { t: 'former', w: 300, secs: twin
+          ? [{ id: 'sec-topply', label: 'Top ply wire', part: 'top' }, { id: 'sec-baseply', label: 'Base ply wire', part: 'bottom' }]
+          : [{ id: 'sec-forming', label: 'Forming' }] },
+      { t: 'press', w: m.press.nips * 130, secs: [{ id: 'sec-press', label: 'Press section' }] },
+      ...m.dryers.map((d, i) => ({ t: 'dryer', w: 280, d, s: i + 1, secs: [{ id: `sec-dryer-${i + 1}`, label: `${ord(i + 1)} dryer${d.type === 'uno' ? ' · unorun' : ''}` }] })),
+      ...(m.calender ? [{ t: 'calender', w: 90, secs: [{ id: 'sec-calender', label: 'Calender' }] }] : []),
+      { t: 'reel', w: 90, secs: [{ id: 'sec-reel', label: 'Reel' }] }
     ];
     W = segs.reduce((a, s) => a + s.w, 0) + GAP * (segs.length - 1) + PAD * 2;
     let x = W - PAD;
     for (const s of segs) { s.x1 = x; s.x0 = x - s.w; s.cx = (s.x0 + s.x1) / 2; x = s.x0 - GAP; }
 
-    const back = [], items = [], top = [];
-    const sheet = [];   // sheet path points, flowing right → left
+    const back = [], items = [], top = [], sheetPaths = [];
+    let dryerSheet = null;   // circles the sheet wraps through the dryer sections
+    let sheet = [];   // current straight run of the sheet, flowing right → left
+    const flushSheet = () => { if (sheet.length > 1) sheetPaths.push(`M${sheet.map(pt).join(' L')}`); sheet = []; };
 
     const badge = (id, bx, by) => {
       const d = daysOn(id), txt = d == null ? '—' : `${d} d`;
@@ -362,26 +458,47 @@
     };
     const cls = id => { const st = status(id); return `it ${byId[id].kind}${selected === id ? ' sel' : ''}${st && st.level !== 'ok' ? ' ' + st.level : ''}`; };
     const open = (id) => `<g class="${cls(id)}" data-id="${id}" tabindex="0" role="button" aria-label="${esc(byId[id].name)}" style="--fc:${CAT_COLOR[byId[id].cat]}"><title>${esc(byId[id].name)}</title>`;
+    const deco = (c) => `<circle class="deco" cx="${c.x}" cy="${c.y}" r="${c.r}"/>`;
     // fabric as a belt (rounded rectangle) with optional corner rolls
     const belt = (id, x0, y0, x1, y1, corners, bx, by) => {
       const r = 24, cr = 9;
       let s = open(id) + `<rect class="halo" x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="${r}"/>` + `<rect class="hit" x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="${r}"/>`;
       s += `<rect class="belt" x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="${r}"/>`;
       const pts = { tl: [x0 + r, y0 + r], tr: [x1 - r, y0 + r], bl: [x0 + r, y1 - r], br: [x1 - r, y1 - r] };
-      for (const c of corners) s += `<circle class="deco" cx="${pts[c][0]}" cy="${pts[c][1]}" r="${cr}"/>`;
+      for (const c of corners) s += deco({ x: pts[c][0], y: pts[c][1], r: cr });
       return s + badge(id, bx, by) + '</g>';
+    };
+    // fabric that wraps a list of circles; small felt rolls (r < 12) are drawn as part of it
+    const wrapBelt = (id, cs, bx, by) => {
+      const d = wrapPath(cs, true);
+      return open(id) + `<path class="halo" d="${d}"/><path class="hit" d="${d}"/><path class="belt" d="${d}"/>` +
+        cs.filter(c => c.felt).map(deco).join('') + badge(id, bx, by) + '</g>';
     };
     const roll = (id, cx, cy, r, bx = cx, by = cy) =>
       open(id) + `<circle class="halo" cx="${cx}" cy="${cy}" r="${r + 6}" style="stroke-width:12"/><circle class="rl" cx="${cx}" cy="${cy}" r="${r}"/>` + badge(id, bx, by) + '</g>';
+    const refiner = (id, name, rx, ry, by) =>
+      open(id) + `<rect class="halo" x="${rx - 28}" y="${ry - 19}" width="56" height="38" rx="9"/>` +
+        `<rect class="rf" x="${rx - 28}" y="${ry - 19}" width="56" height="38" rx="9"/><text class="rf-tx" x="${rx}" y="${ry + 1}">${esc(name)}</text>` +
+        badge(id, rx, by) + '</g>';
 
+    let hbX1 = null;
     for (const s of segs) {
       const { x0, x1, cx } = s;
-      if (s.t === 'headbox') {
+      if (s.t === 'refiners') {
+        const rows = [[tpRef, 222, 184], [bpRef, 350, 388]];
+        for (const [list, ry, by] of rows) {
+          if (!list.length) continue;
+          const xs = list.map((r, i) => x1 - 8 - 42 - i * 84);
+          back.push(`<path class="pipe" d="M${xs[0]} ${ry} L${x0 - GAP - 6} ${ry} L${x0 - GAP - 6} ${ry < Y ? 252 : 332} L${x0 - GAP} ${ry < Y ? 252 : 332}"/>`);
+          list.forEach((r, i) => items.push(refiner(`ref-${r.id}`, r.name, xs[i], ry, by)));
+        }
+      } else if (s.t === 'headbox') {
+        hbX1 = x1;
         back.push(`<path class="hb" d="M${x1} 238 L${x1} 346 L${x0+34} 346 L${x0+34} 318 L${x0+4} 303 L${x0+4} 297 L${x0+34} 270 L${x0+34} 238 Z"/>`);
         sheet.push([x0 + 4, Y]);
       } else if (s.t === 'former') {
         items.push(belt('form-bottom', x0 + 4, Y + 4, x1 - 4, 410, ['tl', 'tr', 'bl', 'br'], s.cx, 410));
-        if (m.former.type === 'twin') items.push(belt('form-top', x0 + 105, 186, x1 - 8, Y - 4, ['tl', 'tr', 'bl', 'br'], (x0 + 105 + x1 - 8) / 2, 186));
+        if (twin) items.push(belt('form-top', x0 + 105, 186, x1 - 8, Y - 4, ['tl', 'tr', 'bl', 'br'], (x0 + 105 + x1 - 8) / 2, 186));
         if (m.former.lumpbreaker) items.push(roll('lumpbreaker', x0 + 40, Y - 4 - 20, 20, x0 + 40, 230));
         sheet.push([x0, Y]);
       } else if (s.t === 'press') {
@@ -398,19 +515,57 @@
         }
         sheet.push([x0, Y]);
       } else if (s.t === 'dryer') {
-        const tops = [x1 - 40, x1 - 105, x1 - 170], bots = [x1 - 72, x1 - 137];
-        const uno = s.d.type === 'uno';
-        tops.forEach(tx => back.push(`<circle class="cyl" cx="${tx}" cy="240" r="30"/>`));
-        if (uno) bots.forEach(bx => back.push(`<circle class="cyl" cx="${bx}" cy="353" r="18"/>`));
-        else bots.forEach(bx => back.push(`<circle class="cyl" cx="${bx}" cy="360" r="30"/>`));
-        sheet.push([x1, Y], [tops[0], 272], [bots[0], 328], [tops[1], 272], [bots[1], 328], [tops[2], 272], [x0, Y]);
+        // Traced from the operator's sketch:
+        //  - Sheet runs over the top cans and under the bottom cans (vacuum rolls in the unorun), and dips under a
+        //    transfer roll between sections.
+        //  - Top felt runs over the top cans and dips around felt rolls in the pockets between them; bottom felt runs
+        //    under the bottom cans with a felt roll in the pocket above. Lead rolls at each end, return run outside.
+        //  - Unorun: one felt over the top cans and under the vacuum rolls (sheet outside the felt on the vacuum rolls).
+        const CR = 26, TY = 236, BY = 336, VR = 16, VY = 318;
+        const tops = [x1 - 56, x1 - 140, x1 - 224], bots = [x1 - 98, x1 - 182];
+        const uno = s.d.type === 'uno', last = s.s === m.dryers.length;
+        tops.forEach(tx => back.push(`<circle class="cyl" cx="${tx}" cy="${TY}" r="${CR}"/>`));
+        bots.forEach(bx => back.push(uno ? `<circle class="cyl" cx="${bx}" cy="${VY}" r="${VR}"/>` : `<circle class="cyl" cx="${bx}" cy="${BY}" r="${CR}"/>`));
+        // sheet: one continuous wrap path through all dryer sections
+        if (s.s === 1) { sheet.push([x1, Y]); flushSheet(); dryerSheet = [{ x: x1, y: Y, r: 0, s: 1 }]; }
+        tops.forEach((tx, i) => {
+          dryerSheet.push({ x: tx, y: TY, r: CR + 1.5, s: -1 });
+          if (bots[i] != null) dryerSheet.push(uno ? { x: bots[i], y: VY, r: VR + 6, s: 1 } : { x: bots[i], y: BY, r: CR + 1.5, s: 1 });
+        });
+        const trX = x0 - GAP / 2, trY = 290, trR = 8;
+        back.push(`<circle class="cyl" cx="${trX}" cy="${trY}" r="${trR}"/>`);
+        dryerSheet.push({ x: trX, y: trY, r: trR + 1.5, s: 1 });
+        if (last) {
+          dryerSheet.push({ x: x0 - GAP, y: Y, r: 0, s: 1 });
+          sheetPaths.push(wrapPath(dryerSheet, false));
+          dryerSheet = null;
+          sheet.push([x0 - GAP, Y]);
+        }
+        // felts
+        const FR = CR + 5, fr = (x, y, r, s) => ({ x, y, r, s, felt: true });
         if (uno) {
-          const id = `d${s.s}-felt`;
-          const d = `M${x1-6} 307 L${tops[0]} 279 L${bots[0]} 334 L${tops[1]} 279 L${bots[1]} 334 L${tops[2]} 279 L${x0+6} 307 L${x0+6} 392 L${x1-6} 392 Z`;
-          items.push(open(id) + `<path class="halo" d="${d}"/><path class="hit" d="${d}"/><path class="belt" d="${d}"/>` + badge(id, cx, 392) + '</g>');
+          const cs = [fr(tops[0] + 54, 192, 8, 1)];
+          tops.forEach((tx, i) => {
+            cs.push({ x: tx, y: TY, r: FR, s: -1 });
+            if (bots[i] != null) cs.push({ x: bots[i], y: VY, r: VR + 2.5, s: 1 });
+          });
+          cs.push(fr(tops[2] - 32, 192, 8, 1), fr(tops[2] - 32, 150, 8, 1), fr(tops[0] + 54, 150, 8, 1));
+          items.push(wrapBelt(`d${s.s}-felt`, cs, cx, 142));
         } else {
-          items.push(belt(`d${s.s}-felt-top`, x0 + 6, 154, x1 - 6, 207, ['tl', 'tr'], cx, 154));
-          items.push(belt(`d${s.s}-felt-bottom`, x0 + 6, 393, x1 - 6, 446, ['bl', 'br'], cx, 446));
+          const ct = [fr(tops[0] + 28, 204, 8, 1)];
+          tops.forEach((tx, i) => {
+            ct.push({ x: tx, y: TY, r: FR, s: -1 });
+            if (tops[i + 1] != null) ct.push(fr((tx + tops[i + 1]) / 2, 230, 7, 1));
+          });
+          ct.push(fr(tops[2] - 28, 204, 8, 1), fr(tops[2] - 28, 150, 8, 1), fr(tops[0] + 28, 150, 8, 1));
+          items.push(wrapBelt(`d${s.s}-felt-top`, ct, cx, 142));
+          const cb = [fr(bots[0] + 48, 340, 8, -1)];
+          bots.forEach((bx, i) => {
+            cb.push({ x: bx, y: BY, r: FR, s: 1 });
+            if (bots[i + 1] != null) cb.push(fr((bx + bots[i + 1]) / 2, 342, 7, -1));
+          });
+          cb.push(fr(bots[1] - 48, 340, 8, -1), fr(bots[1] - 48, 430, 8, -1), fr(bots[0] + 48, 430, 8, -1));
+          items.push(wrapBelt(`d${s.s}-felt-bottom`, cb, cx, 438));
         }
       } else if (s.t === 'calender') {
         top.push(roll('cal-top', cx, Y - 30, 30));
@@ -418,18 +573,34 @@
         sheet.push([x0, Y]);
       } else if (s.t === 'reel') {
         back.push(`<circle class="cyl" cx="${cx}" cy="330" r="26"/>`);
-        back.push(`<circle class="spool" cx="${cx}" cy="264" r="40"/><circle class="deco" cx="${cx}" cy="264" r="9"/>`);
-        sheet.push([x1, Y], [cx + 22, 316]);
+        back.push(`<circle class="spool" cx="${cx}" cy="264" r="40"/><circle class="core" cx="${cx}" cy="264" r="9"/>`);
+        sheet.push([x1, Y]); flushSheet();
+        const sr = 41.5, k = Math.SQRT1_2;
+        sheetPaths.push(wrapPath([{ x: x1, y: Y, r: 0, s: 1 }, { x: cx, y: 264, r: sr, s: -1 }], false) + ` A${sr} ${sr} 0 0 0 ${pt([cx - sr * k, 264 - sr * k])}`);
       }
     }
+    flushSheet();
 
-    // section brackets + labels
-    const secs = segs.map(s => `<path class="sec-ln" d="M${s.x0} 480 L${s.x0} 486 L${s.x1} 486 L${s.x1} 480"/><text class="sec-tx" x="${s.cx}" y="510">${esc(s.label)}</text>`).join('');
+    // clickable sections (background hit areas + brackets/labels)
+    const secName = Object.fromEntries(sections(m).map(q => [q.id, q.name]));
+    const secs = segs.map(s => {
+      if (s.plain) return `<path class="sec-ln" d="M${s.x0} 480 L${s.x0} 486 L${s.x1} 486 L${s.x1} 480"/><text class="sec-tx plain" x="${s.cx}" y="510">${esc(s.plain)}</text>`;
+      return s.secs.map(q => {
+        const isTop = q.part === 'top';
+        const y0 = isTop ? VB_TOP : q.part === 'bottom' ? Y : VB_TOP, y1 = isTop ? Y : VB_BOT;
+        const lx0 = isTop ? s.x0 + 105 : s.x0, lx1 = isTop ? s.x1 - 8 : s.x1, lcx = (lx0 + lx1) / 2;
+        const lbl = isTop
+          ? `<path class="sec-ln" d="M${lx0} 160 L${lx0} 154 L${lx1} 154 L${lx1} 160"/><text class="sec-tx" x="${lcx}" y="140">${esc(q.label)}</text>`
+          : `<path class="sec-ln" d="M${lx0} 480 L${lx0} 486 L${lx1} 486 L${lx1} 480"/><text class="sec-tx" x="${lcx}" y="510">${esc(q.label)}</text>`;
+        return `<g class="sec${selectedSec === q.id ? ' sel' : ''}" data-sec="${q.id}" tabindex="0" role="button" aria-label="${esc(secName[q.id])}"><title>${esc(secName[q.id])}</title>` +
+          `<rect class="secbg" x="${s.x0 - GAP / 2}" y="${y0}" width="${s.w + GAP}" height="${y1 - y0}" rx="10"/>${lbl}</g>`;
+      }).join('');
+    }).join('');
     // machine direction arrow (top-left, pointing left)
-    const md = `<path class="md-arrow" d="M${PAD} 124 l16 -9 v6 h56 v6 h-56 v6 z"/><text class="md-tx" x="${PAD + 82}" y="125" dominant-baseline="central">Machine direction</text>`;
-    const sheetPath = `<path class="sheet-ln" d="M${sheet.map(p => p.join(' ')).join(' L')}"/>`;
+    const md = `<g class="md"><path class="md-arrow" d="M${PAD} 124 l16 -9 v6 h56 v6 h-56 v6 z"/><text class="md-tx" x="${PAD + 82}" y="125" dominant-baseline="central">Machine direction</text></g>`;
+    const sheetSvg = sheetPaths.map(d => `<path class="sheet-ln" d="${d}"/>`).join('');
 
-    return `<g>${secs}${md}</g><g>${back.join('')}</g><g>${items.join('')}</g>${sheetPath}<g>${top.join('')}</g>`;
+    return `<g>${secs}</g>${md}<g>${back.join('')}</g>${sheetSvg}<g>${items.join('')}</g><g>${top.join('')}</g>`;
   }
 
   function renderDiagram(m){
@@ -466,11 +637,14 @@
     };
     $('fabRows').innerHTML = P.filter(p => p.kind === 'fabric').map(row).join('');
     $('rollRows').innerHTML = P.filter(p => p.kind === 'roll').map(row).join('');
-    const fab = P.filter(p => p.kind === 'fabric').length, rl = P.length - fab;
+    const refs = P.filter(p => p.kind === 'refiner');
+    $('refCard').hidden = !refs.length;
+    $('refRows').innerHTML = refs.map(row).join('');
+    const fab = P.filter(p => p.kind === 'fabric').length, rl = P.filter(p => p.kind === 'roll').length, rf = P.length - fab - rl;
     const unset = P.filter(p => daysOn(p.id) == null).length;
     const over = P.filter(p => (status(p.id) || {}).level === 'over').length;
     const soon = P.filter(p => (status(p.id) || {}).level === 'soon').length;
-    $('summary').innerHTML = `<span class="chip">${fab} fabrics</span><span class="chip">${rl} rolls</span>` +
+    $('summary').innerHTML = `<span class="chip">${fab} fabrics</span><span class="chip">${rl} rolls</span>` + (rf ? `<span class="chip">${rf} refiners</span>` : '') +
       (over ? `<span class="chip over">${over} overdue</span>` : '') +
       (soon ? `<span class="chip soon">${soon} due within 6 wks</span>` : '') +
       (unset ? `<span class="chip warn">${unset} not set</span>` : '');
@@ -478,7 +652,7 @@
   }
 
   function renderAll(){
-    const m = draft || S.machine || DEFAULT_MACHINE;
+    const m = draft || S.machine || normalize(clone(DEFAULT_MACHINE));
     renderDiagram(m);
     renderTables(m);
   }
@@ -494,7 +668,7 @@
     drawer.hidden = true; drawer.innerHTML = '';
     document.body.classList.remove('drawer-open');
     if (draft) { draft = null; }
-    selected = null;
+    selected = null; selectedSec = null;
     renderAll();
   }
 
@@ -502,9 +676,9 @@
     if (draft) return; // Setup is open
     const p = positions(S.machine).find(q => q.id === id);
     if (!p) return;
-    selected = id;
+    selected = id; selectedSec = null;
     renderAll();
-    const it = S.items[id] || {};
+    const it = S.items[id] || {}, tg = targetOf(id), isRef = p.kind === 'refiner';
     const d = daysOn(id);
     const hist = (it.history || []).slice().reverse();
     const st = status(id);
@@ -512,17 +686,17 @@
       ? `<div class="due ${st.level}">${st.level === 'over'
           ? `<b>Overdue by ${fmtSpan(st.left)}</b><br>Change was due ${fmtDate(st.due)}`
           : `<b>${st.left === 0 ? 'Due today' : fmtSpan(st.left) + ' left'}</b><br>Change due ${fmtDate(st.due)}`}</div>`
-      : (it.target > 0 ? '<div class="due">Set an install date to see when this is due.</div>' : '');
+      : (tg ? `<div class="due">Set ${isRef ? 'the plate install date' : 'an install date'} to see when ${isRef ? 'plates are' : 'this is'} due.</div>` : '');
     openDrawer(`
       <div class="d-head" style="--fc:${CAT_COLOR[p.cat]}">
-        <div><div class="kind">${p.kind === 'fabric' ? 'Fabric' : 'Roll'}</div><div class="where">${esc(p.section)}</div></div>
+        <div><div class="kind">${KIND_LABEL[p.kind]}</div><div class="where">${esc(p.section)}</div></div>
         <button class="x" data-act="close" aria-label="Close">✕</button>
       </div>
       <div class="d-body">
         <h3>${esc(p.name)}</h3>
-        <div class="big${d == null ? ' unset' : ''}">${d == null ? '<b>No install date</b>' : `<b>${d}</b><span>day${d === 1 ? '' : 's'} on machine</span>`}</div>
+        <div class="big${d == null ? ' unset' : ''}">${d == null ? `<b>No ${isRef ? 'plate ' : ''}install date</b>` : `<b>${d}</b><span>day${d === 1 ? '' : 's'} on ${isRef ? 'plates' : 'machine'}</span>`}</div>
         <div class="fld">
-          <label for="inst">Installed</label>
+          <label for="inst">${isRef ? 'Plates installed' : 'Installed'}</label>
           <div class="row">
             <input id="inst" type="date" value="${it.installed || ''}" max="${todayStr()}">
             <button class="btn sm" data-act="today">Today</button>
@@ -530,12 +704,12 @@
           </div>
         </div>
         <div class="fld">
-          <label for="tgt">Target life</label>
+          <label for="tgt">${isRef ? 'Target plate life' : 'Target life'}</label>
           <div class="row">
-            <input id="tgt" type="number" min="1" step="1" inputmode="numeric" value="${it.target > 0 ? it.target : ''}" placeholder="e.g. 26">
-            <select id="tgtUnit"><option value="weeks"${it.targetUnit !== 'days' ? ' selected' : ''}>weeks</option><option value="days"${it.targetUnit === 'days' ? ' selected' : ''}>days</option></select>
+            <input id="tgt" type="number" min="1" step="1" inputmode="numeric" value="${tg ? tg.target : ''}" placeholder="e.g. 26">
+            <select id="tgtUnit"><option value="weeks"${!tg || tg.unit === 'weeks' ? ' selected' : ''}>weeks</option><option value="days"${tg && tg.unit === 'days' ? ' selected' : ''}>days</option></select>
           </div>
-          <span class="hint">Turns yellow within 6 weeks of the target, red once it’s past.</span>
+          <span class="hint">Turns yellow within 6 weeks of the target, red once it’s past.${tg && tg.dflt ? ' Default for refiner plates is 12 weeks.' : ''}</span>
         </div>
         ${dueBox}
         <div class="fld">
@@ -544,14 +718,45 @@
         </div>
         ${it.installed ? `<div class="fld">
           <span class="lbl">Changed out</span>
-          <div class="row"><button class="btn danger" data-act="replace">Replaced today</button></div>
+          <div class="row"><button class="btn danger" data-act="replace">${isRef ? 'Plates changed today' : 'Replaced today'}</button></div>
           <span class="hint">Logs the current run below and restarts the count from today.</span>
         </div>` : ''}
-        ${hist.length ? `<div class="fld"><span class="lbl">Previous runs</span><div class="hist">${hist.map((h, i) =>
+        ${hist.length ? `<div class="fld"><span class="lbl">${isRef ? 'Previous plate sets' : 'Previous runs'}</span><div class="hist">${hist.map((h, i) =>
           `<div class="hrow"><span class="tt">${fmtDate(h.installed)} → ${fmtDate(h.removed)} · <b>${h.days} d</b></span><button class="rm" data-act="delhist" data-i="${hist.length - 1 - i}" title="Remove">✕</button></div>`).join('')}</div></div>` : ''}
       </div>`);
     drawer.dataset.mode = 'item';
     drawer.dataset.id = id;
+  }
+
+  function openSection(secId){
+    if (draft) return; // Setup is open
+    const m = S.machine, sec = sections(m).find(q => q.id === secId);
+    if (!sec) return;
+    selected = null; selectedSec = secId;
+    renderAll();
+    const P = positions(m).filter(p => p.section === sec.name);
+    const over = P.filter(p => (status(p.id) || {}).level === 'over').length;
+    const soon = P.filter(p => (status(p.id) || {}).level === 'soon').length;
+    const rows = P.map(p => {
+      const d = daysOn(p.id), st = status(p.id), lv = st ? st.level : '';
+      const left = st ? (st.left < 0 ? fmtSpan(st.left) + ' overdue' : st.left === 0 ? 'due today' : fmtSpan(st.left) + ' left') : '';
+      return `<button class="srow ${lv}" data-act="item" data-id="${p.id}" style="--fc:${CAT_COLOR[p.cat]}">
+        <span class="sw"></span><span class="nm">${esc(p.name)}<small>${KIND_LABEL[p.kind]}${left ? ' · ' + left : ''}</small></span>
+        <span class="days${d == null ? ' unset' : ''} ${lv}">${d == null ? 'not set' : d + ' d'}</span></button>`;
+    }).join('');
+    openDrawer(`
+      <div class="d-head">
+        <div><div class="kind" style="color:var(--ink)">Section</div><div class="where">${esc(m.name || '')}</div></div>
+        <button class="x" data-act="close" aria-label="Close">✕</button>
+      </div>
+      <div class="d-body">
+        <h3>${esc(sec.name)}</h3>
+        ${over || soon ? `<div class="row">${over ? `<span class="chip over">${over} overdue</span>` : ''}${soon ? `<span class="chip soon">${soon} due within 6 wks</span>` : ''}</div>` : ''}
+        ${P.length ? `<div class="fld"><span class="lbl">Tracked here</span><div class="slist">${rows}</div></div>` : '<span class="hint">Nothing tracked in this section yet.</span>'}
+        <span class="hint">More for this section is coming in a later version.</span>
+      </div>`);
+    drawer.dataset.mode = 'section';
+    drawer.dataset.id = secId;
   }
 
   function setItem(id, patch){
@@ -566,18 +771,19 @@
     const act = b.dataset.act, id = drawer.dataset.id;
     if (act === 'close') return closeDrawer();
     if (drawer.dataset.mode === 'setup') return setupAction(act, b);
+    if (act === 'item') return openItem(b.dataset.id);
     if (act === 'today') { setItem(id, { installed: todayStr() }); openItem(id); }
     else if (act === 'clear') { setItem(id, { installed: '' }); openItem(id); }
     else if (act === 'replace') {
       if (!b.classList.contains('armed')) {
         b.classList.add('armed'); b.textContent = 'Click again to confirm';
-        clearTimeout(armTimer); armTimer = setTimeout(() => { b.classList.remove('armed'); b.textContent = 'Replaced today'; }, 3000);
+        clearTimeout(armTimer); armTimer = setTimeout(() => { b.classList.remove('armed'); b.textContent = drawer.dataset.id.startsWith('ref-') ? 'Plates changed today' : 'Replaced today'; }, 3000);
         return;
       }
       const it = S.items[id], t = todayStr();
       const history = (it.history || []).concat([{ installed: it.installed, removed: t, days: Math.max(0, daysBetween(it.installed, t)) }]);
       setItem(id, { installed: t, history });
-      toast('New run started today');
+      toast(id.startsWith('ref-') ? 'New plate set started today' : 'New run started today');
       openItem(id);
     } else if (act === 'delhist') {
       const history = (S.items[id].history || []).slice(); history.splice(+b.dataset.i, 1);
@@ -606,7 +812,7 @@
   function openSetup(first){
     firstRun = !!first;
     selected = null;
-    draft = clone(S.machine || DEFAULT_MACHINE);
+    draft = normalize(clone(S.machine || DEFAULT_MACHINE));
     drawer.dataset.mode = 'setup';
     drawSetup();
     renderAll();
@@ -623,9 +829,14 @@
       <div class="d-body">
         ${firstRun ? '<div class="welcome"><b>Welcome.</b> Lay out your machine below; the diagram updates as you go. You can change this any time from <b>Setup</b>.</div>' : ''}
         <div class="fld"><label for="mName">Machine name</label><input id="mName" type="text" value="${esc(m.name)}" placeholder="PM1"></div>
+        <div class="group" style="--fc:var(--c-refiner)"><h4><span class="sw"></span>Refiners</h4>
+          ${m.refiners.map((r, i) => `<div class="dsec"><input type="text" class="rname" data-ref="${i}" value="${esc(r.name)}" placeholder="e.g. TP 1"><button class="ib" data-act="delref" data-i="${i}" title="Remove refiner">✕</button></div>`).join('')}
+          <div><button class="btn sm" data-act="addref"${m.refiners.length >= 8 ? ' disabled' : ''}>+ Add refiner</button></div>
+          <span class="hint">Names starting with T are drawn in the top row (top ply), the rest below (base ply). Plate life target defaults to 12 weeks.</span>
+        </div>
         <div class="group" style="--fc:var(--c-forming)"><h4><span class="sw"></span>Forming</h4>
           <div class="fld"><select id="fType">
-            <option value="twin"${m.former.type === 'twin' ? ' selected' : ''}>Top &amp; bottom formers</option>
+            <option value="twin"${m.former.type === 'twin' ? ' selected' : ''}>Top ply &amp; base ply wires</option>
             <option value="fourdrinier"${m.former.type === 'fourdrinier' ? ' selected' : ''}>Single forming fabric</option></select></div>
           <label class="ck"><input id="fLump" type="checkbox"${m.former.lumpbreaker ? ' checked' : ''}> Lumpbreaker roll</label>
         </div>
@@ -654,6 +865,7 @@
   function setupChange(e){
     const t = e.target, m = draft;
     if (t.id === 'mName') { m.name = t.value; renderTables(m); return; }
+    if (t.dataset.ref != null) { m.refiners[+t.dataset.ref].name = t.value; renderAll(); return; }
     if (e.type === 'input') return;
     if (t.id === 'fType') m.former.type = t.value;
     else if (t.id === 'fLump') m.former.lumpbreaker = t.checked;
@@ -664,14 +876,17 @@
     drawSetup(); renderAll();
   }
   function setupAction(act, b){
+    if (act === 'addref') { draft.refiners.push({ id: 'r' + Date.now().toString(36), name: '' }); drawSetup(); renderAll(); const ins = drawer.querySelectorAll('.rname'); if (ins.length) ins[ins.length - 1].focus(); return; }
+    if (act === 'delref') { draft.refiners.splice(+b.dataset.i, 1); drawSetup(); renderAll(); return; }
     if (act === 'adddry') { draft.dryers.push({ type: 'double' }); drawSetup(); renderAll(); }
     else if (act === 'deldry') { draft.dryers.splice(+b.dataset.i, 1); drawSetup(); renderAll(); }
     else if (act === 'savesetup') {
       draft.name = (draft.name || '').trim() || 'PM1';
+      draft.refiners.forEach((r, i) => { r.name = (r.name || '').trim() || `Refiner ${i + 1}`; });
       S.machine = draft; save();
       const wasFirst = firstRun; firstRun = false;
       closeDrawer();
-      toast(wasFirst ? 'Machine created. Click any fabric or roll to set its install date.' : 'Machine updated');
+      toast(wasFirst ? 'Machine created. Click any fabric, roll or refiner to set its install date.' : 'Machine updated');
     }
   }
 
@@ -700,7 +915,7 @@
       const d = JSON.parse(await file.text());
       if (!d || !d.machine || !d.machine.press || !Array.isArray(d.machine.dryers)) throw new Error('bad');
       const prev = clone(S);
-      S = { machine: d.machine, items: d.items || {} };
+      S = { machine: normalize(d.machine), items: d.items || {} };
       if (draft) { draft = null; }
       drawer.hidden = true; document.body.classList.remove('drawer-open'); selected = null;
       save(); renderAll();
@@ -721,15 +936,16 @@
 
   /* ---------- Events ---------- */
   $('diagram').addEventListener('click', e => {
-    const g = e.target.closest('.it');
+    const g = e.target.closest('.it'), sg = e.target.closest('.sec');
     if (g) openItem(g.dataset.id);
+    else if (sg) openSection(sg.dataset.sec);
     else if (!draft && !drawer.hidden) closeDrawer();
   });
   $('diagram').addEventListener('keydown', e => {
-    const g = e.target.closest('.it');
-    if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openItem(g.dataset.id); }
+    const g = e.target.closest('.it'), sg = e.target.closest('.sec');
+    if ((g || sg) && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); g ? openItem(g.dataset.id) : openSection(sg.dataset.sec); }
   });
-  ['fabRows', 'rollRows'].forEach(id => $(id).addEventListener('click', e => {
+  ['fabRows', 'rollRows', 'refRows'].forEach(id => $(id).addEventListener('click', e => {
     const tr = e.target.closest('tr[data-id]'); if (tr) openItem(tr.dataset.id);
   }));
   $('setupBtn').onclick = () => openSetup(false);
@@ -745,7 +961,7 @@
   new ResizeObserver(() => { if (zoom === 'fit') applyZoom(); }).observe($('diagramScroll'));
   // Day counts roll over at midnight: refresh when the window comes back into view.
   let lastDay = todayStr();
-  const refreshDay = () => { if (todayStr() !== lastDay) { lastDay = todayStr(); renderAll(); if (drawer.dataset.mode === 'item' && !drawer.hidden) openItem(drawer.dataset.id); } };
+  const refreshDay = () => { if (todayStr() !== lastDay) { lastDay = todayStr(); renderAll(); if (!drawer.hidden && drawer.dataset.mode === 'item') openItem(drawer.dataset.id); else if (!drawer.hidden && drawer.dataset.mode === 'section') openSection(drawer.dataset.id); } };
   window.addEventListener('focus', refreshDay);
   setInterval(refreshDay, 60000);
 
