@@ -438,7 +438,7 @@
           ? [{ id: 'sec-topply', label: 'Top ply wire', part: 'top' }, { id: 'sec-baseply', label: 'Base ply wire', part: 'bottom' }]
           : [{ id: 'sec-forming', label: 'Forming' }] },
       { t: 'press', w: m.press.nips * 130, secs: [{ id: 'sec-press', label: 'Press section' }] },
-      ...m.dryers.map((d, i) => ({ t: 'dryer', w: 256, d, s: i + 1, secs: [{ id: `sec-dryer-${i + 1}`, label: `${ord(i + 1)} dryer${d.type === 'uno' ? ' · unorun' : ''}` }] })),
+      ...m.dryers.map((d, i) => ({ t: 'dryer', w: 280, d, s: i + 1, secs: [{ id: `sec-dryer-${i + 1}`, label: `${ord(i + 1)} dryer${d.type === 'uno' ? ' · unorun' : ''}` }] })),
       ...(m.calender ? [{ t: 'calender', w: 90, secs: [{ id: 'sec-calender', label: 'Calender' }] }] : []),
       { t: 'reel', w: 90, secs: [{ id: 'sec-reel', label: 'Reel' }] }
     ];
@@ -447,6 +447,7 @@
     for (const s of segs) { s.x1 = x; s.x0 = x - s.w; s.cx = (s.x0 + s.x1) / 2; x = s.x0 - GAP; }
 
     const back = [], items = [], top = [], sheetPaths = [];
+    let dryerSheet = null;   // circles the sheet wraps through the dryer sections
     let sheet = [];   // current straight run of the sheet, flowing right → left
     const flushSheet = () => { if (sheet.length > 1) sheetPaths.push(`M${sheet.map(pt).join(' L')}`); sheet = []; };
 
@@ -514,51 +515,57 @@
         }
         sheet.push([x0, Y]);
       } else if (s.t === 'dryer') {
-        // Three top cans, two bottom cans (vacuum rolls for unorun). The sheet runs between the rows:
-        // under the top cans, over the bottom cans, with open draws between them.
-        // Top felt wraps the bottom of the top cans (felt rolls above, in the pockets); bottom felt wraps the
-        // top of the bottom cans (felt rolls below). Unorun: top felt only.
+        // Traced from the operator's sketch:
+        //  - Sheet runs over the top cans and under the bottom cans (vacuum rolls in the unorun), and dips under a
+        //    transfer roll between sections.
+        //  - Top felt runs over the top cans and dips around felt rolls in the pockets between them; bottom felt runs
+        //    under the bottom cans with a felt roll in the pocket above. Lead rolls at each end, return run outside.
+        //  - Unorun: one felt over the top cans and under the vacuum rolls (sheet outside the felt on the vacuum rolls).
         const CR = 26, TY = 236, BY = 336, VR = 16, VY = 318;
-        const tops = [x1 - 44, x1 - 128, x1 - 212], bots = [x1 - 86, x1 - 170];
-        const uno = s.d.type === 'uno';
+        const tops = [x1 - 56, x1 - 140, x1 - 224], bots = [x1 - 98, x1 - 182];
+        const uno = s.d.type === 'uno', last = s.s === m.dryers.length;
         tops.forEach(tx => back.push(`<circle class="cyl" cx="${tx}" cy="${TY}" r="${CR}"/>`));
         bots.forEach(bx => back.push(uno ? `<circle class="cyl" cx="${bx}" cy="${VY}" r="${VR}"/>` : `<circle class="cyl" cx="${bx}" cy="${BY}" r="${CR}"/>`));
-        // sheet: arcs along the felted side of each can, open draws between rows
-        sheet.push([x1, Y]); flushSheet();
-        const SR = CR + 1.5, BR = uno ? VR + 4 : CR + 1.5, BYc = uno ? VY : BY, k = Math.SQRT1_2;
-        let sp = `M${x1} ${Y}`;
+        // sheet: one continuous wrap path through all dryer sections
+        if (s.s === 1) { sheet.push([x1, Y]); flushSheet(); dryerSheet = [{ x: x1, y: Y, r: 0, s: 1 }]; }
         tops.forEach((tx, i) => {
-          sp += ` L${pt([tx + SR * k, TY + SR * k])} A${SR} ${SR} 0 0 1 ${pt([tx - SR * k, TY + SR * k])}`;   // under the top can
-          if (bots[i] != null) {
-            const bx = bots[i];
-            sp += ` L${pt([bx + BR * k, BYc - BR * k])} A${BR} ${BR} 0 0 0 ${pt([bx - BR * k, BYc - BR * k])}`;   // over the bottom can
-          }
+          dryerSheet.push({ x: tx, y: TY, r: CR + 1.5, s: -1 });
+          if (bots[i] != null) dryerSheet.push(uno ? { x: bots[i], y: VY, r: VR + 6, s: 1 } : { x: bots[i], y: BY, r: CR + 1.5, s: 1 });
         });
-        sp += ` L${x0} ${Y}`;
-        sheetPaths.push(sp);
-        sheet.push([x0, Y]);
+        const trX = x0 - GAP / 2, trY = 290, trR = 8;
+        back.push(`<circle class="cyl" cx="${trX}" cy="${trY}" r="${trR}"/>`);
+        dryerSheet.push({ x: trX, y: trY, r: trR + 1.5, s: 1 });
+        if (last) {
+          dryerSheet.push({ x: x0 - GAP, y: Y, r: 0, s: 1 });
+          sheetPaths.push(wrapPath(dryerSheet, false));
+          dryerSheet = null;
+          sheet.push([x0 - GAP, Y]);
+        }
         // felts
         const FR = CR + 5, fr = (x, y, r, s) => ({ x, y, r, s, felt: true });
-        const topLoop = () => {
-          const cs = [fr(x1 - 8, 258, 8, 1)];
-          tops.forEach((tx, i) => {
-            cs.push({ x: tx, y: TY, r: FR, s: 1 });
-            if (bots[i] != null) cs.push(fr((tx + tops[i + 1]) / 2, 192, 9, -1));
-          });
-          cs.push(fr(x0 + 8, 258, 8, 1), fr(x0 + 8, 160, 8, 1), fr(x1 - 8, 160, 8, 1));
-          return cs;
-        };
         if (uno) {
-          items.push(wrapBelt(`d${s.s}-felt`, topLoop(), cx, 152));
-        } else {
-          items.push(wrapBelt(`d${s.s}-felt-top`, topLoop(), cx, 152));
-          const cs = [fr(x1 - 30, 312, 8, -1)];
-          bots.forEach((bx, i) => {
-            cs.push({ x: bx, y: BY, r: FR, s: -1 });
-            if (bots[i + 1] != null) cs.push(fr((bx + bots[i + 1]) / 2, 384, 9, 1));
+          const cs = [fr(tops[0] + 54, 192, 8, 1)];
+          tops.forEach((tx, i) => {
+            cs.push({ x: tx, y: TY, r: FR, s: -1 });
+            if (bots[i] != null) cs.push({ x: bots[i], y: VY, r: VR + 2.5, s: 1 });
           });
-          cs.push(fr(x0 + 30, 312, 8, -1), fr(x0 + 30, 430, 8, -1), fr(x1 - 30, 430, 8, -1));
-          items.push(wrapBelt(`d${s.s}-felt-bottom`, cs, cx, 438));
+          cs.push(fr(tops[2] - 32, 192, 8, 1), fr(tops[2] - 32, 150, 8, 1), fr(tops[0] + 54, 150, 8, 1));
+          items.push(wrapBelt(`d${s.s}-felt`, cs, cx, 142));
+        } else {
+          const ct = [fr(tops[0] + 28, 204, 8, 1)];
+          tops.forEach((tx, i) => {
+            ct.push({ x: tx, y: TY, r: FR, s: -1 });
+            if (tops[i + 1] != null) ct.push(fr((tx + tops[i + 1]) / 2, 230, 7, 1));
+          });
+          ct.push(fr(tops[2] - 28, 204, 8, 1), fr(tops[2] - 28, 150, 8, 1), fr(tops[0] + 28, 150, 8, 1));
+          items.push(wrapBelt(`d${s.s}-felt-top`, ct, cx, 142));
+          const cb = [fr(bots[0] + 48, 340, 8, -1)];
+          bots.forEach((bx, i) => {
+            cb.push({ x: bx, y: BY, r: FR, s: 1 });
+            if (bots[i + 1] != null) cb.push(fr((bx + bots[i + 1]) / 2, 342, 7, -1));
+          });
+          cb.push(fr(bots[1] - 48, 340, 8, -1), fr(bots[1] - 48, 430, 8, -1), fr(bots[0] + 48, 430, 8, -1));
+          items.push(wrapBelt(`d${s.s}-felt-bottom`, cb, cx, 438));
         }
       } else if (s.t === 'calender') {
         top.push(roll('cal-top', cx, Y - 30, 30));
@@ -567,7 +574,9 @@
       } else if (s.t === 'reel') {
         back.push(`<circle class="cyl" cx="${cx}" cy="330" r="26"/>`);
         back.push(`<circle class="spool" cx="${cx}" cy="264" r="40"/><circle class="core" cx="${cx}" cy="264" r="9"/>`);
-        sheet.push([x1, Y], [cx + 22, 316]);
+        sheet.push([x1, Y]); flushSheet();
+        const sr = 41.5, k = Math.SQRT1_2;
+        sheetPaths.push(wrapPath([{ x: x1, y: Y, r: 0, s: 1 }, { x: cx, y: 264, r: sr, s: -1 }], false) + ` A${sr} ${sr} 0 0 0 ${pt([cx - sr * k, 264 - sr * k])}`);
       }
     }
     flushSheet();
