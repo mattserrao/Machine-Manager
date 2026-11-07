@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Machine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1f2328; --muted:#6b7280; --line:#e5e7eb; --accent:#2563eb;
+    --ok:#16a34a; --bad:#dc2626; --board:#fafaf9; --dot:#d6d3d1;
+    --c-forming:#0891b2; --c-press:#d97706; --c-dryer:#9333ea; --c-roll:#44403c;
+    color-scheme:light only;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;min-height:100%;color:var(--ink);
+    font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;
+    background-color:var(--board);
+    background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:24px 24px}
+  button{font:inherit;color:inherit;cursor:pointer;background-color:#fff}
+  textarea,input,select{background-color:#fff;color:var(--ink);font:inherit}
+  [hidden]{display:none!important}
+
+  .wrap{padding:14px 14px 60px;transition:margin-right .18s}
+  body.drawer-open .wrap{margin-right:388px}
+
+  /* ---------- Chrome (matches Whiteboard) ---------- */
+  .bar{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);
+    border-radius:12px;padding:6px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+  .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .brand{padding:6px 12px 6px 6px;gap:10px;text-decoration:none;color:inherit}
+  .brand:hover{box-shadow:0 2px 14px rgba(0,0,0,.10)}
+  .logo{width:28px;height:28px;border-radius:8px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px}
+  .brand h1{margin:0;font-size:15px;font-weight:600;line-height:1.2}
+  .brand p{margin:0;font-size:11.5px;color:var(--muted)}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 11px;font-size:13px;font-weight:500;white-space:nowrap}
+  .btn:hover{background:#f5f5f4}
+  .btn:disabled{opacity:.4;cursor:default;background:#fff}
+  .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .btn.primary:hover{background:#000}
+  .btn.danger{color:var(--bad);border-color:#fecaca}
+  .btn.danger:hover{background:#fef2f2}
+  .btn.danger.armed{background:var(--bad);color:#fff;border-color:var(--bad)}
+  .btn.sm{padding:4px 9px;font-size:12px}
+  .ib{border:0;background:transparent;border-radius:7px;padding:5px 8px;font-size:14px;line-height:1;color:#44403c}
+  .ib:hover{background:#f5f5f4}
+  .sep{width:1px;height:20px;background:var(--line);margin:0 2px}
+  #saveState{font-size:11px;color:var(--muted);padding:0 6px;min-width:44px}
+  #zoomPct{font-size:12px;min-width:44px;text-align:center;font-variant-numeric:tabular-nums;border:0;background:transparent;border-radius:6px;padding:4px}
+  #zoomPct:hover{background:#f5f5f4}
+  #ver{text-align:right;margin-top:18px;font-size:10.5px;color:rgba(0,0,0,.28);letter-spacing:.02em}
+
+  /* ---------- Cards ---------- */
+  .card{background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,.07);
+    box-shadow:0 1px 2px rgba(0,0,0,.06),0 6px 16px rgba(0,0,0,.07)}
+  .card-head{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .card-head h2{margin:0;font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .md{font-size:12px;color:var(--muted);font-weight:500}
+  .spacer{flex:1}
+  .chip{font-size:11px;padding:2px 8px;background:rgba(0,0,0,.06);border-radius:999px;font-weight:500;color:#44403c;white-space:nowrap}
+  .chip.warn{background:#fef3c7;color:#92400e}
+  .zoom{display:flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:9px;padding:2px}
+
+  #diagramScroll{overflow:auto;padding:8px 0 4px}
+  #diagram{display:block;margin:0 auto}
+
+  .tables{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;margin-top:14px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:8px 12px 6px 16px}
+  th.r,td.r{text-align:right}
+  td{padding:8px 12px 8px 16px;border-top:1px solid #f1f1f0;vertical-align:middle}
+  tbody tr{cursor:pointer}
+  tbody tr:hover td{background:#fafaf9}
+  tbody tr.sel td{background:#eff6ff}
+  .pname{font-weight:500;display:flex;align-items:center;gap:8px}
+  .pname .sw{width:9px;height:9px;border-radius:50%;background:var(--fc);flex:none}
+  .psec{font-size:11.5px;color:var(--muted);margin-left:17px}
+  .days{display:inline-block;min-width:54px;text-align:center;font-weight:600;font-size:12px;padding:2px 9px;border-radius:999px;
+    background:#f5f5f4;font-variant-numeric:tabular-nums}
+  .days.unset{color:#a8a29e;font-weight:500}
+  .dt{color:#57534e;font-variant-numeric:tabular-nums;white-space:nowrap}
+
+  /* ---------- Diagram (SVG) ---------- */
+  .it{cursor:pointer}
+  .it:focus{outline:none}
+  .belt{fill:none;stroke:var(--fc);stroke-width:5;stroke-linejoin:round;transition:stroke-width .12s}
+  .hit{fill:none;stroke:transparent;stroke-width:20;pointer-events:stroke;stroke-linejoin:round}
+  .it:hover .belt,.it:focus-visible .belt{stroke-width:7.5}
+  .it.sel .belt{stroke:var(--accent);stroke-width:7.5}
+  .rl{fill:#e7e5e4;stroke:var(--c-roll);stroke-width:2.5;transition:fill .12s}
+  .it.roll:hover .rl,.it.roll:focus-visible .rl{fill:#d6d3d1}
+  .it.sel .rl{stroke:var(--accent);stroke-width:4;fill:#dbeafe}
+  .deco{fill:#fff;stroke:#a8a29e;stroke-width:2;pointer-events:none}
+  .cyl{fill:#f5f5f4;stroke:#a8a29e;stroke-width:2;pointer-events:none}
+  .hb{fill:#f5f5f4;stroke:#78716c;stroke-width:2;stroke-linejoin:round}
+  .sheet-ln{fill:none;stroke:#b45309;stroke-width:2;stroke-linejoin:round;opacity:.8;pointer-events:none}
+  .spool{fill:#f5e6c8;stroke:#a16207;stroke-width:2}
+  .bdg rect{fill:#fff;stroke:var(--fc);stroke-width:2}
+  .bdg text{font-size:19px;font-weight:600;fill:var(--ink);text-anchor:middle;dominant-baseline:central;font-variant-numeric:tabular-nums}
+  .bdg.unset text{fill:#a8a29e;font-weight:500}
+  .it.sel .bdg rect{stroke:var(--accent);fill:#eff6ff}
+  .sec-ln{stroke:#d6d3d1;stroke-width:1.5;fill:none}
+  .sec-tx{font-size:15px;font-weight:600;fill:#78716c;text-anchor:middle;letter-spacing:.05em;text-transform:uppercase}
+  .md-arrow{fill:#a8a29e}
+  .md-tx{font-size:15px;font-weight:500;fill:#a8a29e}
+
+  /* ---------- Drawer ---------- */
+  .drawer{position:fixed;top:14px;right:14px;bottom:14px;width:360px;z-index:100;display:flex;flex-direction:column;background:#fff;
+    border-radius:14px;border:1px solid var(--line);box-shadow:0 24px 60px rgba(0,0,0,.18);overflow:hidden}
+  .d-head{display:flex;align-items:center;gap:8px;padding:12px 12px 12px 16px;border-bottom:1px solid var(--line)}
+  .d-head .kind{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--fc)}
+  .d-head .where{font-size:12px;color:var(--muted)}
+  .x{border:0;background:transparent;font-size:18px;line-height:1;padding:4px 6px;border-radius:6px;color:rgba(0,0,0,.6);margin-left:auto}
+  .x:hover{background:rgba(0,0,0,.07)}
+  .d-body{padding:16px;overflow:auto;display:flex;flex-direction:column;gap:16px;flex:1}
+  .d-foot{display:flex;gap:8px;align-items:center;padding:12px 14px;border-top:1px solid var(--line)}
+  .d-body h3{margin:0;font-size:18px;font-weight:600;line-height:1.3}
+  .big{display:flex;align-items:baseline;gap:8px}
+  .big b{font-size:40px;font-weight:600;line-height:1;font-variant-numeric:tabular-nums}
+  .big span{font-size:13px;color:var(--muted)}
+  .big.unset b{font-size:22px;color:#a8a29e;font-weight:500}
+  .fld{display:flex;flex-direction:column;gap:6px}
+  .fld > label,.lbl{font-size:12px;color:var(--muted);font-weight:500}
+  .fld input[type=text],.fld input[type=date],.fld select,.fld textarea{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:13px;outline:none}
+  .fld input:focus,.fld select:focus,.fld textarea:focus{border-color:#a8a29e}
+  .fld textarea{min-height:80px;resize:vertical;line-height:1.45}
+  .row{display:flex;gap:8px;align-items:center}
+  .ck{display:flex;align-items:center;gap:8px;font-size:13px}
+  .ck input{margin:0;accent-color:var(--ink)}
+  .ck.dis{opacity:.45}
+  .hint{font-size:11.5px;color:var(--muted);line-height:1.45}
+  .hist{display:flex;flex-direction:column;gap:6px}
+  .hrow{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 6px 6px 10px;font-size:12.5px}
+  .hrow .tt{flex:1;color:#44403c}
+  .hrow .rm{border:0;background:transparent;font-size:13px;color:#a8a29e;padding:2px 6px;border-radius:5px}
+  .hrow .rm:hover{color:var(--bad);background:#fef2f2}
+  .group{border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+  .group h4{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .group h4 .sw{width:9px;height:9px;border-radius:50%;background:var(--fc)}
+  .dsec{display:flex;align-items:center;gap:8px}
+  .dsec .n{font-size:12px;font-weight:600;color:#57534e;width:62px}
+  .dsec select{flex:1;border:1px solid var(--line);border-radius:8px;padding:5px 7px;font-size:12.5px}
+  .welcome{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5;color:#1e3a8a}
+
+  #toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:500;
+    background:var(--ink);color:#fff;font-size:13px;padding:9px 14px;border-radius:9px;transition:.2s;pointer-events:none;max-width:90vw}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.act{pointer-events:auto}
+  #toast button{margin-left:12px;border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:6px;padding:3px 9px;font-weight:600;font-size:12px}
+
+  @media (max-width:820px){
+    body.drawer-open .wrap{margin-right:0}
+    .drawer{left:14px;width:auto}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a class="bar brand" href="index.html" title="Back to tools">
+      <div class="logo">MM</div>
+      <div><h1>My Machine</h1><p id="machName">—</p></div>
+    </a>
+    <div class="bar">
+      <button id="setupBtn" class="btn">⚙ Setup</button>
+      <span class="sep"></span>
+      <button id="exportBtn" class="btn">Export</button>
+      <button id="importBtn" class="btn">Import</button>
+      <input id="importFile" type="file" accept="application/json,.json" hidden>
+      <span id="saveState"></span>
+    </div>
+  </div>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Machine</h2>
+      <span class="md">Click a fabric or roll to set its install date</span>
+      <span class="spacer"></span>
+      <span id="summary" class="row"></span>
+      <div class="zoom">
+        <button class="ib" id="zoomOut" title="Zoom out" aria-label="Zoom out">−</button>
+        <button id="zoomPct" title="Fit to width">Fit</button>
+        <button class="ib" id="zoomIn" title="Zoom in" aria-label="Zoom in">+</button>
+      </div>
+    </div>
+    <div id="diagramScroll"><svg id="diagram" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Paper machine diagram"></svg></div>
+  </section>
+
+  <div class="tables">
+    <section class="card">
+      <div class="card-head"><h2>Fabrics</h2></div>
+      <table><thead><tr><th>Position</th><th>Installed</th><th class="r">Days on</th></tr></thead><tbody id="fabRows"></tbody></table>
+    </section>
+    <section class="card">
+      <div class="card-head"><h2>Rolls</h2></div>
+      <table><thead><tr><th>Position</th><th>Installed</th><th class="r">Days on</th></tr></thead><tbody id="rollRows"></tbody></table>
+    </section>
+  </div>
+  <div id="ver"></div>
+</div>
+
+<aside id="drawer" class="drawer" hidden></aside>
+<div id="toast"></div>
+
+<script>
+(() => {
+  'use strict';
+  const VERSION = 'v0.1.0';
+  const KEY = 'machine-manager-mymachine';
+  const $ = id => document.getElementById(id);
+  $('ver').textContent = 'My Machine ' + VERSION;
+
+  const DEFAULT_MACHINE = {
+    name: 'PM1',
+    former: { type: 'twin', lumpbreaker: true },
+    press: { nips: 2, tandem: true },
+    dryers: [{ type: 'uno' }, { type: 'double' }, { type: 'double' }],
+    calender: true
+  };
+  const CAT_COLOR = { forming: 'var(--c-forming)', press: 'var(--c-press)', dryer: 'var(--c-dryer)', roll: 'var(--c-roll)' };
+
+  /* ---------- State & storage ---------- */
+  let S = { machine: null, items: {} };
+  let draft = null;           // machine config while Setup is open
+  let selected = null;        // selected position id
+  let zoom = 'fit';
+
+  function load(){
+    try {
+      const raw = localStorage.getItem(KEY);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && d.machine) S = { machine: d.machine, items: d.items || {} };
+      }
+    } catch (e) { /* storage unavailable or corrupt: start fresh */ }
+  }
+  let saveTimer;
+  function save(){
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ version: VERSION, saved: new Date().toISOString(), machine: S.machine, items: S.items }));
+      $('saveState').textContent = 'Saved';
+      clearTimeout(saveTimer); saveTimer = setTimeout(() => $('saveState').textContent = '', 1600);
+    } catch (e) {
+      $('saveState').textContent = 'Not saved';
+      toast('Could not save in this browser. Use Export to keep a copy.');
+    }
+  }
+  const clone = o => JSON.parse(JSON.stringify(o));
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+  /* ---------- Dates ---------- */
+  const pad = n => String(n).padStart(2, '0');
+  const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+  const parseDay = s => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+  function daysBetween(a, b){ return Math.round((parseDay(b) - parseDay(a)) / 864e5); }
+  function daysOn(id){ const it = S.items[id]; return it && it.installed ? Math.max(0, daysBetween(it.installed, todayStr())) : null; }
+  const fmtDate = s => s ? parseDay(s).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+  const ord = n => n + (n === 1 ? 'st' : n === 2 ? 'nd' : n === 3 ? 'rd' : 'th');
+
+  /* ---------- Positions (derived from machine config) ---------- */
+  function positions(m){
+    const P = [];
+    const add = (id, name, kind, cat, section) => P.push({ id, name, kind, cat, section });
+    if (m.former.type === 'twin') {
+      add('form-top', 'Top forming fabric', 'fabric', 'forming', 'Forming');
+      add('form-bottom', 'Bottom forming fabric', 'fabric', 'forming', 'Forming');
+    } else {
+      add('form-bottom', 'Forming fabric', 'fabric', 'forming', 'Forming');
+    }
+    if (m.former.lumpbreaker) add('lumpbreaker', 'Lumpbreaker roll', 'roll', 'roll', 'Forming');
+    const tandem = m.press.tandem && m.press.nips > 1;
+    for (let n = 1; n <= m.press.nips; n++) {
+      add(`p${n}-felt-top`, `${ord(n)} press top felt`, 'fabric', 'press', 'Press');
+      if (!tandem) add(`p${n}-felt-bottom`, `${ord(n)} press bottom felt`, 'fabric', 'press', 'Press');
+    }
+    if (tandem) add('p-tandem-felt', 'Tandem felt', 'fabric', 'press', 'Press');
+    for (let n = 1; n <= m.press.nips; n++) {
+      add(`p${n}-roll-top`, `${ord(n)} press top roll`, 'roll', 'roll', 'Press');
+      add(`p${n}-roll-bottom`, `${ord(n)} press bottom roll`, 'roll', 'roll', 'Press');
+    }
+    m.dryers.forEach((d, i) => {
+      const s = i + 1, sec = `${ord(s)} dryer section`;
+      if (d.type === 'uno') add(`d${s}-felt`, `${ord(s)} section unorun felt`, 'fabric', 'dryer', sec);
+      else {
+        add(`d${s}-felt-top`, `${ord(s)} section top felt`, 'fabric', 'dryer', sec);
+        add(`d${s}-felt-bottom`, `${ord(s)} section bottom felt`, 'fabric', 'dryer', sec);
+      }
+    });
+    if (m.calender) {
+      add('cal-top', 'Calender top roll', 'roll', 'roll', 'Calender');
+      add('cal-bottom', 'Calender bottom roll', 'roll', 'roll', 'Calender');
+    }
+    return P;
+  }
+
+  /* ---------- Diagram ---------- */
+  // Laid out in flow order (headbox first) from right to left: headbox on the right, reel on the left.
+  const Y = 300, PAD = 20, GAP = 18, VB_TOP = 106, VB_BOT = 520;
+  let W = 1000;
+
+  function buildDiagram(m){
+    const P = positions(m), byId = Object.fromEntries(P.map(p => [p.id, p]));
+    const tandem = m.press.tandem && m.press.nips > 1;
+    const segs = [
+      { t: 'headbox', w: 70, label: 'Headbox' },
+      { t: 'former', w: 300, label: 'Forming' },
+      { t: 'press', w: m.press.nips * 130, label: 'Press' },
+      ...m.dryers.map((d, i) => ({ t: 'dryer', w: 210, d, s: i + 1, label: `Dryer ${i + 1}${d.type === 'uno' ? ' · Unorun' : ''}` })),
+      ...(m.calender ? [{ t: 'calender', w: 90, label: 'Calender' }] : []),
+      { t: 'reel', w: 90, label: 'Reel' }
+    ];
+    W = segs.reduce((a, s) => a + s.w, 0) + GAP * (segs.length - 1) + PAD * 2;
+    let x = W - PAD;
+    for (const s of segs) { s.x1 = x; s.x0 = x - s.w; s.cx = (s.x0 + s.x1) / 2; x = s.x0 - GAP; }
+
+    const back = [], items = [], top = [];
+    const sheet = [];   // sheet path points, flowing right → left
+
+    const badge = (id, bx, by) => {
+      const d = daysOn(id), txt = d == null ? '—' : `${d} d`;
+      const w = Math.max(44, txt.length * 11.5 + 22);
+      return `<g class="bdg${d == null ? ' unset' : ''}"><rect x="${bx - w/2}" y="${by - 15}" width="${w}" height="30" rx="15"/><text x="${bx}" y="${by + 0.5}">${txt}</text></g>`;
+    };
+    const cls = id => `it ${byId[id].kind}${selected === id ? ' sel' : ''}`;
+    const open = (id) => `<g class="${cls(id)}" data-id="${id}" tabindex="0" role="button" aria-label="${esc(byId[id].name)}" style="--fc:${CAT_COLOR[byId[id].cat]}"><title>${esc(byId[id].name)}</title>`;
+    // fabric as a belt (rounded rectangle) with optional corner rolls
+    const belt = (id, x0, y0, x1, y1, corners, bx, by) => {
+      const r = 24, cr = 9;
+      let s = open(id) + `<rect class="hit" x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="${r}"/>`;
+      s += `<rect class="belt" x="${x0}" y="${y0}" width="${x1-x0}" height="${y1-y0}" rx="${r}"/>`;
+      const pts = { tl: [x0 + r, y0 + r], tr: [x1 - r, y0 + r], bl: [x0 + r, y1 - r], br: [x1 - r, y1 - r] };
+      for (const c of corners) s += `<circle class="deco" cx="${pts[c][0]}" cy="${pts[c][1]}" r="${cr}"/>`;
+      return s + badge(id, bx, by) + '</g>';
+    };
+    const roll = (id, cx, cy, r, bx = cx, by = cy) =>
+      open(id) + `<circle class="rl" cx="${cx}" cy="${cy}" r="${r}"/>` + badge(id, bx, by) + '</g>';
+
+    for (const s of segs) {
+      const { x0, x1, cx } = s;
+      if (s.t === 'headbox') {
+        back.push(`<path class="hb" d="M${x1} 238 L${x1} 346 L${x0+34} 346 L${x0+34} 318 L${x0+4} 303 L${x0+4} 297 L${x0+34} 270 L${x0+34} 238 Z"/>`);
+        sheet.push([x0 + 4, Y]);
+      } else if (s.t === 'former') {
+        items.push(belt('form-bottom', x0 + 4, Y + 4, x1 - 4, 410, ['tl', 'tr', 'bl', 'br'], s.cx, 410));
+        if (m.former.type === 'twin') items.push(belt('form-top', x0 + 105, 186, x1 - 8, Y - 4, ['tl', 'tr', 'bl', 'br'], (x0 + 105 + x1 - 8) / 2, 186));
+        if (m.former.lumpbreaker) items.push(roll('lumpbreaker', x0 + 40, Y - 4 - 20, 20, x0 + 40, 230));
+        sheet.push([x0, Y]);
+      } else if (s.t === 'press') {
+        for (let i = 0; i < m.press.nips; i++) {
+          const n = i + 1, nx = x1 - 65 - i * 130;
+          items.push(belt(`p${n}-felt-top`, nx - 55, 170, nx + 55, Y - 4, ['tl', 'tr'], nx, 170));
+          if (!tandem) items.push(belt(`p${n}-felt-bottom`, nx - 55, Y + 4, nx + 55, 430, ['bl', 'br'], nx, 430));
+        }
+        if (tandem) items.push(belt('p-tandem-felt', x0 + 10, Y + 4, x1 - 10, 430, ['bl', 'br'], cx, 430));
+        for (let i = 0; i < m.press.nips; i++) {
+          const n = i + 1, nx = x1 - 65 - i * 130;
+          top.push(roll(`p${n}-roll-top`, nx, Y - 4 - 30, 30));
+          top.push(roll(`p${n}-roll-bottom`, nx, Y + 4 + 30, 30));
+        }
+        sheet.push([x0, Y]);
+      } else if (s.t === 'dryer') {
+        const tops = [x1 - 40, x1 - 105, x1 - 170], bots = [x1 - 72, x1 - 137];
+        const uno = s.d.type === 'uno';
+        tops.forEach(tx => back.push(`<circle class="cyl" cx="${tx}" cy="240" r="30"/>`));
+        if (uno) bots.forEach(bx => back.push(`<circle class="cyl" cx="${bx}" cy="353" r="18"/>`));
+        else bots.forEach(bx => back.push(`<circle class="cyl" cx="${bx}" cy="360" r="30"/>`));
+        sheet.push([x1, Y], [tops[0], 272], [bots[0], 328], [tops[1], 272], [bots[1], 328], [tops[2], 272], [x0, Y]);
+        if (uno) {
+          const id = `d${s.s}-felt`;
+          const d = `M${x1-6} 307 L${tops[0]} 279 L${bots[0]} 334 L${tops[1]} 279 L${bots[1]} 334 L${tops[2]} 279 L${x0+6} 307 L${x0+6} 392 L${x1-6} 392 Z`;
+          items.push(open(id) + `<path class="hit" d="${d}"/><path class="belt" d="${d}"/>` + badge(id, cx, 392) + '</g>');
+        } else {
+          items.push(belt(`d${s.s}-felt-top`, x0 + 6, 154, x1 - 6, 207, ['tl', 'tr'], cx, 154));
+          items.push(belt(`d${s.s}-felt-bottom`, x0 + 6, 393, x1 - 6, 446, ['bl', 'br'], cx, 446));
+        }
+      } else if (s.t === 'calender') {
+        top.push(roll('cal-top', cx, Y - 30, 30));
+        top.push(roll('cal-bottom', cx, Y + 30, 30));
+        sheet.push([x0, Y]);
+      } else if (s.t === 'reel') {
+        back.push(`<circle class="cyl" cx="${cx}" cy="330" r="26"/>`);
+        back.push(`<circle class="spool" cx="${cx}" cy="264" r="40"/><circle class="deco" cx="${cx}" cy="264" r="9"/>`);
+        sheet.push([x1, Y], [cx + 22, 316]);
+      }
+    }
+
+    // section brackets + labels
+    const secs = segs.map(s => `<path class="sec-ln" d="M${s.x0} 480 L${s.x0} 486 L${s.x1} 486 L${s.x1} 480"/><text class="sec-tx" x="${s.cx}" y="510">${esc(s.label)}</text>`).join('');
+    // machine direction arrow (top-left, pointing left)
+    const md = `<path class="md-arrow" d="M${PAD} 124 l16 -9 v6 h56 v6 h-56 v6 z"/><text class="md-tx" x="${PAD + 82}" y="125" dominant-baseline="central">Machine direction</text>`;
+    const sheetPath = `<path class="sheet-ln" d="M${sheet.map(p => p.join(' ')).join(' L')}"/>`;
+
+    return `<g>${secs}${md}</g><g>${back.join('')}</g><g>${items.join('')}</g>${sheetPath}<g>${top.join('')}</g>`;
+  }
+
+  function renderDiagram(m){
+    const svg = $('diagram');
+    svg.innerHTML = buildDiagram(m);
+    svg.setAttribute('viewBox', `0 ${VB_TOP} ${W} ${VB_BOT - VB_TOP}`);
+    applyZoom();
+  }
+  function fitScale(){ const avail = $('diagramScroll').clientWidth - 8; return Math.max(0.3, Math.min(1.25, avail / W)); }
+  function applyZoom(){
+    const sc = zoom === 'fit' ? fitScale() : zoom;
+    const svg = $('diagram');
+    svg.setAttribute('width', Math.round(W * sc));
+    svg.setAttribute('height', Math.round((VB_BOT - VB_TOP) * sc));
+    $('zoomPct').textContent = zoom === 'fit' ? 'Fit' : Math.round(sc * 100) + '%';
+  }
+  function stepZoom(dir){
+    const cur = zoom === 'fit' ? fitScale() : zoom;
+    zoom = Math.min(2, Math.max(0.3, Math.round((cur + dir * 0.15) * 100) / 100));
+    applyZoom();
+  }
+
+  /* ---------- Tables & summary ---------- */
+  function renderTables(m){
+    const P = positions(m);
+    const row = p => {
+      const it = S.items[p.id] || {}, d = daysOn(p.id);
+      return `<tr data-id="${p.id}" class="${selected === p.id ? 'sel' : ''}">
+        <td><div class="pname" style="--fc:${CAT_COLOR[p.cat]}"><span class="sw"></span>${esc(p.name)}</div><div class="psec">${esc(p.section)}</div></td>
+        <td class="dt">${fmtDate(it.installed)}</td>
+        <td class="r"><span class="days${d == null ? ' unset' : ''}">${d == null ? 'not set' : d + ' d'}</span></td></tr>`;
+    };
+    $('fabRows').innerHTML = P.filter(p => p.kind === 'fabric').map(row).join('');
+    $('rollRows').innerHTML = P.filter(p => p.kind === 'roll').map(row).join('');
+    const fab = P.filter(p => p.kind === 'fabric').length, rl = P.length - fab;
+    const unset = P.filter(p => daysOn(p.id) == null).length;
+    $('summary').innerHTML = `<span class="chip">${fab} fabrics</span><span class="chip">${rl} rolls</span>` +
+      (unset ? `<span class="chip warn">${unset} not set</span>` : '');
+    $('machName').textContent = m.name ? `${m.name} · fabric & roll ages` : 'Fabric & roll ages';
+  }
+
+  function renderAll(){
+    const m = draft || S.machine || DEFAULT_MACHINE;
+    renderDiagram(m);
+    renderTables(m);
+  }
+
+  /* ---------- Drawer: item editor ---------- */
+  const drawer = $('drawer');
+  function openDrawer(html){
+    drawer.innerHTML = html; drawer.hidden = false;
+    document.body.classList.add('drawer-open');
+    requestAnimationFrame(applyZoom);
+  }
+  function closeDrawer(){
+    drawer.hidden = true; drawer.innerHTML = '';
+    document.body.classList.remove('drawer-open');
+    if (draft) { draft = null; }
+    selected = null;
+    renderAll();
+  }
+
+  function openItem(id){
+    if (draft) return; // Setup is open
+    const p = positions(S.machine).find(q => q.id === id);
+    if (!p) return;
+    selected = id;
+    renderAll();
+    const it = S.items[id] || {};
+    const d = daysOn(id);
+    const hist = (it.history || []).slice().reverse();
+    openDrawer(`
+      <div class="d-head" style="--fc:${CAT_COLOR[p.cat]}">
+        <div><div class="kind">${p.kind === 'fabric' ? 'Fabric' : 'Roll'}</div><div class="where">${esc(p.section)}</div></div>
+        <button class="x" data-act="close" aria-label="Close">✕</button>
+      </div>
+      <div class="d-body">
+        <h3>${esc(p.name)}</h3>
+        <div class="big${d == null ? ' unset' : ''}">${d == null ? '<b>No install date</b>' : `<b>${d}</b><span>day${d === 1 ? '' : 's'} on machine</span>`}</div>
+        <div class="fld">
+          <label for="inst">Installed</label>
+          <div class="row">
+            <input id="inst" type="date" value="${it.installed || ''}" max="${todayStr()}">
+            <button class="btn sm" data-act="today">Today</button>
+            ${it.installed ? '<button class="btn sm" data-act="clear">Clear</button>' : ''}
+          </div>
+        </div>
+        <div class="fld">
+          <label for="note">Notes</label>
+          <textarea id="note" placeholder="Vendor, style, serial number, condition…">${esc(it.note || '')}</textarea>
+        </div>
+        ${it.installed ? `<div class="fld">
+          <span class="lbl">Changed out</span>
+          <div class="row"><button class="btn danger" data-act="replace">Replaced today</button></div>
+          <span class="hint">Logs the current run below and restarts the count from today.</span>
+        </div>` : ''}
+        ${hist.length ? `<div class="fld"><span class="lbl">Previous runs</span><div class="hist">${hist.map((h, i) =>
+          `<div class="hrow"><span class="tt">${fmtDate(h.installed)} → ${fmtDate(h.removed)} · <b>${h.days} d</b></span><button class="rm" data-act="delhist" data-i="${hist.length - 1 - i}" title="Remove">✕</button></div>`).join('')}</div></div>` : ''}
+      </div>`);
+    drawer.dataset.mode = 'item';
+    drawer.dataset.id = id;
+  }
+
+  function setItem(id, patch){
+    const it = S.items[id] = Object.assign({ installed: '', note: '', history: [] }, S.items[id] || {}, patch);
+    if (!it.installed && !it.note && !(it.history || []).length) delete S.items[id];
+    save();
+  }
+
+  let armTimer;
+  drawer.addEventListener('click', e => {
+    const b = e.target.closest('[data-act]'); if (!b) return;
+    const act = b.dataset.act, id = drawer.dataset.id;
+    if (act === 'close') return closeDrawer();
+    if (drawer.dataset.mode === 'setup') return setupAction(act, b);
+    if (act === 'today') { setItem(id, { installed: todayStr() }); openItem(id); }
+    else if (act === 'clear') { setItem(id, { installed: '' }); openItem(id); }
+    else if (act === 'replace') {
+      if (!b.classList.contains('armed')) {
+        b.classList.add('armed'); b.textContent = 'Click again to confirm';
+        clearTimeout(armTimer); armTimer = setTimeout(() => { b.classList.remove('armed'); b.textContent = 'Replaced today'; }, 3000);
+        return;
+      }
+      const it = S.items[id], t = todayStr();
+      const history = (it.history || []).concat([{ installed: it.installed, removed: t, days: Math.max(0, daysBetween(it.installed, t)) }]);
+      setItem(id, { installed: t, history });
+      toast('New run started today');
+      openItem(id);
+    } else if (act === 'delhist') {
+      const history = (S.items[id].history || []).slice(); history.splice(+b.dataset.i, 1);
+      setItem(id, { history }); openItem(id);
+    }
+  });
+  drawer.addEventListener('change', e => {
+    if (drawer.dataset.mode === 'setup') return setupChange(e);
+    if (e.target.id === 'inst') {
+      let v = e.target.value;
+      if (v && v > todayStr()) { v = todayStr(); toast('Install date can’t be in the future'); }
+      setItem(drawer.dataset.id, { installed: v }); openItem(drawer.dataset.id);
+    }
+  });
+  drawer.addEventListener('input', e => {
+    if (drawer.dataset.mode === 'setup') return setupChange(e);
+    if (e.target.id === 'note') setItem(drawer.dataset.id, { note: e.target.value });
+  });
+
+  /* ---------- Drawer: machine setup ---------- */
+  let firstRun = false;
+  function openSetup(first){
+    firstRun = !!first;
+    selected = null;
+    draft = clone(S.machine || DEFAULT_MACHINE);
+    drawer.dataset.mode = 'setup';
+    drawSetup();
+    renderAll();
+  }
+  function drawSetup(){
+    const m = draft;
+    const nipsOpt = [1, 2, 3].map(n => `<option value="${n}"${m.press.nips === n ? ' selected' : ''}>${n} nip${n > 1 ? 's' : ''}</option>`).join('');
+    const dry = m.dryers.map((d, i) => `<div class="dsec"><span class="n">Section ${i + 1}</span>
+      <select data-dry="${i}"><option value="uno"${d.type === 'uno' ? ' selected' : ''}>Unorun — single felt</option><option value="double"${d.type === 'double' ? ' selected' : ''}>Top &amp; bottom felts</option></select>
+      <button class="ib" data-act="deldry" data-i="${i}" title="Remove section"${m.dryers.length < 2 ? ' disabled' : ''}>✕</button></div>`).join('');
+    openDrawer(`
+      <div class="d-head"><div><div class="kind" style="color:var(--ink)">Machine setup</div><div class="where">Headbox on the right, reel on the left</div></div>
+        ${firstRun ? '' : '<button class="x" data-act="close" aria-label="Close">✕</button>'}</div>
+      <div class="d-body">
+        ${firstRun ? '<div class="welcome"><b>Welcome.</b> Lay out your machine below; the diagram updates as you go. You can change this any time from <b>Setup</b>.</div>' : ''}
+        <div class="fld"><label for="mName">Machine name</label><input id="mName" type="text" value="${esc(m.name)}" placeholder="PM1"></div>
+        <div class="group" style="--fc:var(--c-forming)"><h4><span class="sw"></span>Forming</h4>
+          <div class="fld"><select id="fType">
+            <option value="twin"${m.former.type === 'twin' ? ' selected' : ''}>Top &amp; bottom formers</option>
+            <option value="fourdrinier"${m.former.type === 'fourdrinier' ? ' selected' : ''}>Single forming fabric</option></select></div>
+          <label class="ck"><input id="fLump" type="checkbox"${m.former.lumpbreaker ? ' checked' : ''}> Lumpbreaker roll</label>
+        </div>
+        <div class="group" style="--fc:var(--c-press)"><h4><span class="sw"></span>Press</h4>
+          <div class="fld"><select id="pNips">${nipsOpt}</select></div>
+          <label class="ck${m.press.nips < 2 ? ' dis' : ''}"><input id="pTandem" type="checkbox"${m.press.tandem ? ' checked' : ''}${m.press.nips < 2 ? ' disabled' : ''}> Tandem bottom felt through all nips</label>
+          <span class="hint">Each nip gets a top felt and a top &amp; bottom roll. Without tandem, each nip also gets its own bottom felt.</span>
+        </div>
+        <div class="group" style="--fc:var(--c-dryer)"><h4><span class="sw"></span>Dryers</h4>
+          ${dry}
+          <div><button class="btn sm" data-act="adddry"${m.dryers.length >= 8 ? ' disabled' : ''}>+ Add section</button></div>
+        </div>
+        <div class="group" style="--fc:var(--c-roll)"><h4><span class="sw"></span>Calender &amp; reel</h4>
+          <label class="ck"><input id="cal" type="checkbox"${m.calender ? ' checked' : ''}> Calender (top &amp; bottom roll)</label>
+          <span class="hint">The reel is always shown.</span>
+        </div>
+        ${firstRun ? '' : '<span class="hint">Removing a position hides it but keeps its dates; add it back and they return.</span>'}
+      </div>
+      <div class="d-foot">
+        ${firstRun ? '' : '<button class="btn" data-act="close">Cancel</button>'}
+        <span class="spacer"></span>
+        <button class="btn primary" data-act="savesetup">${firstRun ? 'Create machine' : 'Save'}</button>
+      </div>`);
+    drawer.dataset.mode = 'setup';
+  }
+  function setupChange(e){
+    const t = e.target, m = draft;
+    if (t.id === 'mName') { m.name = t.value; renderTables(m); return; }
+    if (e.type === 'input') return;
+    if (t.id === 'fType') m.former.type = t.value;
+    else if (t.id === 'fLump') m.former.lumpbreaker = t.checked;
+    else if (t.id === 'pNips') m.press.nips = +t.value;
+    else if (t.id === 'pTandem') m.press.tandem = t.checked;
+    else if (t.id === 'cal') m.calender = t.checked;
+    else if (t.dataset.dry != null) m.dryers[+t.dataset.dry].type = t.value;
+    drawSetup(); renderAll();
+  }
+  function setupAction(act, b){
+    if (act === 'adddry') { draft.dryers.push({ type: 'double' }); drawSetup(); renderAll(); }
+    else if (act === 'deldry') { draft.dryers.splice(+b.dataset.i, 1); drawSetup(); renderAll(); }
+    else if (act === 'savesetup') {
+      draft.name = (draft.name || '').trim() || 'PM1';
+      S.machine = draft; save();
+      const wasFirst = firstRun; firstRun = false;
+      closeDrawer();
+      toast(wasFirst ? 'Machine created. Click any fabric or roll to set its install date.' : 'Machine updated');
+    }
+  }
+
+  /* ---------- Export / import ---------- */
+  function exportJSON(){
+    const P = positions(S.machine);
+    const data = {
+      app: 'machine-manager-mymachine', version: VERSION, exported: new Date().toISOString(),
+      machine: S.machine, items: S.items,
+      // flattened, human/LLM-readable view of current state (ignored on import)
+      positions: P.map(p => ({ id: p.id, name: p.name, type: p.kind, section: p.section,
+        installed: (S.items[p.id] || {}).installed || null, daysOn: daysOn(p.id), note: (S.items[p.id] || {}).note || '' }))
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `my-machine-${(S.machine.name || 'machine').replace(/[^\w-]+/g, '_')}-${todayStr()}.json`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+  async function importJSON(file){
+    try {
+      const d = JSON.parse(await file.text());
+      if (!d || !d.machine || !d.machine.press || !Array.isArray(d.machine.dryers)) throw new Error('bad');
+      const prev = clone(S);
+      S = { machine: d.machine, items: d.items || {} };
+      if (draft) { draft = null; }
+      drawer.hidden = true; document.body.classList.remove('drawer-open'); selected = null;
+      save(); renderAll();
+      toast(`Imported ${S.machine.name || 'machine'}`, 'Undo', () => { S = prev; save(); renderAll(); });
+    } catch (e) { toast('That file isn’t a My Machine export'); }
+  }
+
+  /* ---------- Toast ---------- */
+  let toastTimer;
+  function toast(msg, actLabel, fn){
+    const t = $('toast');
+    t.innerHTML = esc(msg) + (actLabel ? `<button>${esc(actLabel)}</button>` : '');
+    t.classList.toggle('act', !!actLabel);
+    if (actLabel) t.querySelector('button').onclick = () => { fn(); t.classList.remove('show'); };
+    t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), actLabel ? 6000 : 2600);
+  }
+
+  /* ---------- Events ---------- */
+  $('diagram').addEventListener('click', e => {
+    const g = e.target.closest('.it');
+    if (g) openItem(g.dataset.id);
+    else if (!draft && !drawer.hidden) closeDrawer();
+  });
+  $('diagram').addEventListener('keydown', e => {
+    const g = e.target.closest('.it');
+    if (g && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openItem(g.dataset.id); }
+  });
+  ['fabRows', 'rollRows'].forEach(id => $(id).addEventListener('click', e => {
+    const tr = e.target.closest('tr[data-id]'); if (tr) openItem(tr.dataset.id);
+  }));
+  $('setupBtn').onclick = () => openSetup(false);
+  $('exportBtn').onclick = exportJSON;
+  $('importBtn').onclick = () => $('importFile').click();
+  $('importFile').onchange = e => { const f = e.target.files[0]; if (f) importJSON(f); e.target.value = ''; };
+  $('zoomIn').onclick = () => stepZoom(1);
+  $('zoomOut').onclick = () => stepZoom(-1);
+  $('zoomPct').onclick = () => { zoom = 'fit'; applyZoom(); };
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && !drawer.hidden && !firstRun) closeDrawer();
+  });
+  new ResizeObserver(() => { if (zoom === 'fit') applyZoom(); }).observe($('diagramScroll'));
+  // Day counts roll over at midnight: refresh when the window comes back into view.
+  let lastDay = todayStr();
+  const refreshDay = () => { if (todayStr() !== lastDay) { lastDay = todayStr(); renderAll(); if (drawer.dataset.mode === 'item' && !drawer.hidden) openItem(drawer.dataset.id); } };
+  window.addEventListener('focus', refreshDay);
+  setInterval(refreshDay, 60000);
+
+  /* ---------- Start ---------- */
+  load();
+  if (!S.machine) openSetup(true);
+  else renderAll();
+})();
+</script>
+</body>
+</html>
