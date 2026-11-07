@@ -7,7 +7,9 @@
 --   memberships   who is in which org, as viewer | editor | admin.
 --   wb_boards     Whiteboard boards (one row per board).
 --   wb_items      Whiteboard notes, links and frames (one row per item).
---   storage       private bucket "wb-files", files kept under <org_id>/<board_id>/...
+--   mm_records    every other tool's data (My Machine, ...), one row per record.
+--   storage       private buckets "wb-files" (<org_id>/<board_id>/...) and
+--                 "mm-files" (<org_id>/<tool>/...).
 --
 -- Security
 --   Row-level security on every table. A signed-in user only sees rows of orgs
@@ -16,7 +18,7 @@
 --
 -- Concurrency
 --   Every board and item has a version number the database bumps on each write.
---   The page saves through wb_apply(), which only updates a row if the version
+--   The page saves through wb_apply() / mm_apply(), which only updates a row if the version
 --   it last saw is still current. If someone else changed it first, the save is
 --   refused and the page shows their version instead (no silent overwrites).
 --   Deletes are soft (deleted = true) so they sync live and can be undone.
@@ -250,6 +252,100 @@ create policy wb_files_insert on storage.objects for insert to authenticated
   with check (bucket_id = 'wb-files' and private.has_org_role_path((storage.foldername(name))[1], 'editor'));
 create policy wb_files_update on storage.objects for update to authenticated
   using (bucket_id = 'wb-files' and private.has_org_role_path((storage.foldername(name))[1], 'editor'));
+
+-- ───────────────────────── Records for every other tool ─────────────────────────
+-- One generic table so new tools need no schema change: each tool stores its own
+-- records (e.g. My Machine: 'machine', 'item:<position>') as JSON, with the same
+-- version check and live updates as the Whiteboard.
+
+create table if not exists public.mm_records (
+  org_id      uuid not null references public.orgs(id) on delete cascade,
+  tool        text not null check (tool ~ '^[a-z0-9-]{1,40}$'),
+  id          text not null check (length(id) between 1 and 200),
+  data        jsonb not null default '{}'::jsonb,
+  deleted     boolean not null default false,
+  version     integer not null default 1,
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  updated_by  uuid default auth.uid(),
+  primary key (org_id, tool, id)
+);
+
+create or replace function public.mm_touch() returns trigger language plpgsql set search_path = '' as $$
+begin
+  if tg_op = 'INSERT' then
+    new.version := 1;
+  else
+    new.version := old.version + 1;
+    new.org_id := old.org_id; new.tool := old.tool; new.id := old.id;   -- records can't be moved
+  end if;
+  new.updated_at := now();
+  new.updated_by := auth.uid();
+  return new;
+end $$;
+drop trigger if exists mm_records_touch on public.mm_records;
+create trigger mm_records_touch before insert or update on public.mm_records
+  for each row execute function public.mm_touch();
+
+alter table public.mm_records enable row level security;
+drop policy if exists mm_records_read   on public.mm_records;
+drop policy if exists mm_records_insert on public.mm_records;
+drop policy if exists mm_records_update on public.mm_records;
+create policy mm_records_read   on public.mm_records for select to authenticated using (private.has_org_role(org_id));
+create policy mm_records_insert on public.mm_records for insert to authenticated with check (private.has_org_role(org_id, 'editor'));
+create policy mm_records_update on public.mm_records for update to authenticated
+  using (private.has_org_role(org_id, 'editor')) with check (private.has_org_role(org_id, 'editor'));
+
+-- p_changes: [{ id, data, deleted, base }] — base = version last seen, null for new.
+-- Returns [{ id, ok, version }] or, on conflict, [{ id, ok:false, row }].
+create or replace function public.mm_apply(p_org uuid, p_tool text, p_changes jsonb)
+returns jsonb language plpgsql security invoker set search_path = '' as $$
+declare c jsonb; res jsonb := '[]'::jsonb; v integer; cur jsonb; base integer;
+begin
+  for c in select * from jsonb_array_elements(p_changes) loop
+    v := null; cur := null; base := (c->>'base')::integer;
+    if base is null then
+      insert into public.mm_records (org_id, tool, id, data, deleted)
+      values (p_org, p_tool, c->>'id', coalesce(c->'data', '{}'::jsonb), coalesce((c->>'deleted')::boolean, false))
+      on conflict (org_id, tool, id) do nothing returning version into v;
+    else
+      update public.mm_records set data = coalesce(c->'data', data), deleted = coalesce((c->>'deleted')::boolean, deleted)
+      where org_id = p_org and tool = p_tool and id = c->>'id' and version = base returning version into v;
+    end if;
+    if v is null then
+      select to_jsonb(r) into cur from public.mm_records r where r.org_id = p_org and r.tool = p_tool and r.id = c->>'id';
+    end if;
+    res := res || jsonb_build_array(jsonb_build_object('id', c->>'id', 'ok', v is not null, 'version', v, 'row', cur));
+  end loop;
+  return res;
+end $$;
+
+revoke all on public.mm_records from anon;
+grant select, insert, update on public.mm_records to authenticated;
+revoke execute on function public.mm_apply(uuid, text, jsonb) from public, anon;
+grant  execute on function public.mm_apply(uuid, text, jsonb) to authenticated;
+
+do $$ begin
+  alter publication supabase_realtime add table public.mm_records;
+exception when duplicate_object then null; end $$;
+
+-- Files for every other tool: private bucket "mm-files", kept under <org_id>/<tool>/...
+insert into storage.buckets (id, name, public, file_size_limit)
+values ('mm-files', 'mm-files', false, 26214400)          -- private, 25 MB per file
+on conflict (id) do update set public = false, file_size_limit = excluded.file_size_limit;
+
+drop policy if exists mm_files_read   on storage.objects;
+drop policy if exists mm_files_insert on storage.objects;
+drop policy if exists mm_files_update on storage.objects;
+drop policy if exists mm_files_delete on storage.objects;
+create policy mm_files_read on storage.objects for select to authenticated
+  using (bucket_id = 'mm-files' and private.has_org_role_path((storage.foldername(name))[1]));
+create policy mm_files_insert on storage.objects for insert to authenticated
+  with check (bucket_id = 'mm-files' and private.has_org_role_path((storage.foldername(name))[1], 'editor'));
+create policy mm_files_update on storage.objects for update to authenticated
+  using (bucket_id = 'mm-files' and private.has_org_role_path((storage.foldername(name))[1], 'editor'));
+create policy mm_files_delete on storage.objects for delete to authenticated
+  using (bucket_id = 'mm-files' and private.has_org_role_path((storage.foldername(name))[1], 'editor'));
 
 -- ───────────────────────── Admin helper (SQL Editor only) ─────────────────────────
 -- select public.mm_add_member('PM1', 'person@example.com', 'editor');

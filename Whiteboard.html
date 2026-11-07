@@ -904,6 +904,33 @@
       boards.forEach(r => applyRow('wb_boards', r)); items.forEach(r => applyRow('wb_items', r));
     } catch (e) {}
   }
+  // First time signed in to an empty organization: offer to bring over boards made in demo mode.
+  async function offerLocalCopy(){
+    if (!cloud.edit) return;
+    const askKey = `mm-wb-copy-asked:${cloud.org.id}`;
+    try { if (localStorage.getItem(askKey)) return; } catch (e) { return; }
+    const orgHasContent = Object.values(app.boards).some(b => Object.keys(b.notes).length || b.frames.length);
+    if (orgHasContent) return;
+    let local = null;
+    try { local = await store.get('app'); } catch (e) { return; }
+    const list = local && local.order ? local.order.map(id => local.boards[id]).filter(b => b && Object.keys(b.notes || {}).length) : [];
+    if (!list.length) return;
+    try { localStorage.setItem(askKey, '1'); } catch (e) {}
+    const n = list.reduce((t, b) => t + Object.keys(b.notes).length, 0);
+    if (!confirm(`This browser has ${list.length} board${list.length === 1 ? '' : 's'} (${n} notes) saved from before you signed in.\n\nCopy ${list.length === 1 ? 'it' : 'them'} to ${cloud.org.name} so your team can see ${list.length === 1 ? 'it' : 'them'}?`)) return;
+    const existing = new Set(Object.values(app.boards).map(b => b.name));
+    for (const b of list){
+      b.id = bid();
+      if (existing.has(b.name)) b.name += ' (copied)';
+      for (const n of Object.values(b.notes)) for (const a of (n.attachments || [])) delete a.path;
+      fixBoard(b);
+      app.boards[b.id] = b; app.order.push(b.id);
+    }
+    // Drop an untouched blank board the org started with, so the copied boards come first.
+    for (const id of [...app.order]){ const b = app.boards[id]; if (!list.includes(b) && !Object.keys(b.notes).length && !b.frames.length && app.order.length > list.length) delete app.boards[id], app.order = app.order.filter(x => x !== id); }
+    app.current = list[0].id;
+    toast(`Copied ${list.length} board${list.length === 1 ? '' : 's'} to ${cloud.org.name}`);
+  }
   async function loadCloud(s){
     Object.assign(cloud, { on:true, org:s.org, user:s.user, edit:MMCloud.canEdit(s) });
     viewCache = loadView();
@@ -2969,6 +2996,7 @@
       try {
         await loadCloud(sess);
         saveStateEl.textContent = cloud.edit ? 'Saved' : 'View only';
+        await offerLocalCopy();
         if (!app.order.length) newBoard('Board 1');
         B = app.boards[app.current] || app.boards[app.order[0]];
         app.current = B.id;
@@ -2984,7 +3012,10 @@
       return;
     }
     if (sess && !sess.org) toast('Your account isn’t in an organization yet — showing the demo board.');
-    if (window.MMCloud && MMCloud.enabled) setMode('Demo · this browser only', 'Saved in this browser only. Sign in on the Machine Manager home page to use your shared boards.', 'index.html');
+    if (window.MMCloud && MMCloud.enabled){
+      setMode('Demo · this browser only — Sign in', 'Saved in this browser only. Sign in to use your team’s shared boards.', '#');
+      $('mode').addEventListener('click', e => { e.preventDefault(); MMCloud.openSignIn(); });
+    }
     try {
       let saved = await store.get('app');
       if (!saved){
