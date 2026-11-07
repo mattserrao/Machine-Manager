@@ -48,10 +48,10 @@
 <body>
 <div class="wrap">
   <div class="topbar">
-    <a class="bar brand" href="index.html" title="Back to tools">
-      <div class="logo">MM</div>
+    <div class="bar brand">
+      <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
       <div><h1>PM1 LLM</h1><p>Ask questions across PM1 data</p></div>
-    </a>
+    </div>
     <div id="acct"></div>
   </div>
 
@@ -76,5 +76,6 @@
   document.getElementById('ver').textContent = 'PM1 LLM ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true });
 </script>
+<script src="mm-nav.js"></script>
 </body>
 </html>

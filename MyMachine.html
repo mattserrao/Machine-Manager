@@ -210,10 +210,10 @@
 <body>
 <div class="wrap">
   <div class="topbar">
-    <a class="bar brand" href="index.html" title="Back to tools">
-      <div class="logo">MM</div>
+    <div class="bar brand">
+      <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
       <div><h1>My Machine</h1><p id="machName">—</p></div>
-    </a>
+    </div>
     <div class="bar">
       <button id="setupBtn" class="btn">⚙ Setup</button>
       <span class="sep"></span>
@@ -388,6 +388,12 @@
 
   /* ---------- Positions & sections (derived from machine config) ---------- */
   function normalize(m){
+    // Fill anything missing from the defaults, so a partial or older saved setup can't break the page.
+    const d = DEFAULT_MACHINE;
+    m = Object.assign({}, clone(d), m || {});
+    m.former = Object.assign({}, d.former, m.former || {});
+    m.press = Object.assign({}, d.press, m.press || {});
+    if (!Array.isArray(m.dryers) || !m.dryers.length) m.dryers = clone(d.dryers);
     if (!Array.isArray(m.refiners)) m.refiners = clone(DEFAULT_REFINERS);
     return m;
   }
@@ -1038,5 +1044,6 @@
   })();
 })();
 </script>
+<script src="mm-nav.js"></script>
 </body>
 </html>
