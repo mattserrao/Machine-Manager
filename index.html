@@ -53,19 +53,49 @@
   .sub .mini{font-size:11px;padding:3px 7px 3px 9px;border-radius:5px}
   .open{display:flex;justify-content:flex-end;font-size:12px;font-weight:500;color:var(--accent);padding:0 2px}
 
+
+  .top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  #acct{display:inline-flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:12px;
+    padding:8px 10px 8px 14px;box-shadow:0 2px 10px rgba(0,0,0,.06);font-size:13px}
+  #acct[hidden]{display:none}
+  #acct .who{line-height:1.3}
+  #acct .who b{display:block;font-weight:600}
+  #acct .who span{color:var(--muted);font-size:12px}
+  #acct select{font:inherit;font-size:12px;border:1px solid var(--line);border-radius:6px;padding:1px 4px;color:var(--muted);background:#fff}
+  .pill{display:inline-block;font-size:10.5px;font-weight:600;border-radius:999px;padding:2px 8px;background:#fef3c7;color:#92400e;margin-left:6px;vertical-align:1px}
+  .pill.ok{background:#dcfce7;color:#166534}
+  .btn{font:inherit;font-size:13px;font-weight:500;border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;color:var(--ink)}
+  .btn:hover{background:#f5f5f4}
+  .btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+  .btn.primary:hover{background:#000}
+  .btn:disabled{opacity:.6;cursor:default}
+  #signin{border:none;border-radius:14px;padding:0;box-shadow:0 20px 60px rgba(0,0,0,.25);width:min(360px,calc(100vw - 32px))}
+  #signin::backdrop{background:rgba(28,25,23,.35)}
+  #signin form{padding:22px 22px 18px;display:flex;flex-direction:column;gap:12px}
+  #signin h3{margin:0;font-size:16px}
+  #signin p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.45}
+  #signin label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:500;color:#3f3f46}
+  #signin input{font:inherit;font-size:14px;border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+  #signin input:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+  #signinErr{color:#b91c1c;font-size:12.5px;min-height:1em}
+  #signin .row{display:flex;justify-content:flex-end;gap:8px}
+
   footer{margin-top:40px;font-size:12px;color:var(--muted)}
   #ver{text-align:right;margin-top:18px;font-size:10.5px;color:rgba(0,0,0,.28);letter-spacing:.02em}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div class="logo">MM</div>
-    <div>
-      <h1>Machine Manager</h1>
-      <p>Paper machine planning tools</p>
-    </div>
-  </header>
+  <div class="top">
+    <header>
+      <div class="logo">MM</div>
+      <div>
+        <h1>Machine Manager</h1>
+        <p>Paper machine planning tools</p>
+      </div>
+    </header>
+    <div id="acct" hidden></div>
+  </div>
 
   <h2>Tools</h2>
   <div class="grid">
@@ -147,9 +177,9 @@
 
     <a class="card" href="Whiteboard.html">
       <div class="body">
-        <span class="ver">v0.3.2</span>
+        <span class="ver">v0.4.0</span>
         <p class="title">Whiteboard</p>
-        <p class="desc">Free-form board of notes: checklists, status, owners and due dates, arrows, frames, stacks up to 4 levels deep. Outage and handover templates; export, import and print.</p>
+        <p class="desc">Free-form board of notes: checklists, status, owners and due dates, arrows, frames, stacks up to 4 levels deep. Outage and handover templates; export, import and print. Signed in, boards are shared live with your team.</p>
       </div>
       <div class="tucked">
         <div class="mini" style="--c:#fff4b8">Outage plan
@@ -177,9 +207,71 @@
 
   <div id="ver"></div>
 </div>
+<dialog id="signin">
+  <form method="dialog" id="signinForm">
+    <h3>Sign in</h3>
+    <p>Use the account your administrator set up for you. Without signing in you're using the demo, which saves only in this browser.</p>
+    <label>Email<input id="siEmail" type="email" autocomplete="username" required></label>
+    <label>Password<input id="siPass" type="password" autocomplete="current-password" required></label>
+    <div id="signinErr"></div>
+    <div class="row">
+      <button class="btn" type="button" id="siCancel">Cancel</button>
+      <button class="btn primary" type="submit" id="siGo">Sign in</button>
+    </div>
+  </form>
+</dialog>
+<script src="vendor/supabase-2.119.0.js"></script>
+<script src="mm-config.js"></script>
+<script src="mm-cloud.js"></script>
 <script>
-  const VERSION = 'v0.1.0';
+  const VERSION = 'v0.2.0';
   document.getElementById('ver').textContent = 'Machine Manager ' + VERSION;
+
+  /* ---- Account: demo (signed out) or signed in to an org ---- */
+  (async () => {
+    const acct = document.getElementById('acct'), dlg = document.getElementById('signin');
+    if (!MMCloud.enabled) return;              // sign-in not configured: everything stays in demo mode
+    const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+    async function paint(){
+      acct.textContent = '';
+      let s = null;
+      try { s = await MMCloud.session(); } catch (e) { s = null; }
+      const who = mk('div', 'who');
+      if (!s){
+        const b = mk('b'); b.append('Demo', mk('span', 'pill', 'This browser only')); who.appendChild(b);
+        who.appendChild(mk('span', '', 'Try the tools with sample data'));
+        const go = mk('button', 'btn primary', 'Sign in'); go.addEventListener('click', open);
+        acct.append(who, go);
+      } else {
+        const b = mk('b', '', s.user.email);
+        b.appendChild(mk('span', 'pill ok', s.org ? (s.org.role === 'viewer' ? 'View only' : 'Synced') : 'No access'));
+        who.appendChild(b);
+        if (s.orgs.length > 1){
+          const sel = mk('select'); sel.title = 'Organization';
+          s.orgs.forEach(o => { const op = mk('option', '', o.name); op.value = o.id; op.selected = s.org && o.id === s.org.id; sel.appendChild(op); });
+          sel.addEventListener('change', () => { MMCloud.setOrg(sel.value); paint(); });
+          who.appendChild(sel);
+        } else {
+          who.appendChild(mk('span', '', s.org ? s.org.name : 'Ask your administrator to add you to an organization'));
+        }
+        const out = mk('button', 'btn', 'Sign out');
+        out.addEventListener('click', async () => { await MMCloud.signOut(); paint(); });
+        acct.append(who, out);
+      }
+      acct.hidden = false;
+    }
+    function open(){ document.getElementById('signinErr').textContent = ''; dlg.showModal(); document.getElementById('siEmail').focus(); }
+    document.getElementById('siCancel').addEventListener('click', () => dlg.close());
+    document.getElementById('signinForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const go = document.getElementById('siGo'), err = document.getElementById('signinErr');
+      go.disabled = true; err.textContent = '';
+      try { await MMCloud.signIn(document.getElementById('siEmail').value, document.getElementById('siPass').value); dlg.close(); document.getElementById('siPass').value = ''; paint(); }
+      catch (x) { err.textContent = x.message; }
+      finally { go.disabled = false; }
+    });
+    paint();
+  })();
 </script>
 </body>
 </html>
