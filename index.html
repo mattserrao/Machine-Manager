@@ -112,53 +112,28 @@
       </div>
       <div class="pict">
         <svg viewBox="0 0 240 78">
-        <g fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <!-- sheet line -->
-          <path d="M14 40 H22 M34 40 H40 M82 40 H86 M128 40 H132 M158 40 H162 M192 40 H196" stroke="#c08a5a" stroke-width="1"/>
-          <!-- 3rd & 2nd dryer felts (top / bottom) -->
-          <rect x="40" y="10" width="42" height="24" rx="4" stroke="#9333ea" stroke-width="1.6"/>
-          <rect x="44" y="46" width="34" height="22" rx="4" stroke="#9333ea" stroke-width="1.6"/>
-          <rect x="86" y="10" width="42" height="24" rx="4" stroke="#9333ea" stroke-width="1.6"/>
-          <rect x="90" y="46" width="34" height="22" rx="4" stroke="#9333ea" stroke-width="1.6"/>
-          <!-- 1st dryer unorun felt weaving -->
-          <path d="M132 12 H158 M132 12 V28 M158 12 V28 M138 28 V48 M152 28 V48 M138 48 Q145 56 152 48" stroke="#9333ea" stroke-width="1.6"/>
-          <!-- press felts -->
-          <rect x="162" y="8" width="13" height="26" rx="3" stroke="#ea8a1a" stroke-width="1.6"/>
-          <rect x="178" y="8" width="13" height="26" rx="3" stroke="#ea8a1a" stroke-width="1.6"/>
-          <rect x="162" y="44" width="29" height="24" rx="3" stroke="#ea8a1a" stroke-width="1.6"/>
-          <!-- top & base ply wires -->
-          <rect x="198" y="14" width="22" height="18" rx="3" stroke="#0e98b5" stroke-width="1.6"/>
-          <rect x="196" y="44" width="26" height="18" rx="3" stroke="#0e98b5" stroke-width="1.6"/>
+        <!-- sheet line -->
+        <path d="M14 36 H232" stroke="#d6c2ad" stroke-width="1.2"/>
+        <!-- reel + calender -->
+        <circle cx="12" cy="36" r="8" fill="#f5e6c8" stroke="#a8a29e" stroke-width="1.4"/><circle cx="12" cy="36" r="2" fill="#a8a29e"/>
+        <g fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.4"><circle cx="32" cy="30" r="5"/><circle cx="32" cy="42" r="5"/></g>
+        <!-- sections -->
+        <g fill="#fff" stroke-width="1.8">
+          <rect x="44" y="18" width="40" height="36" rx="6" stroke="#9333ea"/>
+          <rect x="90" y="18" width="40" height="36" rx="6" stroke="#9333ea"/>
+          <rect x="136" y="18" width="28" height="36" rx="6" stroke="#9333ea"/>
+          <rect x="170" y="18" width="28" height="36" rx="6" stroke="#ea8a1a"/>
+          <rect x="204" y="18" width="20" height="36" rx="6" stroke="#0e98b5"/>
         </g>
-        <g fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.2">
-          <!-- dryer cans -->
-          <circle cx="47" cy="30" r="4.5"/><circle cx="61" cy="30" r="4.5"/><circle cx="75" cy="30" r="4.5"/>
-          <circle cx="54" cy="48" r="4.5"/><circle cx="68" cy="48" r="4.5"/>
-          <circle cx="93" cy="30" r="4.5"/><circle cx="107" cy="30" r="4.5"/><circle cx="121" cy="30" r="4.5"/>
-          <circle cx="100" cy="48" r="4.5"/><circle cx="114" cy="48" r="4.5"/>
-          <circle cx="138" cy="28" r="4.5"/><circle cx="152" cy="28" r="4.5"/>
-          <circle cx="145" cy="49" r="3.5"/>
-          <!-- calender -->
-          <circle cx="28" cy="33" r="5"/><circle cx="28" cy="46" r="5"/>
-          <!-- press rolls -->
-          <circle cx="168.5" cy="34" r="4.5"/><circle cx="168.5" cy="44" r="4.5"/>
-          <circle cx="184.5" cy="34" r="4.5"/><circle cx="184.5" cy="44" r="4.5"/>
-          <!-- lumpbreaker -->
-          <circle cx="210" cy="38" r="3"/>
-          <!-- refiners -->
-          <rect x="226" y="16" width="10" height="7" rx="2"/><rect x="226" y="26" width="10" height="7" rx="2"/>
-          <rect x="226" y="46" width="10" height="7" rx="2"/><rect x="226" y="56" width="10" height="7" rx="2"/>
+        <!-- refiners -->
+        <g fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.2"><rect x="228" y="22" width="8" height="10" rx="2"/><rect x="228" y="40" width="8" height="10" rx="2"/></g>
+        <!-- labels -->
+        <g font-size="7.5" fill="#a1a1aa" text-anchor="middle">
+          <text x="12" y="62">reel</text><text x="104" y="66">dryers</text><text x="184" y="66">press</text><text x="214" y="66">wires</text>
         </g>
-        <!-- reel -->
-        <circle cx="10" cy="34" r="8" fill="#f5e6c8" stroke="#a8a29e" stroke-width="1.2"/><circle cx="10" cy="34" r="2" fill="#a8a29e"/>
-        <circle cx="10" cy="51" r="5" fill="#f5f5f4" stroke="#a8a29e" stroke-width="1.2"/>
         <!-- life status pips -->
-        <circle cx="82" cy="10" r="3.2" fill="#facc15" stroke="#fff" stroke-width="1"/>
-        <circle cx="175" cy="8" r="3.2" fill="#ef4444" stroke="#fff" stroke-width="1"/>
-        <circle cx="236" cy="16" r="3.2" fill="#facc15" stroke="#fff" stroke-width="1"/>
-        <!-- direction -->
-        <path d="M14 74 H40 M14 74 l4 -3 M14 74 l4 3" stroke="#a1a1aa" stroke-width="1" fill="none" stroke-linecap="round"/>
-        <text x="44" y="76.5" font-size="7" fill="#a1a1aa">machine direction</text>
+        <circle cx="84" cy="18" r="4" fill="#facc15" stroke="#fff" stroke-width="1.2"/>
+        <circle cx="198" cy="18" r="4" fill="#ef4444" stroke="#fff" stroke-width="1.2"/>
       </svg>
         <div class="open">Open →</div>
       </div>
