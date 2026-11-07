@@ -193,6 +193,49 @@
   .srow .nm small{font-size:11.5px;color:var(--muted);font-weight:400}
   .dsec input.rname{flex:1;border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-size:12.5px;outline:none}
   .dsec input.rname:focus{border-color:#a8a29e}
+  /* ---------- Condition & history ---------- */
+  :root{ --cd-wear:#f59e0b; --cd-worn:#ea580c; --cd-damaged:#dc2626; }
+  .cond{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:999px;letter-spacing:.02em;white-space:nowrap}
+  .cond.good{background:#dcfce7;color:#166534}
+  .cond.wear{background:#fef3c7;color:#92400e}
+  .cond.worn{background:#ffedd5;color:#9a3412}
+  .cond.damaged{background:#fee2e2;color:#b91c1c}
+  .chip.flag{background:#ffedd5;color:#9a3412}
+  .flg circle{stroke:#fff;stroke-width:2.5}
+  .flg.wear circle{fill:var(--cd-wear)} .flg.worn circle{fill:var(--cd-worn)} .flg.damaged circle{fill:var(--cd-damaged)}
+  .flg text{font-size:14px;font-weight:700;fill:#fff;text-anchor:middle;dominant-baseline:central}
+  .seg{display:flex;border:1px solid var(--line);border-radius:9px;padding:2px;gap:2px}
+  .seg button{flex:1;border:0;background:transparent;border-radius:7px;padding:6px 4px;font-size:12.5px;font-weight:500;color:#57534e}
+  .seg button:hover{background:#f5f5f4}
+  .seg button.on.good{background:#dcfce7;color:#166534}
+  .seg button.on.wear{background:#fef3c7;color:#92400e}
+  .seg button.on.worn{background:#ffedd5;color:#9a3412}
+  .seg button.on.damaged{background:#fee2e2;color:#b91c1c}
+  .flagbox{border-radius:10px;padding:9px 12px;font-size:12.5px;line-height:1.45;background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+  .flagbox.damaged{background:#fef2f2;color:#991b1b;border-color:#fca5a5}
+  .flagbox.wear{background:#fffbeb;color:#92400e;border-color:#fde68a}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grid2 .fld input,.grid2 .fld select{width:100%;min-width:0}
+  .grid2 .full{grid-column:1/-1}
+  .chform{border:1px solid #fecaca;background:#fffafa;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+  .chform h4,.hedit h4{margin:0;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .hstats{display:flex;gap:6px;flex-wrap:wrap}
+  .hcard{border:1px solid var(--line);border-radius:9px;padding:8px 8px 8px 11px;font-size:12.5px;display:flex;flex-direction:column;gap:4px}
+  .hcard .top{display:flex;align-items:center;gap:6px}
+  .hcard .when{flex:1;color:#44403c;font-variant-numeric:tabular-nums}
+  .hcard .age{font-weight:600;font-variant-numeric:tabular-nums;background:#f5f5f4;border-radius:999px;padding:1px 8px;font-size:12px}
+  .hcard .meta{display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+  .hcard .what{color:#57534e;font-size:12px}
+  .hcard .nt{color:#44403c;font-size:12px;line-height:1.45;white-space:pre-wrap}
+  .hcard .rm,.hcard .ed{border:0;background:transparent;font-size:13px;color:#a8a29e;padding:2px 6px;border-radius:5px}
+  .hcard .ed:hover{color:var(--ink);background:#f5f5f4}
+  .hcard .rm:hover{color:var(--bad);background:#fef2f2}
+  .hedit{border:1px solid #bfdbfe;background:#f8fbff;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+  .reason{font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:999px;background:#f5f5f4;color:#44403c}
+  .reason.damaged{background:#fee2e2;color:#b91c1c}
+  .reason.performance{background:#e0e7ff;color:#3730a3}
+  .demo-box{border:1px dashed #d6d3d1;border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+
   .welcome{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5;color:#1e3a8a}
 
   #toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:500;
@@ -229,7 +272,7 @@
     <div class="card-head">
       <h2>Machine</h2>
       <span class="md">Click a fabric, roll or refiner to set dates and target life; click a section name for its card</span>
-      <span class="legend"><span><i style="background:#fde047"></i>Due within 6 wks</span><span><i style="background:#dc2626"></i>Overdue</span></span>
+      <span class="legend"><span><i style="background:#fde047"></i>Due within 6 wks</span><span><i style="background:#dc2626"></i>Overdue</span><span><i style="background:var(--cd-worn);border-radius:50%"></i>Flagged: change next outage</span></span>
       <span class="spacer"></span>
       <span id="summary" class="row"></span>
       <div class="zoom">
@@ -265,10 +308,11 @@
 <script src="mm-config.js"></script>
 <script src="mm-cloud.js"></script>
 <script src="mm-machine.js"></script>
+<script src="mm-demo.js"></script>
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.3.1';
+  const VERSION = 'v0.4.0';
   const KEY = 'machine-manager-mymachine';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'My Machine ' + VERSION;
@@ -291,7 +335,7 @@
   function readLocal(){
     try {
       const d = JSON.parse(localStorage.getItem(KEY));
-      if (d && d.machine) return { machine: normalize(d.machine), items: d.items || {} };
+      if (d && d.machine) return { machine: normalize(d.machine), items: d.items || {}, demo: !!d.demo };
     } catch (e) { /* storage unavailable or corrupt */ }
     return null;
   }
@@ -342,7 +386,7 @@
   function save(){
     if (cloud) return cloud.save();
     try {
-      localStorage.setItem(KEY, JSON.stringify({ version: VERSION, saved: new Date().toISOString(), machine: S.machine, items: S.items }));
+      localStorage.setItem(KEY, JSON.stringify({ version: VERSION, saved: new Date().toISOString(), demo: !!S.demo, machine: S.machine, items: S.items }));
       $('saveState').textContent = 'Saved';
       clearTimeout(saveTimer); saveTimer = setTimeout(() => $('saveState').textContent = '', 1600);
     } catch (e) {
@@ -437,7 +481,9 @@
     const badge = (id, bx, by) => {
       const d = daysOn(id), txt = d == null ? '—' : `${d} d`;
       const w = Math.max(44, txt.length * 11.5 + 22);
-      return `<g class="bdg${d == null ? ' unset' : ''}"><rect x="${bx - w/2}" y="${by - 15}" width="${w}" height="30" rx="15"/><text x="${bx}" y="${by + 0.5}">${txt}</text></g>`;
+      const it = S.items[id], fl = MM.flagged(it)
+        ? `<g class="flg ${it.condition}"><title>${esc(MM.condLabel(it.condition))} — change at next outage</title><circle cx="${bx + w/2 - 1}" cy="${by - 14}" r="10"/><text x="${bx + w/2 - 1}" y="${by - 13.5}">!</text></g>` : '';
+      return `<g class="bdg${d == null ? ' unset' : ''}"><rect x="${bx - w/2}" y="${by - 15}" width="${w}" height="30" rx="15"/><text x="${bx}" y="${by + 0.5}">${txt}</text></g>${fl}`;
     };
     const cls = id => { const st = status(id); return `it ${byId[id].kind}${selected === id ? ' sel' : ''}${st && st.level !== 'ok' ? ' ' + st.level : ''}`; };
     const open = (id) => `<g class="${cls(id)}" data-id="${id}" tabindex="0" role="button" aria-label="${esc(byId[id].name)}" style="--fc:${CAT_COLOR[byId[id].cat]}"><title>${esc(byId[id].name)}</title>`;
@@ -609,7 +655,7 @@
       const it = S.items[p.id] || {}, d = daysOn(p.id), st = status(p.id), lv = st ? st.level : '';
       const left = st ? `<div class="left ${lv}">${st.left < 0 ? fmtSpan(st.left) + ' overdue' : st.left === 0 ? 'due today' : fmtSpan(st.left) + ' left'}</div>` : '';
       return `<tr data-id="${p.id}" class="${selected === p.id ? 'sel ' : ''}${lv}">
-        <td><div class="pname" style="--fc:${CAT_COLOR[p.cat]}"><span class="sw"></span>${esc(p.name)}</div><div class="psec">${esc(p.section)}</div></td>
+        <td><div class="pname" style="--fc:${CAT_COLOR[p.cat]}"><span class="sw"></span>${esc(p.name)}</div><div class="psec">${esc(p.section)}${MM.flagged(it) ? ` · <span class="cond ${it.condition}" title="Change at next outage">${esc(MM.condLabel(it.condition))}</span>` : ''}</div></td>
         <td class="dt">${fmtDate(it.installed)}</td>
         <td class="dt">${fmtTarget(p.id)}</td>
         <td class="r"><span class="days${d == null ? ' unset' : ''} ${lv}">${d == null ? 'not set' : d + ' d'}</span>${left}</td></tr>`;
@@ -623,7 +669,9 @@
     const unset = P.filter(p => daysOn(p.id) == null).length;
     const over = P.filter(p => (status(p.id) || {}).level === 'over').length;
     const soon = P.filter(p => (status(p.id) || {}).level === 'soon').length;
+    const flg = P.filter(p => MM.flagged(S.items[p.id])).length;
     $('summary').innerHTML = `<span class="chip">${fab} fabrics</span><span class="chip">${rl} rolls</span>` + (rf ? `<span class="chip">${rf} refiners</span>` : '') +
+      (flg ? `<span class="chip flag">${flg} flagged for next outage</span>` : '') +
       (over ? `<span class="chip over">${over} overdue</span>` : '') +
       (soon ? `<span class="chip soon">${soon} due within 6 wks</span>` : '') +
       (unset ? `<span class="chip warn">${unset} not set</span>` : '');
@@ -651,21 +699,79 @@
     renderAll();
   }
 
+  // Drawer sub-states for the open position (reset when another position opens).
+  let chOpen = false;          // change-out form showing
+  let histEdit = null;         // index into history being edited, or 'new' for a past run being added
+  const optList = (list, sel) => list.map(x => `<option value="${x.id}"${x.id === sel ? ' selected' : ''}>${esc(x.label)}</option>`).join('');
+  const what = h => [h.vendor, h.style, h.serial ? 'S/N ' + h.serial : ''].filter(Boolean).map(esc).join(' · ');
+
+  function histForm(h, isRef){
+    h = h || {};
+    return `<div class="hedit"><h4>${histEdit === 'new' ? (isRef ? 'Add a past plate set' : 'Add a past run') : 'Edit run'}</h4>
+      <div class="grid2">
+        <div class="fld"><label for="hInst">Installed</label><input id="hInst" type="date" value="${h.installed || ''}" max="${todayStr()}"></div>
+        <div class="fld"><label for="hRem">Removed</label><input id="hRem" type="date" value="${h.removed || ''}" max="${todayStr()}"></div>
+        <div class="fld"><label for="hVendor">Vendor</label><input id="hVendor" type="text" value="${esc(h.vendor)}"></div>
+        <div class="fld"><label for="hStyle">Style</label><input id="hStyle" type="text" value="${esc(h.style)}"></div>
+        <div class="fld full"><label for="hSerial">Serial #</label><input id="hSerial" type="text" value="${esc(h.serial)}"></div>
+        <div class="fld"><label for="hReason">Reason removed</label><select id="hReason">${optList(MM.REASONS, h.reason || 'planned')}</select></div>
+        <div class="fld"><label for="hCond">Condition when removed</label><select id="hCond">${optList(MM.CONDITIONS, h.condition || 'good')}</select></div>
+        <div class="fld full"><label for="hNote">Notes</label><textarea id="hNote" placeholder="What it looked like, why it came off, performance…">${esc(h.note)}</textarea></div>
+      </div>
+      <div class="row"><button class="btn" data-act="hcancel">Cancel</button><span class="spacer"></span><button class="btn primary" data-act="hsave">Save run</button></div>
+    </div>`;
+  }
+
   function openItem(id){
     if (draft) return; // Setup is open
     const p = positions(S.machine).find(q => q.id === id);
     if (!p) return;
+    if (drawer.dataset.mode !== 'item' || drawer.dataset.id !== id) { chOpen = false; histEdit = null; }
     selected = id; selectedSec = null;
     renderAll();
     const it = S.items[id] || {}, tg = targetOf(id), isRef = p.kind === 'refiner';
     const d = daysOn(id);
-    const hist = (it.history || []).slice().reverse();
+    const histAll = it.history || [];
+    const hist = histAll.slice().reverse();
     const st = status(id);
+    const cond = it.condition || 'good', flag = MM.flagged(it);
     const dueBox = st
       ? `<div class="due ${st.level}">${st.level === 'over'
           ? `<b>Overdue by ${fmtSpan(st.left)}</b><br>Change was due ${fmtDate(st.due)}`
           : `<b>${st.left === 0 ? 'Due today' : fmtSpan(st.left) + ' left'}</b><br>Change due ${fmtDate(st.due)}`}</div>`
       : (tg ? `<div class="due">Set ${isRef ? 'the plate install date' : 'an install date'} to see when ${isRef ? 'plates are' : 'this is'} due.</div>` : '');
+    const runWord = isRef ? 'plate set' : 'run';
+    // history summary
+    const ages = histAll.map(h => h.days).filter(n => n >= 0);
+    const avg = ages.length ? Math.round(ages.reduce((a, b) => a + b, 0) / ages.length) : 0;
+    const stats = ages.length > 1 ? `<div class="hstats"><span class="chip">${ages.length} ${runWord}s</span><span class="chip">avg ${avg} d</span><span class="chip">${Math.min(...ages)}–${Math.max(...ages)} d</span>${
+      histAll.filter(h => h.reason === 'damaged').length ? `<span class="chip over">${histAll.filter(h => h.reason === 'damaged').length} damaged</span>` : ''}</div>` : '';
+    const histCards = hist.map((h, i) => {
+      const idx = hist.length - 1 - i;
+      if (histEdit === idx) return histForm(h, isRef);
+      const w = what(h);
+      return `<div class="hcard">
+        <div class="top"><span class="when">${fmtDate(h.installed)} → ${fmtDate(h.removed)}</span><span class="age">${h.days} d</span>
+          <button class="ed" data-act="hedit" data-i="${idx}" title="Edit">✎</button><button class="rm" data-act="delhist" data-i="${idx}" title="Remove">✕</button></div>
+        ${h.reason || h.condition ? `<div class="meta">${h.reason ? `<span class="reason ${h.reason}">${esc(MM.reasonLabel(h.reason))}</span>` : ''}${h.condition ? `<span class="cond ${h.condition}" title="Condition when removed">Condition: ${esc(MM.condLabel(h.condition))}</span>` : ''}</div>` : ''}
+        ${w ? `<div class="what">${w}</div>` : ''}
+        ${h.note ? `<div class="nt">${esc(h.note)}</div>` : ''}
+      </div>`;
+    }).join('');
+    const changeForm = `<div class="chform"><h4>Log change-out</h4>
+      <div class="grid2">
+        <div class="fld full"><label for="chDate">${isRef ? 'Plates changed on' : 'Changed on'}</label><input id="chDate" type="date" value="${todayStr()}" min="${it.installed || ''}" max="${todayStr()}"></div>
+        <div class="fld"><label for="chReason">Reason removed</label><select id="chReason">${optList(MM.REASONS, MM.defaultReason(it))}</select></div>
+        <div class="fld"><label for="chCond">Condition when removed</label><select id="chCond">${optList(MM.CONDITIONS, cond)}</select></div>
+        <div class="fld full"><label for="chNote">Notes on the ${runWord} coming off</label><textarea id="chNote">${esc([it.note, it.conditionNote].filter(Boolean).join(' — '))}</textarea></div>
+        <div class="fld full"><span class="lbl">New ${isRef ? 'plates' : p.kind}</span></div>
+        <div class="fld"><label for="chVendor">Vendor</label><input id="chVendor" type="text" value="${esc(it.vendor)}"></div>
+        <div class="fld"><label for="chStyle">Style</label><input id="chStyle" type="text" value="${esc(it.style)}"></div>
+        <div class="fld full"><label for="chSerial">Serial #</label><input id="chSerial" type="text" placeholder="New serial number"></div>
+      </div>
+      <div class="row"><button class="btn" data-act="chcancel">Cancel</button><span class="spacer"></span><button class="btn primary" data-act="chsave">Log change</button></div>
+      <span class="hint">The current ${runWord} (${d ?? 0} d) moves to history and the count restarts from the change date.</span>
+    </div>`;
     openDrawer(`
       <div class="d-head" style="--fc:${CAT_COLOR[p.cat]}">
         <div><div class="kind">${KIND_LABEL[p.kind]}</div><div class="where">${esc(p.section)}</div></div>
@@ -674,6 +780,13 @@
       <div class="d-body">
         <h3>${esc(p.name)}</h3>
         <div class="big${d == null ? ' unset' : ''}">${d == null ? `<b>No ${isRef ? 'plate ' : ''}install date</b>` : `<b>${d}</b><span>day${d === 1 ? '' : 's'} on ${isRef ? 'plates' : 'machine'}</span>`}</div>
+        <div class="fld">
+          <span class="lbl">Condition</span>
+          <div class="seg" role="radiogroup" aria-label="Condition">${MM.CONDITIONS.map(c => `<button role="radio" aria-checked="${c.id === cond}" class="${c.id}${c.id === cond ? ' on' : ''}" data-act="cond" data-c="${c.id}">${c.label}</button>`).join('')}</div>
+          ${flag ? `<div class="flagbox ${cond}"><b>Flagged — change at the next outage.</b>${it.conditionDate ? ` Marked ${fmtDate(it.conditionDate)}.` : ''}</div>
+            <input id="condNote" type="text" value="${esc(it.conditionNote)}" placeholder="What’s wrong? (shows in Outage Planning)" style="border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:13px;outline:none">`
+          : '<span class="hint">Wear, Worn or Damaged flags it to be changed at the next outage.</span>'}
+        </div>
         <div class="fld">
           <label for="inst">${isRef ? 'Plates installed' : 'Installed'}</label>
           <div class="row">
@@ -691,17 +804,25 @@
           <span class="hint">Turns yellow within 6 weeks of the target, red once it’s past.${tg && tg.dflt ? ' Default for refiner plates is 12 weeks.' : ''}</span>
         </div>
         ${dueBox}
+        <div class="grid2">
+          <div class="fld"><label for="curVendor">Vendor</label><input id="curVendor" type="text" value="${esc(it.vendor)}"></div>
+          <div class="fld"><label for="curStyle">Style</label><input id="curStyle" type="text" value="${esc(it.style)}"></div>
+          <div class="fld full"><label for="curSerial">Serial #</label><input id="curSerial" type="text" value="${esc(it.serial)}"></div>
+        </div>
         <div class="fld">
           <label for="note">Notes</label>
-          <textarea id="note" placeholder="Vendor, style, serial number, condition…">${esc(it.note || '')}</textarea>
+          <textarea id="note" placeholder="Running notes on this ${runWord}…">${esc(it.note || '')}</textarea>
         </div>
-        ${it.installed ? `<div class="fld">
+        ${it.installed ? (chOpen ? changeForm : `<div class="fld">
           <span class="lbl">Changed out</span>
-          <div class="row"><button class="btn danger" data-act="replace">${isRef ? 'Plates changed today' : 'Replaced today'}</button></div>
-          <span class="hint">Logs the current run below and restarts the count from today.</span>
-        </div>` : ''}
-        ${hist.length ? `<div class="fld"><span class="lbl">${isRef ? 'Previous plate sets' : 'Previous runs'}</span><div class="hist">${hist.map((h, i) =>
-          `<div class="hrow"><span class="tt">${fmtDate(h.installed)} → ${fmtDate(h.removed)} · <b>${h.days} d</b></span><button class="rm" data-act="delhist" data-i="${hist.length - 1 - i}" title="Remove">✕</button></div>`).join('')}</div></div>` : ''}
+          <div class="row"><button class="btn danger" data-act="replace">${isRef ? 'Log plate change…' : 'Log change-out…'}</button></div>
+          <span class="hint">Records why it came off and its condition, then starts a new ${runWord}.</span>
+        </div>`) : ''}
+        <div class="fld"><span class="lbl">${isRef ? 'Previous plate sets' : 'History'}</span>
+          ${stats}
+          ${hist.length || histEdit === 'new' ? `<div class="hist">${histEdit === 'new' ? histForm({}, isRef) : ''}${histCards}</div>` : `<span class="hint">No previous ${runWord}s logged yet.</span>`}
+          ${histEdit === 'new' ? '' : `<div><button class="btn sm" data-act="hadd">+ Add past ${runWord}</button></div>`}
+        </div>
       </div>`);
     drawer.dataset.mode = 'item';
     drawer.dataset.id = id;
@@ -720,7 +841,7 @@
       const d = daysOn(p.id), st = status(p.id), lv = st ? st.level : '';
       const left = st ? (st.left < 0 ? fmtSpan(st.left) + ' overdue' : st.left === 0 ? 'due today' : fmtSpan(st.left) + ' left') : '';
       return `<button class="srow ${lv}" data-act="item" data-id="${p.id}" style="--fc:${CAT_COLOR[p.cat]}">
-        <span class="sw"></span><span class="nm">${esc(p.name)}<small>${KIND_LABEL[p.kind]}${left ? ' · ' + left : ''}</small></span>
+        <span class="sw"></span><span class="nm">${esc(p.name)}<small>${KIND_LABEL[p.kind]}${left ? ' · ' + left : ''}${MM.flagged(S.items[p.id]) ? ' · <b>' + esc(MM.condLabel(S.items[p.id].condition)) + '</b>, change next outage' : ''}</small></span>
         <span class="days${d == null ? ' unset' : ''} ${lv}">${d == null ? 'not set' : d + ' d'}</span></button>`;
     }).join('');
     openDrawer(`
@@ -740,7 +861,7 @@
 
   function setItem(id, patch){
     const it = S.items[id] = Object.assign({ installed: '', note: '', history: [] }, S.items[id] || {}, patch);
-    if (!it.installed && !it.note && !(it.target > 0) && !(it.history || []).length) delete S.items[id];
+    if (!it.installed && !it.note && !(it.target > 0) && !(it.history || []).length && !it.vendor && !it.style && !it.serial && !MM.flagged(it)) delete S.items[id];
     save();
   }
 
@@ -753,19 +874,53 @@
     if (act === 'item') return openItem(b.dataset.id);
     if (act === 'today') { setItem(id, { installed: todayStr() }); openItem(id); }
     else if (act === 'clear') { setItem(id, { installed: '' }); openItem(id); }
-    else if (act === 'replace') {
+    else if (act === 'cond') {
+      const c = b.dataset.c, it = S.items[id] || {};
+      if ((it.condition || 'good') === c) return;
+      setItem(id, { condition: c, conditionDate: c === 'good' ? '' : todayStr(), conditionNote: c === 'good' ? '' : (it.conditionNote || '') });
+      if (c !== 'good') toast(`Flagged ${MM.condLabel(c).toLowerCase()} — it’ll show on the next outage`);
+      openItem(id);
+      if (c !== 'good') { const n = $('condNote'); if (n) n.focus(); }
+    }
+    else if (act === 'replace') { chOpen = true; histEdit = null; openItem(id); drawer.querySelector('.chform').scrollIntoView({ block: 'start' }); $('chReason').focus({ preventScroll: true }); }
+    else if (act === 'chcancel') { chOpen = false; openItem(id); }
+    else if (act === 'chsave') {
+      const it = S.items[id], t = $('chDate').value || todayStr();
+      if (t < it.installed) return toast('Change date can’t be before the install date');
+      if (t > todayStr()) return toast('Change date can’t be in the future');
+      const prev = clone(it);
+      S.items[id] = MM.replaced(it, t, { reason: $('chReason').value, condition: $('chCond').value, note: $('chNote').value.trim(),
+        vendor: $('chVendor').value.trim(), style: $('chStyle').value.trim(), serial: $('chSerial').value.trim() });
+      save(); chOpen = false; renderAll(); openItem(id);
+      toast(id.startsWith('ref-') ? 'Plate change logged' : 'Change-out logged', 'Undo', () => { S.items[id] = prev; save(); renderAll(); openItem(id); });
+    }
+    else if (act === 'hadd' || act === 'hedit') {
+      histEdit = act === 'hadd' ? 'new' : +b.dataset.i; chOpen = false; openItem(id);
+      drawer.querySelector('.hedit').scrollIntoView({ block: 'nearest' }); $('hInst').focus({ preventScroll: true });
+    }
+    else if (act === 'hcancel') { histEdit = null; openItem(id); }
+    else if (act === 'hsave') {
+      const inst = $('hInst').value, rem = $('hRem').value;
+      if (!inst || !rem) return toast('Enter both the installed and removed dates');
+      if (rem < inst) return toast('Removed date can’t be before installed');
+      const it = S.items[id] || {};
+      if (it.installed && rem > it.installed) return toast('A past run has to come off by the current install date');
+      const h = { installed: inst, removed: rem, days: daysBetween(inst, rem), vendor: $('hVendor').value.trim(), style: $('hStyle').value.trim(),
+        serial: $('hSerial').value.trim(), reason: $('hReason').value, condition: $('hCond').value, note: $('hNote').value.trim() };
+      const history = (it.history || []).slice();
+      if (histEdit === 'new') history.push(h); else history[histEdit] = h;
+      history.sort((a, b) => a.installed.localeCompare(b.installed));
+      histEdit = null;
+      setItem(id, { history }); renderAll(); openItem(id);
+    }
+    else if (act === 'delhist') {
       if (!b.classList.contains('armed')) {
-        b.classList.add('armed'); b.textContent = 'Click again to confirm';
-        clearTimeout(armTimer); armTimer = setTimeout(() => { b.classList.remove('armed'); b.textContent = drawer.dataset.id.startsWith('ref-') ? 'Plates changed today' : 'Replaced today'; }, 3000);
+        b.classList.add('armed'); b.textContent = 'Remove?'; b.style.color = 'var(--bad)';
+        clearTimeout(armTimer); armTimer = setTimeout(() => { b.classList.remove('armed'); b.textContent = '✕'; b.style.color = ''; }, 3000);
         return;
       }
-      const it = S.items[id], t = todayStr();
-      const history = (it.history || []).concat([{ installed: it.installed, removed: t, days: Math.max(0, daysBetween(it.installed, t)) }]);
-      setItem(id, { installed: t, history });
-      toast(id.startsWith('ref-') ? 'New plate set started today' : 'New run started today');
-      openItem(id);
-    } else if (act === 'delhist') {
       const history = (S.items[id].history || []).slice(); history.splice(+b.dataset.i, 1);
+      histEdit = null;
       setItem(id, { history }); openItem(id);
     }
   });
@@ -783,7 +938,8 @@
   });
   drawer.addEventListener('input', e => {
     if (drawer.dataset.mode === 'setup') return setupChange(e);
-    if (e.target.id === 'note') setItem(drawer.dataset.id, { note: e.target.value });
+    const f = { note: 'note', curVendor: 'vendor', curStyle: 'style', curSerial: 'serial', condNote: 'conditionNote' }[e.target.id];
+    if (f) setItem(drawer.dataset.id, { [f]: e.target.value });
   });
 
   /* ---------- Drawer: machine setup ---------- */
@@ -833,6 +989,9 @@
           <span class="hint">The reel is always shown.</span>
         </div>
         ${firstRun ? '' : '<span class="hint">Removing a position hides it but keeps its dates; add it back and they return.</span>'}
+        ${!cloud && window.MMDemo ? `<div class="demo-box"><span class="lbl">Demo data (this browser only)</span>
+          <div class="row"><button class="btn sm" data-act="demoload">Load demo data</button><button class="btn sm danger" data-act="democlear">Clear all dates &amp; history</button></div>
+          <span class="hint">Demo data sets up PM1 with realistic ages, a few flagged items and a full base ply fabric history. Both can be undone.</span></div>` : ''}
       </div>
       <div class="d-foot">
         ${firstRun ? '' : '<button class="btn" data-act="close">Cancel</button>'}
@@ -857,6 +1016,13 @@
   function setupAction(act, b){
     if (act === 'addref') { draft.refiners.push({ id: 'r' + Date.now().toString(36), name: '' }); drawSetup(); renderAll(); const ins = drawer.querySelectorAll('.rname'); if (ins.length) ins[ins.length - 1].focus(); return; }
     if (act === 'delref') { draft.refiners.splice(+b.dataset.i, 1); drawSetup(); renderAll(); return; }
+    if (act === 'demoload' || act === 'democlear') {
+      const prev = clone(S);
+      S = act === 'demoload' ? MMDemo.build() : { machine: S.machine || draft, items: {}, demo: false };
+      save(); firstRun = false; closeDrawer();
+      toast(act === 'demoload' ? 'Demo data loaded' : 'All dates and history cleared', 'Undo', () => { S = prev; save(); renderAll(); });
+      return;
+    }
     if (act === 'adddry') { draft.dryers.push({ type: 'double' }); drawSetup(); renderAll(); }
     else if (act === 'deldry') { draft.dryers.splice(+b.dataset.i, 1); drawSetup(); renderAll(); }
     else if (act === 'savesetup') {
@@ -880,7 +1046,11 @@
         installed: (S.items[p.id] || {}).installed || null, daysOn: daysOn(p.id), targetLifeDays: lifeDays(p.id),
         dueDate: (status(p.id) || {}).due || null, daysLeft: status(p.id) ? status(p.id).left : null,
         status: status(p.id) ? { ok: 'ok', soon: 'due within 6 weeks', over: 'overdue' }[status(p.id).level] : null,
-        note: (S.items[p.id] || {}).note || '' }))
+        note: (S.items[p.id] || {}).note || '',
+        vendor: (S.items[p.id] || {}).vendor || '', style: (S.items[p.id] || {}).style || '', serial: (S.items[p.id] || {}).serial || '',
+        condition: (S.items[p.id] || {}).condition || 'good', flaggedForNextOutage: MM.flagged(S.items[p.id]),
+        conditionNote: (S.items[p.id] || {}).conditionNote || '',
+        history: ((S.items[p.id] || {}).history || []).map(h => Object.assign({}, h, { reason: MM.reasonLabel(h.reason) || h.reason || '', condition: MM.condLabel(h.condition) || '' })) }))
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const a = document.createElement('a');
@@ -957,7 +1127,7 @@
         // First time signed in: offer to bring over a machine set up in demo mode.
         const local = readLocal(), askKey = `mm-mymachine-copy-asked:${cloud.org.id}`;
         let asked = false; try { asked = !!localStorage.getItem(askKey); } catch (e) {}
-        if (!S.machine && local && cloud.edit && !asked){
+        if (!S.machine && local && !local.demo && cloud.edit && !asked){
           try { localStorage.setItem(askKey, '1'); } catch (e) {}
           const n = Object.values(local.items).filter(it => it.installed).length;
           if (confirm(`This browser has a machine saved from before you signed in (${local.machine.name}, ${n} install date${n === 1 ? '' : 's'}).\n\nCopy it to ${cloud.org.name} so your team can see it?`)){
@@ -968,6 +1138,10 @@
       } else cloud = null;            // signed out or no organization: demo mode
     }
     if (!cloud) load();
+    // Demo mode with nothing saved yet: start from the sample machine instead of a blank setup.
+    let demoStart = false;
+    if (!cloud && !S.machine && window.MMDemo) { S = MMDemo.build(); save(); demoStart = true; }
+    if (demoStart) toast('Showing demo data for PM1. Setup can reload or clear it.');
     if (!S.machine && (!cloud || cloud.edit)) openSetup(true);
     else {
       renderAll();
