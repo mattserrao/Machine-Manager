@@ -9,72 +9,577 @@
 <style>
   :root{
     --ink:#1f2328; --muted:#6b7280; --line:#e5e7eb; --accent:#2563eb;
-    --board:#fafaf9; --dot:#d6d3d1;
+    --ok:#16a34a; --bad:#dc2626; --warn:#d97706; --annual:#7c3aed; --board:#fafaf9; --dot:#d6d3d1;
+    --c-forming:#0891b2; --c-press:#d97706; --c-dryer:#9333ea; --c-roll:#44403c; --c-refiner:#475569;
     color-scheme:light only;
   }
   *{box-sizing:border-box}
   html,body{margin:0;min-height:100%;color:var(--ink);
     font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;
-    background-color:var(--board);
-    background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:24px 24px}
+    background-color:var(--board);background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:24px 24px}
+  button{font:inherit;color:inherit;cursor:pointer;background-color:#fff}
+  input,select,textarea{font:inherit;color:var(--ink);background-color:#fff}
+  [hidden]{display:none!important}
+  a{color:inherit}
 
-  .wrap{padding:14px 14px 60px}
-
-  /* ---------- Chrome (matches Whiteboard / My Machine) ---------- */
+  /* ---------- Chrome (same as the Whiteboard) ---------- */
   .bar{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);
     border-radius:12px;padding:6px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-  .topbar{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+  .top{position:relative;z-index:50;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    padding:14px 14px 10px;pointer-events:none}
+  .top > *{pointer-events:auto}
+  .topleft{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
   .brand{padding:6px 12px 6px 6px;gap:10px;text-decoration:none;color:inherit}
-  .brand:hover{box-shadow:0 2px 14px rgba(0,0,0,.10)}
-  .logo{width:28px;height:28px;border-radius:8px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px}
+  .logo{width:28px;height:28px;border-radius:8px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px;flex:none}
   .brand h1{margin:0;font-size:15px;font-weight:600;line-height:1.2}
-  .brand p{margin:0;font-size:11.5px;color:var(--muted)}
-  #ver{text-align:right;margin-top:18px;font-size:10.5px;color:rgba(0,0,0,.28);letter-spacing:.02em}
+  .brand p{margin:0;font-size:11.5px;color:var(--muted);max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 11px;font-size:13px;font-weight:500;white-space:nowrap}
+  .btn:hover{background:#f5f5f4}
+  .btn:disabled{opacity:.4;cursor:default;background:#fff}
+  .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .btn.primary:hover{background:#000}
+  .btn.sm{padding:3px 9px;font-size:12px;border-radius:7px}
+  .btn.on{background:#eff6ff;border-color:#bfdbfe;color:var(--accent)}
+  .sep{width:1px;height:20px;background:var(--line);margin:0 2px}
+  #saveState{font-size:11px;color:var(--muted);padding:0 6px;min-width:44px}
+  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:500;
+    background:var(--ink);color:#fff;font-size:13px;padding:9px 14px;border-radius:9px;transition:.2s;pointer-events:none;max-width:90vw}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  #toast.act{pointer-events:auto}
+  #toast button{margin-left:12px;border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:6px;padding:3px 9px;font-weight:600;font-size:12px}
+  #ver{position:fixed;right:12px;bottom:8px;font-size:10.5px;color:rgba(0,0,0,.28);letter-spacing:.02em}
 
-  /* ---------- Cards ---------- */
-  .card{background:#fff;border-radius:12px;border:1px solid rgba(0,0,0,.07);
-    box-shadow:0 1px 2px rgba(0,0,0,.06),0 6px 16px rgba(0,0,0,.07)}
-  .card-head{display:flex;align-items:center;gap:10px;padding:10px 12px 10px 16px;border-bottom:1px solid var(--line)}
-  .card-head h2{margin:0;font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  main{padding:6px 14px 60px}
 
-  .empty{display:grid;place-items:center;text-align:center;min-height:52vh;padding:40px 20px}
-  .empty .icon{width:44px;height:44px;border-radius:12px;background:#f5f5f4;display:grid;place-items:center;
-    font-size:20px;margin:0 auto 12px}
-  .empty p{margin:0}
-  .empty .t{font-weight:600;font-size:15px;margin-bottom:4px}
-  .empty .s{font-size:13px;color:var(--muted)}
+  /* ---------- Gate / empty states ---------- */
+  .gate{display:grid;place-items:center;min-height:70vh}
+  .gate .box{background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:14px;padding:26px 28px;max-width:420px;text-align:center;
+    box-shadow:0 1px 2px rgba(0,0,0,.06),0 10px 28px rgba(0,0,0,.08)}
+  .gate .icon{width:44px;height:44px;border-radius:12px;background:#f5f5f4;display:grid;place-items:center;font-size:20px;margin:0 auto 12px}
+  .gate h2{margin:0 0 6px;font-size:17px}
+  .gate p{margin:0 0 16px;font-size:13.5px;color:var(--muted);line-height:1.5}
+
+  /* ---------- Outage cards ---------- */
+  .lane{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:22px;align-items:start}
+  .lane-h{display:flex;align-items:center;gap:10px;margin:22px 2px 12px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .lane-h:first-child{margin-top:4px}
+  .card{background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,.07);overflow:hidden;
+    box-shadow:0 1px 2px rgba(0,0,0,.06),0 8px 22px rgba(0,0,0,.08)}
+  .card.annual{border-top:4px solid var(--annual)}
+  .card.past{opacity:.8}
+  .card.next{outline:2px solid var(--ink);outline-offset:3px}
+  .ch{padding:16px 18px 12px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--line)}
+  .ch .d{flex:1;min-width:0}
+  .ch .wd{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .ch .date{font-size:24px;font-weight:600;line-height:1.15;margin-top:1px}
+  .ch .rel{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .ch .rel b{color:var(--ink);font-weight:600}
+  .badges{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap;
+    color:var(--sc,#57534e);background:color-mix(in srgb,var(--sc,#57534e) 12%,#fff)}
+  .sec{padding:12px 18px 14px}
+  .sec + .sec{border-top:1px dashed rgba(0,0,0,.12)}
+  .sh{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .sh h3{margin:0;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  .sh .n{font-size:11px;font-weight:600;color:var(--muted);background:#f5f5f4;border-radius:999px;padding:1px 7px}
+  .sh .sp{flex:1}
+  .none{font-size:13px;color:#a8a29e;padding:4px 0}
+
+  /* due items: like tucked mini-notes on the whiteboard */
+  .due{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid rgba(0,0,0,.09);border-radius:9px;padding:7px 8px 7px 12px;
+    position:relative;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .due + .due{margin-top:6px}
+  .due::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:4px;border-radius:2px;background:var(--cc)}
+  .due .nm{flex:1;min-width:0}
+  .due .nm a{font-size:13px;font-weight:600;text-decoration:none}
+  .due .nm a:hover{text-decoration:underline}
+  .due .sub{font-size:11.5px;color:var(--muted);margin-top:1px}
+  .due.done{background:#f0fdf4;border-color:#bbf7d0}
+  .due.done .nm a{color:#166534}
+  .chg{font-size:11.5px;font-weight:600;color:#166534;white-space:nowrap}
+  .lnk{border:0;background:none;padding:0;font-size:11.5px;color:var(--muted);text-decoration:underline;cursor:pointer}
+
+  /* tasks: sticky notes */
+  .tasks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .task{position:relative;background:var(--c,#fff4b8);border-radius:9px;border:1px solid rgba(0,0,0,.08);padding:9px 10px 9px 9px;
+    box-shadow:0 1px 2px rgba(0,0,0,.06),0 4px 10px rgba(0,0,0,.06);display:flex;gap:7px;align-items:flex-start;min-height:56px}
+  .task input[type=checkbox]{margin:2px 0 0;accent-color:var(--ink);flex:none}
+  .task .tx{flex:1;min-width:0;font-size:13px;line-height:1.35;word-break:break-word;outline:none;white-space:pre-wrap;border-radius:4px}
+  .task .tx[contenteditable=true]:focus{background:rgba(255,255,255,.6)}
+  .task.done .tx{text-decoration:line-through;color:#78716c}
+  .task .x{position:absolute;top:3px;right:3px;border:0;background:transparent;border-radius:5px;font-size:12px;color:#78716c;padding:1px 5px;opacity:0}
+  .task:hover .x,.task .x:focus{opacity:1}
+  .task .x:hover{background:rgba(0,0,0,.08)}
+  .addtask{display:flex;gap:6px;margin-top:8px}
+  .addtask input{flex:1;border:1px dashed #d6d3d1;border-radius:9px;padding:8px 10px;font-size:13px;background:rgba(255,255,255,.7)}
+  .addtask input:focus{outline:none;border:1px solid #a8a29e;background:#fff}
+
+  .foot{font-size:12px;color:var(--muted);margin:26px 2px 0;line-height:1.6}
+  .foot a{color:var(--accent)}
+
+  /* ---------- Schedule editor ---------- */
+  .backdrop{position:fixed;inset:0;z-index:300;background:rgba(28,25,23,.35);display:grid;place-items:center;padding:16px}
+  .sheet{background:#fff;border-radius:14px;width:min(520px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .sheet-h{padding:18px 20px 10px}
+  .sheet-h h2{margin:0;font-size:17px}
+  .sheet-h p{margin:5px 0 0;font-size:13px;color:var(--muted);line-height:1.5}
+  .rows{padding:6px 20px;overflow:auto}
+  .row{display:grid;grid-template-columns:1fr 130px auto;gap:8px;align-items:center;padding:5px 0}
+  .row input,.row select{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:13px}
+  .row .ib{border:0;background:transparent;border-radius:7px;padding:5px 8px;color:#78716c}
+  .row .ib:hover{background:#f5f5f4;color:var(--bad)}
+  .row .wd{grid-column:1 / -1;font-size:11px;color:var(--muted);margin:-3px 0 0 2px}
+  .sheet-f{display:flex;gap:8px;align-items:center;padding:12px 20px 18px;border-top:1px solid var(--line)}
+  .sheet-f .sp{flex:1}
+  .err{color:var(--bad);font-size:12.5px}
+
+  @media print{
+    .top,.addtask,.task .x,.btn,#toast{display:none!important}
+    html,body{background:#fff}
+    .card{box-shadow:none;break-inside:avoid;border:1px solid #d6d3d1}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="topbar">
+<div class="top">
+  <div class="topleft">
     <div class="bar brand">
       <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
-      <div><h1>Operations Outage Planning</h1><p>Outage-day work</p></div>
+      <div><h1>Operations Outage Planning</h1><p id="brandSub">Outage-day work</p></div>
     </div>
-    <div id="acct"></div>
+    <div class="bar" id="toolbar" hidden>
+      <button class="btn" id="schedBtn">Edit schedule</button>
+      <button class="btn" id="pastBtn" title="Show outages that have already happened">Past</button>
+      <button class="btn" id="printBtn" title="Print the upcoming outage cards">Print</button>
+      <span id="saveState"></span>
+    </div>
   </div>
-
-  <section class="card">
-    <div class="card-head"><h2>Outage planning</h2></div>
-    <div class="empty">
-      <div>
-        <div class="icon">🛠</div>
-        <p class="t">Nothing here yet</p>
-        <p class="s">This tool is a placeholder.</p>
-      </div>
-    </div>
-  </section>
-
-  <div id="ver"></div>
+  <div id="acct"></div>
 </div>
+
+<main id="main"></main>
+
+<div id="editor" class="backdrop" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="edTitle">
+    <div class="sheet-h">
+      <h2 id="edTitle">Outage schedule</h2>
+      <p id="edHelp"></p>
+    </div>
+    <div class="rows" id="edRows"></div>
+    <div class="sheet-f">
+      <button class="btn" id="edAdd">+ Add outage</button>
+      <span class="err" id="edErr"></span>
+      <span class="sp"></span>
+      <button class="btn" id="edCancel">Cancel</button>
+      <button class="btn primary" id="edSave">Save schedule</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="ver"></div>
+
 <script src="vendor/supabase-2.119.0.js"></script>
 <script src="mm-config.js"></script>
 <script src="mm-cloud.js"></script>
+<script src="mm-machine.js"></script>
 <script>
-  const VERSION = 'v0.1.2';
-  document.getElementById('ver').textContent = 'Operations Outage Planning ' + VERSION;
-  MMCloud.mountAccount(document.getElementById('acct'), { compact: true });
+(() => {
+  'use strict';
+  const VERSION = 'v0.2.0';
+  const $ = id => document.getElementById(id);
+  $('ver').textContent = 'Operations Outage Planning ' + VERSION;
+
+  // Normal outages repeat every 6 weeks from Nov 11, 2026. Annual outages are marked but planned later.
+  const CADENCE_DAYS = 42, ANCHOR = '2026-11-11', PREFILL = 6, RECENT_DAYS = 21;
+  const CAT = { forming: 'var(--c-forming)', press: 'var(--c-press)', dryer: 'var(--c-dryer)', roll: 'var(--c-roll)', refiner: 'var(--c-refiner)' };
+  const TASK_COLORS = ['#fff4b8', '#d4ecff', '#d9f3d3', '#ffd8e1', '#e9e0ff', '#ffe2c4'];
+  const MM = window.MMMachine;
+  const { todayStr, parseDay, daysBetween, addDays } = MM;
+
+  /* ---------- State ---------- */
+  let session = null, oStore = null, mStore = null;
+  let machineRaw = null, machine = null, items = {};             // from My Machine (shared)
+  let O = { settings: null, outages: {}, tasks: {} };            // this tool's records
+  let showPast = false;
+  const canEdit = () => !!(oStore && oStore.edit);
+
+  /* ---------- Helpers ---------- */
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const uid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
+  const fmt = (s, o) => parseDay(s).toLocaleDateString(undefined, o);
+  const fmtShort = s => fmt(s, { month: 'short', day: 'numeric' });
+  const fmtLong = s => fmt(s, { month: 'short', day: 'numeric', year: 'numeric' });
+  const span = n => { n = Math.abs(n); return n < 14 ? `${n} day${n === 1 ? '' : 's'}` : `${Math.round(n / 7)} weeks`; };
+  function relDay(d){
+    const n = daysBetween(todayStr(), d);
+    return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n === -1 ? 'Yesterday' : n > 0 ? `in ${span(n)}` : `${span(n)} ago`;
+  }
+  let toastT;
+  function toast(msg, action){
+    const t = $('toast'); t.textContent = msg; t.classList.toggle('act', !!action);
+    if (action){ const b = el('button', '', action.label); b.addEventListener('click', () => { t.classList.remove('show'); action.fn(); }); t.appendChild(b); }
+    t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), action ? 7000 : 2800);
+  }
+  const outages = () => Object.entries(O.outages).map(([id, o]) => ({ ...o, id }))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
+
+  /* ---------- Which fabrics and rolls are due at which outage ----------
+     An item belongs to the last outage before it would go overdue: the latest outage on or
+     before its due date. It can only be changed at an outage after its current install date;
+     if none of those comes before the due date, it goes on the first one (overdue by then).
+     If its outage has passed and it wasn't changed, it also shows on the next upcoming
+     outage as missed. Items installed on an outage's date show there as changed. */
+  function plan(){
+    const list = outages(), today = todayStr();
+    const firstUp = list.find(o => o.date >= today);
+    const by = Object.fromEntries(list.map(o => [o.id, []]));
+    const unset = [], later = [];
+    if (!machine) return { by, unset, later };
+    for (const p of MM.positions(machine)){
+      const it = items[p.id], due = MM.dueDate(it, p.id);
+      if (!due){ unset.push(p); continue; }
+      const at = list.find(o => o.date === it.installed);
+      if (at) by[at.id].push({ p, it, due, changed: true });
+      const cands = list.filter(o => o.date > it.installed);   // outages where this run could be changed
+      if (!cands.length){ later.push(p); continue; }
+      let a = null; for (const o of cands) if (o.date <= due) a = o;
+      if (!a) a = cands[0];                                     // due before any chance: first one, overdue by then
+      const lastOne = a === list[list.length - 1];
+      if (lastOne && due > addDays(a.date, CADENCE_DAYS)){ later.push(p); continue; }   // can wait past the planned schedule
+      by[a.id].push({ p, it, due, changed: false });
+      if (a.date < today && firstUp && firstUp !== a && firstUp.date > it.installed) by[firstUp.id].push({ p, it, due, changed: false, missed: a });
+    }
+    for (const k in by) by[k].sort((x, y) => (x.changed - y.changed) || x.due.localeCompare(y.due));
+    return { by, unset, later };
+  }
+
+  /* ---------- Saving ---------- */
+  const oRecords = () => {
+    const r = {};
+    if (O.settings) r.settings = O.settings;
+    for (const [id, o] of Object.entries(O.outages)) r['outage:' + id] = o;
+    for (const [id, t] of Object.entries(O.tasks)) r['task:' + id] = t;
+    return r;
+  };
+  const mRecords = () => {
+    const r = {};
+    if (machineRaw) r.machine = machineRaw;
+    for (const [id, it] of Object.entries(items)) r['item:' + id] = it;
+    return r;
+  };
+  function onO(id, data){
+    if (id === 'settings') O.settings = data;
+    else if (id.startsWith('outage:')){ const k = id.slice(7); if (data) O.outages[k] = data; else delete O.outages[k]; }
+    else if (id.startsWith('task:')){ const k = id.slice(5); if (data) O.tasks[k] = data; else delete O.tasks[k]; }
+    softRender();
+  }
+  function onM(id, data){
+    if (id === 'machine'){ machineRaw = data; machine = data ? MM.normalize(JSON.parse(JSON.stringify(data))) : null; }
+    else if (id.startsWith('item:')){ const k = id.slice(5); if (data) items[k] = data; else delete items[k]; }
+    softRender();
+  }
+  let warned = false, viewWarned = false, stT;
+  function status(x){
+    const s = $('saveState');
+    if (x === 'saving') s.textContent = 'Saving…';
+    else if (x === 'saved'){
+      s.textContent = 'Saved'; warned = false; clearTimeout(stT); stT = setTimeout(() => s.textContent = '', 1600);
+      if ((oStore && oStore.conflicts) || (mStore && mStore.conflicts)) toast('Someone else changed that at the same moment — showing their version.');
+    } else if (x === 'error'){ s.textContent = 'Not saved'; if (!warned){ warned = true; toast('Can’t reach the server — keep this page open, it will keep retrying.'); } }
+    else if (x === 'viewonly'){ s.textContent = 'View only'; if (!viewWarned){ viewWarned = true; toast('You have view-only access — changes you make here aren’t saved.'); } }
+  }
+  const saveO = () => { oStore.save(); };
+  const saveM = () => { mStore.save(); };
+
+  /* ---------- Rendering ---------- */
+  // Live changes from others redraw the board, but never while someone is typing in it.
+  let pending = false;
+  function softRender(){
+    const a = document.activeElement;
+    if (a && $('main').contains(a) && (a.isContentEditable || a.tagName === 'INPUT')){ pending = true; return; }
+    requestAnimationFrame(render);
+  }
+  $('main').addEventListener('focusout', () => { if (pending){ pending = false; setTimeout(softRender, 0); } });
+
+  function gate(icon, title, text, btn){
+    const main = $('main'); main.textContent = '';
+    const g = el('div', 'gate'), b = el('div', 'box');
+    b.append(el('div', 'icon', icon), el('h2', '', title), el('p', '', text));
+    if (btn){ const x = btn.href ? Object.assign(el('a', 'btn primary', btn.label), { href: btn.href }) : el('button', 'btn primary', btn.label);
+      x.style.textDecoration = 'none'; if (btn.fn) x.addEventListener('click', btn.fn); b.appendChild(x); }
+    g.appendChild(b); main.appendChild(g);
+    $('toolbar').hidden = true;
+  }
+
+  function render(){
+    if (!session || !machine) return;
+    const list = outages(), today = todayStr();
+    if (!list.length){
+      if (canEdit()) gate('🗓', 'No outages scheduled', 'Add your upcoming outage dates to start planning.', { label: 'Set up schedule', fn: () => openEditor() });
+      else gate('🗓', 'No outages scheduled yet', `An editor in ${session.org.name} needs to set up the outage schedule.`);
+      return;
+    }
+    $('toolbar').hidden = false;
+    $('schedBtn').hidden = !canEdit();
+    const { by, unset, later } = plan();
+    const past = list.filter(o => o.date < today);
+    const recent = past.filter(o => daysBetween(o.date, today) <= RECENT_DAYS);
+    const older = past.filter(o => !recent.includes(o));
+    const up = list.filter(o => o.date >= today);
+    $('pastBtn').hidden = !older.length;
+    $('pastBtn').classList.toggle('on', showPast);
+    $('pastBtn').textContent = showPast ? 'Hide past' : `Past (${older.length})`;
+
+    const main = $('main'); main.textContent = '';
+    const lane = (title, os, cls) => {
+      if (!os.length) return;
+      main.appendChild(el('div', 'lane-h', title));
+      const l = el('div', 'lane');
+      os.forEach(o => l.appendChild(card(o, by[o.id], cls, o === up[0])));
+      main.appendChild(l);
+    };
+    lane('Upcoming', up);
+    lane('Recently finished', recent, 'past');
+    if (showPast) lane('Earlier', older.slice().reverse(), 'past');
+    if (!up.length) main.insertBefore(el('div', 'foot', 'No upcoming outages. Use Edit schedule to add the next ones.'), main.firstChild);
+
+    const f = el('div', 'foot');
+    const bits = [];
+    if (later.length) bits.push(`${later.length} fabric${later.length === 1 ? '' : 's'}/roll${later.length === 1 ? '' : 's'} not due until after the last planned outage.`);
+    if (unset.length) bits.push(`${unset.length} position${unset.length === 1 ? ' has' : 's have'} no install date or target life, so ${unset.length === 1 ? 'it isn’t' : 'they aren’t'} planned yet.`);
+    if (bits.length){ f.append(bits.join(' ') + ' '); const a = el('a', '', 'Open My Machine'); a.href = 'MyMachine.html'; f.appendChild(a); main.appendChild(f); }
+  }
+
+  function card(o, due, cls, isNext){
+    const today = todayStr();
+    const c = el('section', 'card' + (o.type === 'annual' ? ' annual' : '') + (cls ? ' ' + cls : '') + (isNext ? ' next' : ''));
+    c.dataset.id = o.id;
+    // header
+    const h = el('div', 'ch'), d = el('div', 'd');
+    d.append(el('div', 'wd', fmt(o.date, { weekday: 'long' })), el('div', 'date', fmtLong(o.date)));
+    const rel = el('div', 'rel'); const rb = el('b', '', relDay(o.date)); rel.append(rb);
+    const tasks = Object.entries(O.tasks).filter(([, t]) => t.outage === o.id).map(([id, t]) => ({ ...t, id })).sort((a, b) => (a.at || 0) - (b.at || 0));
+    const open = due.filter(x => !x.changed).length, tdone = tasks.filter(t => t.done).length;
+    rel.append(` · ${open} due · ${tdone}/${tasks.length} tasks done`);
+    d.appendChild(rel);
+    const bd = el('div', 'badges');
+    const ty = el('span', 'pill', o.type === 'annual' ? 'Annual outage' : 'Outage'); if (o.type === 'annual') ty.style.setProperty('--sc', 'var(--annual)');
+    bd.appendChild(ty);
+    if (isNext){ const n = el('span', 'pill', 'Next'); n.style.setProperty('--sc', 'var(--ink)'); bd.appendChild(n); }
+    h.append(d, bd); c.appendChild(h);
+
+    // fabrics & rolls from My Machine
+    const s1 = el('div', 'sec'), sh1 = el('div', 'sh');
+    sh1.append(el('h3', '', 'Fabrics & rolls due'), el('span', 'n', String(open)));
+    s1.appendChild(sh1);
+    if (!due.length) s1.appendChild(el('div', 'none', 'Nothing due before the next outage.'));
+    for (const x of due) s1.appendChild(dueRow(o, x, today));
+    c.appendChild(s1);
+
+    // tasks
+    const s2 = el('div', 'sec'), sh2 = el('div', 'sh');
+    sh2.append(el('h3', '', 'Tasks'), el('span', 'n', tasks.length ? `${tdone}/${tasks.length}` : '0'));
+    s2.appendChild(sh2);
+    const grid = el('div', 'tasks');
+    tasks.forEach(t => grid.appendChild(taskNote(t)));
+    if (tasks.length) s2.appendChild(grid);
+    else if (!canEdit()) s2.appendChild(el('div', 'none', 'No tasks yet.'));
+    if (canEdit()){
+      const add = el('div', 'addtask'), inp = el('input');
+      inp.placeholder = 'Add a task for this outage…'; inp.setAttribute('aria-label', 'New task for ' + fmtLong(o.date));
+      inp.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' || !inp.value.trim()) return;
+        const id = uid(), n = Object.values(O.tasks).filter(t => t.outage === o.id).length;
+        O.tasks[id] = { outage: o.id, text: inp.value.trim(), done: false, at: Date.now(), color: TASK_COLORS[n % TASK_COLORS.length] };
+        saveO(); inp.value = ''; render();
+        const again = document.querySelector(`.card[data-id="${o.id}"] .addtask input`); if (again) again.focus();
+      });
+      add.appendChild(inp); s2.appendChild(add);
+    }
+    c.appendChild(s2);
+    return c;
+  }
+
+  function dueRow(o, x, today){
+    const r = el('div', 'due' + (x.changed ? ' done' : ''));
+    r.style.setProperty('--cc', CAT[x.p.cat] || '#78716c');
+    const nm = el('div', 'nm'), a = el('a', '', x.p.name);
+    a.href = 'MyMachine.html#item=' + encodeURIComponent(x.p.id); a.title = 'Open in My Machine';
+    nm.appendChild(a);
+    const sub = el('div', 'sub');
+    if (x.changed){
+      sub.textContent = `${x.p.section} · changed at this outage · next due ${fmtLong(x.due)}`;
+    } else {
+      const gap = daysBetween(o.date, x.due);
+      sub.textContent = `${x.p.section} · due ${fmtLong(x.due)}`;
+      const pill = el('span', 'pill');
+      if (x.missed){ pill.textContent = `Missed ${fmtShort(x.missed.date)}`; pill.style.setProperty('--sc', 'var(--bad)'); }
+      else if (gap < 0){ pill.textContent = `${span(gap)} overdue by then`; pill.style.setProperty('--sc', 'var(--bad)'); }
+      else { pill.textContent = gap === 0 ? 'due that day' : `${span(gap)} left at outage`; pill.style.setProperty('--sc', 'var(--warn)'); }
+      pill.style.marginLeft = '6px'; sub.appendChild(pill);
+    }
+    nm.appendChild(sub); r.appendChild(nm);
+    if (!canEdit()) return r;
+    if (x.changed){
+      const last = (x.it.history || [])[x.it.history.length - 1];
+      r.appendChild(el('span', 'chg', '✓ Changed'));
+      if (last && last.removed === o.date){
+        const u = el('button', 'lnk', 'Undo'); u.title = 'Restore the previous install date in My Machine';
+        u.addEventListener('click', () => undoChange(x.p, o));
+        r.appendChild(u);
+      }
+    } else if (o.date <= today && !x.missed){
+      const b = el('button', 'btn sm', 'Mark changed');
+      b.title = `Record a new ${x.p.kind === 'refiner' ? 'plate set' : 'run'} starting ${fmtLong(o.date)} in My Machine`;
+      b.addEventListener('click', () => markChanged(x.p, o));
+      r.appendChild(b);
+    } else if (x.missed){
+      const b = el('button', 'btn sm', `Changed ${fmtShort(x.missed.date)}?`);
+      b.title = `If it was changed at the ${fmtLong(x.missed.date)} outage, record that in My Machine`;
+      b.addEventListener('click', () => markChanged(x.p, x.missed));
+      r.appendChild(b);
+    } else {
+      const p = el('span', 'pill', 'Planned'); p.title = 'Mark it changed on or after the outage day'; r.appendChild(p);
+    }
+    return r;
+  }
+
+  // "Changed at this outage" → new run in My Machine starting on the outage date (old run kept in history).
+  function markChanged(p, o){
+    const before = items[p.id] ? JSON.parse(JSON.stringify(items[p.id])) : undefined;
+    items[p.id] = MM.replaced(items[p.id], o.date);
+    saveM(); render();
+    toast(`${p.name}: new ${p.kind === 'refiner' ? 'plate set' : 'run'} from ${fmtShort(o.date)} saved to My Machine`, { label: 'Undo', fn: () => {
+      if (before) items[p.id] = before; else delete items[p.id];
+      saveM(); render();
+    } });
+  }
+  function undoChange(p, o){
+    const it = JSON.parse(JSON.stringify(items[p.id])), last = it.history.pop();
+    if (!last || last.removed !== o.date) return;
+    it.installed = last.installed; items[p.id] = it;
+    saveM(); render(); toast(`${p.name}: restored install date ${fmtShort(last.installed)}`);
+  }
+
+  function taskNote(t){
+    const n = el('div', 'task' + (t.done ? ' done' : ''));
+    n.style.setProperty('--c', t.color || TASK_COLORS[0]);
+    const cb = el('input'); cb.type = 'checkbox'; cb.checked = !!t.done; cb.disabled = !canEdit();
+    cb.setAttribute('aria-label', 'Done');
+    cb.addEventListener('change', () => { O.tasks[t.id] = { ...O.tasks[t.id], done: cb.checked }; saveO(); requestAnimationFrame(render); });
+    const tx = el('div', 'tx', t.text);
+    if (canEdit()){
+      tx.contentEditable = 'true'; tx.spellcheck = true;
+      tx.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); tx.blur(); } if (e.key === 'Escape'){ tx.textContent = O.tasks[t.id].text; tx.blur(); } });
+      tx.addEventListener('blur', () => {
+        const v = tx.innerText.trim();
+        if (!O.tasks[t.id]) return;
+        if (!v){ delete O.tasks[t.id]; saveO(); setTimeout(render, 0); return; }
+        if (v !== O.tasks[t.id].text){ O.tasks[t.id] = { ...O.tasks[t.id], text: v }; saveO(); }
+      });
+      const x = el('button', 'x', '✕'); x.title = 'Delete task'; x.setAttribute('aria-label', 'Delete task');
+      x.addEventListener('click', () => {
+        const was = O.tasks[t.id]; delete O.tasks[t.id]; saveO(); render();
+        toast('Task deleted', { label: 'Undo', fn: () => { O.tasks[t.id] = was; saveO(); render(); } });
+      });
+      n.append(cb, tx, x);
+    } else n.append(cb, tx);
+    return n;
+  }
+
+  /* ---------- Schedule editor ---------- */
+  let rows = [];
+  function cadenceFrom(d){ let x = ANCHOR; if (d) { while (x <= d) x = addDays(x, CADENCE_DAYS); return x; } while (x < todayStr()) x = addDays(x, CADENCE_DAYS); return x; }
+  function openEditor(){
+    const list = outages(), today = todayStr();
+    const first = !list.length;
+    rows = list.filter(o => o.date >= addDays(today, -RECENT_DAYS)).map(o => ({ id: o.id, date: o.date, type: o.type || 'normal' }));
+    if (first){ let d = cadenceFrom(); for (let i = 0; i < PREFILL; i++){ rows.push({ id: null, date: d, type: 'normal' }); d = addDays(d, CADENCE_DAYS); } }
+    $('edTitle').textContent = first ? 'Set up your outage schedule' : 'Outage schedule';
+    $('edHelp').textContent = first
+      ? `Normal outages repeat every 6 weeks from Nov 11. Check these dates, change any that are different, and mark annual outages. You can change them later.`
+      : 'Change a date, mark an outage annual, or remove one. Removing an outage also removes its tasks. Older past outages aren’t shown here.';
+    $('edErr').textContent = '';
+    drawRows(); $('editor').hidden = false;
+    const f = $('edRows').querySelector('input'); if (f) f.focus();
+  }
+  function drawRows(){
+    const box = $('edRows'); box.textContent = '';
+    rows.forEach((r, i) => {
+      const row = el('div', 'row');
+      const d = el('input'); d.type = 'date'; d.value = r.date; d.required = true; d.setAttribute('aria-label', 'Outage date');
+      d.addEventListener('change', () => { r.date = d.value; wd.textContent = r.date ? fmt(r.date, { weekday: 'long' }) + (r.id ? '' : ' · new') : ''; });
+      const t = el('select'); t.setAttribute('aria-label', 'Outage type');
+      [['normal', 'Normal'], ['annual', 'Annual']].forEach(([v, l]) => { const op = el('option', '', l); op.value = v; op.selected = r.type === v; t.appendChild(op); });
+      t.addEventListener('change', () => { r.type = t.value; });
+      const x = el('button', 'ib', '✕'); x.title = 'Remove'; x.setAttribute('aria-label', 'Remove outage');
+      x.addEventListener('click', () => { rows.splice(i, 1); drawRows(); });
+      const wd = el('div', 'wd', r.date ? fmt(r.date, { weekday: 'long' }) + (r.id ? '' : ' · new') : '');
+      row.append(d, t, x, wd); box.appendChild(row);
+    });
+    if (!rows.length) box.appendChild(el('div', 'none', 'No outages. Add one below.'));
+  }
+  $('edAdd').addEventListener('click', () => {
+    const last = rows.map(r => r.date).filter(Boolean).sort().pop() || outages().map(o => o.date).pop();
+    rows.push({ id: null, date: last ? addDays(last, CADENCE_DAYS) : cadenceFrom(), type: 'normal' });
+    drawRows(); const ins = $('edRows').querySelectorAll('input'); if (ins.length) ins[ins.length - 1].focus();
+  });
+  $('edCancel').addEventListener('click', () => { $('editor').hidden = true; });
+  $('editor').addEventListener('keydown', e => { if (e.key === 'Escape') $('editor').hidden = true; });
+  $('edSave').addEventListener('click', () => {
+    if (rows.some(r => !r.date)){ $('edErr').textContent = 'Every outage needs a date.'; return; }
+    const dates = rows.map(r => r.date);
+    if (new Set(dates).size !== dates.length){ $('edErr').textContent = 'Two outages have the same date.'; return; }
+    const shown = new Set(outages().filter(o => o.date >= addDays(todayStr(), -RECENT_DAYS)).map(o => o.id));
+    const keep = new Set(rows.filter(r => r.id).map(r => r.id));
+    const removed = [...shown].filter(id => !keep.has(id));
+    const lostTasks = Object.values(O.tasks).filter(t => removed.includes(t.outage)).length;
+    if (lostTasks && !confirm(`Removing ${removed.length === 1 ? 'that outage' : 'those outages'} also deletes ${lostTasks} task${lostTasks === 1 ? '' : 's'}. Continue?`)) return;
+    for (const id of removed){ delete O.outages[id]; for (const [k, t] of Object.entries(O.tasks)) if (t.outage === id) delete O.tasks[k]; }
+    for (const r of rows){
+      const id = r.id || uid();
+      O.outages[id] = Object.assign({}, O.outages[id] || {}, { date: r.date, type: r.type });
+    }
+    O.settings = Object.assign({}, O.settings || {}, { cadenceDays: CADENCE_DAYS, anchor: ANCHOR, setUp: true });
+    saveO(); $('editor').hidden = true; render();
+    toast('Schedule saved');
+  });
+
+  $('schedBtn').addEventListener('click', () => openEditor());
+  $('pastBtn').addEventListener('click', () => { showPast = !showPast; render(); });
+  $('printBtn').addEventListener('click', () => window.print());
+  // Day counts and "next outage" roll over at midnight.
+  let lastDay = todayStr();
+  setInterval(() => { if (todayStr() !== lastDay){ lastDay = todayStr(); softRender(); } }, 60000);
+
+  /* ---------- Start: signed-in users with My Machine set up ---------- */
+  (async () => {
+    if (!window.MMCloud || !MMCloud.enabled)
+      return gate('🔒', 'Sign-in isn’t available', 'Outage Planning shares data through your organization’s account, which isn’t set up on this site.');
+    MMCloud.mountAccount($('acct'), { compact: true });
+    try { session = await MMCloud.session(); }
+    catch (e) { return gate('⚠️', 'Can’t reach the server', 'Check your connection and reload the page.', { label: 'Reload', fn: () => location.reload() }); }
+    if (!session)
+      return gate('🔒', 'Sign in to plan outages', 'Outage Planning is shared with your team, so it needs an account. The other tools can still be tried in demo mode.', { label: 'Sign in', fn: () => MMCloud.openSignIn() });
+    if (!session.org)
+      return gate('🔒', 'No organization yet', 'Your account isn’t in an organization yet. Ask your administrator to add you.');
+    $('brandSub').textContent = `${session.org.name} · outages`;
+    gate('⏳', 'Loading…', 'Getting your outages and machine.');
+    oStore = MMCloud.openStore('outages', { snapshot: oRecords, onChange: onO, onStatus: status });
+    mStore = MMCloud.openStore('mymachine', { snapshot: mRecords, onChange: onM, onStatus: status });
+    let od, md;
+    try { [od, md] = await Promise.all([oStore.ready, mStore.ready]); }
+    catch (e) { return gate('⚠️', 'Couldn’t load', (e && e.message ? e.message + ' — ' : '') + 'reload to try again.', { label: 'Reload', fn: () => location.reload() }); }
+    for (const [k, v] of Object.entries(md || {})) onM(k, v);
+    for (const [k, v] of Object.entries(od || {})) onO(k, v);
+    if (!machine)
+      return gate('⚙', 'Set up My Machine first', `Outage Planning uses ${session.org.name}’s machine layout and fabric and roll dates from My Machine to show what’s due at each outage.`, { label: 'Open My Machine', href: 'MyMachine.html' });
+    render();
+    if (!outages().length && canEdit()) openEditor();
+  })();
+})();
 </script>
 <script src="mm-nav.js"></script>
 </body>
