@@ -438,7 +438,7 @@
           ? [{ id: 'sec-topply', label: 'Top ply wire', part: 'top' }, { id: 'sec-baseply', label: 'Base ply wire', part: 'bottom' }]
           : [{ id: 'sec-forming', label: 'Forming' }] },
       { t: 'press', w: m.press.nips * 130, secs: [{ id: 'sec-press', label: 'Press section' }] },
-      ...m.dryers.map((d, i) => ({ t: 'dryer', w: 226, d, s: i + 1, secs: [{ id: `sec-dryer-${i + 1}`, label: `${ord(i + 1)} dryer${d.type === 'uno' ? ' · unorun' : ''}` }] })),
+      ...m.dryers.map((d, i) => ({ t: 'dryer', w: 256, d, s: i + 1, secs: [{ id: `sec-dryer-${i + 1}`, label: `${ord(i + 1)} dryer${d.type === 'uno' ? ' · unorun' : ''}` }] })),
       ...(m.calender ? [{ t: 'calender', w: 90, secs: [{ id: 'sec-calender', label: 'Calender' }] }] : []),
       { t: 'reel', w: 90, secs: [{ id: 'sec-reel', label: 'Reel' }] }
     ];
@@ -514,43 +514,50 @@
         }
         sheet.push([x0, Y]);
       } else if (s.t === 'dryer') {
-        // three top cans, two bottom cans (or vacuum rolls for unorun); fabrics and sheet wrap them
-        const CR = 26, TY = 236, BY = 352, VR = 16, VY = 340;
-        const tops = [x1 - 41, x1 - 113, x1 - 185], bots = [x1 - 77, x1 - 149];
+        // Three top cans, two bottom cans (vacuum rolls for unorun). The sheet runs between the rows:
+        // under the top cans, over the bottom cans, with open draws between them.
+        // Top felt wraps the bottom of the top cans (felt rolls above, in the pockets); bottom felt wraps the
+        // top of the bottom cans (felt rolls below). Unorun: top felt only.
+        const CR = 26, TY = 236, BY = 336, VR = 16, VY = 318;
+        const tops = [x1 - 44, x1 - 128, x1 - 212], bots = [x1 - 86, x1 - 170];
         const uno = s.d.type === 'uno';
         tops.forEach(tx => back.push(`<circle class="cyl" cx="${tx}" cy="${TY}" r="${CR}"/>`));
         bots.forEach(bx => back.push(uno ? `<circle class="cyl" cx="${bx}" cy="${VY}" r="${VR}"/>` : `<circle class="cyl" cx="${bx}" cy="${BY}" r="${CR}"/>`));
-        // sheet: over the top cans, under the bottom cans
+        // sheet: arcs along the felted side of each can, open draws between rows
         sheet.push([x1, Y]); flushSheet();
-        const sc = [{ x: x1, y: Y, r: 0, s: 1 }];
+        const SR = CR + 1.5, BR = uno ? VR + 4 : CR + 1.5, BYc = uno ? VY : BY, k = Math.SQRT1_2;
+        let sp = `M${x1} ${Y}`;
         tops.forEach((tx, i) => {
-          sc.push({ x: tx, y: TY, r: CR + 1.5, s: -1 });
-          if (bots[i] != null) sc.push(uno ? { x: bots[i], y: VY, r: VR + 5, s: 1 } : { x: bots[i], y: BY, r: CR + 1.5, s: 1 });
+          sp += ` L${pt([tx + SR * k, TY + SR * k])} A${SR} ${SR} 0 0 1 ${pt([tx - SR * k, TY + SR * k])}`;   // under the top can
+          if (bots[i] != null) {
+            const bx = bots[i];
+            sp += ` L${pt([bx + BR * k, BYc - BR * k])} A${BR} ${BR} 0 0 0 ${pt([bx - BR * k, BYc - BR * k])}`;   // over the bottom can
+          }
         });
-        sc.push({ x: x0, y: Y, r: 0, s: 1 });
-        sheetPaths.push(wrapPath(sc, false));
+        sp += ` L${x0} ${Y}`;
+        sheetPaths.push(sp);
         sheet.push([x0, Y]);
         // felts
         const FR = CR + 5, fr = (x, y, r, s) => ({ x, y, r, s, felt: true });
-        const topLoop = (bottomRoll) => {
-          const cs = [fr(x1 - 10, 210, 8, 1)];
+        const topLoop = () => {
+          const cs = [fr(x1 - 8, 258, 8, 1)];
           tops.forEach((tx, i) => {
-            cs.push({ x: tx, y: TY, r: FR, s: -1 });
-            if (bots[i] != null) cs.push(bottomRoll ? { x: bots[i], y: VY, r: VR + 2.5, s: 1 } : fr((tx + tops[i + 1]) / 2, 222, 7, 1));
+            cs.push({ x: tx, y: TY, r: FR, s: 1 });
+            if (bots[i] != null) cs.push(fr((tx + tops[i + 1]) / 2, 192, 9, -1));
           });
-          cs.push(fr(x0 + 10, 210, 8, 1), fr(x0 + 10, 166, 8, 1), fr(x1 - 10, 166, 8, 1));
+          cs.push(fr(x0 + 8, 258, 8, 1), fr(x0 + 8, 160, 8, 1), fr(x1 - 8, 160, 8, 1));
           return cs;
         };
         if (uno) {
-          items.push(wrapBelt(`d${s.s}-felt`, topLoop(true), cx, 158));
+          items.push(wrapBelt(`d${s.s}-felt`, topLoop(), cx, 152));
         } else {
-          items.push(wrapBelt(`d${s.s}-felt-top`, topLoop(false), cx, 158));
-          const cs = [fr(x1 - 28, 372, 8, -1)];
+          items.push(wrapBelt(`d${s.s}-felt-top`, topLoop(), cx, 152));
+          const cs = [fr(x1 - 30, 312, 8, -1)];
           bots.forEach((bx, i) => {
-            cs.push({ x: bx, y: BY, r: FR, s: 1 });
-            if (bots[i + 1] != null) cs.push(fr((bx + bots[i + 1]) / 2, 366, 7, -1));
+            cs.push({ x: bx, y: BY, r: FR, s: -1 });
+            if (bots[i + 1] != null) cs.push(fr((bx + bots[i + 1]) / 2, 384, 9, 1));
           });
-          cs.push(fr(x0 + 28, 372, 8, -1), fr(x0 + 28, 430, 8, -1), fr(x1 - 28, 430, 8, -1));
+          cs.push(fr(x0 + 30, 312, 8, -1), fr(x0 + 30, 430, 8, -1), fr(x1 - 30, 430, 8, -1));
           items.push(wrapBelt(`d${s.s}-felt-bottom`, cs, cx, 438));
         }
       } else if (s.t === 'calender') {
