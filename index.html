@@ -53,25 +53,31 @@
   .sub .mini{font-size:11px;padding:3px 7px 3px 9px;border-radius:5px}
   .open{display:flex;justify-content:flex-end;font-size:12px;font-weight:500;color:var(--accent);padding:0 2px}
 
+
+  .top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+
   footer{margin-top:40px;font-size:12px;color:var(--muted)}
   #ver{text-align:right;margin-top:18px;font-size:10.5px;color:rgba(0,0,0,.28);letter-spacing:.02em}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div class="logo">MM</div>
-    <div>
-      <h1>Machine Manager</h1>
-      <p>Paper machine planning tools</p>
-    </div>
-  </header>
+  <div class="top">
+    <header>
+      <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
+      <div>
+        <h1>Machine Manager</h1>
+        <p>Paper machine planning tools</p>
+      </div>
+    </header>
+    <div id="acct"></div>
+  </div>
 
   <h2>Tools</h2>
   <div class="grid">
     <a class="card" href="ConsumablesTracker.html">
       <div class="body">
-        <span class="ver">v0.1.0</span>
+        <span class="ver">v0.1.1</span>
         <p class="title">Consumables Tracker</p>
         <p class="desc">Track doctor blades, shower nozzles and other wear items. Coming soon.</p>
       </div>
@@ -83,9 +89,9 @@
 
     <a class="card" href="MyMachine.html">
       <div class="body">
-        <span class="ver">v0.2.3</span>
+        <span class="ver">v0.3.0</span>
         <p class="title">My Machine</p>
-        <p class="desc">Diagram of your paper machine, set up to match it. Track days on for each fabric, roll and refiner plate set against a target life: yellow when due within 6 weeks, red when overdue.</p>
+        <p class="desc">Diagram of your paper machine, set up to match it. Track days on for each fabric, roll and refiner plate set against a target life: yellow when due within 6 weeks, red when overdue. Signed in, shared live with your team.</p>
       </div>
       <div class="tucked">
         <div class="mini" style="--c:#d4ecff">Fabrics
@@ -99,7 +105,7 @@
 
     <a class="card" href="OperationsOutagePlanning.html">
       <div class="body">
-        <span class="ver">v0.1.1</span>
+        <span class="ver">v0.1.2</span>
         <p class="title">Operations Outage Planning</p>
         <p class="desc">Plan operations work for outage days. Coming soon.</p>
       </div>
@@ -111,7 +117,7 @@
 
     <a class="card" href="PM1LLM.html">
       <div class="body">
-        <span class="ver">v0.1.0</span>
+        <span class="ver">v0.1.1</span>
         <p class="title">PM1 LLM</p>
         <p class="desc">Search and ask questions across all PM1 data. Coming soon.</p>
       </div>
@@ -123,7 +129,7 @@
 
     <a class="card" href="TaskPackageLibrary.html">
       <div class="body">
-        <span class="ver">v0.1.0</span>
+        <span class="ver">v0.1.1</span>
         <p class="title">Task Package Library</p>
         <p class="desc">Reusable outage work packages with crew, hours, tools and permits. Coming soon.</p>
       </div>
@@ -135,7 +141,7 @@
 
     <a class="card" href="VendorReports.html">
       <div class="body">
-        <span class="ver">v0.1.0</span>
+        <span class="ver">v0.1.1</span>
         <p class="title">Vendor Reports</p>
         <p class="desc">Placeholder for supplier reports. Coming soon.</p>
       </div>
@@ -147,9 +153,9 @@
 
     <a class="card" href="Whiteboard.html">
       <div class="body">
-        <span class="ver">v0.3.2</span>
+        <span class="ver">v0.4.0</span>
         <p class="title">Whiteboard</p>
-        <p class="desc">Free-form board of notes: checklists, status, owners and due dates, arrows, frames, stacks up to 4 levels deep. Outage and handover templates; export, import and print.</p>
+        <p class="desc">Free-form board of notes: checklists, status, owners and due dates, arrows, frames, stacks up to 4 levels deep. Outage and handover templates; export, import and print. Signed in, boards are shared live with your team.</p>
       </div>
       <div class="tucked">
         <div class="mini" style="--c:#fff4b8">Outage plan
@@ -177,9 +183,15 @@
 
   <div id="ver"></div>
 </div>
+<script src="vendor/supabase-2.119.0.js"></script>
+<script src="mm-config.js"></script>
+<script src="mm-cloud.js"></script>
 <script>
-  const VERSION = 'v0.1.0';
+  const VERSION = 'v0.3.0';
   document.getElementById('ver').textContent = 'Machine Manager ' + VERSION;
+
+  MMCloud.mountAccount(document.getElementById('acct'));
 </script>
+<script src="mm-nav.js"></script>
 </body>
 </html>
