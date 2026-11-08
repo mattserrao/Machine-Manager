@@ -49,7 +49,7 @@
   --board:var(--bg); --annual:var(--ink-2);
   /* dot grid: one 1px dot every --grid. Full strength on boards (moves with pan/zoom, matches Snap);
      quiet behind every other page, showing only in the space between boxes */
-  --grid:24px; --dot:#353532; --dot-quiet:#2f2f2d;
+  --grid:24px; --dot:#41413e; --dot-quiet:#383835; --dot-r:1.5px;   /* dark: slightly larger, soft dots so they show on any screen */
 
   /* notes are neutral cards (stored pastel colours are kept in the data but not shown) */
   --note-base:var(--raised); --note-tint:4%;
@@ -74,7 +74,7 @@
   --bad:#96600f; --bad-soft:#f4dfb3; --bad-ink:#6e470c; --bad-line:#b7791f;   /* solid overdue: darker so white text reads */
   --teal:#6c6c69; --orange:#6c6c69; --purple:#6c6c69; --slate:#6c6c69;
   --c-forming:#8a8a86; --c-press:#8a8a86; --c-dryer:#8a8a86; --c-roll:#4a4a47; --c-refiner:#4a4a47; --annual:#3f3f3d;
-  --dot:#e0e0dc; --dot-quiet:#e9e9e6; --note-base:#ffffff; --note-tint:4%;
+  --dot:#e0e0dc; --dot-quiet:#e9e9e6; --dot-r:1px; --note-base:#ffffff; --note-tint:4%;
   --shadow-pop:0 10px 28px rgba(0,0,0,.09),0 0 0 1px rgba(0,0,0,.03);
   --scrim:rgba(0,0,0,.22);
 }
@@ -84,7 +84,7 @@
 /* ---------- Page grid ----------
    The boards' dot grid, quieter, behind every page that isn't a board. Starts under the top bar so it
    lines up with the page; boxes are solid so it only shows between them. Off on paper. */
-.mm-grid,body:not(.mm-canvas){background-image:radial-gradient(var(--dot-quiet) 1px,transparent 1.2px);
+.mm-grid,body:not(.mm-canvas){background-image:radial-gradient(var(--dot-quiet) var(--dot-r),transparent calc(var(--dot-r) + .2px));
   background-size:var(--grid) var(--grid);background-position:0 var(--top-h)}
 @media print{ .mm-grid,body{background-image:none!important} }
 

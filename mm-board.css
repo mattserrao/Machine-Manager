@@ -3,7 +3,7 @@
 html,body{height:100%;overflow:hidden}
 /* ---------- Board ---------- */
   #board{position:fixed;inset:0;background-color:var(--board);
-    background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:var(--grid) var(--grid);
+    background-image:radial-gradient(var(--dot) var(--dot-r),transparent calc(var(--dot-r) + .2px));background-size:var(--grid) var(--grid);
     touch-action:none;cursor:default;overflow:hidden}
 #board.panning{cursor:grabbing}
 #world{position:absolute;left:0;top:0;transform-origin:0 0}
@@ -284,7 +284,7 @@ textarea.inline.mini-inline{min-height:54px;font-size:12px;padding:5px 7px;borde
 .ph span,.pf span{font-size:9.5px;color:var(--muted)}
 .pf{position:absolute;display:flex;justify-content:space-between;align-items:flex-end}
 .pvp{position:absolute;overflow:hidden;overflow:clip;contain:strict}
-.pvp.grid{background-image:radial-gradient(var(--dot) 1px,transparent 1.2px)}
+.pvp.grid{background-image:radial-gradient(var(--dot) var(--dot-r),transparent calc(var(--dot-r) + .2px))}
 .pworld{position:absolute;left:0;top:0;transform-origin:0 0}
 .pworld .note{box-shadow:none!important;border:1px solid rgb(var(--fg-rgb) / .2);transition:none;opacity:1!important;outline:none!important}
 .pworld .mini{box-shadow:none!important;transition:none}
