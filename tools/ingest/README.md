@@ -20,3 +20,8 @@ Tools the orchestrator calls (all read-only, RLS applies): `mm_llm_search_docs` 
 `mm_llm_search_docs_vec` (embeddings), `mm_llm_search_records` (BUS/WO/action/RCFA text), `mm_llm_position_history`,
 `mm_llm_outage_scope`, `mm_llm_overdue_actions`, `mm_llm_envoy`, `mm_llm_pi_daily`, `mm_llm_pi_values`.
 The full Pi history is also served by the mock PI Web API (`tools/demo-data/mock_piwebapi.py`).
+
+## Refreshing the saved answers
+
+`ask_demo.py` runs the demo questions through the live `mm-llm-ask` function with an ingest token; the answers are
+saved under each question id and shown to signed-in users on the MM LLM page. See `supabase/SETUP.md`.

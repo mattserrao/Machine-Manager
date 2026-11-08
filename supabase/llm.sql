@@ -22,6 +22,9 @@
 -- Tools (what the orchestrator calls; security invoker, so RLS applies to the signed-in user):
 --   mm_llm_search_docs, mm_llm_search_docs_vec, mm_llm_search_records, mm_llm_position_history, mm_llm_outage_scope,
 --   mm_llm_overdue_actions, mm_llm_envoy, mm_llm_pi_daily, mm_llm_pi_values
+--
+-- Asking: llm.query_access (who may ask, per org, with a daily limit) and llm.answers (every answer with its tool
+-- trace; readable by signed-in users who can see the org). Questions go through the mm-llm-ask edge function.
 
 create schema if not exists llm;
 grant usage on schema llm to authenticated, service_role;
@@ -476,5 +479,144 @@ do $$ declare f text; begin
                            'mm_llm_pi_values(uuid, text, timestamptz, timestamptz)'] loop
     execute format('revoke execute on function public.%s from public', f);
     execute format('grant execute on function public.%s to anon, authenticated', f);   -- RLS decides what comes back
+  end loop;
+end $$;
+
+
+-- ───────────────────────── Asking the assistant ─────────────────────────
+-- Two tiers: every signed-in user can read the assistant's saved answers for orgs they can see (members, or a
+-- public demo org); only users on llm.query_access can ask new questions (through the mm-llm-ask edge function,
+-- which runs the tools as that user and saves the answer). Grant in the SQL editor:
+--   select public.mm_llm_grant_query('demodemo@gmail.com', 'Demo Mill', 40);   -- questions per day
+
+create table if not exists llm.query_access (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  org_id uuid not null references public.orgs(id) on delete cascade,
+  daily_limit int not null default 40 check (daily_limit between 0 and 1000),
+  created_at timestamptz not null default now(),
+  primary key (user_id, org_id));
+alter table llm.query_access enable row level security;
+drop policy if exists query_access_own on llm.query_access;
+create policy query_access_own on llm.query_access for select to authenticated using (user_id = (select auth.uid()));
+revoke all on llm.query_access from anon, authenticated;
+grant select on llm.query_access to authenticated;
+grant all on llm.query_access to service_role;
+
+create table if not exists llm.answers (
+  id bigint generated always as identity primary key,
+  org_id uuid not null references public.orgs(id) on delete cascade,
+  question_id text,                      -- answer-key id (S01-Q1 …) when it was a demo question
+  question text not null, answer text, status text not null default 'ok' check (status in ('ok', 'error')),
+  tool_trace jsonb not null default '[]'::jsonb, model text, provider text,
+  input_tokens int, output_tokens int, ms int,
+  asked_by uuid references auth.users(id) on delete set null, created_at timestamptz not null default now());
+create index if not exists answers_org_idx on llm.answers (org_id, created_at desc);
+create index if not exists answers_q_idx on llm.answers (org_id, question_id, created_at desc);
+create index if not exists answers_user_idx on llm.answers (asked_by, created_at);
+alter table llm.answers enable row level security;
+drop policy if exists answers_read on llm.answers;
+create policy answers_read on llm.answers for select to authenticated
+  using (private.has_org_role(org_id) or private.llm_is_public(org_id));   -- signed-in only: not anon
+revoke all on llm.answers from anon, authenticated;
+grant select on llm.answers to authenticated;
+grant all on llm.answers to service_role;
+
+-- What the signed-in user may do: ask (and how many questions are left today) for which org.
+create or replace function public.mm_llm_my_access()
+returns table (org_id uuid, org_name text, daily_limit int, used_today int, can_ask boolean)
+language sql stable security invoker set search_path = '' as $$
+  select q.org_id, coalesce(p.name, o.name), q.daily_limit,
+         (select count(*)::int from llm.answers a where a.asked_by = (select auth.uid()) and a.org_id = q.org_id
+            and a.created_at >= date_trunc('day', now() at time zone 'America/New_York') at time zone 'America/New_York'),
+         true
+  from llm.query_access q
+  left join llm.public_orgs p on p.org_id = q.org_id
+  left join public.orgs o on o.id = q.org_id
+  where q.user_id = (select auth.uid());
+$$;
+revoke execute on function public.mm_llm_my_access() from public, anon;
+grant execute on function public.mm_llm_my_access() to authenticated;
+
+-- SQL editor only.
+create or replace function public.mm_llm_grant_query(p_email text, p_org_name text, p_daily_limit int default 40)
+returns text language plpgsql security definer set search_path = '' as $$
+declare u uuid; o uuid;
+begin
+  select id into u from auth.users where lower(email) = lower(p_email);
+  if u is null then raise exception 'No user with email %', p_email; end if;
+  select id into o from public.orgs where name = p_org_name;
+  if o is null then raise exception 'No organization named %', p_org_name; end if;
+  if p_daily_limit <= 0 then delete from llm.query_access where user_id = u and org_id = o;
+    return format('%s can no longer ask about %s', p_email, p_org_name); end if;
+  insert into llm.query_access (user_id, org_id, daily_limit) values (u, o, p_daily_limit)
+  on conflict (user_id, org_id) do update set daily_limit = excluded.daily_limit;
+  return format('%s can ask about %s (%s questions a day)', p_email, p_org_name, p_daily_limit);
+end $$;
+revoke execute on function public.mm_llm_grant_query(text, text, int) from public, anon, authenticated;
+
+-- Grounding for the orchestrator's prompt: the org's outages, positions and Pi tags.
+create or replace function public.mm_llm_context(p_org uuid) returns jsonb
+language sql stable security invoker set search_path = '' as $$
+  select jsonb_build_object(
+    'outages', (select coalesce(jsonb_agg(jsonb_build_object('id', o.outage_id, 'kind', o.kind,
+                 'starts', (o.starts_at at time zone 'America/New_York')::date, 'ends', (o.ends_at at time zone 'America/New_York')::date) order by o.starts_at), '[]')
+                from llm.outages o where o.org_id = p_org),
+    'positions', (select coalesce(jsonb_agg(jsonb_build_object('id', e.position_id, 'name', e.name, 'section', e.section) order by e.section, e.name), '[]')
+                  from llm.equipment e where e.org_id = p_org and e.position_id is not null),
+    'pi_tags', (select coalesce(jsonb_agg(jsonb_build_object('tag', t.tag, 'description', t.description, 'units', t.units) order by t.tag), '[]')
+                from llm.pi_tags t where t.org_id = p_org),
+    'data_through', (select max(sheet_date) from llm.bus_items b where b.org_id = p_org));
+$$;
+
+-- For the mm-llm-ask edge function only (service role).
+create or replace function public.mm_llm_save_answer(p_org uuid, p_question_id text, p_question text, p_answer text, p_status text,
+  p_trace jsonb, p_model text, p_provider text, p_in int, p_out int, p_ms int, p_user uuid)
+returns bigint language sql security definer set search_path = '' as $$
+  insert into llm.answers (org_id, question_id, question, answer, status, tool_trace, model, provider, input_tokens, output_tokens, ms, asked_by)
+  values (p_org, p_question_id, p_question, p_answer, p_status, coalesce(p_trace, '[]'::jsonb), p_model, p_provider, p_in, p_out, p_ms, p_user)
+  returning id;
+$$;
+create or replace function public.mm_llm_answers_today() returns int
+language sql stable security definer set search_path = '' as $$
+  select count(*)::int from llm.answers
+  where created_at >= date_trunc('day', now() at time zone 'America/New_York') at time zone 'America/New_York';
+$$;
+revoke execute on function public.mm_llm_save_answer(uuid, text, text, text, text, jsonb, text, text, int, int, int, uuid) from public, anon, authenticated;
+grant execute on function public.mm_llm_save_answer(uuid, text, text, text, text, jsonb, text, text, int, int, int, uuid) to service_role;
+revoke execute on function public.mm_llm_answers_today() from public, anon, authenticated;
+grant execute on function public.mm_llm_answers_today() to service_role;
+
+-- Reading answers (signed-in only; row-level security on llm.answers applies).
+-- Saved answers to the demo questions: the latest good answer per question id.
+create or replace function public.mm_llm_saved_answers(p_org uuid)
+returns table (id bigint, question_id text, question text, answer text, tool_trace jsonb, model text, provider text, ms int, created_at timestamptz)
+language sql stable security invoker set search_path = '' as $$
+  select distinct on (a.question_id) a.id, a.question_id, a.question, a.answer, a.tool_trace, a.model, a.provider, a.ms, a.created_at
+  from llm.answers a
+  where a.org_id = p_org and a.question_id is not null and a.status = 'ok'
+  order by a.question_id, a.created_at desc;
+$$;
+-- The signed-in user's own recent questions.
+create or replace function public.mm_llm_my_answers(p_org uuid, p_limit int default 20)
+returns table (id bigint, question text, answer text, status text, tool_trace jsonb, model text, ms int, created_at timestamptz)
+language sql stable security invoker set search_path = '' as $$
+  select a.id, a.question, a.answer, a.status, a.tool_trace, a.model, a.ms, a.created_at
+  from llm.answers a
+  where a.org_id = p_org and a.asked_by = (select auth.uid())
+  order by a.created_at desc limit least(greatest(coalesce(p_limit, 20), 1), 100);
+$$;
+revoke execute on function public.mm_llm_saved_answers(uuid) from public, anon;
+grant execute on function public.mm_llm_saved_answers(uuid) to authenticated, service_role;
+revoke execute on function public.mm_llm_my_answers(uuid, int) from public, anon;
+grant execute on function public.mm_llm_my_answers(uuid, int) to authenticated;
+
+-- The tools are also run by the edge function's service role (batch runs of the demo questions).
+do $$ declare f text; begin
+  foreach f in array array['mm_llm_context(uuid)', 'mm_llm_summary(uuid)', 'mm_llm_search_docs(uuid, text, int, text[])', 'mm_llm_search_records(uuid, text, int)',
+                           'mm_llm_position_history(uuid, text, date, date)', 'mm_llm_outage_scope(uuid, text)', 'mm_llm_overdue_actions(uuid, date)',
+                           'mm_llm_envoy(uuid, text, date, date)', 'mm_llm_pi_daily(uuid, text, date, date)',
+                           'mm_llm_pi_values(uuid, text, timestamptz, timestamptz)'] loop
+    execute format('revoke execute on function public.%s from public', f);
+    execute format('grant execute on function public.%s to anon, authenticated, service_role', f);
   end loop;
 end $$;

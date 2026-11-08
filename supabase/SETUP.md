@@ -70,6 +70,26 @@ A load replaces that organization's MM LLM rows.
 has no MM LLM data yet. Only the `llm` tables and the `<org>/llm/` files of a public org are opened this way;
 every other table and file stays members-only. Never make an organization with real mill data public.
 
+**Asking the assistant** (the `mm-llm-ask` edge function, `supabase/functions/mm-llm-ask/`). Three tiers:
+
+| Who | Sees |
+|---|---|
+| Not signed in | Demo data, the evidence tables and the hand-written answer key |
+| Signed in | The same, plus the model's saved answers to the demo questions |
+| On the asking list | The same, plus an Ask box for their own questions (daily limit) |
+
+- Add someone to the asking list in the SQL Editor:
+  `select public.mm_llm_grant_query('demodemo@gmail.com', 'Demo Mill', 40);` (a limit of `0` removes them).
+  The demo account is a **viewer** in the Demo Mill only, so its questions can only read the fictional data.
+- The function runs the tools with the asker's own session, so row-level security applies. Every answer is saved
+  to `llm.answers` with the tools it called.
+- Model settings live in **Edge Functions → Secrets**: `ANTHROPIC_API_KEY` (default provider), or
+  `MM_LLM_PROVIDER=openai` with `OPENAI_API_KEY` and `MM_LLM_MODEL`. `MM_LLM_MODEL` also overrides the Anthropic
+  model (default `claude-sonnet-5-5`); `MM_LLM_DAILY_CAP` limits answers per day for everyone (default 300).
+  Paste the key itself from the provider's console. The masked "••••" value shown after saving is not the key.
+- Refresh the saved answers to the demo questions: create an ingest token (as above), then run
+  `python3 tools/ingest/ask_demo.py --token <token>`, and delete the token.
+
 ## Updating the database
 
 `schema.sql` is the full, current schema and builds a new project in one go (safe to re-run). For the existing project, apply the steps in `migrations/` in order; see `migrations/README.md`.

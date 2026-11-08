@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MM LLM</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1728"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1728">
-<script src="mm-icons.js?v=2026-11-08.1728"></script>
+<script src="mm-theme.js?v=2026-11-08.1905"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1905">
+<script src="mm-icons.js?v=2026-11-08.1905"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1320px;margin:0 auto;padding:24px 20px 72px}
@@ -100,6 +100,21 @@
   .ev .empty{font-size:12px;color:var(--muted);padding:6px 0}
   .ev mark{background:var(--warn-soft);color:var(--ink);border-radius:2px;padding:0 1px}
   .demo-msg{font-size:13px;color:var(--muted)}
+  .model{margin:0;font-size:13px;line-height:1.6;color:var(--ink);white-space:pre-wrap}
+  .model .cite{font:500 11px var(--mono);color:var(--ink-3);background:var(--surface-2);border-radius:3px;padding:0 3px;white-space:nowrap}
+  .meta{margin:6px 0 0;font-size:12px;color:var(--muted)}
+  .meta code{font:500 11px var(--mono);color:var(--ink-3)}
+  details.key{margin:14px 0 0}
+  details.key summary{cursor:pointer;font-size:12px;font-weight:500;color:var(--muted)}
+  .ask{margin:0 0 16px;padding:14px 16px;border:1px solid var(--accent-line);border-radius:var(--r-lg);background:var(--accent-soft)}
+  .ask label{display:block;font-size:13px;font-weight:600;margin:0 0 6px}
+  .ask textarea{width:100%;box-sizing:border-box;min-height:64px;resize:vertical;font:inherit;font-size:13px;padding:8px 10px;
+     border:1px solid var(--line-strong);border-radius:var(--r);background:var(--surface);color:var(--ink)}
+  .ask .row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:8px 0 0}
+  .ask .row span{font-size:12px;color:var(--muted)}
+  .ask .mine{margin:10px 0 0;display:flex;flex-wrap:wrap;gap:6px}
+  .ask .mine button{font:inherit;font-size:12px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:999px;
+     padding:3px 10px;cursor:pointer;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   @media (max-width:860px){ .qa{grid-template-columns:1fr} }
 </style>
 </head>
@@ -129,6 +144,7 @@
     <div class="demo-h"><h2 id="demoTitle">Demo data</h2><span class="mm-chip" id="demoChip">Loading…</span></div>
     <p class="demo-sub" id="demoSub">Loading what the assistant can see…</p>
     <div class="tiles" id="tiles"></div>
+    <div id="askSlot"></div>
     <div class="qa">
       <div class="qlist" id="qlist"></div>
       <div class="ans" id="ans"><p class="demo-msg">Pick a question to see the prepared answer and the evidence the tools return for it.</p></div>
@@ -146,11 +162,11 @@
 
   <div id="ver"></div>
 </main>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1728"></script>
-<script src="mm-config.js?v=2026-11-08.1728"></script>
-<script src="mm-cloud.js?v=2026-11-08.1728"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1905"></script>
+<script src="mm-config.js?v=2026-11-08.1905"></script>
+<script src="mm-cloud.js?v=2026-11-08.1905"></script>
 <script>
-  const VERSION = 'v0.3.0';
+  const VERSION = 'v0.4.0';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true });
 
@@ -324,9 +340,9 @@
     const fail = msg => { chip.textContent = 'Unavailable'; sub.textContent = msg; };
     if (!MMCloud.enabled) return fail('The demo data lives in Supabase, which isn’t set up for this copy of the site.');
     const db = MMCloud.client;
-    let org = null, isDemo = true;
+    let org = null, isDemo = true, s = null;
     try {
-      const s = await MMCloud.session();
+      s = await MMCloud.session();
       if (s && s.org) {                         // a signed-in org with its own MM LLM data wins
         const { data } = await db.rpc('mm_llm_summary', { p_org: s.org.id });
         if (data && data.some(r => r.n > 0)) { org = { id: s.org.id, name: s.org.name }; isDemo = false; }
@@ -342,7 +358,7 @@
     $('demoTitle').textContent = org.name;
     chip.textContent = isDemo ? 'Public demo · fictional data' : 'Your organization';
     sub.textContent = isDemo
-      ? 'One fictional year of PM1 data (Nov 2025 – Oct 2026), loaded the same way real mill files will be. “Today” in the demo is Oct 31, 2026, eleven days before the Nov 11 outage. Anyone can read it; sign in to see your own organization’s data once it’s loaded.'
+      ? 'One fictional year of PM1 data (Nov 2025 – Oct 2026), loaded the same way real mill files will be. “Today” in the demo is Oct 31, 2026, eleven days before the Nov 11 outage. Anyone can read the data and the prepared answers; signed-in users also see the model’s own answers.'
       : 'Your organization’s MM LLM data.';
 
     const { data: summary } = await db.rpc('mm_llm_summary', { p_org: org.id });
@@ -351,6 +367,15 @@
       const t = mk('div', 'tile'); t.append(mk('b', '', Number(r.n).toLocaleString()), mk('span', '', r.source));
       tiles.appendChild(t);
     });
+
+    // Signed in: the model's saved answers (latest per demo question), and whether this user may ask live questions.
+    let saved = {}, access = null;
+    if (s) {
+      const [a, b] = await Promise.all([db.rpc('mm_llm_saved_answers', { p_org: org.id }), db.rpc('mm_llm_my_access')]);
+      (a.data || []).forEach(r => { saved[r.question_id] = r; });
+      access = (b.data || []).find(r => r.org_id === org.id) || null;
+    }
+    if (access) mountAsk();
 
     let key;
     try { key = await (await fetch('demo-data/answers/answer_key.json', { cache: 'no-cache' })).json(); }
@@ -374,9 +399,18 @@
       cur = q.id;
       qlist.querySelectorAll('.q').forEach(x => x.setAttribute('aria-pressed', String(x === btn)));
       ans.textContent = '';
-      ans.append(mk('h3', '', q.question), mk('div', 'lbl', 'Prepared answer'), mk('p', 'prep', q.expect),
-                 mk('p', 'note', 'Written from the evidence below. The live model run comes next; its answers will replace this text.'),
-                 mk('div', 'lbl', 'Evidence the tools return (live from Supabase)'));
+      ans.appendChild(mk('h3', '', q.question));
+      const m = saved[q.id];
+      if (m) {
+        ans.append(mk('div', 'lbl', 'Model answer'), modelText(m.answer), meta(m));
+        const d = mk('details', 'key'); d.append(mk('summary', '', 'Answer key (written by hand to check the model)'), mk('p', 'prep', q.expect));
+        ans.appendChild(d);
+      } else {
+        ans.append(mk('div', 'lbl', 'Prepared answer'), mk('p', 'prep', q.expect),
+                   mk('p', 'note', s ? 'Written from the evidence below. The model’s answer to this question hasn’t been saved yet.'
+                                     : 'Written from the evidence below. Sign in to see the model’s own answer.'));
+      }
+      ans.appendChild(mk('div', 'lbl', 'Evidence the tools return (live from Supabase)'));
       for (const s of q.show) {
         const box = mk('div', 'ev'), t = mk('div', 't');
         t.append(mk('span', '', s.label), mk('code', '', s.fn)); box.appendChild(t); ans.appendChild(box);
@@ -412,12 +446,64 @@
         if (total > rows.length) box.appendChild(mk('div', 'empty', `Showing ${rows.length} of ${total}.`));
       }
     }
+
+    // Model text: plain text, with [citations] set off so they're easy to check against the evidence.
+    function modelText(text) {
+      const p = mk('p', 'model');
+      String(text || '').split(/(\[[^\]\n]{2,80}\])/).forEach(part =>
+        p.appendChild(/^\[.*\]$/.test(part) ? mk('span', 'cite', part) : document.createTextNode(part)));
+      return p;
+    }
+    function meta(r) {
+      const p = mk('p', 'meta'), tools = (r.tool_trace || r.trace || []).map(t => t.tool);
+      const when = r.created_at ? new Date(r.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'just now';
+      p.append(`${r.model || 'model'} · ${((r.ms || 0) / 1000).toFixed(1)} s · ${when} · ${tools.length} tool call${tools.length === 1 ? '' : 's'}`);
+      if (tools.length) { p.append(': '); p.appendChild(mk('code', '', [...new Set(tools)].join(', '))); }
+      return p;
+    }
+
+    // Live questions (accounts on the asking list only, e.g. the demo account).
+    function mountAsk() {
+      const box = mk('div', 'ask'), lab = mk('label', '', 'Ask the assistant about ' + org.name);
+      const ta = mk('textarea'); ta.id = 'askQ'; lab.htmlFor = 'askQ'; ta.maxLength = 1500;
+      ta.placeholder = 'e.g. What should I watch on the dryer section going into the Nov 11 outage?';
+      const go = mk('button', 'btn primary', 'Ask'); go.type = 'button';
+      const left = mk('span'), row = mk('div', 'row'), mine = mk('div', 'mine');
+      const setLeft = n => { left.textContent = `${n} question${n === 1 ? '' : 's'} left today · answers use only the demo data`; };
+      setLeft(Math.max(0, access.daily_limit - access.used_today));
+      row.append(go, left); box.append(lab, ta, row, mine); $('askSlot').appendChild(box);
+      const showMine = (r, q) => {
+        cur = 'ask'; qlist.querySelectorAll('.q').forEach(x => x.setAttribute('aria-pressed', 'false'));
+        ans.textContent = ''; ans.append(mk('h3', '', q), mk('div', 'lbl', r.status === 'error' ? 'Error' : 'Model answer'), modelText(r.answer), meta(r));
+      };
+      const addMine = r => {
+        const b = mk('button', '', r.question); b.type = 'button'; b.title = r.question;
+        b.addEventListener('click', () => showMine(r, r.question)); mine.prepend(b);
+        while (mine.children.length > 8) mine.lastChild.remove();
+      };
+      db.rpc('mm_llm_my_answers', { p_org: org.id, p_limit: 8 }).then(({ data }) => (data || []).reverse().forEach(addMine));
+      const ask = async () => {
+        const q = ta.value.trim(); if (!q) return ta.focus();
+        go.disabled = true; go.textContent = 'Thinking…';
+        cur = 'ask'; ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', 'Searching the demo data… this usually takes 15–60 seconds.'));
+        try {
+          const { data, error } = await db.functions.invoke('mm-llm-ask', { body: { question: q } });
+          let r = data;
+          if (error) { try { r = await error.context.json(); } catch { r = { error: error.message }; } }
+          if (!r || r.error) { ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', (r && r.error) || 'No answer came back.')); return; }
+          const rec = { ...r, question: q, tool_trace: r.trace, created_at: new Date().toISOString() };
+          showMine(rec, q); addMine(rec); if (r.remaining != null) setLeft(r.remaining); ta.value = '';
+        } finally { go.disabled = false; go.textContent = 'Ask'; }
+      };
+      go.addEventListener('click', ask);
+      ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) ask(); });
+    }
   })();
   addEventListener('keydown', e => { if (e.key === 'Escape' && sel) select(null); });
   addEventListener('resize', () => requestAnimationFrame(draw));
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   requestAnimationFrame(draw);
 </script>
-<script src="mm-nav.js?v=2026-11-08.1728"></script>
+<script src="mm-nav.js?v=2026-11-08.1905"></script>
 </body>
 </html>
