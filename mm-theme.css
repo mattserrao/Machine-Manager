@@ -249,5 +249,62 @@ button.mmnav:hover{background:var(--hover-2);color:var(--ink)}
   .mmc .who b{display:block;max-width:96px;overflow:hidden;text-overflow:ellipsis}
   .mmc .who b::before{display:inline-block;margin-right:6px;vertical-align:1px}
   .mmc .who > span,.mmc .who select{display:none}
-  .mmc-btn{height:34px}
+  .mmc .mmc-btn{height:36px}
+
+  /* the tool row scrolls sideways: fade the edge that has more behind it (mm-nav.js sets data-more) */
+  .mm-top .bar:not(.brand)[data-more~="r"],body.mm-canvas #toolbar[data-more~="r"]{
+    -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 36px),transparent)}
+  .mm-top .bar:not(.brand)[data-more~="l"],body.mm-canvas #toolbar[data-more~="l"]{
+    -webkit-mask-image:linear-gradient(to left,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 36px),transparent)}
+  .mm-top .bar:not(.brand)[data-more~="l"][data-more~="r"],body.mm-canvas #toolbar[data-more~="l"][data-more~="r"]{
+    -webkit-mask-image:linear-gradient(to right,transparent,#000 36px,#000 calc(100% - 36px),transparent);mask-image:linear-gradient(to right,transparent,#000 36px,#000 calc(100% - 36px),transparent)}
+  .mm-top .bar:not(.brand) .sep,body.mm-canvas #toolbar .sep{margin:0 2px}
+
+  /* form fields: 16px so iOS doesn't zoom the page when one is focused (text typed on a card keeps the card's size) */
+  input:not([type=checkbox]):not([type=radio]):not([type=range]):not(.keep-size),select,textarea:not(.inline){font-size:16px!important}
+
+  /* the version footer sits under the content instead of floating over it (board pages: it's in the app menu) */
+  #ver{position:static;display:block;text-align:right;padding:16px 4px calc(8px + env(safe-area-inset-bottom))}
+  body.mm-canvas #ver{display:none}
+
+
+  /* dialogs open as bottom sheets: full width, thumb-reachable buttons */
+  .backdrop{place-items:end stretch!important;padding:24px 0 0!important}
+  .backdrop > .sheet{width:100%!important;max-height:calc(100dvh - 24px)!important;border-radius:14px 14px 0 0!important;border-bottom:0!important;
+    padding-bottom:env(safe-area-inset-bottom);animation:mm-sheet-up .18s ease-out}
+  @keyframes mm-sheet-up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+}
+
+/* toasts on phones (either way up) sit at the bottom, full width, clear of the top bar and the page's header cards */
+@media (max-width:760px),(max-height:500px){
+  #toast{top:auto;left:12px;right:12px;max-width:none;bottom:calc(var(--bottom-h,0px) + 14px + env(safe-area-inset-bottom));transform:translateY(6px)}
+  #toast.show{transform:none}
+}
+
+/* ---------- Touch screens: bigger targets ----------
+   Fingers need about 40–44px; desktop keeps its compact sizes. */
+@media (pointer:coarse){
+  .btn{height:40px;padding:0 12px}
+  .btn.sm{height:34px}
+  .ib{min-width:40px;height:40px}
+  .mm-top .bar:not(.brand) .btn,body.mm-canvas #toolbar .btn{height:38px}
+  .mm-top .bar:not(.brand) .ib,body.mm-canvas #toolbar .ib{height:38px;min-width:38px}
+  .logo{width:40px!important;height:40px!important}
+  .mmc .mmc-btn{height:38px}
+  #toast button{padding:8px 12px}
+  body .sp{min-height:34px;padding:0 12px 0 10px}
+  body #libSearch{height:40px}
+  /* small inline controls keep their look but get a larger invisible hit area */
+  button.x,button.rm,button.ed,.tab .tx,button.qb,.mini .caret,button.pkg-more,button.shrink{position:relative}
+  button.x::after,button.rm::after,button.ed::after,.tab .tx::after,button.qb::after,.mini .caret::after,button.pkg-more::after,button.shrink::after{content:"";position:absolute;inset:-8px}
+  .cb{position:relative}
+  .cb::after{content:"";position:absolute;inset:-3px -10px}
+}
+
+/* ---------- Words for the input you have ----------
+   Help text written for a mouse (.t-mouse) or for touch (.t-touch); only the right one shows. */
+.t-touch{display:none}
+@media (hover:none) and (pointer:coarse){
+  .t-mouse{display:none!important}
+  .t-touch{display:revert}
 }

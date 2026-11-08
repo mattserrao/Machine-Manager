@@ -37,7 +37,16 @@
   .mmnav-seg button{display:flex;align-items:center;justify-content:center;gap:5px;height:26px;border:0;border-radius:5px;background:transparent;
     color:var(--muted);font:500 12px var(--font);cursor:pointer}
   .mmnav-seg button:hover{color:var(--ink)}
-  .mmnav-seg button[aria-checked="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line-strong)}`;
+  .mmnav-seg button[aria-checked="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line-strong)}
+  .mmnav-ver{display:none;padding:6px 8px 4px;font-size:11px;color:var(--ink-3);text-align:right}
+  @media (max-width:760px){
+    .mmnav-menu{left:8px!important;right:8px;max-height:calc(100dvh - 72px)}
+    .mmnav-ver:not(:empty){display:block}
+  }
+  @media (pointer:coarse){
+    .mmnav-menu a,.mmnav-menu .cur{height:44px}
+    .mmnav-seg button{height:36px}
+  }`;
   document.head.appendChild(css);
 
   const file = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
@@ -86,10 +95,13 @@
       MMTheme.onChange(sync); sync();
       set.append(lb, seg); menu.appendChild(set);
     }
+    // Phones hide the floating version footer; show it at the bottom of this menu instead.
+    const ver = document.createElement('div'); ver.className = 'mmnav-ver'; menu.appendChild(ver);
     document.body.appendChild(menu);
 
     const links = () => [...menu.querySelectorAll('a')];
     function open(){
+      const v = document.getElementById('ver'); ver.textContent = v ? v.textContent.trim() : '';
       const r = btn.getBoundingClientRect();
       menu.style.left = Math.max(8, r.left) + 'px'; menu.style.top = (r.bottom + 8) + 'px';
       menu.hidden = false; btn.setAttribute('aria-expanded', 'true');
@@ -108,10 +120,31 @@
       else if (e.key === 'Tab'){ close(); }
       e.stopPropagation();       // keep tool shortcuts (e.g. the Whiteboard's) from firing while the menu is open
     });
-    window.addEventListener('resize', () => close());
+    // Phone browsers resize the window as their address bar slides away; only a real width change closes the menu.
+    let lastW = innerWidth;
+    window.addEventListener('resize', () => { if (innerWidth !== lastW){ lastW = innerWidth; close(); } });
     window.addEventListener('blur', () => close());
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+
+  // Tool rows that scroll sideways on phones: mark which ends have more buttons hidden, so mm-theme.css can fade that edge.
+  function watchRows(){
+    const rows = document.querySelectorAll('.mm-top .bar:not(.brand), body.mm-canvas #toolbar');
+    rows.forEach(row => {
+      const mark = () => {
+        const more = [];
+        if (row.scrollLeft > 2) more.push('l');
+        if (row.scrollLeft + row.clientWidth < row.scrollWidth - 2) more.push('r');
+        const v = more.join(' ');
+        if (row.dataset.more !== v) row.dataset.more = v;
+      };
+      row.addEventListener('scroll', mark, { passive: true });
+      if (window.ResizeObserver) new ResizeObserver(mark).observe(row);
+      new MutationObserver(mark).observe(row, { childList: true, subtree: true, attributes: true, attributeFilter: ['hidden'] });
+      mark();
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watchRows); else watchRows();
   // Paper is white: print with the light colour set from mm-theme.css (one copy, shared with the print preview).
   window.addEventListener('beforeprint', () => document.documentElement.classList.add('mm-light'));
   window.addEventListener('afterprint', () => document.documentElement.classList.remove('mm-light'));

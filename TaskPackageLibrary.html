@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><!-- boards zoom themselves; stops iOS zooming the page when typing on a card -->
 <title>Ops Task Library</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1214"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1214">
-<script src="mm-icons.js?v=2026-11-08.1214"></script>
-<link rel="stylesheet" href="mm-board.css?v=2026-11-08.1214">
-<link rel="stylesheet" href="mm-board-library.css?v=2026-11-08.1214">
+<script src="mm-theme.js?v=2026-11-08.1254"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1254">
+<script src="mm-icons.js?v=2026-11-08.1254"></script>
+<link rel="stylesheet" href="mm-board.css?v=2026-11-08.1254">
+<link rel="stylesheet" href="mm-board-library.css?v=2026-11-08.1254">
 <style>
   /* this page only (shared styles: mm-board.css, mm-board-library.css) */
   
@@ -27,7 +27,7 @@
       <path id="tmpLink" class="tmp" d="" marker-end="url(#arrowSel)"/>
     </svg>
   </div>
-  <div id="empty"><div><h1>No steps yet</h1><p>Double-click anywhere or press <b>New step</b> to add the first step. Press <b>?</b> for shortcuts.</p></div></div>
+  <div id="empty"><div><h1>No steps yet</h1><p><span class="t-mouse">Double-click</span><span class="t-touch">Double-tap</span> anywhere or press <b>New step</b> to add the first step.<span class="t-mouse"> Press <b>?</b> for shortcuts.</span></p></div></div>
   <div id="marquee" hidden></div>
 </div>
 
@@ -126,7 +126,7 @@
     </div>
     <div class="sheet-body">
       <textarea id="edText" placeholder="Write something… (first line becomes the title)"></textarea>
-      <div class="fmt-hint"><code>- </code> bullet · <code>- [ ] </code> checkbox · <code>Tab</code> indent · <code>**bold**</code> · <code>*italic*</code> · <code>[text](https://…)</code></div>
+      <div class="fmt-hint"><code>- </code> bullet · <code>- [ ] </code> checkbox · <span class="t-mouse"><code>Tab</code> indent · </span><code>**bold**</code> · <code>*italic*</code> · <code>[text](https://…)</code></div>
       <div class="frow" id="edStatus"></div>
       <div class="frow">
         <label>Time <input type="number" id="edHrs" min="0" step="0.25" placeholder="0" style="width:76px"> h</label>
@@ -145,7 +145,7 @@
       <button id="edDelete" class="btn danger">Delete step</button>
       <button id="edDetach" class="btn">Pop out of stack</button>
       <span class="spacer"></span>
-      <span class="kbd-hint">Enter to close · Shift+Enter new line</span>
+      <span class="kbd-hint t-mouse">Enter to close · Shift+Enter new line</span>
       <button id="edDone" class="btn primary">Done</button>
     </div>
   </div>
@@ -157,7 +157,7 @@
     <div class="sheet-body">
       <div class="keys">
         <h4>Notes</h4>
-        <kbd>N</kbd><span>New step (or double-click the board)</span>
+        <kbd>N</kbd><span>New step (or <span class="t-mouse">double-click</span><span class="t-touch">double-tap</span> the board)</span>
         <kbd>Click</kbd><span>Open the note editor</span>
         <kbd>Double-click</kbd><span>Edit text right on the card</span>
         <kbd>Enter</kbd><span>Open the selected note · close the editor</span>
@@ -204,10 +204,10 @@
   <div>
     <b>Getting started</b>
     <ul>
-      <li>Each card is a step · double-click the board for a new one · click a card to edit, double-click to type on it</li>
+      <li>Each card is a step · <span class="t-mouse">double-click</span><span class="t-touch">double-tap</span> the board for a new one · <span class="t-mouse">click</span><span class="t-touch">tap</span> a card to edit, <span class="t-mouse">double-click</span><span class="t-touch">double-tap</span> to type on it</li>
       <li>Drag a card onto another’s bottom edge to tuck it in as a sub-step or note (up to 4 levels)</li>
-      <li>Drag the blue dot on a card’s edge to draw an arrow to the next step · the frame button makes a frame for a phase</li>
-      <li>Right-click anything for options · <b>File</b> to export, import or print · <b>?</b> for shortcuts</li>
+      <li>Drag the blue dot on a<span class="t-touch"> selected</span> card’s edge to draw an arrow to the next step · the frame button makes a frame for a phase</li>
+      <li><span class="t-mouse">Right-click</span><span class="t-touch">Press and hold</span> anything for options · <b>File</b> to export, import or print<span class="t-mouse"> · <b>?</b> for shortcuts</span></li>
     </ul>
   </div>
   <button class="btn" id="tipsOk">Got it</button>
@@ -263,16 +263,16 @@
   </div>
 </div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1214"></script>
-<script src="mm-config.js?v=2026-11-08.1214"></script>
-<script src="mm-cloud.js?v=2026-11-08.1214"></script>
-<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.1214"></script>
-<script src="mm-ui.js?v=2026-11-08.1214"></script>
-<script src="mm-records.js?v=2026-11-08.1214"></script>
-<script src="mm-board.js?v=2026-11-08.1214"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1254"></script>
+<script src="mm-config.js?v=2026-11-08.1254"></script>
+<script src="mm-cloud.js?v=2026-11-08.1254"></script>
+<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.1254"></script>
+<script src="mm-ui.js?v=2026-11-08.1254"></script>
+<script src="mm-records.js?v=2026-11-08.1254"></script>
+<script src="mm-board.js?v=2026-11-08.1254"></script>
 <script>
 MMBoard.start({
-    version:'v0.4.0',
+    version:'v0.4.1',
     shell:'library', tool:'task-packages', title:'Ops Task Library', idb:'mm-task-packages', idPrefix:'tp-', viewKey:'mm-tp-view',
     fileExt:'taskpackage', appTag:'machine-manager-task-package', urlParam:'pkg', statusMenu:true, startInLibrary:true,
     words:{ board:'package', Board:'Task package', boards:'packages', card:'step', Card:'Step', cards:'steps' },
@@ -468,6 +468,6 @@ MMBoard.start({
   },
 });
 </script>
-<script src="mm-nav.js?v=2026-11-08.1214"></script>
+<script src="mm-nav.js?v=2026-11-08.1254"></script>
 </body>
 </html>

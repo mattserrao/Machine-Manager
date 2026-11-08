@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><!-- boards zoom themselves; stops iOS zooming the page when typing on a card -->
 <title>Daily</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1214"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1214">
-<script src="mm-icons.js?v=2026-11-08.1214"></script>
-<link rel="stylesheet" href="mm-board.css?v=2026-11-08.1214">
+<script src="mm-theme.js?v=2026-11-08.1254"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1254">
+<script src="mm-icons.js?v=2026-11-08.1254"></script>
+<link rel="stylesheet" href="mm-board.css?v=2026-11-08.1254">
 <style>
   /* this page only (shared styles: mm-board.css) */
   #tabs{bottom:14px;left:14px;max-width:calc(100vw - 260px);overflow-x:auto}
@@ -29,7 +29,7 @@
       <path id="tmpLink" class="tmp" d="" marker-end="url(#arrowSel)"/>
     </svg>
   </div>
-  <div id="empty"><div><span class="soon">Placeholder</span><h1>Daily journal is planned</h1><p>A formatted daily journal for machine managers will live here.</p><p>For now it’s a blank board: double-click anywhere or press <b>New entry</b> to jot something down.</p></div></div>
+  <div id="empty"><div><span class="soon">Placeholder</span><h1>Daily journal is planned</h1><p>A formatted daily journal for machine managers will live here.</p><p>For now it’s a blank board: <span class="t-mouse">double-click</span><span class="t-touch">double-tap</span> anywhere or press <b>New entry</b> to jot something down.</p></div></div>
   <div id="marquee" hidden></div>
 </div>
 
@@ -91,7 +91,7 @@
     </div>
     <div class="sheet-body">
       <textarea id="edText" placeholder="Write something… (first line becomes the title)"></textarea>
-      <div class="fmt-hint"><code>- </code> bullet · <code>- [ ] </code> checkbox · <code>Tab</code> indent · <code>**bold**</code> · <code>*italic*</code> · <code>[text](https://…)</code></div>
+      <div class="fmt-hint"><code>- </code> bullet · <code>- [ ] </code> checkbox · <span class="t-mouse"><code>Tab</code> indent · </span><code>**bold**</code> · <code>*italic*</code> · <code>[text](https://…)</code></div>
       <div class="frow" id="edStatus"></div>
       <div class="frow">
         <label>Due <input type="date" id="edDue"></label>
@@ -110,7 +110,7 @@
       <button id="edDelete" class="btn danger">Delete entry</button>
       <button id="edDetach" class="btn">Pop out of stack</button>
       <span class="spacer"></span>
-      <span class="kbd-hint">Enter to close · Shift+Enter new line</span>
+      <span class="kbd-hint t-mouse">Enter to close · Shift+Enter new line</span>
       <button id="edDone" class="btn primary">Done</button>
     </div>
   </div>
@@ -122,7 +122,7 @@
     <div class="sheet-body">
       <div class="keys">
         <h4>Notes</h4>
-        <kbd>N</kbd><span>New entry (or double-click the board)</span>
+        <kbd>N</kbd><span>New entry (or <span class="t-mouse">double-click</span><span class="t-touch">double-tap</span> the board)</span>
         <kbd>Click</kbd><span>Open the entry editor</span>
         <kbd>Double-click</kbd><span>Edit text right on the card</span>
         <kbd>Enter</kbd><span>Open the selected entry · close the editor</span>
@@ -169,10 +169,10 @@
   <div>
     <b>Getting started</b>
     <ul>
-      <li>Double-click the board for a new entry · click an entry to edit, double-click to type on it</li>
+      <li><span class="t-mouse">Double-click</span><span class="t-touch">Double-tap</span> the board for a new entry · <span class="t-mouse">click</span><span class="t-touch">tap</span> an entry to edit, <span class="t-mouse">double-click</span><span class="t-touch">double-tap</span> to type on it</li>
       <li>Drag an entry onto another’s bottom edge to stack it (up to 4 levels)</li>
-      <li>Drag the blue dot on an entry’s edge to draw an arrow · the frame button makes a frame to group entries</li>
-      <li>Right-click anything for options · <b>File</b> to export, import or print · <b>?</b> for shortcuts</li>
+      <li>Drag the blue dot on <span class="t-mouse">an</span><span class="t-touch">a selected</span> entry’s edge to draw an arrow · the frame button makes a frame to group entries</li>
+      <li><span class="t-mouse">Right-click</span><span class="t-touch">Press and hold</span> anything for options · <b>File</b> to export, import or print<span class="t-mouse"> · <b>?</b> for shortcuts</span></li>
     </ul>
   </div>
   <button class="btn" id="tipsOk">Got it</button>
@@ -228,17 +228,17 @@
   </div>
 </div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1214"></script>
-<script src="mm-config.js?v=2026-11-08.1214"></script>
-<script src="mm-cloud.js?v=2026-11-08.1214"></script>
-<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.1214"></script>
-<script src="mm-ui.js?v=2026-11-08.1214"></script>
-<script src="mm-records.js?v=2026-11-08.1214"></script>
-<script src="mm-board.js?v=2026-11-08.1214"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1254"></script>
+<script src="mm-config.js?v=2026-11-08.1254"></script>
+<script src="mm-cloud.js?v=2026-11-08.1254"></script>
+<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.1254"></script>
+<script src="mm-ui.js?v=2026-11-08.1254"></script>
+<script src="mm-records.js?v=2026-11-08.1254"></script>
+<script src="mm-board.js?v=2026-11-08.1254"></script>
 <script>
 MMBoard.start({
     // Placeholder (v0.1.0): a plain board on the shared engine until the formatted journal is built.
-    version:'v0.1.0',
+    version:'v0.1.1',
     shell:'tabs', tool:'daily', title:'Daily', idb:'mm-daily', idPrefix:'dy-', viewKey:'mm-daily-view',
     fileExt:'daily', appTag:'machine-manager-daily', urlParam:'day', statusMenu:true,
     words:{ board:'page', Board:'Page', boards:'pages', card:'entry', Card:'Entry', cards:'entries', sub:'sub-entry', subs:'sub-entries', owner:'Owner' },
@@ -247,6 +247,6 @@ MMBoard.start({
   plugin(){ return {}; },
 });
 </script>
-<script src="mm-nav.js?v=2026-11-08.1214"></script>
+<script src="mm-nav.js?v=2026-11-08.1254"></script>
 </body>
 </html>
