@@ -3,10 +3,10 @@ PM1:REF_BP1_KW,BP1 refiner motor load,kW,00041070,sec-refiners,ref-bp1,1150,40,3
 PM1:REF_BP2_KW,BP2 refiner motor load,kW,00041084,sec-refiners,ref-bp2,1150,40,3
 PM1:REF_TP1_KW,TP1 refiner motor load,kW,00041098,sec-refiners,ref-tp1,1150,40,3
 PM1:REF_TP2_KW,TP2 refiner motor load,kW,00041112,sec-refiners,ref-tp2,1150,40,3
-PM1:REF_BP1_SE,BP1 refiner specific energy,kWh/t,00041070,sec-refiners,ref-bp1,95,4,3
-PM1:REF_BP2_SE,BP2 refiner specific energy,kWh/t,00041084,sec-refiners,ref-bp2,95,4,3
-PM1:REF_TP1_SE,TP1 refiner specific energy,kWh/t,00041098,sec-refiners,ref-tp1,95,4,3
-PM1:REF_TP2_SE,TP2 refiner specific energy,kWh/t,00041112,sec-refiners,ref-tp2,95,4,3
+PM1:REF_BP1_SE,BP1 refiner specific energy,kWh/t,00041070,sec-refiners,ref-bp1,95,1.0,3
+PM1:REF_BP2_SE,BP2 refiner specific energy,kWh/t,00041084,sec-refiners,ref-bp2,95,1.0,3
+PM1:REF_TP1_SE,TP1 refiner specific energy,kWh/t,00041098,sec-refiners,ref-tp1,95,1.0,3
+PM1:REF_TP2_SE,TP2 refiner specific energy,kWh/t,00041112,sec-refiners,ref-tp2,95,1.0,3
 PM1:HB_TOP_P,Top ply headbox pressure,psi,00041126,sec-topply,,9.8,0.15,3
 PM1:HB_BASE_P,Base ply headbox pressure,psi,00041168,sec-baseply,,11.2,0.15,3
 PM1:HB_BASE_CONS,Base ply headbox consistency,%,00041168,sec-baseply,,0.82,0.02,3
@@ -20,19 +20,19 @@ PM1:UHLE_TAN_VAC,Tandem felt Uhle box vacuum,inHg,00041273,sec-press,,12.5,0.4,3
 PM1:PRESS_OUT_MOIST,Sheet moisture after press (calc.),%,00041028,sec-press,,58.0,0.6,3
 PM1:DRY1_STEAM_P,1st section steam pressure,psig,00041357,sec-dryer-1,,25,1.5,3
 PM1:DRY2_STEAM_P,2nd section steam pressure,psig,00041462,sec-dryer-2,,75,3,3
-PM1:DRY3_STEAM_P,3rd section steam pressure,psig,00041735,sec-dryer-3,,110,4,3
-PM1:DRY3_PV_FAN_AMPS,3rd section pocket ventilation fan,A,00041742,sec-dryer-3,,62,2,3
-PM1:DRY1_C05_DS_VIB,Dryer can 5 DS bearing velocity,in/s,00041399,sec-dryer-1,,0.06,0.01,3
-PM1:DRY2_C15_DS_VIB,Dryer can 15 DS bearing velocity,in/s,00041504,sec-dryer-2,,0.07,0.01,3
-PM1:DRY2_C21_DS_VIB,Dryer can 21 DS bearing velocity,in/s,00041546,sec-dryer-2,,0.07,0.01,3
-PM1:DRY2_C27_DS_VIB,Dryer can 27 DS bearing velocity,in/s,00041588,sec-dryer-2,,0.07,0.01,3
-PM1:DRY2_C27_DS_TEMP,Dryer can 27 DS bearing temperature,degF,00041588,sec-dryer-2,,185,4,3
-PM1:DRY2_C27_TS_VIB,Dryer can 27 TS bearing velocity,in/s,00041588,sec-dryer-2,,0.06,0.01,3
-PM1:DRY2_C33_DS_VIB,Dryer can 33 DS bearing velocity,in/s,00041630,sec-dryer-2,,0.07,0.01,3
-PM1:DRY3_C49_DS_VIB,Dryer can 49 DS bearing velocity,in/s,00041777,sec-dryer-3,,0.07,0.01,3
-PM1:DRY3_C61_DS_VIB,Dryer can 61 DS bearing velocity,in/s,00041861,sec-dryer-3,,0.07,0.01,3
-PM1:PRESS2_BOT_DS_VIB,2nd press bottom roll DS bearing velocity,in/s,00041308,sec-press,p2-roll-bottom,0.08,0.012,3
-PM1:CAL_BOT_DS_VIB,Calender bottom roll DS bearing velocity,in/s,00041966,sec-calender,cal-bottom,0.05,0.01,3
+PM1:DRY3_STEAM_P,3rd section steam pressure,psig,00041735,sec-dryer-3,,110,2,3
+PM1:DRY3_PV_FAN_AMPS,3rd section pocket ventilation fan,A,00041742,sec-dryer-3,,62,1.0,3
+PM1:DRY1_C05_DS_VIB,Dryer can 5 DS bearing velocity,in/s,00041399,sec-dryer-1,,0.06,0.006,3
+PM1:DRY2_C15_DS_VIB,Dryer can 15 DS bearing velocity,in/s,00041504,sec-dryer-2,,0.07,0.006,3
+PM1:DRY2_C21_DS_VIB,Dryer can 21 DS bearing velocity,in/s,00041546,sec-dryer-2,,0.07,0.006,3
+PM1:DRY2_C27_DS_VIB,Dryer can 27 DS bearing velocity,in/s,00041588,sec-dryer-2,,0.07,0.006,3
+PM1:DRY2_C27_DS_TEMP,Dryer can 27 DS bearing temperature,degF,00041588,sec-dryer-2,,185,1.5,3
+PM1:DRY2_C27_TS_VIB,Dryer can 27 TS bearing velocity,in/s,00041588,sec-dryer-2,,0.06,0.006,3
+PM1:DRY2_C33_DS_VIB,Dryer can 33 DS bearing velocity,in/s,00041630,sec-dryer-2,,0.07,0.006,3
+PM1:DRY3_C49_DS_VIB,Dryer can 49 DS bearing velocity,in/s,00041777,sec-dryer-3,,0.07,0.006,3
+PM1:DRY3_C61_DS_VIB,Dryer can 61 DS bearing velocity,in/s,00041861,sec-dryer-3,,0.07,0.006,3
+PM1:PRESS2_BOT_DS_VIB,2nd press bottom roll DS bearing velocity,in/s,00041308,sec-press,p2-roll-bottom,0.08,0.007,3
+PM1:CAL_BOT_DS_VIB,Calender bottom roll DS bearing velocity,in/s,00041966,sec-calender,cal-bottom,0.05,0.006,3
 PM1:DRY_DRIVE_2_LOAD,2nd section drive load,%,00041455,sec-dryer-2,,62,3,3
 PM1:REEL_MOIST,Reel moisture (QCS),%,00041994,sec-reel,,7.5,0.3,3
 PM1:REEL_BW,Reel basis weight (QCS),lb/MSF,00041994,sec-reel,,by grade,0.25,3

@@ -22,7 +22,10 @@ timeline:
     what: '"Steam limited on 33#, slowed 40 fpm" — repeats most 33# days for four weeks.'
   - date: 2026-03-24
     sources: [envoy]
-    what: Envoy flags 3rd section steam at maximum and Uhle box vacuum high.
+    what: Envoy flags 2nd press Uhle box vacuum high (report Mar 25).
+  - date: 2026-03-25
+    sources: [envoy, pi]
+    what: Next 33# run - 3rd section steam pinned at its 135 psig limit; Envoy flags it (report Mar 26).
   - date: 2026-03-27
     sources: [bus, teams]
     what: Process engineer asks Halden for a felt survey at the next outage; action logged.

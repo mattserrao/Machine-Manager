@@ -15,13 +15,13 @@ vendors: [V-KV]
 timeline:
   - date: 2026-09-01
     sources: [pi]
-    what: DS velocity starts a slow rise from 0.07 in/s; TS unchanged; bearing temperature flat.
+    what: DS velocity starts a slow, accelerating rise from 0.07 in/s; TS barely moves; bearing temperature flat.
   - date: 2026-09-14
     sources: [vendor]
-    what: September vibration route — can 27 DS 0.11 in/s, "monitor"; early outer-race tone in the spectrum.
+    what: September vibration route — can 27 DS 0.07 in/s overall, but an early outer-race tone in the spectrum; "monitor".
   - date: 2026-09-22
     sources: [pi, envoy]
-    what: First Envoy exception (> 3σ). Repeats on 6 of the next 12 days, mostly on 33#.
+    what: First Envoy exception (> 3σ, highest on 33#; report arrives Sep 23). Flags most days after that.
   - date: 2026-09-28
     sources: [bus]
     what: One BUS line, "Can 27 vibration alarm — reliability to look at", closed next day as "within limits".
@@ -33,7 +33,7 @@ timeline:
     what: After restart the rise continues, now with DS temperature +8 °F. Envoy flags daily.
   - date: 2026-10-19
     sources: [vendor]
-    what: October vibration route — 0.21 in/s, outer-race defect confirmed, "replace at next opportunity".
+    what: October vibration route — 0.25 in/s, outer-race defect confirmed, "replace at next opportunity".
   - date: 2026-10-20
     sources: [jde, teams]
     what: Corrective WO raised, priority 2, scheduled to OUT-2026-11-11; action for planner to confirm bearing and housing parts on site.
@@ -46,7 +46,7 @@ demo_questions:
     expect: Can 27 DS bearing replacement near the top, with the vibration and temperature trend, the Oct 19 route report, the WO number and whether parts are confirmed.
   - q: When did we first see the can 27 problem?
     output: Ask MM
-    expect: Envoy first flagged it on Sep 22 (rise visible from ~Sep 1), before the annual outage, and it was not added to the annual scope.
+    expect: Envoy first flagged it on Sep 22 (report Sep 23; spectrum tone on the Sep 14 route), before the annual outage, and it was not added to the annual scope.
 records:
   wo:
     - key: S01-WO

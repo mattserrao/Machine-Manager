@@ -180,10 +180,11 @@ def equipment():
 
 
 # ───────────────────────── Pi tags ─────────────────────────
-# tag, description, units, asset name (resolved to asset_no), mean, sigma. Envoy flags beyond ±3σ.
+# tag, description, units, asset name (resolved to asset_no), mean, sigma (hourly noise in the mock Pi series).
+# Envoy flags beyond ±3σ of its own trailing baseline (see pi_envoy.py).
 TAGS = [
     *[(f'PM1:REF_{r}_KW', f'{r} refiner motor load', 'kW', f'{n} refiner', 1150, 40) for r, n in [('BP1', 'BP 1'), ('BP2', 'BP 2'), ('TP1', 'TP 1'), ('TP2', 'TP 2')]],
-    *[(f'PM1:REF_{r}_SE', f'{r} refiner specific energy', 'kWh/t', f'{n} refiner', 95, 4) for r, n in [('BP1', 'BP 1'), ('BP2', 'BP 2'), ('TP1', 'TP 1'), ('TP2', 'TP 2')]],
+    *[(f'PM1:REF_{r}_SE', f'{r} refiner specific energy', 'kWh/t', f'{n} refiner', 95, 1.0) for r, n in [('BP1', 'BP 1'), ('BP2', 'BP 2'), ('TP1', 'TP 1'), ('TP2', 'TP 2')]],
     ('PM1:HB_TOP_P', 'Top ply headbox pressure', 'psi', 'Top ply headbox', 9.8, .15),
     ('PM1:HB_BASE_P', 'Base ply headbox pressure', 'psi', 'Base ply headbox', 11.2, .15),
     ('PM1:HB_BASE_CONS', 'Base ply headbox consistency', '%', 'Base ply headbox', .82, .02),
@@ -197,19 +198,19 @@ TAGS = [
     ('PM1:PRESS_OUT_MOIST', 'Sheet moisture after press (calc.)', '%', 'PM1 Press section', 58.0, .6),
     ('PM1:DRY1_STEAM_P', '1st section steam pressure', 'psig', '1st section steam & condensate', 25, 1.5),
     ('PM1:DRY2_STEAM_P', '2nd section steam pressure', 'psig', '2nd section steam & condensate', 75, 3),
-    ('PM1:DRY3_STEAM_P', '3rd section steam pressure', 'psig', '3rd section steam & condensate', 110, 4),
-    ('PM1:DRY3_PV_FAN_AMPS', '3rd section pocket ventilation fan', 'A', '3rd section pocket ventilation', 62, 2),
-    ('PM1:DRY1_C05_DS_VIB', 'Dryer can 5 DS bearing velocity', 'in/s', 'Dryer can 5', .06, .01),
-    ('PM1:DRY2_C15_DS_VIB', 'Dryer can 15 DS bearing velocity', 'in/s', 'Dryer can 15', .07, .01),
-    ('PM1:DRY2_C21_DS_VIB', 'Dryer can 21 DS bearing velocity', 'in/s', 'Dryer can 21', .07, .01),
-    ('PM1:DRY2_C27_DS_VIB', 'Dryer can 27 DS bearing velocity', 'in/s', 'Dryer can 27', .07, .01),
-    ('PM1:DRY2_C27_DS_TEMP', 'Dryer can 27 DS bearing temperature', 'degF', 'Dryer can 27', 185, 4),
-    ('PM1:DRY2_C27_TS_VIB', 'Dryer can 27 TS bearing velocity', 'in/s', 'Dryer can 27', .06, .01),
-    ('PM1:DRY2_C33_DS_VIB', 'Dryer can 33 DS bearing velocity', 'in/s', 'Dryer can 33', .07, .01),
-    ('PM1:DRY3_C49_DS_VIB', 'Dryer can 49 DS bearing velocity', 'in/s', 'Dryer can 49', .07, .01),
-    ('PM1:DRY3_C61_DS_VIB', 'Dryer can 61 DS bearing velocity', 'in/s', 'Dryer can 61', .07, .01),
-    ('PM1:PRESS2_BOT_DS_VIB', '2nd press bottom roll DS bearing velocity', 'in/s', '2nd press bottom roll', .08, .012),
-    ('PM1:CAL_BOT_DS_VIB', 'Calender bottom roll DS bearing velocity', 'in/s', 'Calender bottom roll', .05, .01),
+    ('PM1:DRY3_STEAM_P', '3rd section steam pressure', 'psig', '3rd section steam & condensate', 110, 2),
+    ('PM1:DRY3_PV_FAN_AMPS', '3rd section pocket ventilation fan', 'A', '3rd section pocket ventilation', 62, 1.0),
+    ('PM1:DRY1_C05_DS_VIB', 'Dryer can 5 DS bearing velocity', 'in/s', 'Dryer can 5', .06, .006),
+    ('PM1:DRY2_C15_DS_VIB', 'Dryer can 15 DS bearing velocity', 'in/s', 'Dryer can 15', .07, .006),
+    ('PM1:DRY2_C21_DS_VIB', 'Dryer can 21 DS bearing velocity', 'in/s', 'Dryer can 21', .07, .006),
+    ('PM1:DRY2_C27_DS_VIB', 'Dryer can 27 DS bearing velocity', 'in/s', 'Dryer can 27', .07, .006),
+    ('PM1:DRY2_C27_DS_TEMP', 'Dryer can 27 DS bearing temperature', 'degF', 'Dryer can 27', 185, 1.5),
+    ('PM1:DRY2_C27_TS_VIB', 'Dryer can 27 TS bearing velocity', 'in/s', 'Dryer can 27', .06, .006),
+    ('PM1:DRY2_C33_DS_VIB', 'Dryer can 33 DS bearing velocity', 'in/s', 'Dryer can 33', .07, .006),
+    ('PM1:DRY3_C49_DS_VIB', 'Dryer can 49 DS bearing velocity', 'in/s', 'Dryer can 49', .07, .006),
+    ('PM1:DRY3_C61_DS_VIB', 'Dryer can 61 DS bearing velocity', 'in/s', 'Dryer can 61', .07, .006),
+    ('PM1:PRESS2_BOT_DS_VIB', '2nd press bottom roll DS bearing velocity', 'in/s', '2nd press bottom roll', .08, .007),
+    ('PM1:CAL_BOT_DS_VIB', 'Calender bottom roll DS bearing velocity', 'in/s', 'Calender bottom roll', .05, .006),
     ('PM1:DRY_DRIVE_2_LOAD', '2nd section drive load', '%', '2nd section drive group', 62, 3),
     ('PM1:REEL_MOIST', 'Reel moisture (QCS)', '%', 'QCS scanner', 7.5, .3),
     ('PM1:REEL_BW', 'Reel basis weight (QCS)', 'lb/MSF', 'QCS scanner', 0, .25),
