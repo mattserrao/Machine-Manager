@@ -99,4 +99,40 @@ as_user(c, u_b)
 admin.execute("select public.mm_llm_set_public(%s, false)", (name_a,))
 as_user(c, u_b); check("answers of a private org are hidden from non-members", c.execute("select count(*) from llm.answers where org_id = %s", (A,)).fetchone()[0] == 0)
 
+# ─── step 05: downtime / production / position runs, records ingest, several public orgs ───
+check("downtime rows load through the token", ingest(svc, tok_a, "downtime", [
+    {"event_id": "DT-1", "starts_at": "2026-01-06T09:40:00-05:00", "ends_at": "2026-01-06T12:22:00-05:00", "minutes": 162, "kind": "unplanned",
+     "area": "3rd dryer section", "equipment": "3rd section rotary joint (DS)", "asset_no": "1", "cause": "Rotary joint leak"},
+    {"event_id": "DT-2", "starts_at": "2026-06-23T15:10:00-05:00", "ends_at": "2026-06-23T18:04:00-05:00", "minutes": 174, "kind": "unplanned",
+     "area": "3rd dryer section", "equipment": "3rd section rotary joint (DS)", "asset_no": "1", "cause": "Rotary joint leak"},
+    {"event_id": "DT-3", "starts_at": "2026-06-24T01:00:00-05:00", "ends_at": "2026-06-24T01:30:00-05:00", "minutes": 30, "kind": "break", "area": "Reel"}]) == 3)
+check("a bad downtime kind is refused", raises(lambda: ingest(svc, tok_a, "downtime", [{"event_id": "DT-X", "starts_at": "2026-01-01T00:00:00Z",
+      "ends_at": "2026-01-01T01:00:00Z", "minutes": 60, "kind": "nap"}])) is not None)
+ingest(svc, tok_a, "production_daily", [{"day": "2026-06-23", "tons": 640, "uptime_pct": 87.9, "breaks": 1}])
+ingest(svc, tok_a, "position_runs", [{"position_id": "p2-felt-top", "installed": "2026-04-15", "removed": "2026-05-19", "days": 34, "target_days": 42,
+                                     "reason": "performance", "condition": "worn", "position_name": "2nd press top felt"}])
+check("records load for an allowed tool, into the token's org", ingest(svc, tok_a, "records:mymachine", [{"id": "machine", "data": {"name": "PM1"}},
+      {"id": "item:p2-felt-top", "data": {"installed": "2026-05-19"}}]) == 2
+      and admin.execute("select count(*) from mm_records where org_id = %s and tool = 'mymachine'", (A,)).fetchone()[0] == 2)
+check("records for other tools are refused", raises(lambda: ingest(svc, tok_a, "records:whiteboard", [{"id": "p:x", "data": {}}])) is not None)
+check("records reset replaces that tool's records only", ingest(svc, tok_a, "records:mymachine", [{"id": "machine", "data": {"name": "PM1"}}], "reset") == 1
+      and admin.execute("select count(*) from mm_records where org_id = %s and tool = 'mymachine'", (A,)).fetchone()[0] == 1)
+as_user(c, u_b)
+check("new tables: a non-member sees no downtime", c.execute("select count(*) from llm.downtime").fetchone()[0] == 0)
+check("new tools: a non-member gets nothing", c.execute("select count(*) from public.mm_llm_downtime_summary(%s, '2026-01-01', '2026-12-31')", (A,)).fetchone()[0] == 0)
+admin.execute("select public.mm_llm_set_public(%s, true)", (name_a,)); admin.execute("select public.mm_llm_set_public(%s, true)", (name_b,))
+as_user(anon, None)
+pubs = [r[0] for r in anon.execute("select id from public.mm_llm_public_org()").fetchall()]
+check("every public org is listed, the first published first", pubs == [A, B], str(pubs))
+r = anon.execute("select equipment, events, rcfas from public.mm_llm_repeat_stops(%s, '2026-01-01', '2026-12-31')", (A,)).fetchall()
+check("repeat stops without an RCFA (anon on a public org)", r == [("3rd section rotary joint (DS)", 2, "none")], str(r))
+r = anon.execute("select kind, events, minutes from public.mm_llm_downtime_summary(%s, '2026-01-01', '2026-12-31', 'kind')", (A,)).fetchall()
+check("downtime summary by kind", sorted((k, n) for k, n, _ in r) == [("break", 1), ("unplanned", 2)], str(r))
+r = anon.execute("select early, pct_of_target from public.mm_llm_position_life(%s, 'p2-felt-top')", (A,)).fetchall()
+check("position life flags an early removal", r == [(True, 81)], str(r))
+check("production summary", anon.execute("select tons from public.mm_llm_production(%s, '2026-06-01', '2026-06-30', 'month')", (A,)).fetchone()[0] == 640)
+check("anon can't read the demo org's mm_records", raises(lambda: anon.execute("select count(*) from mm_records").fetchone()) is not None
+      or anon.execute("select count(*) from mm_records").fetchone()[0] == 0)
+admin.execute("select public.mm_llm_set_public(%s, false)", (name_a,)); admin.execute("select public.mm_llm_set_public(%s, false)", (name_b,))
+
 print(f"\n{len(failures)} failing" if failures else "\nall passed"); sys.exit(1 if failures else 0)

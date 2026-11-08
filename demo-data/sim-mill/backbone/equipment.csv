@@ -1,0 +1,115 @@
+asset_no,name,section,kind,position_id,parent_asset
+00072007,PM1 Stock prep,sec-stockprep,section,,
+00072014,PM1 Refiners,sec-refiners,section,,
+00072021,PM1 Forming,sec-forming,section,,
+00072028,PM1 Press section,sec-press,section,,
+00072035,PM1 1st dryer section,sec-dryer-1,section,,
+00072042,PM1 2nd dryer section,sec-dryer-2,section,,
+00072049,PM1 3rd dryer section,sec-dryer-3,section,,
+00072056,PM1 4th dryer section,sec-dryer-4,section,,
+00072063,PM1 Reel,sec-reel,section,,
+00072070,PM1 Winder,sec-winder,section,,
+00072077,Pulper,sec-stockprep,pulper,,00072007
+00072084,Pulper rotor,sec-stockprep,motor,,00072077
+00072091,HD cleaners,sec-stockprep,cleaner,,00072007
+00072098,Coarse screen,sec-stockprep,screen,,00072007
+00072105,Fine screens,sec-stockprep,screen,,00072007
+00072112,LC cleaners,sec-stockprep,cleaner,,00072007
+00072119,LW cleaners,sec-stockprep,cleaner,,00072007
+00072126,Thickener,sec-stockprep,thickener,,00072007
+00072133,Stock chest,sec-stockprep,chest,,00072007
+00072140,Machine chest,sec-stockprep,chest,,00072007
+00072147,Ragger,sec-stockprep,ragger,,00072007
+00072154,Steam header,sec-stockprep,steam,,00072007
+00072161,REF 1 refiner,sec-refiners,refiner,ref-refa,00072014
+00072168,REF 1 refiner motor,sec-refiners,motor,,00072161
+00072175,REF 2 refiner,sec-refiners,refiner,ref-refb,00072014
+00072182,REF 2 refiner motor,sec-refiners,motor,,00072175
+00072189,Headbox,sec-forming,headbox,,00072021
+00072196,Fan pump,sec-forming,pump,,00072021
+00072203,Breast roll,sec-forming,roll,,00072021
+00072210,Couch roll,sec-forming,roll,,00072021
+00072217,Flat boxes,sec-forming,vacuum,,00072021
+00072224,Forming HP shower,sec-forming,shower,,00072021
+00072231,Wire guide,sec-forming,guide,,00072021
+00072238,Vacuum pump,sec-forming,pump,,00072021
+00072245,Forming fabric,sec-forming,fabric,form-bottom,00072021
+00072252,1st press top felt,sec-press,fabric,p1-felt-top,00072028
+00072259,1st press top felt Uhle box,sec-press,vacuum,,00072252
+00072266,1st press top felt HP shower,sec-press,shower,,00072252
+00072273,1st press bottom felt,sec-press,fabric,p1-felt-bottom,00072028
+00072280,1st press bottom felt Uhle box,sec-press,vacuum,,00072273
+00072287,1st press bottom felt HP shower,sec-press,shower,,00072273
+00072294,1st press top roll,sec-press,roll,p1-roll-top,00072028
+00072301,1st press bottom roll,sec-press,roll,p1-roll-bottom,00072028
+00072308,1st press drive,sec-press,drive,,00072028
+00072315,2nd press top felt,sec-press,fabric,p2-felt-top,00072028
+00072322,2nd press top felt Uhle box,sec-press,vacuum,,00072315
+00072329,2nd press top felt HP shower,sec-press,shower,,00072315
+00072336,2nd press bottom felt,sec-press,fabric,p2-felt-bottom,00072028
+00072343,2nd press bottom felt Uhle box,sec-press,vacuum,,00072336
+00072350,2nd press bottom felt HP shower,sec-press,shower,,00072336
+00072357,2nd press top roll,sec-press,roll,p2-roll-top,00072028
+00072364,2nd press bottom roll,sec-press,roll,p2-roll-bottom,00072028
+00072371,2nd press drive,sec-press,drive,,00072028
+00072378,1st section unorun felt,sec-dryer-1,fabric,d1-felt,00072035
+00072385,Dryer can 1,sec-dryer-1,can,,00072035
+00072392,Dryer can 2,sec-dryer-1,can,,00072035
+00072399,Dryer can 3,sec-dryer-1,can,,00072035
+00072406,Dryer can 4,sec-dryer-1,can,,00072035
+00072413,Dryer can 5,sec-dryer-1,can,,00072035
+00072420,1st section felt roll 1,sec-dryer-1,roll,d1-froll-1,00072035
+00072427,1st section felt roll 2,sec-dryer-1,roll,d1-froll-2,00072035
+00072434,1st section felt roll 3,sec-dryer-1,roll,d1-froll-3,00072035
+00072441,1st section felt roll 4,sec-dryer-1,roll,d1-froll-4,00072035
+00072448,1st section felt roll 5,sec-dryer-1,roll,d1-froll-5,00072035
+00072455,1st section rotary joint (DS),sec-dryer-1,joint,,00072035
+00072462,1st section PV fan,sec-dryer-1,fan,,00072035
+00072469,2nd section unorun felt,sec-dryer-2,fabric,d2-felt,00072042
+00072476,Dryer can 6,sec-dryer-2,can,,00072042
+00072483,Dryer can 7,sec-dryer-2,can,,00072042
+00072490,Dryer can 8,sec-dryer-2,can,,00072042
+00072497,Dryer can 9,sec-dryer-2,can,,00072042
+00072504,Dryer can 10,sec-dryer-2,can,,00072042
+00072511,2nd section felt roll 1,sec-dryer-2,roll,d2-froll-1,00072042
+00072518,2nd section felt roll 2,sec-dryer-2,roll,d2-froll-2,00072042
+00072525,2nd section felt roll 3,sec-dryer-2,roll,d2-froll-3,00072042
+00072532,2nd section felt roll 4,sec-dryer-2,roll,d2-froll-4,00072042
+00072539,2nd section felt roll 5,sec-dryer-2,roll,d2-froll-5,00072042
+00072546,2nd section rotary joint (DS),sec-dryer-2,joint,,00072042
+00072553,2nd section PV fan,sec-dryer-2,fan,,00072042
+00072560,3rd section unorun felt,sec-dryer-3,fabric,d3-felt,00072049
+00072567,Dryer can 11,sec-dryer-3,can,,00072049
+00072574,Dryer can 12,sec-dryer-3,can,,00072049
+00072581,Dryer can 13,sec-dryer-3,can,,00072049
+00072588,Dryer can 14,sec-dryer-3,can,,00072049
+00072595,Dryer can 15,sec-dryer-3,can,,00072049
+00072602,3rd section felt roll 1,sec-dryer-3,roll,d3-froll-1,00072049
+00072609,3rd section felt roll 2,sec-dryer-3,roll,d3-froll-2,00072049
+00072616,3rd section felt roll 3,sec-dryer-3,roll,d3-froll-3,00072049
+00072623,3rd section felt roll 4,sec-dryer-3,roll,d3-froll-4,00072049
+00072630,3rd section felt roll 5,sec-dryer-3,roll,d3-froll-5,00072049
+00072637,3rd section rotary joint (DS),sec-dryer-3,joint,,00072049
+00072644,3rd section PV fan,sec-dryer-3,fan,,00072049
+00072651,4th section unorun felt,sec-dryer-4,fabric,d4-felt,00072056
+00072658,Dryer can 16,sec-dryer-4,can,,00072056
+00072665,Dryer can 17,sec-dryer-4,can,,00072056
+00072672,Dryer can 18,sec-dryer-4,can,,00072056
+00072679,Dryer can 19,sec-dryer-4,can,,00072056
+00072686,Dryer can 20,sec-dryer-4,can,,00072056
+00072693,4th section felt roll 1,sec-dryer-4,roll,d4-froll-1,00072056
+00072700,4th section felt roll 2,sec-dryer-4,roll,d4-froll-2,00072056
+00072707,4th section felt roll 3,sec-dryer-4,roll,d4-froll-3,00072056
+00072714,4th section felt roll 4,sec-dryer-4,roll,d4-froll-4,00072056
+00072721,4th section felt roll 5,sec-dryer-4,roll,d4-froll-5,00072056
+00072728,4th section rotary joint (DS),sec-dryer-4,joint,,00072056
+00072735,4th section PV fan,sec-dryer-4,fan,,00072056
+00072742,Dryer drive lineup,sec-dryer-2,drive,,00072042
+00072749,Hood supply fan,sec-dryer-4,fan,,00072056
+00072756,Hood exhaust fan,sec-dryer-4,fan,,00072056
+00072763,Reel drum,sec-reel,roll,,00072063
+00072770,Reel drum DS bearing,sec-reel,bearing,,00072763
+00072777,Reel drive,sec-reel,drive,,00072063
+00072784,Winder drums,sec-winder,roll,,00072070
+00072791,Winder drive,sec-winder,drive,,00072070
+00072798,Winder slitters,sec-winder,knife,,00072070

@@ -1,0 +1,661 @@
+{
+ "24": {
+  "speed": {
+   "mean": 2184.6179,
+   "std": 729.7533,
+   "median": 2632.0
+  },
+  "prod": {
+   "mean": 27.3585,
+   "std": 10.58,
+   "median": 34.627
+  },
+  "st1": {
+   "mean": 40.0,
+   "std": 0.0,
+   "median": 40.0
+  },
+  "st3": {
+   "mean": 113.7609,
+   "std": 16.3893,
+   "median": 119.72
+  },
+  "steam": {
+   "mean": 45.6809,
+   "std": 7.2517,
+   "median": 49.279
+  },
+  "dryl": {
+   "mean": 83.6876,
+   "std": 8.1739,
+   "median": 87.21
+  },
+  "moist": {
+   "mean": 7.8795,
+   "std": 0.179,
+   "median": 7.9706
+  },
+  "bw": {
+   "mean": 25.5199,
+   "std": 0.2776,
+   "median": 25.498
+  },
+  "kwh": {
+   "mean": 60.0,
+   "std": 0.0,
+   "median": 60.0
+  },
+  "refkw": {
+   "mean": 2493.5882,
+   "std": 552.0717,
+   "median": 2842.9
+  },
+  "csf": {
+   "mean": 449.9722,
+   "std": 0.3576,
+   "median": 449.97
+  },
+  "amps": {
+   "mean": 409.3125,
+   "std": 15.9387,
+   "median": 410.02
+  },
+  "cp": {
+   "mean": 4.9997,
+   "std": 0.0189,
+   "median": 5.0006
+  },
+  "vac": {
+   "mean": 8.86,
+   "std": 0.0,
+   "median": 8.86
+  },
+  "couchSol": {
+   "mean": 18.998,
+   "std": 0.0195,
+   "median": 19.0
+  },
+  "pressSol": {
+   "mean": 43.998,
+   "std": 0.0195,
+   "median": 44.0
+  },
+  "hbc": {
+   "mean": 0.8,
+   "std": 0.0005,
+   "median": 0.8
+  },
+  "fan": {
+   "mean": 15808.2116,
+   "std": 5792.0056,
+   "median": 19514.0
+  },
+  "hoodH": {
+   "mean": 158.9993,
+   "std": 12.0608,
+   "median": 160.0
+  },
+  "dp1": {
+   "mean": 2.4034,
+   "std": 0.0934,
+   "median": 2.4656
+  },
+  "dp2": {
+   "mean": 3.4526,
+   "std": 0.4911,
+   "median": 3.771
+  },
+  "dp3": {
+   "mean": 4.5592,
+   "std": 0.8179,
+   "median": 5.0763
+  },
+  "dl_pulp": {
+   "mean": 81.8633,
+   "std": 3.2273,
+   "median": 82.001
+  },
+  "dl_fan": {
+   "mean": 29.959,
+   "std": 10.1444,
+   "median": 36.155
+  },
+  "dl_couch": {
+   "mean": 60.347,
+   "std": 15.4107,
+   "median": 69.07
+  },
+  "dl_pr1": {
+   "mean": 59.9298,
+   "std": 15.2787,
+   "median": 68.596
+  },
+  "dl_pr2": {
+   "mean": 54.0466,
+   "std": 13.4092,
+   "median": 61.592
+  },
+  "dl_dry": {
+   "mean": 59.7653,
+   "std": 15.0073,
+   "median": 68.346
+  },
+  "dl_reel": {
+   "mean": 51.7267,
+   "std": 13.9375,
+   "median": 59.576
+  },
+  "dl_wind": {
+   "mean": 77.2613,
+   "std": 21.4598,
+   "median": 86.777
+  },
+  "chest": {
+   "mean": 52.7814,
+   "std": 1.7952,
+   "median": 52.292
+  },
+  "mcLvl": {
+   "mean": 69.0086,
+   "std": 1.3111,
+   "median": 69.056
+  }
+ },
+ "28": {
+  "speed": {
+   "mean": 1933.0981,
+   "std": 623.3785,
+   "median": 2262.0
+  },
+  "prod": {
+   "mean": 24.7529,
+   "std": 9.3948,
+   "median": 26.718
+  },
+  "st1": {
+   "mean": 40.0,
+   "std": 0.0,
+   "median": 40.0
+  },
+  "st3": {
+   "mean": 120.1585,
+   "std": 15.6019,
+   "median": 124.27
+  },
+  "steam": {
+   "mean": 43.9851,
+   "std": 6.3069,
+   "median": 46.469
+  },
+  "dryl": {
+   "mean": 86.0371,
+   "std": 7.2005,
+   "median": 88.633
+  },
+  "moist": {
+   "mean": 7.9202,
+   "std": 0.1275,
+   "median": 7.9738
+  },
+  "bw": {
+   "mean": 27.764,
+   "std": 0.5227,
+   "median": 27.966
+  },
+  "kwh": {
+   "mean": 60.0,
+   "std": 0.0,
+   "median": 60.0
+  },
+  "refkw": {
+   "mean": 2252.9588,
+   "std": 513.8024,
+   "median": 2334.5
+  },
+  "csf": {
+   "mean": 450.0388,
+   "std": 0.3714,
+   "median": 450.06
+  },
+  "amps": {
+   "mean": 409.9775,
+   "std": 0.7373,
+   "median": 410.0
+  },
+  "cp": {
+   "mean": 4.9994,
+   "std": 0.02,
+   "median": 5.0
+  },
+  "vac": {
+   "mean": 8.86,
+   "std": 0.0,
+   "median": 8.86
+  },
+  "couchSol": {
+   "mean": 18.9964,
+   "std": 0.0263,
+   "median": 19.0
+  },
+  "pressSol": {
+   "mean": 43.9964,
+   "std": 0.0263,
+   "median": 44.0
+  },
+  "hbc": {
+   "mean": 0.7999,
+   "std": 0.0005,
+   "median": 0.8
+  },
+  "fan": {
+   "mean": 15202.7676,
+   "std": 5367.9543,
+   "median": 18402.0
+  },
+  "hoodH": {
+   "mean": 158.5714,
+   "std": 13.7964,
+   "median": 160.0
+  },
+  "dp1": {
+   "mean": 2.197,
+   "std": 0.0554,
+   "median": 2.1756
+  },
+  "dp2": {
+   "mean": 2.9471,
+   "std": 0.3178,
+   "median": 3.0555
+  },
+  "dp3": {
+   "mean": 4.0607,
+   "std": 0.6264,
+   "median": 4.3608
+  },
+  "dl_pulp": {
+   "mean": 81.9807,
+   "std": 0.5522,
+   "median": 81.935
+  },
+  "dl_fan": {
+   "mean": 25.3616,
+   "std": 8.1057,
+   "median": 29.478
+  },
+  "dl_couch": {
+   "mean": 60.7714,
+   "std": 15.1319,
+   "median": 69.107
+  },
+  "dl_pr1": {
+   "mean": 60.3228,
+   "std": 15.0032,
+   "median": 68.518
+  },
+  "dl_pr2": {
+   "mean": 54.3746,
+   "std": 13.1493,
+   "median": 61.591
+  },
+  "dl_dry": {
+   "mean": 57.7939,
+   "std": 13.8808,
+   "median": 65.337
+  },
+  "dl_reel": {
+   "mean": 52.0796,
+   "std": 13.7197,
+   "median": 59.655
+  },
+  "dl_wind": {
+   "mean": 75.1094,
+   "std": 22.983,
+   "median": 86.467
+  },
+  "chest": {
+   "mean": 52.7422,
+   "std": 1.9335,
+   "median": 52.027
+  },
+  "mcLvl": {
+   "mean": 69.067,
+   "std": 1.3597,
+   "median": 69.205
+  }
+ },
+ "31": {
+  "speed": {
+   "mean": 1792.2686,
+   "std": 601.0719,
+   "median": 2147.0
+  },
+  "prod": {
+   "mean": 26.3666,
+   "std": 10.5567,
+   "median": 33.351
+  },
+  "st1": {
+   "mean": 40.0,
+   "std": 0.0,
+   "median": 40.0
+  },
+  "st3": {
+   "mean": 129.4697,
+   "std": 17.2211,
+   "median": 134.64
+  },
+  "steam": {
+   "mean": 45.6621,
+   "std": 6.548,
+   "median": 48.983
+  },
+  "dryl": {
+   "mean": 88.9043,
+   "std": 7.4077,
+   "median": 91.754
+  },
+  "moist": {
+   "mean": 7.9031,
+   "std": 0.1493,
+   "median": 7.9728
+  },
+  "bw": {
+   "mean": 31.0455,
+   "std": 0.545,
+   "median": 31.077
+  },
+  "kwh": {
+   "mean": 60.0,
+   "std": 0.0,
+   "median": 60.0
+  },
+  "refkw": {
+   "mean": 2420.4405,
+   "std": 553.0919,
+   "median": 2738.2
+  },
+  "csf": {
+   "mean": 449.9668,
+   "std": 0.376,
+   "median": 449.96
+  },
+  "amps": {
+   "mean": 409.9473,
+   "std": 0.6726,
+   "median": 409.98
+  },
+  "cp": {
+   "mean": 4.9986,
+   "std": 0.0182,
+   "median": 4.9994
+  },
+  "vac": {
+   "mean": 8.86,
+   "std": 0.0,
+   "median": 8.86
+  },
+  "couchSol": {
+   "mean": 18.9951,
+   "std": 0.03,
+   "median": 19.0
+  },
+  "pressSol": {
+   "mean": 43.9951,
+   "std": 0.03,
+   "median": 44.0
+  },
+  "hbc": {
+   "mean": 0.8,
+   "std": 0.0004,
+   "median": 0.8
+  },
+  "fan": {
+   "mean": 15770.9866,
+   "std": 5827.6106,
+   "median": 19395.0
+  },
+  "hoodH": {
+   "mean": 159.7459,
+   "std": 8.4416,
+   "median": 160.0
+  },
+  "dp1": {
+   "mean": 2.1756,
+   "std": 0.0,
+   "median": 2.1756
+  },
+  "dp2": {
+   "mean": 2.7097,
+   "std": 0.2073,
+   "median": 2.8331
+  },
+  "dp3": {
+   "mean": 3.8125,
+   "std": 0.5437,
+   "median": 4.1384
+  },
+  "dl_pulp": {
+   "mean": 81.9882,
+   "std": 0.5121,
+   "median": 81.957
+  },
+  "dl_fan": {
+   "mean": 26.5032,
+   "std": 8.7358,
+   "median": 31.735
+  },
+  "dl_couch": {
+   "mean": 60.2446,
+   "std": 15.882,
+   "median": 69.143
+  },
+  "dl_pr1": {
+   "mean": 59.8314,
+   "std": 15.7265,
+   "median": 68.613
+  },
+  "dl_pr2": {
+   "mean": 53.9445,
+   "std": 13.7833,
+   "median": 61.612
+  },
+  "dl_dry": {
+   "mean": 56.2998,
+   "std": 14.1085,
+   "median": 64.166
+  },
+  "dl_reel": {
+   "mean": 51.6142,
+   "std": 14.335,
+   "median": 59.606
+  },
+  "dl_wind": {
+   "mean": 77.0131,
+   "std": 21.9397,
+   "median": 86.718
+  },
+  "chest": {
+   "mean": 52.3936,
+   "std": 1.3561,
+   "median": 51.993
+  },
+  "mcLvl": {
+   "mean": 68.9775,
+   "std": 1.3033,
+   "median": 69.026
+  }
+ },
+ "34Super": {
+  "speed": {
+   "mean": 1697.7071,
+   "std": 555.3238,
+   "median": 2027.0
+  },
+  "prod": {
+   "mean": 27.995,
+   "std": 10.7829,
+   "median": 35.408
+  },
+  "st1": {
+   "mean": 40.0,
+   "std": 0.0,
+   "median": 40.0
+  },
+  "st3": {
+   "mean": 126.8017,
+   "std": 16.7682,
+   "median": 131.51
+  },
+  "steam": {
+   "mean": 47.1502,
+   "std": 7.0383,
+   "median": 50.553
+  },
+  "dryl": {
+   "mean": 88.085,
+   "std": 7.6947,
+   "median": 90.837
+  },
+  "moist": {
+   "mean": 7.9032,
+   "std": 0.1532,
+   "median": 7.9741
+  },
+  "bw": {
+   "mean": 33.9391,
+   "std": 0.2069,
+   "median": 33.9665
+  },
+  "kwh": {
+   "mean": 60.0,
+   "std": 0.0,
+   "median": 60.0
+  },
+  "refkw": {
+   "mean": 2573.6682,
+   "std": 544.8725,
+   "median": 2907.15
+  },
+  "csf": {
+   "mean": 449.9935,
+   "std": 0.3712,
+   "median": 449.99
+  },
+  "amps": {
+   "mean": 408.8634,
+   "std": 20.6047,
+   "median": 410.03
+  },
+  "cp": {
+   "mean": 5.0006,
+   "std": 0.0199,
+   "median": 5.0011
+  },
+  "vac": {
+   "mean": 8.86,
+   "std": 0.0,
+   "median": 8.86
+  },
+  "couchSol": {
+   "mean": 18.9983,
+   "std": 0.0165,
+   "median": 19.0
+  },
+  "pressSol": {
+   "mean": 43.9983,
+   "std": 0.0165,
+   "median": 44.0
+  },
+  "hbc": {
+   "mean": 0.8,
+   "std": 0.0003,
+   "median": 0.8
+  },
+  "fan": {
+   "mean": 16330.5795,
+   "std": 5886.5655,
+   "median": 20018.0
+  },
+  "hoodH": {
+   "mean": 159.5481,
+   "std": 12.104,
+   "median": 160.0
+  },
+  "dp1": {
+   "mean": 2.1756,
+   "std": 0.0,
+   "median": 2.1756
+  },
+  "dp2": {
+   "mean": 2.5228,
+   "std": 0.1303,
+   "median": 2.601
+  },
+  "dp3": {
+   "mean": 3.6274,
+   "std": 0.4628,
+   "median": 3.9064
+  },
+  "dl_pulp": {
+   "mean": 81.7627,
+   "std": 4.1467,
+   "median": 81.983
+  },
+  "dl_fan": {
+   "mean": 27.6417,
+   "std": 8.9346,
+   "median": 33.035
+  },
+  "dl_couch": {
+   "mean": 60.3431,
+   "std": 15.538,
+   "median": 69.08
+  },
+  "dl_pr1": {
+   "mean": 59.927,
+   "std": 15.3994,
+   "median": 68.578
+  },
+  "dl_pr2": {
+   "mean": 54.0373,
+   "std": 13.525,
+   "median": 61.5585
+  },
+  "dl_dry": {
+   "mean": 55.5831,
+   "std": 13.5374,
+   "median": 63.173
+  },
+  "dl_reel": {
+   "mean": 51.7471,
+   "std": 14.0733,
+   "median": 59.62
+  },
+  "dl_wind": {
+   "mean": 78.845,
+   "std": 19.3557,
+   "median": 86.9195
+  },
+  "chest": {
+   "mean": 52.165,
+   "std": 1.9166,
+   "median": 51.9585
+  },
+  "mcLvl": {
+   "mean": 68.9866,
+   "std": 1.3099,
+   "median": 69.0225
+  }
+ },
+ "_note": "Reference year (the-paper-mill sim-headless run_year.js, seed 20251101): hourly tag means while the machine was running, by grade",
+ "_hours": {
+  "run": 5885,
+  "total": 8760,
+  "by_grade": {
+   "24": 5664,
+   "28": 234,
+   "31": 980,
+   "34Super": 1882
+  }
+ }
+}

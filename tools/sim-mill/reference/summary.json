@@ -1,0 +1,40 @@
+{
+ "seed": 20251101,
+ "days": 365,
+ "rate": 45,
+ "ms": 110714,
+ "tons": 197198,
+ "incidents": 25,
+ "upsets": {
+  "syphon": 2,
+  "rectfail": 6,
+  "drivefail": 2,
+  "hdblow": 2,
+  "dryerfire": 1,
+  "ragger": 1,
+  "bearingfail": 4,
+  "fogfan": 1,
+  "dye": 1,
+  "felt": 3,
+  "refclash": 1,
+  "slime": 1
+ },
+ "breaks": 559,
+ "breakMin": 26457,
+ "hayouts": 1130,
+ "outages": 8,
+ "found": 2,
+ "fails": 12,
+ "unplanned_gt1h": 25,
+ "breaks_per_day": 1.53,
+ "checksum": {
+  "t": 525600,
+  "cash": 37277577,
+  "incidents": 25,
+  "breaks": 541,
+  "hayouts": 1130,
+  "tons": 197198,
+  "yard": 793,
+  "fg": 38
+ }
+}

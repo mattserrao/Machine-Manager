@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import importers as I
 
 ORDER = ['equipment', 'pi_tags', 'outages', 'bus_items', 'work_orders', 'actions', 'rcfa', 'envoy', 'pi_series',
-         'documents', 'doc_chunks', 'ingest_files']
+         'documents', 'doc_chunks', 'downtime', 'production_daily', 'position_runs', 'ingest_files']
 BATCH = {'pi_series': 1000, 'doc_chunks': 300, 'documents': 200}
 
 def collect(source, backbone_dir, log=print):
@@ -29,7 +29,7 @@ def collect(source, backbone_dir, log=print):
     bus = g('bus/*.xlsx'); t['bus_items'] = I.bus_sheets(bus, tg); files.update({p: 'bus' for p in bus})
     jde = g('jde/*.csv'); t['work_orders'] = I.jde_exports(jde, tg); files.update({p: 'jde' for p in jde})
     pl = g('teams/*.csv'); t['actions'] = I.planner_exports(pl, tg); files.update({p: 'planner' for p in pl})
-    rl = os.path.join(source, 'rcfa', 'RCFA_log_PM1.csv'); t['rcfa'] = I.rcfa_log(rl, tg); files[rl] = 'rcfa_log'
+    rl = (g('rcfa/RCFA_log_*.csv') or [os.path.join(source, 'rcfa', 'RCFA_log_PM1.csv')])[0]; t['rcfa'] = I.rcfa_log(rl, tg); files[rl] = 'rcfa_log'
     ev = g('envoy/*.csv'); t['envoy'] = I.envoy_reports(ev, tg); files.update({p: 'envoy' for p in ev})
     # actions inherit the asset of the RCFA they belong to, or of the WO named in their description
     rc = {aid: r for r in t['rcfa'] for aid in r['action_ids']}
@@ -40,12 +40,18 @@ def collect(source, backbone_dir, log=print):
             m = __import__('re').search(r'WO (\d+)', a['description']); src = wo.get(m.group(1)) if m else None
         if src and not a['asset_no']: a['asset_no'], a['position_id'] = src['asset_no'], src['position_id']
     t['pi_series'] = I.pi_series(os.path.join(source, 'pi'))
+    # step 05: downtime events, daily production and position runs (Sim Mill has them; Demo Mill doesn't yet)
+    dtp = g('downtime/*.csv'); t['downtime'] = I.downtime_files(dtp, tg); files.update({p: 'downtime' for p in dtp})
+    prp = g('production/*.csv'); t['production_daily'] = I.production_files(prp); files.update({p: 'production' for p in prp})
+    psp = g('positions/*.csv'); t['position_runs'] = I.position_run_files(psp); files.update({p: 'position_runs' for p in psp})
+    t['records'] = I.record_files(os.path.join(source, 'records'))
     log('parsing documents (OCR for scanned ones)…')
     t['documents'], t['doc_chunks'] = I.documents(os.path.join(source, 'docs'), tg, source)
     for d in t['documents']: files[os.path.join(source, d['file_path'])] = 'document'
     for p in g('docs/reference/tables/*.csv'): files[p] = 'reference_table'
     counts = {}
-    for name, rows in (('bus_items', t['bus_items']), ('work_orders', t['work_orders']), ('actions', t['actions']), ('envoy', t['envoy'])):
+    for name, rows in (('bus_items', t['bus_items']), ('work_orders', t['work_orders']), ('actions', t['actions']), ('envoy', t['envoy']),
+                       ('downtime', t['downtime']), ('production_daily', t['production_daily']), ('position_runs', t['position_runs'])):
         for r in rows: counts[r['source_file']] = counts.get(r['source_file'], 0) + 1
     t['ingest_files'] = [dict(source_file=os.path.relpath(p, source).replace(os.sep, '/'), kind=k, rows=counts.get(os.path.basename(p)))
                          for p, k in sorted(files.items())]
@@ -87,6 +93,11 @@ def push(target, tables, log=print):
         for i in range(0, len(rows), b):
             n += target.ingest(name, rows[i:i + b]) or 0
         log(f'  {name:12s} {n:>8,} rows')
+    # Machine Manager records (My Machine, Outage Planning, Consumables): only the tools the source has, each replaced whole
+    for tool, rows in (tables.get('records') or {}).items():
+        n = target.ingest(f'records:{tool}', [], 'reset') or 0
+        for i in range(0, len(rows), 500): n += target.ingest(f'records:{tool}', rows[i:i + 500]) or 0
+        log(f'  records:{tool:12s} {len(rows):>5,} records')
 
 def upload_files(target, source, paths, log=print):
     for i, p in enumerate(paths):
@@ -120,6 +131,7 @@ if __name__ == '__main__':
     a = ap.parse_args()
     tables, paths = collect(a.source, a.backbone)
     for k in ORDER: print(f'  {k:12s} {len(tables[k]):>8,} rows parsed')
+    for k, v in tables['records'].items(): print(f'  records:{k:12s} {len(v):>5,} records parsed')
     if a.dry_run: sys.exit(0)
     token = a.token or os.environ.get('MM_INGEST_TOKEN') or sys.exit('need --token or MM_INGEST_TOKEN')
     target = Local(a.dsn, token) if a.dsn else Supabase(a.url, a.key, token)

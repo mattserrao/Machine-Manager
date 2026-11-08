@@ -1,0 +1,110 @@
+# Sim Mill — the mill the data-generating model runs. This is The Paper Mill's own recycled-board mill (the game's
+# machine, grades, critical assets and upsets: see reference/catalog.json, exported from the-paper-mill sim-headless),
+# set up as a Machine Manager organization. Every person and company is fictional.
+
+org: Sim Mill
+machine:
+  name: PM1
+  # My Machine setup (mm-machine.js): fourdrinier, 2 press nips (not tandem), 4 uno-run dryer sections of 5 cans,
+  # each with 5 felt rolls tracked as roll positions, no calender, twin refiners.
+  former: { type: fourdrinier, lumpbreaker: false }
+  press: { nips: 2, tandem: false }
+  dryers:
+    - { type: uno, feltRolls: 5 }
+    - { type: uno, feltRolls: 5 }
+    - { type: uno, feltRolls: 5 }
+    - { type: uno, feltRolls: 5 }
+  calender: false
+  refiners: [{ id: refa, name: REF 1 }, { id: refb, name: REF 2 }]
+  cans_per_section: 5
+
+year:
+  warmup_start: 2025-09-01      # the model runs from here so Envoy has a baseline on day one
+  start: 2025-11-01
+  today: 2026-10-31             # demo "today"
+  end: 2026-11-01
+
+outages:
+  anchor: 2026-11-11            # the 6-week grid, as Demo Mill and Outage Planning
+  cadence_days: 42
+  start_hour: 6
+  hours: 20
+
+# Grades: the game's (02-audio GRADES and GCOST). sp = full speed (fpm), bw = lb/1000 ft2, brk = break hazard factor,
+# steam = steam demand factor, mix = campaign size range (t). The planner walks the wheel 24 > 28 > 31 > 34Super > 31.
+grades:
+  "24":      { label: 24#,      sp: 2632, bw: 25.52, brk: 1.15, steam: 1.00, mix: [2600, 3600] }
+  "28":      { label: 28#,      sp: 2262, bw: 28.03, brk: 1.25, steam: 1.02, mix: [80, 160] }
+  "31":      { label: 31#,      sp: 2147, bw: 31.10, brk: 0.75, steam: 1.14, mix: [150, 350] }
+  "34Super": { label: 34 Super, sp: 2027, bw: 34.01, brk: 0.55, steam: 1.11, mix: [800, 1300] }
+wheel: ["24", "28", "31", "34Super", "31"]
+k_tph: 0.0005180989223542414    # t/h = k * fpm * bw (the game's P.K: 34.8 t/h on 24 at 2,632 fpm)
+
+# Realism retune (agreed targets: 1-3 breaks a day, 15-25 unplanned stops over 1 h a year, 10-20 RCFAs).
+# Reference year (JS) used MTBF x 45 (its own chaos and reliability multipliers add stops); the port uses x 30 and break hazard x 2.5 on the game's season-tuned values.
+rates:
+  upset_mtbf_x: 30
+  breaks_per_day: 1.55          # mean on 24 (grade factors scale it)
+  rcfa_min_hours: 3             # an unplanned stop this long (or the 2nd of a kind in 60 days) gets an RCFA
+
+vendors:
+  - { id: V-NB, name: Northbank Fabrics, scope: Forming fabric and dryer fabrics; clothing surveys, rep: Tamsin Okafor }
+  - { id: V-HF, name: Halden Felt Co., scope: 1st press felts; felt surveys, rep: Joel Abernathy }
+  - { id: V-MP, name: Marlow Press Fabrics, scope: 2nd press felts; felt surveys, rep: Ines Callaghan }
+  - { id: V-CT, name: Corrie Textiles, scope: 3rd and 4th section dryer fabrics, rep: Wendell Pryce }
+  - { id: V-RR, name: Ridgeway Refining, scope: Refiner plates; plate reports, rep: Corinne Batista }
+  - { id: V-PR, name: Pellham Roll Service, scope: Press rolls and felt rolls; recover and regrind, rep: Hollis Drummond }
+  - { id: V-TR, name: Teague Roll Works, scope: "Reel drum, couch roll and winder drums; grinding", rep: Marisol Quenneville }
+  - { id: V-KV, name: Keel Vibration Services, scope: Monthly vibration route, rep: Anders Vollmer }
+  - { id: V-SW, name: Spraywell Nozzle Supply, scope: Shower nozzles; quarterly shower audits, rep: Kiran Mehta }
+  - { id: V-BS, name: Brightwater Steam Systems, scope: Rotary joints and syphons; steam surveys, rep: Delphine Ortega }
+
+roster:
+  - { id: P01, name: Rosalind Achebe, role: PM1 superintendent }
+  - { id: P02, name: Curtis Lindahl, role: Maintenance planner }
+  - { id: P03, name: Mei Fairbanks, role: Reliability engineer }
+  - { id: P04, name: Tobias Renner, role: Process engineer }
+  - { id: P05, name: Gloria Nakamura, role: Maintenance supervisor (mechanical) }
+  - { id: P06, name: Desmond Pike, role: Maintenance supervisor (electrical) }
+  - { id: P07, name: Ingrid Solberg, role: Stock prep supervisor }
+  - { id: P08, name: Harlan Mbeki, role: Shift lead (crew A), crew: A }
+  - { id: P09, name: Lucille Brandt, role: Shift lead (crew B), crew: B }
+  - { id: P10, name: Rafael Okonkwo, role: Shift lead (crew C), crew: C }
+  - { id: P11, name: Wynn Castellano, role: Shift lead (crew D), crew: D }
+  - { id: P12, name: Beatrix Hale, role: Millwright lead }
+  - { id: P13, name: Omar Szabo, role: Electrical lead }
+  - { id: P14, name: Fenna Gallagher, role: Instrument tech }
+  - { id: P15, name: Quentin Adeyemi, role: Storeroom coordinator }
+  - { id: P16, name: Sunniva Brooks, role: Clothing coordinator }
+  - { id: P17, name: Eamon Takahashi, role: Steam and condensate engineer }
+  - { id: P18, name: Dolores Vance, role: Production manager }
+
+# Clothing, plates and rolls: target life (weeks), vendor and style. Felts and fabrics change at outages; the model
+# picks the outage nearest the target (or the one before, if the position is worn). `phase` = the outage index (0 =
+# Sep 17 2025) the current piece went on before the year starts, so changes land through the year.
+positions:
+  ref-refa:       { kind: refiner, life_w: 12, vendor: Ridgeway Refining, style: "34\" LC plate, 3.0/4.0 bar/groove", phase: 0 }
+  ref-refb:       { kind: refiner, life_w: 12, vendor: Ridgeway Refining, style: "34\" LC plate, 3.0/4.0 bar/groove", phase: 1 }
+  form-bottom:    { kind: fabric,  life_w: 12, vendor: Northbank Fabrics, style: NX-1850 double layer, phase: 0 }
+  p1-felt-top:    { kind: fabric,  life_w: 12, vendor: Halden Felt Co., style: "Seamed felt, 1300 gsm", phase: 1 }
+  p1-felt-bottom: { kind: fabric,  life_w: 12, vendor: Halden Felt Co., style: "Endless felt, 1500 gsm", phase: 0 }
+  p2-felt-top:    { kind: fabric,  life_w: 6,  vendor: Marlow Press Fabrics, style: "Seamed felt, 1400 gsm", phase: 1 }
+  p2-felt-bottom: { kind: fabric,  life_w: 12, vendor: Marlow Press Fabrics, style: "Endless felt, 1600 gsm", phase: 1 }
+  p1-roll-top:    { kind: roll, life_w: 104, vendor: Pellham Roll Service, style: Composite cover, since: 2025-02-26 }
+  p1-roll-bottom: { kind: roll, life_w: 78,  vendor: Pellham Roll Service, style: "Suction roll, rubber 10 P&J", since: 2025-06-04 }
+  p2-roll-top:    { kind: roll, life_w: 104, vendor: Pellham Roll Service, style: Granite-style composite cover, since: 2024-12-11 }
+  p2-roll-bottom: { kind: roll, life_w: 78,  vendor: Pellham Roll Service, style: "Blind-drilled rubber, 12 P&J", since: 2025-03-12 }
+  d1-felt:        { kind: fabric, life_w: 52, vendor: Northbank Fabrics, style: "Dryer fabric, spiral seam", since: 2025-03-12 }
+  d2-felt:        { kind: fabric, life_w: 52, vendor: Northbank Fabrics, style: "Dryer fabric, pin seam", since: 2025-06-04 }
+  d3-felt:        { kind: fabric, life_w: 65, vendor: Corrie Textiles, style: "Dryer fabric, spiral seam", since: 2025-04-23 }
+  d4-felt:        { kind: fabric, life_w: 65, vendor: Corrie Textiles, style: "Dryer fabric, spiral seam", since: 2025-07-16 }
+felt_roll: { life_w: 156, vendor: Pellham Roll Service, style: "Felt roll, rubber cover, sealed bearings" }
+
+consumables:
+  - { name: "Refiner plates (34\" LC, Ridgeway)", qty: 1, min: 2, unit: sets, note: "One set used per refiner per change; REF 2 is wearing early" }
+  - { name: "2nd press top felt (Marlow, 1400 gsm)", qty: 2, min: 1, unit: felts }
+  - { name: "Forming fabric NX-1850", qty: 1, min: 1, unit: fabrics }
+  - { name: "Dryer felt roll bearings", qty: 6, min: 4, unit: bearings }
+  - { name: "Rotary joint seal kits (Brightwater)", qty: 1, min: 2, unit: kits, note: "3rd section joint leaks used two" }
+  - { name: "Reel drum DS bearing (22238)", qty: 0, min: 1, unit: bearings, note: "On order" }
+  - { name: "HP shower nozzles (2nd press)", qty: 140, min: 60, unit: nozzles }
