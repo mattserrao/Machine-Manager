@@ -436,7 +436,7 @@ def check(m, ev, out, truth):
     need(all(d in fs for d in [D('2026-10-1' + str(k)) for k in range(3, 10)]), 'S01: should flag daily after the restart')
     daily = lambda tag, day: float(np.nanmean(vals[tag][(int(hidx(dt.datetime.combine(D(day), dt.time(0)))) - i0):][:24]))
     need(abs(daily('PM1:DRY2_C27_DS_VIB', '2026-09-14') - .07) <= .008, f"S01: Sep 14 can 27 {daily('PM1:DRY2_C27_DS_VIB', '2026-09-14'):.3f} in/s, route says 0.07")
-    need(abs(daily('PM1:DRY2_C27_DS_VIB', '2026-10-19') - .25) <= .02, f"S01: Oct 19 can 27 {daily('PM1:DRY2_C27_DS_VIB', '2026-10-19'):.3f} in/s, route says 0.25")
+    need(abs(daily('PM1:DRY2_C27_DS_VIB', '2026-10-19') - .24) <= .015, f"S01: Oct 19 can 27 {daily('PM1:DRY2_C27_DS_VIB', '2026-10-19'):.3f} in/s, route says 0.24")
     need(not [d for d in fs if D('2026-08-01') <= d < D('2026-09-22')], 'S01: flagged before Sep 22')
     u = [d for d in flags(ev, 'PM1:UHLE_P2_VAC') if D('2026-03-01') <= d <= D('2026-04-20')]
     st = [d for d in flags(ev, 'PM1:DRY3_STEAM_P') if D('2026-03-01') <= d <= D('2026-04-20')]

@@ -33,7 +33,7 @@ timeline:
     what: After restart the rise continues, now with DS temperature +8 °F. Envoy flags daily.
   - date: 2026-10-19
     sources: [vendor]
-    what: October vibration route — 0.25 in/s, outer-race defect confirmed, "replace at next opportunity".
+    what: October vibration route — 0.24 in/s, outer-race defect confirmed, "replace at next opportunity".
   - date: 2026-10-20
     sources: [jde, teams]
     what: Corrective WO raised, priority 2, scheduled to OUT-2026-11-11; action for planner to confirm bearing and housing parts on site.

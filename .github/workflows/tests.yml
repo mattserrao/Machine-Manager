@@ -40,11 +40,13 @@ jobs:
       - run: node tests/sync/sync_sim.js
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
-      - run: pip install pyyaml openpyxl numpy
+      - run: pip install pyyaml openpyxl numpy reportlab pypdf python-docx pillow
       - run: python3 tools/demo-data/backbone.py --check
       - run: python3 tools/demo-data/structured.py --check
       - name: Pi + Envoy (needs phase 2's _truth, so generate it first)
         run: python3 tools/demo-data/structured.py && python3 tools/demo-data/pi_envoy.py --check
+      - name: Documents (needs phases 2–3 output)
+        run: python3 tools/demo-data/pi_envoy.py && python3 tools/demo-data/docs.py --check
 
   browser:
     runs-on: ubuntu-latest
