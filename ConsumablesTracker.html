@@ -5,55 +5,55 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Consumables Tracker</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="mm-board.css?v=2026-11-08.0053">
-<link rel="stylesheet" href="mm-board-library.css?v=2026-11-08.0053">
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0136">
+<script src="mm-icons.js?v=2026-11-08.0136"></script>
+<link rel="stylesheet" href="mm-board.css?v=2026-11-08.0136">
+<link rel="stylesheet" href="mm-board-library.css?v=2026-11-08.0136">
 <style>
   /* this page only (shared styles: mm-board.css, mm-board-library.css) */
   /* consumable cards */
-  .ck-kind{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:rgba(0,0,0,.5)}
+  .ck-kind{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:rgb(var(--fg-rgb) / .5)}
   .inv{margin-top:8px;display:flex;flex-direction:column;gap:4px}
-  .ir{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.65);border:1px solid rgba(0,0,0,.08);border-radius:7px;padding:5px 6px 5px 9px}
+  .ir{display:flex;align-items:center;gap:8px;background:rgb(var(--bg-rgb) / .3);border:1px solid rgb(var(--fg-rgb) / .08);border-radius:7px;padding:5px 6px 5px 9px}
   .ir .iw{flex:1;min-width:0}
   .ir .ia{font-size:12.5px;font-weight:500;line-height:1.25;word-break:break-word}
-  .ir .ib2{font-size:11px;color:#78716c;line-height:1.25;word-break:break-word}
+  .ir .ib2{font-size:11px;color:var(--muted);line-height:1.25;word-break:break-word}
   .qty{display:flex;align-items:center;gap:2px;flex:none}
   .qty .qn{min-width:26px;text-align:center;font-weight:600;font-size:15px;font-variant-numeric:tabular-nums}
-  .qty .qn.zero{color:#dc2626}
-  .qb{width:22px;height:22px;border-radius:6px;border:1px solid rgba(0,0,0,.12);background:#fff;cursor:pointer;font:600 13px/1 inherit;color:#44403c;display:grid;place-items:center;padding:0}
-  .qb:hover{background:#f5f5f4}
-  .inv-foot{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:#78716c;margin-top:5px}
-  .inv-foot b{color:#1c1917;font-weight:600}
-  .pos{margin-top:8px;font-size:12.5px;font-weight:500;background:rgba(255,255,255,.65);border:1px solid rgba(0,0,0,.08);border-radius:7px;padding:5px 9px}
-  .pos span{display:block;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:rgba(0,0,0,.45)}
+  .qty .qn.zero{color:var(--bad-ink)}
+  .qb{width:22px;height:22px;border-radius:6px;border:1px solid rgb(var(--fg-rgb) / .12);background:var(--surface);cursor:pointer;font:600 13px/1 inherit;color:var(--ink-2);display:grid;place-items:center;padding:0}
+  .qb:hover{background:var(--hover)}
+  .inv-foot{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--muted);margin-top:5px}
+  .inv-foot b{color:var(--ink);font-weight:600}
+  .pos{margin-top:8px;font-size:12.5px;font-weight:500;background:rgb(var(--bg-rgb) / .3);border:1px solid rgb(var(--fg-rgb) / .08);border-radius:7px;padding:5px 9px}
+  .pos span{display:block;font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:rgb(var(--fg-rgb) / .45)}
   .kv{margin:7px 0 0;display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px}
-  .kv dt{color:#78716c}
+  .kv dt{color:var(--muted)}
   .kv dd{margin:0;font-weight:500;word-break:break-word}
   /* consumable editor */
   #edCons{display:flex;flex-direction:column;gap:8px}
   #edCons:empty{display:none}
-  .ce-h{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:#78716c;margin-top:4px}
+  .ce-h{font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-top:4px}
   .ce-grid{display:grid;gap:5px;align-items:center}
   .ce-grid.inv{grid-template-columns:1fr 1fr 64px 26px;margin:0}
   .ce-grid.kv2{grid-template-columns:140px 1fr 26px}
-  .ce-grid input{width:100%;min-width:0;font:inherit;font-size:13px;padding:5px 7px;border:1px solid #d6d3d1;border-radius:6px;background:#fff}
-  .ce-grid .hd{font-size:11px;color:#78716c}
-  .ce-grid .hd input{font-size:11px;padding:3px 6px;color:#57534e;background:#fafaf9}
-  .ce-x{border:0;background:none;color:#a8a29e;cursor:pointer;font-size:14px;padding:0}
-  .ce-x:hover{color:#dc2626}
+  .ce-grid input{width:100%;min-width:0;font:inherit;font-size:13px;padding:5px 7px;border:1px solid var(--line-strong);border-radius:6px;background:var(--surface)}
+  .ce-grid .hd{font-size:11px;color:var(--muted)}
+  .ce-grid .hd input{font-size:11px;padding:3px 6px;color:var(--ink-2);background:var(--surface-2)}
+  .ce-x{border:0;background:none;color:var(--faint);cursor:pointer;font-size:14px;padding:0}
+  .ce-x:hover{color:var(--bad-ink)}
   .ce-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
-  .ce-row input[type=text],.ce-row input[type=date]{font:inherit;font-size:13px;padding:5px 7px;border:1px solid #d6d3d1;border-radius:6px}
+  .ce-row input[type=text],.ce-row input[type=date]{font:inherit;font-size:13px;padding:5px 7px;border:1px solid var(--line-strong);border-radius:6px}
   .ce-row .grow{flex:1;min-width:140px}
 </style>
 </head>
-<body>
+<body class="mm-canvas">
 <div id="board">
   <div id="world">
     <svg id="links" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#78716c"/></marker>
-        <marker id="arrowSel" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker>
+        <marker id="arrowSel" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker>
       </defs>
       <g id="lg"></g>
       <path id="tmpLink" class="tmp" d="" marker-end="url(#arrowSel)"/>
@@ -69,18 +69,18 @@
   <div><h1>Consumables Tracker</h1><p id="brandSub">Boards</p></div>
 </div>
 <div id="toolbar" class="bar">
-  <button id="libBtn" class="btn" title="All consumables boards">← Boards</button>
-  <button id="newBtn" class="btn primary">+ New card ▾</button>
+  <button id="libBtn" class="btn" title="All consumables boards" data-ic="back" data-ic-size="sm">Boards</button>
+  <button id="newBtn" class="btn primary" data-ic="plus" data-ic-size="sm">New card<svg class="mi-ic xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
   <span class="sep"></span>
-  <button id="undoBtn" class="ib" title="Undo (Ctrl/⌘+Z)" aria-label="Undo">↶</button>
-  <button id="redoBtn" class="ib" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo">↷</button>
+  <button id="undoBtn" class="ib" title="Undo (Ctrl/⌘+Z)" aria-label="Undo" data-ic="undo"></button>
+  <button id="redoBtn" class="ib" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo" data-ic="redo"></button>
   <span class="sep"></span>
-  <button id="frameBtn" class="ib" title="New frame (F)" aria-label="New frame">▭</button>
-  <button id="snapBtn" class="ib wide" title="Snap to grid (G)" aria-label="Snap to grid">⊞</button>
+  <button id="frameBtn" class="ib" title="New frame (F)" aria-label="New frame" data-ic="frame"></button>
+  <button id="snapBtn" class="ib wide" title="Snap to grid (G)" aria-label="Snap to grid" data-ic="grid"></button>
   <span class="sep"></span>
   <button id="infoBtn" class="btn" title="Board name, machine and description">Details</button>
-  <button id="fileBtn" class="btn" title="Export, import, print">File ▾</button>
-  <button id="helpBtn" class="ib wide" title="Shortcuts (?)" aria-label="Shortcuts">?</button>
+  <button id="fileBtn" class="btn" title="Export, import, print">File<svg class="mi-ic xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+  <button id="helpBtn" class="ib wide" title="Shortcuts (?)" aria-label="Shortcuts" data-ic="help"></button>
   <span id="saveState"></span>
   <a id="mode" hidden></a>
 </div>
@@ -88,7 +88,7 @@
 
 <div id="topright">
 <div id="searchbar" class="bar">
-  <span style="color:#a8a29e;font-size:13px">⌕</span>
+  <span style="color:var(--faint);display:flex" data-ic="search" data-ic-size="sm"></span>
   <input id="search" type="search" placeholder="Search cards, part #s  ( / )" autocomplete="off">
   <span id="searchCount"></span>
 </div>
@@ -97,10 +97,10 @@
 
 
 <div id="zoombar" class="bar">
-  <button class="ib" id="zoomOut" title="Zoom out (−)" aria-label="Zoom out">−</button>
+  <button class="ib" id="zoomOut" title="Zoom out (−)" aria-label="Zoom out" data-ic="minus" data-ic-size="sm"></button>
   <button id="zoomPct" title="Reset to 100% (0)">100%</button>
-  <button class="ib" id="zoomIn" title="Zoom in (+)" aria-label="Zoom in">+</button>
-  <button class="ib" id="fitBtn" title="Fit all (Shift+1)" aria-label="Fit all">⤢</button>
+  <button class="ib" id="zoomIn" title="Zoom in (+)" aria-label="Zoom in" data-ic="plus" data-ic-size="sm"></button>
+  <button class="ib" id="fitBtn" title="Fit all (Shift+1)" aria-label="Fit all" data-ic="fit" data-ic-size="sm"></button>
 </div>
 
 <div id="ver"></div>
@@ -120,7 +120,7 @@
 
 <div id="pkgDlg" class="backdrop" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-label="Board details">
-    <div class="sheet-head" style="--c:#fff"><b style="font-size:14px">Board details</b><span class="chip" id="pkgExample">Example</span><span class="spacer"></span><button class="x" id="pkgClose" aria-label="Close">✕</button></div>
+    <div class="sheet-head" style="--c:var(--surface)"><b style="font-size:14px">Board details</b><span class="chip" id="pkgExample">Example</span><span class="spacer"></span><button class="x" id="pkgClose" aria-label="Close" data-ic="x"></button></div>
     <div class="sheet-body">
       <label class="fld">Name<input id="pkgName" type="text" placeholder="e.g. PM1 Consumables"></label>
       <div class="frow">
@@ -144,7 +144,7 @@
 
 <div id="linkPop" hidden>
   <input id="linkLabel" placeholder="Label (optional)">
-  <button class="btn" id="linkRev" title="Reverse direction">⇄</button>
+  <button class="btn" id="linkRev" title="Reverse direction" data-ic="swap" data-ic-size="sm"></button>
   <button class="btn danger" id="linkDel">Delete</button>
 </div>
 
@@ -153,7 +153,7 @@
     <div class="sheet-head">
       <div class="swatches" id="edSwatches"></div>
       <span id="edLabel"></span>
-      <button class="x" id="edClose" aria-label="Close">✕</button>
+      <button class="x" id="edClose" aria-label="Close" data-ic="x"></button>
     </div>
     <div class="sheet-body">
       <textarea id="edText" placeholder="Write something… (first line becomes the title)"></textarea>
@@ -184,7 +184,7 @@
 
 <div id="help" class="backdrop" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
-    <div class="sheet-head" style="--c:#fff"><b style="font-size:14px">Shortcuts</b><span class="spacer"></span><button class="x" id="helpClose" aria-label="Close">✕</button></div>
+    <div class="sheet-head" style="--c:var(--surface)"><b style="font-size:14px">Shortcuts</b><span class="spacer"></span><button class="x" id="helpClose" aria-label="Close" data-ic="x"></button></div>
     <div class="sheet-body">
       <div class="keys">
         <h4>Notes</h4>
@@ -238,7 +238,7 @@
       <li>Each consumable is a card · <b>+ New card</b> picks the type · click a card to edit it</li>
       <li>Inventory cards: tap − / + to change what’s on hand · info cards: what goes where</li>
       <li>Frames group categories · drag a card onto another’s bottom edge to tuck in a note</li>
-      <li>Right-click anything for options · <b>File ▾</b> to export, import or print · <b>?</b> for shortcuts</li>
+      <li>Right-click anything for options · <b>File</b> to export, import or print · <b>?</b> for shortcuts</li>
     </ul>
   </div>
   <button class="btn" id="tipsOk">Got it</button>
@@ -246,7 +246,7 @@
 
 <div id="printDlg" class="backdrop" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-label="Print or save as PDF">
-    <div class="sheet-head" style="--c:#fff"><b style="font-size:14px">Print / PDF</b><span class="spacer"></span><button class="x" id="pdClose" aria-label="Close">✕</button></div>
+    <div class="sheet-head" style="--c:var(--surface)"><b style="font-size:14px">Print / PDF</b><span class="spacer"></span><button class="x" id="pdClose" aria-label="Close" data-ic="x"></button></div>
     <div class="sheet-body">
       <div class="pd-opts" id="pdOpts">
         <div class="orow">Content<div class="seg" data-k="kind"><button data-v="picture">Board picture</button><button data-v="report">Written report</button></div></div>
@@ -294,13 +294,13 @@
   </div>
 </div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0053"></script>
-<script src="mm-config.js?v=2026-11-08.0053"></script>
-<script src="mm-cloud.js?v=2026-11-08.0053"></script>
-<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.0053"></script>
-<script src="mm-ui.js?v=2026-11-08.0053"></script>
-<script src="mm-records.js?v=2026-11-08.0053"></script>
-<script src="mm-board.js?v=2026-11-08.0053"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0136"></script>
+<script src="mm-config.js?v=2026-11-08.0136"></script>
+<script src="mm-cloud.js?v=2026-11-08.0136"></script>
+<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.0136"></script>
+<script src="mm-ui.js?v=2026-11-08.0136"></script>
+<script src="mm-records.js?v=2026-11-08.0136"></script>
+<script src="mm-board.js?v=2026-11-08.0136"></script>
 <script>
 MMBoard.start({
     version:'v0.3.0',
@@ -430,7 +430,7 @@ MMBoard.start({
       const c = n.cons; if (!c) return;
       const ch = () => { render(); save(); };
       const inp = (v, ph, on, type) => { const i = el('input'); i.type = type || 'text'; i.value = v == null ? '' : v; if (ph) i.placeholder = ph; i.addEventListener('input', () => { on(i.value); ch(); }); i.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); closeEditor(); } }); return i; };
-      const xbtn = (fn, title) => { const b = el('button', 'ce-x', '✕'); b.type = 'button'; b.title = title; b.addEventListener('click', () => { fn(); ch(); paintCons(n); }); return b; };
+      const xbtn = (fn, title) => { const b = el('button', 'ce-x'); b.appendChild(MMIcons.el('x', 'xs')); b.type = 'button'; b.title = title; b.addEventListener('click', () => { fn(); ch(); paintCons(n); }); return b; };
       const addBtn = (label, fn) => { const b = el('button', 'btn', label); b.type = 'button'; b.addEventListener('click', () => { fn(); ch(); paintCons(n); const ins = edCons.querySelectorAll('.ce-grid input'); if (ins.length) ins[ins.length - (c.kind === 'inv' ? 3 : 2)].focus(); }); return b; };
 
       if (c.kind === 'inv'){
@@ -611,6 +611,6 @@ MMBoard.start({
   },
 });
 </script>
-<script src="mm-nav.js?v=2026-11-08.0053"></script>
+<script src="mm-nav.js?v=2026-11-08.0136"></script>
 </body>
 </html>

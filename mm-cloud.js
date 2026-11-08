@@ -65,32 +65,33 @@
   /* ───────────── Account chip + sign-in dialog (same on every page) ───────────── */
 
   const CSS = `
-  .mmc{display:inline-flex;align-items:center;gap:10px;background:#fff;border:1px solid #e5e7eb;border-radius:12px;
-    padding:6px 8px 6px 12px;box-shadow:0 2px 10px rgba(0,0,0,.06);font:13px/1.3 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#1f2328;position:relative}
-  .mmc.compact{padding:4px 4px 4px 10px;border-radius:10px;font-size:12px;gap:8px}
-  .mmc .who b{display:block;font-weight:600}
-  .mmc .who > span{color:#6b7280;font-size:12px}
-  .mmc.compact .who b{display:inline;font-weight:600}
+  .mmc{display:inline-flex;align-items:center;gap:10px;font:12.5px/1.3 var(--font);color:var(--ink);position:relative}
+  .mmc .who{display:flex;align-items:center;gap:8px;min-width:0}
+  .mmc .who b{font-weight:500;color:var(--ink-2);white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+  .mmc .who b::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--faint);flex:none}
+  .mmc.live .who b::before{background:var(--ok)}
+  .mmc.off .who b::before{background:var(--bad)}
+  .mmc .who > span{color:var(--muted);font-size:12px;white-space:nowrap}
   .mmc.compact .who > span{display:none}
-  .mmc select{font:inherit;font-size:12px;border:1px solid #e5e7eb;border-radius:6px;padding:1px 4px;color:#6b7280;background:#fff;max-width:160px}
-  .mmc-pill{display:inline-block;font-size:10.5px;font-weight:600;border-radius:999px;padding:2px 8px;background:#fef3c7;color:#92400e;margin-left:6px;vertical-align:1px}
-  .mmc-pill.ok{background:#dcfce7;color:#166534}
-  .mmc-pill.ro{background:#e0e7ff;color:#3730a3}
-  .mmc-btn{font:inherit;font-size:12.5px;font-weight:500;border:1px solid #e5e7eb;background:#fff;border-radius:8px;padding:5px 11px;cursor:pointer;color:#1f2328;white-space:nowrap}
-  .mmc-btn:hover{background:#f5f5f4}
-  .mmc-btn.primary{background:#1f2328;border-color:#1f2328;color:#fff}
-  .mmc-btn.primary:hover{background:#000}
+  .mmc select{font:inherit;font-size:12px;border:1px solid var(--line);border-radius:var(--r-sm);padding:2px 4px;color:var(--ink-2);background:var(--surface-2);max-width:160px}
+  .mmc-pill{font-size:12px;font-weight:400;color:var(--muted)}
+  .mmc-pill::before{content:"·";margin:0 6px 0 0;color:var(--faint)}
+  .mmc-pill.ro{color:var(--accent-ink)}
+  .mmc-btn{font:inherit;font-size:12.5px;font-weight:500;border:1px solid var(--line);background:transparent;border-radius:var(--r-sm);height:30px;padding:0 10px;cursor:pointer;color:var(--ink);white-space:nowrap}
+  .mmc-btn:hover{background:var(--hover);border-color:var(--line-strong)}
+  .mmc-btn.primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
+  .mmc-btn.primary:hover{background:var(--primary-hover)}
   .mmc-btn:disabled{opacity:.6;cursor:default}
-  .mmc-dlg{border:none;border-radius:14px;padding:0;box-shadow:0 20px 60px rgba(0,0,0,.25);width:min(360px,calc(100vw - 32px));
-    font:14px/1.4 Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#1f2328}
-  .mmc-dlg::backdrop{background:rgba(28,25,23,.35)}
-  .mmc-dlg form{padding:22px 22px 18px;display:flex;flex-direction:column;gap:12px}
-  .mmc-dlg h3{margin:0;font-size:16px}
-  .mmc-dlg p{margin:0;font-size:12.5px;color:#6b7280;line-height:1.45}
-  .mmc-dlg label{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:500;color:#3f3f46}
-  .mmc-dlg input{font:inherit;font-size:14px;border:1px solid #e5e7eb;border-radius:8px;padding:8px 10px}
-  .mmc-dlg input:focus{outline:2px solid #2563eb;outline-offset:-1px;border-color:transparent}
-  .mmc-err{color:#b91c1c;font-size:12.5px;min-height:1em}
+  .mmc-dlg{border:1px solid var(--line-strong);border-radius:var(--r-lg);padding:0;box-shadow:var(--shadow-pop);width:min(360px,calc(100vw - 32px));
+    font:13px/1.4 var(--font);color:var(--ink);background:var(--overlay)}
+  .mmc-dlg::backdrop{background:rgba(0,0,0,.6)}
+  .mmc-dlg form{padding:20px 20px 16px;display:flex;flex-direction:column;gap:12px}
+  .mmc-dlg h3{margin:0;font-size:15px;font-weight:600}
+  .mmc-dlg p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5}
+  .mmc-dlg label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:500;color:var(--ink-2)}
+  .mmc-dlg input{font:inherit;font-size:13px;border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:0 10px;height:34px;background:var(--surface-2);color:var(--ink)}
+  .mmc-dlg input:focus{outline:none;border-color:var(--accent)}
+  .mmc-err{color:var(--bad-ink);font-size:12.5px;min-height:1em}
   .mmc-row{display:flex;justify-content:flex-end;gap:8px}`;
   let dlg = null;
   const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
@@ -125,18 +126,19 @@
     let s = null, failed = false;
     try { s = await session(); } catch (e) { failed = true; }
     el.textContent = '';
-    const box = mk('div', 'mmc' + (opts.compact ? ' compact' : '')), who = mk('div', 'who'), b = mk('b');
+    const box = mk('div', 'mmc' + (opts.compact ? ' compact' : '') + (failed ? ' off' : '')), who = mk('div', 'who'), b = mk('b');
     who.appendChild(b); box.appendChild(who);
     if (failed){
       b.append('Offline', mk('span', 'mmc-pill', 'Can’t reach server'));
       who.appendChild(mk('span', '', 'Showing this browser’s copy'));
     } else if (!s){
-      b.append('Demo', mk('span', 'mmc-pill', 'This browser only'));
-      who.appendChild(mk('span', '', 'Try the tools with sample data'));
+      b.append('Demo', mk('span', 'mmc-pill', 'saved in this browser'));
+      box.title = 'Demo mode: sample data, saved only in this browser. Sign in to share with your team.';
       const go = mk('button', 'mmc-btn primary', 'Sign in'); go.addEventListener('click', openSignIn); box.appendChild(go);
     } else {
       b.append(opts.compact && s.org ? s.org.name : s.user.email,
-        s.org ? mk('span', 'mmc-pill ' + (s.org.role === 'viewer' ? 'ro' : 'ok'), s.org.role === 'viewer' ? 'View only' : 'Shared') : mk('span', 'mmc-pill', 'No access'));
+        s.org ? mk('span', 'mmc-pill ' + (s.org.role === 'viewer' ? 'ro' : 'ok'), s.org.role === 'viewer' ? 'view only' : 'shared') : mk('span', 'mmc-pill', 'no access'));
+      if (s.org) box.classList.add('live');
       box.title = `Signed in as ${s.user.email}` + (s.org ? ` · ${s.org.name} (${s.org.role})` : '');
       if (s.orgs.length > 1){
         const sel = mk('select'); sel.title = 'Organization';

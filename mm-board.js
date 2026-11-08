@@ -334,6 +334,9 @@ window.MMBoard = { start(cfg){
 
   /* ================= Helpers ================= */
   const { el, esc } = MMUI;                     // mm-ui.js
+  // line icons (mm-icons.js); a chip is an icon plus text
+  const I = (name, cls) => window.MMIcons ? MMIcons.el(name, cls || 'xs') : document.createTextNode('');
+  const chipI = (cls, ic, txt) => { const c = el('span', cls); c.append(I(ic), document.createTextNode(txt)); return c; };
   const urlCache = new Map();
   function urlFor(att){
     if (!urlCache.has(att.id)) { try { urlCache.set(att.id, URL.createObjectURL(att.blob)); } catch(e){ return ''; } }
@@ -392,7 +395,7 @@ window.MMBoard = { start(cfg){
         const on = m[2] !== ' ';
         const row = el('div', 'ln ck' + (on ? ' on' : ''));
         row.style.paddingLeft = (lineIndent(m[1]) * 16) + 'px';
-        const cb = el('span', 'cb' + (on ? ' on' : ''), on ? '✓' : '');
+        const cb = el('span', 'cb' + (on ? ' on' : '')); if (on) cb.appendChild(I('check', 'xs'));
         cb.dataset.line = i; cb.dataset.id = n.id;
         const tx = el('span'); tx.innerHTML = inline(m[3]);
         row.append(cb, tx); wrap.appendChild(row);
@@ -477,10 +480,10 @@ window.MMBoard = { start(cfg){
     const meta = el('div', 'meta');
     if (P.noteMeta) P.noteMeta(n, meta);
     const pill = statusPill(n.status); if (pill) meta.appendChild(pill);
-    if (n.due) meta.appendChild(el('span', 'chip' + (isLate(n) ? ' late' : ''), '📅 ' + fmtDue(n.due)));
-    if (fmtHrs(n.hrs)) meta.appendChild(el('span', 'chip', '⏱ ' + fmtHrs(n.hrs)));
-    if (n.owner) meta.appendChild(el('span', 'chip', '👤 ' + n.owner));
-    const ck = checklist(n.text); if (ck.total) meta.appendChild(el('span', 'chip', `☑ ${ck.done}/${ck.total}`));
+    if (n.due) meta.appendChild(chipI('chip due' + (isLate(n) ? ' late' : ''), 'calendar', fmtDue(n.due)));
+    if (fmtHrs(n.hrs)) meta.appendChild(chipI('chip', 'clock', fmtHrs(n.hrs)));
+    if (n.owner) meta.appendChild(chipI('chip', 'user', n.owner));
+    const ck = checklist(n.text); if (ck.total) meta.appendChild(chipI('chip', 'checks', `${ck.done}/${ck.total}`));
     body.appendChild(meta);
 
     const { title } = parseText(n.text);
@@ -506,7 +509,7 @@ window.MMBoard = { start(cfg){
     const row = el('div', 'atts');
     const imgs = atts.filter(isImg), files = atts.filter(a => !isImg(a));
     imgs.slice(0, 4).forEach(a => { const i = el('img'); i.src = urlFor(a); i.alt = a.name; row.appendChild(i); });
-    files.slice(0, 2).forEach(a => row.appendChild(el('span', 'chip', '📎 ' + a.name)));
+    files.slice(0, 2).forEach(a => row.appendChild(chipI('chip', 'paperclip', a.name)));
     const more = Math.max(0, imgs.length - 4) + Math.max(0, files.length - 2);
     if (more) row.appendChild(el('span', 'chip', '+' + more));
     return row;
@@ -519,9 +522,9 @@ window.MMBoard = { start(cfg){
     t.dataset.parent = n.id;
     if (level === 2){
       const bar = el('div', 'tbar');
-      bar.appendChild(el('span', '', (n.collapsed ? '▸ ' : '▾ ') + `${n.children.length} ${n.children.length > 1 ? W.subs : W.sub}`));
+      bar.appendChild(chipI('', n.collapsed ? 'right' : 'down', `${n.children.length} ${n.children.length > 1 ? W.subs : W.sub}`));
       const d = doneCount(n);
-      if (d) bar.appendChild(el('span', 'dn', `✓ ${d}/${n.children.length} done`));
+      if (d) bar.appendChild(chipI('dn', 'check', `${d}/${n.children.length} done`));
       bar.title = n.collapsed ? 'Expand' : 'Collapse';
       bar.addEventListener('pointerdown', ev => ev.stopPropagation());
       bar.addEventListener('click', () => toggleCollapse(n.id));
@@ -544,11 +547,11 @@ window.MMBoard = { start(cfg){
     if (c.due) row.appendChild(el('span', 'ma', fmtDue(c.due)));
     if (fmtHrs(c.hrs)) row.appendChild(el('span', 'ma', fmtHrs(c.hrs)));
     if (P.miniMeta) P.miniMeta(c, row);
-    const ck = checklist(c.text); if (ck.total) row.appendChild(el('span', 'ma', `☑${ck.done}/${ck.total}`));
-    if (c.attachments.length) row.appendChild(el('span', 'ma', '📎' + c.attachments.length));
+    const ck = checklist(c.text); if (ck.total) row.appendChild(chipI('ma', 'checks', `${ck.done}/${ck.total}`));
+    if (c.attachments.length) row.appendChild(chipI('ma', 'paperclip', String(c.attachments.length)));
     if (c.children.length){
       const d = doneCount(c);
-      const cr = el('button', 'caret', (c.collapsed ? '▸ ' : '▾ ') + c.children.length + (d ? ` ✓${d}` : ''));
+      const cr = el('button', 'caret'); cr.append(I(c.collapsed ? 'right' : 'down'), document.createTextNode(c.children.length + (d ? ` · ${d} done` : '')));
       cr.title = c.collapsed ? 'Expand' : 'Collapse';
       cr.addEventListener('pointerdown', ev => ev.stopPropagation());
       cr.addEventListener('click', ev => { ev.stopPropagation(); toggleCollapse(c.id); });
@@ -1450,7 +1453,7 @@ window.MMBoard = { start(cfg){
       if (!isImg(a)){ const l = el('a', '', 'Open'); l.href = urlFor(a); l.target = '_blank'; l.rel = 'noopener'; sz.appendChild(l); }
       meta.appendChild(sz);
       box.appendChild(meta);
-      const rm = el('button', 'rm', '✕'); rm.title = 'Remove attachment';
+      const rm = el('button', 'rm'); rm.appendChild(I('x', 'sm')); rm.title = 'Remove attachment';
       rm.addEventListener('click', () => { n.attachments = n.attachments.filter(x => x.id !== a.id); paintEditor(); render(); save(); });
       box.appendChild(rm);
       edAtts.appendChild(box);
@@ -1838,9 +1841,9 @@ function pkgSummary(b){
     if (P.cardChips) P.cardChips(b, st, meta);
     else {
       meta.appendChild(el('span', 'chip', `${st.steps} ${st.steps === 1 ? W.card : W.cards}`));
-      if (m.hours) meta.appendChild(el('span', 'chip', '⏱ ' + fmtHrs(m.hours) + ' window'));
-      if (m.crew) meta.appendChild(el('span', 'chip', '👥 ' + m.crew));
-      if (st.checks) meta.appendChild(el('span', 'chip', `☑ ${st.checks}`));
+      if (m.hours) meta.appendChild(chipI('chip', 'clock', fmtHrs(m.hours) + ' window'));
+      if (m.crew) meta.appendChild(chipI('chip', 'users', String(m.crew)));
+      if (st.checks) meta.appendChild(chipI('chip', 'checks', String(st.checks)));
     }
     c.appendChild(meta);
     if (st.phases.length){
@@ -1996,7 +1999,7 @@ function pkgSummary(b){
     $('brandSub').textContent = B.name;
     const t = $('tabs'); t.textContent = '';
     if (app.order.length > 1){
-      const all = el('button', 'ib', '▾'); all.title = 'All boards';
+      const all = el('button', 'ib'); all.appendChild(I('down', 'sm')); all.title = 'All boards';
       all.addEventListener('click', ev => {
         ev.stopPropagation(); closeMenu();
         menu.appendChild(el('div', 'ml', 'Boards'));
@@ -2014,10 +2017,10 @@ function pkgSummary(b){
       tab.addEventListener('click', () => switchBoard(b.id));
       tab.addEventListener('dblclick', () => renameTab(tab, b));
       if (b.id === B.id && app.order.length > 1){
-        const x = el('button', 'tx', '✕'); x.title = 'Delete board';
+        const x = el('button', 'tx'); x.appendChild(I('x')); x.title = 'Delete board';
         x.addEventListener('click', ev => {
           ev.stopPropagation();
-          if (!x.classList.contains('armed')){ x.classList.add('armed'); x.textContent = 'Delete?'; setTimeout(() => { x.classList.remove('armed'); x.textContent = '✕'; }, 2500); return; }
+          if (!x.classList.contains('armed')){ x.classList.add('armed'); x.textContent = 'Delete?'; setTimeout(() => { x.classList.remove('armed'); x.textContent = ''; x.appendChild(I('x')); }, 2500); return; }
           deleteBoard(b.id);
         });
         tab.appendChild(x);
@@ -2148,7 +2151,7 @@ function pkgSummary(b){
     const bb = contentBox(); if (!bb) throw new Error('board is empty');
     const pad = 40, W = Math.ceil(bb.w + pad*2), Hh = Math.ceil(bb.h + pad*2);
     return window.htmlToImage.toPng(world, {
-      width:W, height:Hh, pixelRatio:Math.min(2, 4000 / Math.max(W, Hh)) || 1, backgroundColor:'#fafaf9', skipFonts:true,
+      width:W, height:Hh, pixelRatio:Math.min(2, 4000 / Math.max(W, Hh)) || 1, backgroundColor:getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#0f1113', skipFonts:true,
       style:{ transform:`translate(${-bb.x + pad}px,${-bb.y + pad}px)`, transformOrigin:'0 0' },
     });
   }

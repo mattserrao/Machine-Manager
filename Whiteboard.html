@@ -5,22 +5,22 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Whiteboard</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="mm-board.css?v=2026-11-08.0053">
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0136">
+<script src="mm-icons.js?v=2026-11-08.0136"></script>
+<link rel="stylesheet" href="mm-board.css?v=2026-11-08.0136">
 <style>
   /* this page only (shared styles: mm-board.css) */
   #tabs{bottom:14px;left:14px;max-width:calc(100vw - 260px);overflow-x:auto}
   @media (max-width:720px){ #search{width:110px} #topleft{max-width:calc(100vw - 300px)} #acct .who{display:none} #toolbar .wide{display:none} .brand > div:last-child{display:none} }
 </style>
 </head>
-<body>
+<body class="mm-canvas">
 <div id="board">
   <div id="world">
     <svg id="links" xmlns="http://www.w3.org/2000/svg">
       <defs>
-        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#78716c"/></marker>
-        <marker id="arrowSel" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker>
+        <marker id="arrowSel" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker>
       </defs>
       <g id="lg"></g>
       <path id="tmpLink" class="tmp" d="" marker-end="url(#arrowSel)"/>
@@ -36,16 +36,16 @@
   <div><h1>Whiteboard</h1><p id="brandSub">Planning board</p></div>
 </div>
 <div id="toolbar" class="bar">
-  <button id="newBtn" class="btn primary">+ New note</button>
+  <button id="newBtn" class="btn primary" data-ic="plus" data-ic-size="sm">New note</button>
   <span class="sep"></span>
-  <button id="undoBtn" class="ib" title="Undo (Ctrl/⌘+Z)" aria-label="Undo">↶</button>
-  <button id="redoBtn" class="ib" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo">↷</button>
+  <button id="undoBtn" class="ib" title="Undo (Ctrl/⌘+Z)" aria-label="Undo" data-ic="undo"></button>
+  <button id="redoBtn" class="ib" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo" data-ic="redo"></button>
   <span class="sep"></span>
-  <button id="frameBtn" class="ib" title="New frame (F)" aria-label="New frame">▭</button>
-  <button id="snapBtn" class="ib wide" title="Snap to grid (G)" aria-label="Snap to grid">⊞</button>
+  <button id="frameBtn" class="ib" title="New frame (F)" aria-label="New frame" data-ic="frame"></button>
+  <button id="snapBtn" class="ib wide" title="Snap to grid (G)" aria-label="Snap to grid" data-ic="grid"></button>
   <span class="sep"></span>
-  <button id="fileBtn" class="btn" title="Export, import, print">File ▾</button>
-  <button id="helpBtn" class="ib wide" title="Shortcuts (?)" aria-label="Shortcuts">?</button>
+  <button id="fileBtn" class="btn" title="Export, import, print">File<svg class="mi-ic xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+  <button id="helpBtn" class="ib wide" title="Shortcuts (?)" aria-label="Shortcuts" data-ic="help"></button>
   <span id="saveState"></span>
   <a id="mode" hidden></a>
 </div>
@@ -53,7 +53,7 @@
 
 <div id="topright">
 <div id="searchbar" class="bar">
-  <span style="color:#a8a29e;font-size:13px">⌕</span>
+  <span style="color:var(--faint);display:flex" data-ic="search" data-ic-size="sm"></span>
   <input id="search" type="search" placeholder="Search notes  ( / )" autocomplete="off">
   <span id="searchCount"></span>
 </div>
@@ -63,10 +63,10 @@
 <div id="tabs" class="bar"></div>
 
 <div id="zoombar" class="bar">
-  <button class="ib" id="zoomOut" title="Zoom out (−)" aria-label="Zoom out">−</button>
+  <button class="ib" id="zoomOut" title="Zoom out (−)" aria-label="Zoom out" data-ic="minus" data-ic-size="sm"></button>
   <button id="zoomPct" title="Reset to 100% (0)">100%</button>
-  <button class="ib" id="zoomIn" title="Zoom in (+)" aria-label="Zoom in">+</button>
-  <button class="ib" id="fitBtn" title="Fit all (Shift+1)" aria-label="Fit all">⤢</button>
+  <button class="ib" id="zoomIn" title="Zoom in (+)" aria-label="Zoom in" data-ic="plus" data-ic-size="sm"></button>
+  <button class="ib" id="fitBtn" title="Fit all (Shift+1)" aria-label="Fit all" data-ic="fit" data-ic-size="sm"></button>
 </div>
 
 <div id="ver"></div>
@@ -75,7 +75,7 @@
 
 <div id="linkPop" hidden>
   <input id="linkLabel" placeholder="Label (optional)">
-  <button class="btn" id="linkRev" title="Reverse direction">⇄</button>
+  <button class="btn" id="linkRev" title="Reverse direction" data-ic="swap" data-ic-size="sm"></button>
   <button class="btn danger" id="linkDel">Delete</button>
 </div>
 
@@ -84,7 +84,7 @@
     <div class="sheet-head">
       <div class="swatches" id="edSwatches"></div>
       <span id="edLabel"></span>
-      <button class="x" id="edClose" aria-label="Close">✕</button>
+      <button class="x" id="edClose" aria-label="Close" data-ic="x"></button>
     </div>
     <div class="sheet-body">
       <textarea id="edText" placeholder="Write something… (first line becomes the title)"></textarea>
@@ -115,7 +115,7 @@
 
 <div id="help" class="backdrop" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
-    <div class="sheet-head" style="--c:#fff"><b style="font-size:14px">Shortcuts</b><span class="spacer"></span><button class="x" id="helpClose" aria-label="Close">✕</button></div>
+    <div class="sheet-head" style="--c:var(--surface)"><b style="font-size:14px">Shortcuts</b><span class="spacer"></span><button class="x" id="helpClose" aria-label="Close" data-ic="x"></button></div>
     <div class="sheet-body">
       <div class="keys">
         <h4>Notes</h4>
@@ -168,8 +168,8 @@
     <ul>
       <li>Double-click the board for a new note · click a note to edit, double-click to type on it</li>
       <li>Drag a note onto another’s bottom edge to stack it (up to 4 levels)</li>
-      <li>Drag the blue dot on a note’s edge to draw an arrow · ▭ makes a frame to group notes</li>
-      <li>Right-click anything for options · <b>File ▾</b> to export, import or print · <b>?</b> for shortcuts</li>
+      <li>Drag the blue dot on a note’s edge to draw an arrow · the frame button makes a frame to group notes</li>
+      <li>Right-click anything for options · <b>File</b> to export, import or print · <b>?</b> for shortcuts</li>
     </ul>
   </div>
   <button class="btn" id="tipsOk">Got it</button>
@@ -177,7 +177,7 @@
 
 <div id="printDlg" class="backdrop" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-label="Print or save as PDF">
-    <div class="sheet-head" style="--c:#fff"><b style="font-size:14px">Print / PDF</b><span class="spacer"></span><button class="x" id="pdClose" aria-label="Close">✕</button></div>
+    <div class="sheet-head" style="--c:var(--surface)"><b style="font-size:14px">Print / PDF</b><span class="spacer"></span><button class="x" id="pdClose" aria-label="Close" data-ic="x"></button></div>
     <div class="sheet-body">
       <div class="pd-opts" id="pdOpts">
         <div class="orow">Content<div class="seg" data-k="kind"><button data-v="picture">Board picture</button><button data-v="report">Written report</button></div></div>
@@ -225,13 +225,13 @@
   </div>
 </div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0053"></script>
-<script src="mm-config.js?v=2026-11-08.0053"></script>
-<script src="mm-cloud.js?v=2026-11-08.0053"></script>
-<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.0053"></script>
-<script src="mm-ui.js?v=2026-11-08.0053"></script>
-<script src="mm-records.js?v=2026-11-08.0053"></script>
-<script src="mm-board.js?v=2026-11-08.0053"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0136"></script>
+<script src="mm-config.js?v=2026-11-08.0136"></script>
+<script src="mm-cloud.js?v=2026-11-08.0136"></script>
+<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.0136"></script>
+<script src="mm-ui.js?v=2026-11-08.0136"></script>
+<script src="mm-records.js?v=2026-11-08.0136"></script>
+<script src="mm-board.js?v=2026-11-08.0136"></script>
 <script>
 MMBoard.start({
     version:'v0.5.0',
@@ -279,6 +279,6 @@ MMBoard.start({
   },
 });
 </script>
-<script src="mm-nav.js?v=2026-11-08.0053"></script>
+<script src="mm-nav.js?v=2026-11-08.0136"></script>
 </body>
 </html>
