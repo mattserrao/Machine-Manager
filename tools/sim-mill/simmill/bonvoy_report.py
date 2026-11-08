@@ -107,7 +107,8 @@ def build(m, p, rec, ev, docs, out):
             if pos and pos in runs:
                 cur = piece_at(runs, pos, dt.datetime.combine(d, dt.time(12)))
                 age = (dt.datetime.combine(d, dt.time(12)) - cur['installed']).days
-                ctx.append(f"{POS_NAME[pos]} is {age} days into a {cur['target_days']}-day target life.")
+                t = cur['target_days']; art = 'an' if str(t).startswith('8') or t in (11, 18) else 'a'
+                ctx.append(f"{POS_NAME[pos]} is {age} days into {art} {t}-day target life.")
             asset = meta['asset']
             parent = BY_NAME[asset]['parent_asset']
             wos = [w for w in rec['wos'] if (w.asset['name'] == asset or w.asset['asset_no'] == parent) and w.created <= d

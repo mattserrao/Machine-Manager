@@ -13,10 +13,12 @@
   .dbar button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--r-sm);padding:5px 10px;cursor:pointer}
   .dbar button:hover{border-color:var(--line-strong)}
   .dbar button:disabled{opacity:.45;cursor:default}
-  .days{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px}
-  .days button{font:inherit;font-size:12px;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:var(--r-md,8px);padding:6px 10px;cursor:pointer;min-width:96px}
-  .days button b{display:block;font-size:13px;font-weight:600;color:var(--ink)}
-  .days button[aria-pressed="true"]{border-color:var(--accent-line);background:var(--accent-soft)}
+  .dayrow{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px;flex:none}
+  .it h3 .n{display:none;color:var(--muted);font-weight:600;margin-right:6px}
+  .dayrow button{height:auto;line-height:1.35;flex:none}
+  .dayrow button{font:inherit;font-size:12px;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:var(--r-md,8px);padding:6px 10px;cursor:pointer;min-width:96px}
+  .dayrow button b{display:block;font-size:13px;font-weight:600;color:var(--ink)}
+  .dayrow button[aria-pressed="true"]{border-color:var(--accent-line);background:var(--accent-soft)}
   .rep{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);padding:16px 18px 18px}
   .rep-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin:0 0 4px}
   .rep-h h2{margin:0;font-size:18px;font-weight:600}
@@ -47,7 +49,19 @@
   .watch b{color:var(--ink)}
   .quiet{padding:18px;border:1px dashed var(--line);border-radius:var(--r-md,8px);color:var(--muted);font-size:13px}
   @media (max-width:900px){ .it{grid-template-columns:24px minmax(0,1fr)} .it .chart{grid-column:2} }
-  @media print{ .days,.dbar button{display:none} .it{break-inside:avoid} }
+  @media (max-width:640px){
+    main.data{padding:14px 12px 56px}
+    .dayrow{flex-wrap:nowrap;overflow-x:auto;scroll-snap-type:x proximity;margin:0 -12px 14px;padding:0 12px 4px;scrollbar-width:none}
+    .dayrow::-webkit-scrollbar{display:none}
+    .dayrow button{min-width:0;scroll-snap-align:start;padding:6px 10px}
+    .rep{border:0;background:transparent;padding:0}
+    .rep-h h2{font-size:17px}
+    .it{grid-template-columns:minmax(0,1fr);gap:8px;padding:12px}
+    .it .rk{display:none} .it .chart{grid-column:1}
+    .it h3 .n{display:inline}
+    .watch{padding:10px 12px}
+  }
+  @media print{ .dayrow,.dbar button{display:none} .it{break-inside:avoid} }
 </style>
 </head>
 <body>
@@ -66,7 +80,7 @@
     <span class="grow"></span>
     <button id="print" type="button">Print</button>
   </div>
-  <div class="days" id="days"></div>
+  <div class="dayrow" id="days"></div>
   <div id="body"><div class="dmsg">Loading…</div></div>
   <div id="ver"></div>
 </main>
@@ -78,7 +92,7 @@
   // Each day's report: a summary, the flagged trends ranked by severity (sigma x hours x days in a row) with a 14-day trend
   // of the tag against its band, and the bearings above their fixed alarm limits. Written by MM LLM from the Bonvoy
   // exceptions and the Pi historian; for the demo the text is generated with the data (tools/sim-mill/simmill/bonvoy_report.py).
-  const VERSION = 'v0.1.0';
+  const VERSION = 'v0.1.1';
   document.getElementById('ver').textContent = 'Bonvoy Report ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
   const $ = id => document.getElementById(id), O = MMLLMOrg, esc = O.esc;
@@ -111,6 +125,13 @@
     box.innerHTML = s + `<div class="sparkcap">Daily average (line), daily range (grey), normal band ${fmt(it.low)} to ${fmt(it.high)} ${esc(it.units)} (blue). Red: flagged days.</div>`;
   }
 
+  // "Machine chest · Machine chest freeness" reads twice; drop the asset when the description already names it.
+  function title(asset, desc, bold){
+    const a = String(asset || ''), d = String(desc || '');
+    if (a && d.toLowerCase().startsWith(a.toLowerCase())) return bold ? `<b>${esc(d)}</b>` : esc(d);
+    return bold ? `<b>${esc(a)}</b> · ${esc(d)}` : `${esc(a)} · ${esc(d)}`;
+  }
+
   function item(it, day){
     const el = document.createElement('div'); el.className = 'it';
     const age = it.streak > 1 ? `<span class="pill warn">${it.streak} days running</span>` : '<span class="pill bad">New</span>';
@@ -121,8 +142,8 @@
     for (const r of it.rcfas || []) links.push(`<a href="Downtime.html">${esc(r)}</a>`);
     if (it.doc) links.push(`<a href="VendorReports.html?doc=${encodeURIComponent(it.doc.id)}">${esc(it.doc.id)}: ${esc(it.doc.title)}</a>`);
     el.innerHTML = `<div class="rk">${it.rank}</div>
-      <div><h3>${esc(it.asset)} · ${esc(it.description)}</h3>
-        <div class="meta">${age}<span class="pill">${esc(it.direction)}</span>${it.hours} h outside the band (${esc(it.first)} to ${esc(it.last)}), ${it.sigma}σ at worst · ${esc(it.tag)}${it.grade ? ' · ' + esc(it.grade) : ''}${trend}</div>
+      <div><h3><span class="n">${it.rank}.</span>${title(it.asset, it.description)}</h3>
+        <div class="meta">${age}<span class="pill">${esc(it.direction)}</span>${it.hours >= 24 ? 'All day outside the band' : `${it.hours} h outside the band (${esc(it.first)} to ${esc(it.last)})`}, ${it.sigma}σ at worst · ${esc(it.tag)}${it.grade ? ' · ' + esc(it.grade) : ''}${trend}</div>
         <p><b>Likely cause.</b> ${esc(it.cause)}</p>
         ${it.context ? `<p>${esc(it.context)}</p>` : ''}
         <p><b>Check.</b> ${esc(it.check)}</p>
@@ -158,7 +179,7 @@
       rep.appendChild(w);
       for (const x of watch){
         const d = document.createElement('div'); d.className = 'watch';
-        d.innerHTML = `<b>${esc(x.asset)}</b> · ${esc(x.description)} <b>${fmt(x.value, x.units)}</b> <span class="pill bad">${esc(x.level)}</span><br>${esc(x.note)}`;
+        d.innerHTML = `${title(x.asset, x.description, true)} <b>${fmt(x.value, x.units)}</b> <span class="pill bad">${esc(x.level)}</span><br>${esc(x.note)}`;
         rep.appendChild(d);
       }
     }

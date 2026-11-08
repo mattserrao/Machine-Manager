@@ -37,6 +37,17 @@ with sync_playwright() as p:
     pg = page("index.html")
     check("Home: the outage tile is marked as the Sim Mill demo", "Demo · Sim Mill" in pg.locator("#tOutage").inner_text())
 
+    # Phone: the Bonvoy Report's day row scrolls sideways at full height and nothing overflows the page.
+    ph = br.new_context(viewport={"width": 390, "height": 844}, is_mobile=True, has_touch=True)
+    pg = ph.new_page(); pg.on("pageerror", lambda e: errs.append(f"phone Bonvoy: {str(e)[:160]}"))
+    pg.goto(BASE + "BonvoyReport.html", wait_until="networkidle"); pg.wait_for_timeout(3000)
+    row, btn = pg.evaluate("[document.getElementById('days').offsetHeight, document.querySelector('#days button')?.offsetHeight || 0]")
+    check("Bonvoy on a phone: day buttons aren't clipped", btn > 0 and row >= btn, f"row {row}px, button {btn}px")
+    check("Bonvoy on a phone: 7 reports", pg.locator("#days button").count() == 7)
+    sw = pg.evaluate("document.documentElement.scrollWidth")
+    check("Bonvoy on a phone: no sideways scroll", sw <= 390, f"{sw}px")
+    ph.close()
+
     check("no script errors", not errs, "; ".join(errs))
     br.close()
 
