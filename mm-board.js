@@ -1,4 +1,4 @@
-// Machine Manager — the board engine shared by the Whiteboard, Task Package Library and Consumables Tracker.
+// Machine Manager — the board engine shared by the Whiteboard, Task Package Library, Consumables Tracker and Daily.
 // Notes (cards) with sub-cards, arrows and frames on a pannable board; undo, search, print, export; saved in
 // this browser (demo) or synced through MMCloud.openStore (signed in). Each page calls MMBoard.start(cfg):
 //

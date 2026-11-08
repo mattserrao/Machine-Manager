@@ -9,7 +9,7 @@ Without signing in, every tool runs as a demo that saves only in your browser. S
 |---|---|
 | `index.html`, `*.html` | One page per tool. Without signing in, every tool runs as a demo saved in your browser. |
 | `mm-cloud.js` | Sign-in, synced records (`openStore`) and files for every tool |
-| `mm-board.js`, `mm-board*.css` | The board engine behind the Whiteboard, Task Package Library and Consumables Tracker |
+| `mm-board.js`, `mm-board*.css` | The board engine behind the Whiteboard, Task Package Library, Consumables Tracker and Daily |
 | `mm-machine.js`, `mm-demo.js` | The machine model shared by My Machine and Outage Planning, and its demo data |
 | `mm-records.js` | Each tool's record ids |
 | `mm-theme.css` | The dark theme every page loads first: colour tokens, top bar, buttons, chips, toast (print uses a light set) |
