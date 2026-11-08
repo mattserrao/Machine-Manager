@@ -1,0 +1,73 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  database:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: pg
+          POSTGRES_DB: mm_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGPASSWORD: pg
+      PGDSN: host=localhost dbname=mm_test user=postgres password=pg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install "psycopg[binary]"
+      - name: Load the schema (twice, to prove it can be re-run)
+        run: |
+          psql -h localhost -U postgres -d mm_test -v ON_ERROR_STOP=1 -q -f tests/db/supabase-shim.sql -f supabase/schema.sql -f supabase/schema.sql
+      - run: python tests/db/test_schema.py
+
+  scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: node tests/unit/machine.test.js
+      - run: node tests/sync/sync_sim.js
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: pip install playwright && python -m playwright install --with-deps chromium
+      - name: Serve the site
+        run: python -m http.server 8000 & sleep 1
+      - run: python tests/browser/smoke.py http://localhost:8000/
+      - run: python tests/browser/boards.py http://localhost:8000/
+      - run: python tests/browser/signed_in.py http://localhost:8000/
+
+  version-stamps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: All pages use one stamp
+        run: python3 tools/stamp.py --check
+      - name: Shared files changed → new stamp
+        if: github.event_name == 'pull_request'
+        run: |
+          base=origin/${{ github.base_ref }}
+          changed=$(git diff --name-only "$base"...HEAD -- 'mm-*.js' 'mm-*.css' 'vendor/*')
+          if [ -n "$changed" ]; then
+            old=$(git show "$base":index.html | grep -o '?v=[^"]*' | head -1)
+            new=$(grep -o '?v=[^"]*' index.html | head -1)
+            if [ "$old" = "$new" ]; then
+              echo "Shared files changed ($changed) but the version stamp is still $new. Run: python3 tools/stamp.py"; exit 1
+            fi
+          fi

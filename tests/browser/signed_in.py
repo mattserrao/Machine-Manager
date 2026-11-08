@@ -5,7 +5,7 @@ board tools' record ids, and that My Machine and Outage Planning load and save c
 
     python3 tests/browser/signed_in.py http://localhost:8000/
 """
-import sys, os, json
+import sys, os, json, re
 from playwright.sync_api import sync_playwright
 
 BASE = sys.argv[1]
@@ -40,11 +40,11 @@ MM_ROWS = [
 ]
 
 with sync_playwright() as p:
-    br = p.chromium.launch(channel="chrome", headless=True)
+    br = p.chromium.launch(channel=os.environ.get("PW_CHANNEL") or None, headless=True)
 
     def open_page(name, rows):
         ctx = br.new_context(viewport={"width": 1400, "height": 860})
-        ctx.route("**/vendor/supabase-*.js", lambda route: route.fulfill(content_type="application/javascript", body=FAKE))
+        ctx.route(re.compile(r".*/vendor/supabase-[^/]*\.js(\?.*)?$"), lambda route: route.fulfill(content_type="application/javascript", body=FAKE))
         ctx.add_init_script(f"window.__seedRows = {json.dumps(rows)};")
         pg = ctx.new_page(); pg.errors = []
         pg.on("pageerror", lambda e: pg.errors.append(str(e)[:300]))

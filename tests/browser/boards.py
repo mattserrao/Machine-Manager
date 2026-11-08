@@ -42,7 +42,7 @@ def empty_spot(pg):
 
 
 with sync_playwright() as p:
-    br = p.chromium.launch(channel="chrome", headless=True)
+    br = p.chromium.launch(channel=os.environ.get("PW_CHANNEL") or None, headless=True)
 
     # ───────── Whiteboard ─────────
     ctx, pg = open_page(br, "Whiteboard.html")

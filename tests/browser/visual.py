@@ -27,7 +27,7 @@ STATES = {
 }
 errors = {}
 with sync_playwright() as p:
-    br = p.chromium.launch(channel="chrome", headless=True)
+    br = p.chromium.launch(channel=os.environ.get("PW_CHANNEL") or None, headless=True)
     for page_name, states in STATES.items():
         for state, steps in states:
             ctx = br.new_context(viewport={"width": 1400, "height": 860}, device_scale_factor=1)

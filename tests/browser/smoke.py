@@ -2,7 +2,7 @@
 
     python3 tests/browser/smoke.py http://localhost:8000/
 """
-import sys, json, os, tempfile
+import sys, os, json, tempfile
 from playwright.sync_api import sync_playwright
 
 BASE = sys.argv[1]
@@ -14,7 +14,7 @@ def check(name, ok, detail=""):
     if not ok: failures.append(name)
 
 with sync_playwright() as p:
-    br = p.chromium.launch(channel="chrome", headless=True)
+    br = p.chromium.launch(channel=os.environ.get("PW_CHANNEL") or None, headless=True)
     for name in PAGES:
         ctx = br.new_context(); pg = ctx.new_page(); errs, missing = [], []
         pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
