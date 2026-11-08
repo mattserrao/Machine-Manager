@@ -143,7 +143,7 @@
     .tile span{font-size:11px;line-height:1.3;display:block}
     .demo-sub{font-size:12.5px}
     .ask{padding:12px}
-    .ask .row .btn{flex:1 0 100%}
+    .ask .row .btn{flex:1 0 100%;justify-content:center}
     .ask .mine button{max-width:100%}
     .foot{margin-top:24px}
     body:not(.mm-canvas) .foot #ver{position:static}
@@ -215,7 +215,7 @@
 <script src="mm-config.js?v=2026-11-08.1905"></script>
 <script src="mm-cloud.js?v=2026-11-08.1905"></script>
 <script>
-  const VERSION = 'v0.5.1';
+  const VERSION = 'v0.5.2';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true });
 
@@ -386,21 +386,23 @@
   (async () => {
     const $ = id => document.getElementById(id);
     const chip = $('demoChip'), sub = $('demoSub');
+    const qlist = $('qlist'), ans = $('ans'), narrow = matchMedia('(max-width:860px)'); let cur = null;
     const fail = msg => { chip.textContent = 'Unavailable'; sub.textContent = msg; };
     if (!MMCloud.enabled) return fail('The demo data lives in Supabase, which isn’t set up for this copy of the site.');
     const db = MMCloud.client;
     let org = null, isDemo = true, s = null;
     try {
       s = await MMCloud.session();
+      const { data: pubs, error } = await db.rpc('mm_llm_public_org');
+      if (error) throw error;
       if (s && s.org) {                         // a signed-in org with its own MM LLM data wins
         const { data } = await db.rpc('mm_llm_summary', { p_org: s.org.id });
-        if (data && data.some(r => r.n > 0)) { org = { id: s.org.id, name: s.org.name }; isDemo = false; }
+        if (data && data.some(r => r.n > 0)) {
+          org = { id: s.org.id, name: s.org.name };
+          isDemo = (pubs || []).some(p => p.id === org.id);   // e.g. the demo account, a member of the Demo Mill
+        }
       }
-      if (!org) {
-        const { data, error } = await db.rpc('mm_llm_public_org');
-        if (error) throw error;
-        if (data && data[0]) org = data[0];
-      }
+      if (!org && pubs && pubs[0]) org = pubs[0];
     } catch (e) { return fail('Couldn’t reach the server: ' + (e.message || e)); }
     if (!org) return fail('No demo organization is published yet.');
 
@@ -433,7 +435,6 @@
     catch (e) { $('qlist').appendChild(mk('p', 'demo-msg', 'The demo questions couldn’t be loaded.')); return; }
     if (!isDemo) { $('qlist').appendChild(mk('p', 'demo-msg', 'Demo questions are written for the Demo Mill.')); return; }
 
-    const qlist = $('qlist'), ans = $('ans'), narrow = matchMedia('(max-width:860px)'); let cur = null;
     key.questions.forEach(q => {
       const b = mk('button', 'q'); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
       b.append(document.createTextNode(q.question), mk('span', 'k', q.output));
@@ -538,15 +539,17 @@
       const ask = async () => {
         const q = ta.value.trim(); if (!q) return ta.focus();
         go.disabled = true; go.textContent = 'Thinking…';
-        cur = 'ask'; ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', 'Searching the demo data… this usually takes 15–60 seconds.'));
-        if (narrow.matches) ans.classList.add('open'), ans.scrollIntoView({ behavior: 'smooth', block: 'start' });
         try {
+          cur = 'ask'; ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', 'Searching the demo data… this usually takes 15–60 seconds.'));
+          if (narrow.matches) ans.classList.add('open'), ans.scrollIntoView({ behavior: 'smooth', block: 'start' });
           const { data, error } = await db.functions.invoke('mm-llm-ask', { body: { question: q } });
           let r = data;
           if (error) { try { r = await error.context.json(); } catch { r = { error: error.message }; } }
           if (!r || r.error) { ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', (r && r.error) || 'No answer came back.')); return; }
           const rec = { ...r, question: q, tool_trace: r.trace, created_at: new Date().toISOString() };
           showMine(rec, q); addMine(rec); if (r.remaining != null) setLeft(r.remaining); ta.value = '';
+        } catch (e) {
+          ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', 'Something went wrong: ' + (e.message || e)));
         } finally { go.disabled = false; go.textContent = 'Ask'; }
       };
       go.addEventListener('click', ask);
