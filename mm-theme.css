@@ -46,7 +46,10 @@
   --c-forming:#b4b2a9; --c-press:#b4b2a9; --c-dryer:#b4b2a9; --c-roll:#7a7973; --c-refiner:#7a7973;
 
   /* older names, kept so page styles read the same */
-  --board:var(--bg); --dot:#353532; --annual:var(--ink-2);
+  --board:var(--bg); --annual:var(--ink-2);
+  /* dot grid: one 1px dot every --grid. Full strength on boards (moves with pan/zoom, matches Snap);
+     quiet behind every other page, showing only in the space between boxes */
+  --grid:24px; --dot:#353532; --dot-quiet:#2f2f2d;
 
   /* notes are neutral cards (stored pastel colours are kept in the data but not shown) */
   --note-base:var(--raised); --note-tint:4%;
@@ -71,16 +74,23 @@
   --bad:#96600f; --bad-soft:#f4dfb3; --bad-ink:#6e470c; --bad-line:#b7791f;   /* solid overdue: darker so white text reads */
   --teal:#6c6c69; --orange:#6c6c69; --purple:#6c6c69; --slate:#6c6c69;
   --c-forming:#8a8a86; --c-press:#8a8a86; --c-dryer:#8a8a86; --c-roll:#4a4a47; --c-refiner:#4a4a47; --annual:#3f3f3d;
-  --dot:#e0e0dc; --note-base:#ffffff; --note-tint:4%;
+  --dot:#e0e0dc; --dot-quiet:#e9e9e6; --note-base:#ffffff; --note-tint:4%;
   --shadow-pop:0 10px 28px rgba(0,0,0,.09),0 0 0 1px rgba(0,0,0,.03);
   --scrim:rgba(0,0,0,.22);
 }
 /* paper is white, not off-white */
 .mm-light,.ppage,.rpage,.pwrap{--bg:#fff; --chrome:#fff}
 
+/* ---------- Page grid ----------
+   The boards' dot grid, quieter, behind every page that isn't a board. Starts under the top bar so it
+   lines up with the page; boxes are solid so it only shows between them. Off on paper. */
+.mm-grid,body:not(.mm-canvas){background-image:radial-gradient(var(--dot-quiet) 1px,transparent 1.2px);
+  background-size:var(--grid) var(--grid);background-position:0 var(--top-h)}
+@media print{ .mm-grid,body{background-image:none!important} }
+
 /* ---------- Base ---------- */
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;color:var(--ink);background:var(--bg);
+html,body{margin:0;min-height:100%;color:var(--ink);background-color:var(--bg);
   font-family:var(--font);font-size:13px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
 button{font:inherit;color:inherit;cursor:pointer;background-color:transparent}
 input,select,textarea{font:inherit;color:var(--ink);background-color:var(--surface-2)}
