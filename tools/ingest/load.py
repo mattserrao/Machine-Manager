@@ -115,7 +115,10 @@ def upload_files(target, source, paths, log=print):
 def prune(target, source, paths, log=print):
     """After uploading: remove the org's stored files the new load didn't send (a rolled year has new file names)."""
     keep = [os.path.relpath(p, source).replace(os.sep, '/') for p in paths]
-    r = target.fn(dict(action='prune', keep=keep))
+    try: r = target.fn(dict(action='prune', keep=keep))
+    except RuntimeError as e:
+        if 'unknown action' not in str(e): raise
+        return log('  prune skipped: the deployed mm-llm-ingest has no prune action yet (old files stay)')
     log(f"  pruned {r.get('removed', 0)} old files ({r.get('kept', 0)} kept)")
 
 def embed(target, log=print):
