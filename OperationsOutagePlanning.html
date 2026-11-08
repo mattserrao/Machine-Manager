@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Operations Outage Planning</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1541"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1541">
-<script src="mm-icons.js?v=2026-11-08.1541"></script>
+<script src="mm-theme.js?v=2026-11-08.1546"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1546">
+<script src="mm-icons.js?v=2026-11-08.1546"></script>
 <style>
   /* shared look: mm-theme.css */
   main{padding:16px 16px 60px}
@@ -320,15 +320,15 @@
 <div id="toast"></div>
 <div id="ver"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1541"></script>
-<script src="mm-config.js?v=2026-11-08.1541"></script>
-<script src="mm-cloud.js?v=2026-11-08.1541"></script>
-<script src="mm-ui.js?v=2026-11-08.1541"></script>
-<script src="mm-records.js?v=2026-11-08.1541"></script>
-<script src="mm-machine.js?v=2026-11-08.1541"></script>
-<script src="mm-demo.js?v=2026-11-08.1541"></script>
-<script src="mm-task-examples.js?v=2026-11-08.1541"></script>
-<script src="mm-demo-outages.js?v=2026-11-08.1541"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1546"></script>
+<script src="mm-config.js?v=2026-11-08.1546"></script>
+<script src="mm-cloud.js?v=2026-11-08.1546"></script>
+<script src="mm-ui.js?v=2026-11-08.1546"></script>
+<script src="mm-records.js?v=2026-11-08.1546"></script>
+<script src="mm-machine.js?v=2026-11-08.1546"></script>
+<script src="mm-demo.js?v=2026-11-08.1546"></script>
+<script src="mm-task-examples.js?v=2026-11-08.1546"></script>
+<script src="mm-demo-outages.js?v=2026-11-08.1546"></script>
 <script>
 (() => {
   'use strict';
@@ -476,7 +476,7 @@
     }
     $('toolbar').hidden = false;
     $('schedBtn').hidden = !canEdit();
-    const { by, unset, later } = plan();
+    const { by } = plan();
     const past = list.filter(o => o.date < today);
     const recent = past.filter(o => daysBetween(o.date, today) <= RECENT_DAYS);
     const older = past.filter(o => !recent.includes(o));
@@ -509,11 +509,6 @@
     main.querySelectorAll('.lane').forEach((l, i) => { if (kept[i]) l.scrollLeft = kept[i]; pager(l); });
     if (!up.length) main.insertBefore(el('div', 'foot', 'No upcoming outages. Use Edit schedule to add the next ones.'), main.firstChild);
 
-    const f = el('div', 'foot');
-    const bits = [];
-    if (later.length) bits.push(`${later.length} fabric${later.length === 1 ? '' : 's'}/roll${later.length === 1 ? '' : 's'} not due until after the last planned outage.`);
-    if (unset.length) bits.push(`${unset.length} position${unset.length === 1 ? ' has' : 's have'} no install date or target life, so ${unset.length === 1 ? 'it isn’t' : 'they aren’t'} planned yet.`);
-    if (bits.length){ f.append(bits.join(' ') + ' '); const a = el('a', '', 'Open My Machine'); a.href = 'MyMachine.html'; f.appendChild(a); main.appendChild(f); }
     fitOpenCard();
   }
 
@@ -1235,6 +1230,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.1541"></script>
+<script src="mm-nav.js?v=2026-11-08.1546"></script>
 </body>
 </html>
