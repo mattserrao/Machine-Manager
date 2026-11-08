@@ -2,18 +2,59 @@
 
 Everything here is deterministic from config/mill.yaml; nothing random.
 """
-import csv, datetime as dt, json, os
+import csv, datetime as dt, json, os, re
 import yaml
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))          # tools/sim-mill
 ROOT = os.path.dirname(os.path.dirname(HERE))                                # repo root
 CFG = yaml.safe_load(open(os.path.join(HERE, 'config', 'mill.yaml')))
 PLANTS = yaml.safe_load(open(os.path.join(HERE, 'config', 'plants.yaml')))
+
+# ═════════════════════════ The 6-week roll ═════════════════════════
+# The year is written for Nov 2025 – Oct 2026 (the "base year"). SIM_SHIFT_CYCLES = k moves every date by k × 42 days,
+# so the outage grid, weekdays and the planted faults keep their places while the demo stays current. Config dates
+# are shifted here; dates written in the code use B() / BT() (a base-year date, moved) and md() for the text.
+SHIFT_CYCLES = int(os.environ.get('SIM_SHIFT_CYCLES') or 0)
+SHIFT = dt.timedelta(days=CFG['outages']['cadence_days'] * SHIFT_CYCLES)
+_ISO = re.compile(r'^\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}(:\d{2})?)?$')
+def _shift(v):
+    if isinstance(v, (dt.date, dt.datetime)): return v + SHIFT
+    if isinstance(v, str) and _ISO.match(v):
+        return (dt.datetime.fromisoformat(v) + SHIFT).isoformat(timespec='minutes') if 'T' in v else (dt.date.fromisoformat(v) + SHIFT).isoformat()
+    if isinstance(v, dict): return {k: _shift(x) for k, x in v.items()}
+    if isinstance(v, list): return [_shift(x) for x in v]
+    return v
+CFG, PLANTS = _shift(CFG), _shift(PLANTS)
 CATALOG = json.load(open(os.path.join(HERE, 'reference', 'catalog.json')))
 DATA = os.path.join(ROOT, 'demo-data', 'sim-mill')
 
 D = lambda v: v if isinstance(v, dt.date) and not isinstance(v, dt.datetime) else (dt.date.fromisoformat(str(v)[:10]) if v else None)
 DT = lambda v: v if isinstance(v, dt.datetime) else dt.datetime.fromisoformat(str(v))
+B = lambda s: dt.date.fromisoformat(s) + SHIFT                  # a base-year date written in the code, moved with the roll
+BT = lambda s: dt.datetime.fromisoformat(s) + SHIFT
+_MON = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
+_FULL = ('January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December')
+_TXT = re.compile(r'(?P<iso>\b20\d\d-\d\d-\d\d\b)|(?P<us>\b\d\d/\d\d/20\d\d\b)|(?P<id>(?<=[A-Z]-)\d{6}\b)'
+                  r'|(?P<mon>\b(?:' + '|'.join(f'{f}|{a}' if f != a else a for a, f in zip(_MON, _FULL)) + r')\b)(?P<day> \d{1,2}\b(?!:))?(?P<yr>, 20\d\d)?')
+def tx(text):
+    """A text written in base-year terms, with its dates moved by the roll: 2026-11-11, 11/11/2026, KV-VR-261111, 'Nov 11',
+    'Nov 11, 2026', and month names on their own ('in May' moves by the 15th). The identity when there is no shift."""
+    if not SHIFT or not text: return text
+    def one(m):
+        if m['iso']: return (dt.date.fromisoformat(m['iso']) + SHIFT).isoformat()
+        if m['us']: return (dt.datetime.strptime(m['us'], '%m/%d/%Y').date() + SHIFT).strftime('%m/%d/%Y')
+        if m['id']: return (dt.datetime.strptime(m['id'], '%y%m%d').date() + SHIFT).strftime('%y%m%d')
+        name = m['mon']
+        k = (_FULL.index(name) if name in _FULL and name not in _MON else _MON.index(name)) + 1
+        long = (name in _FULL and name not in _MON) or (name == 'May' and not m['day'])   # "in May" -> "in June"
+        yr = int(m['yr'][2:]) if m['yr'] else 2026
+        d = dt.date(yr, k, int(m['day']) if m['day'] else 15) + SHIFT
+        out = (_FULL if long else _MON)[d.month - 1]
+        if m['day']: out += f' {d.day}'
+        if m['yr']: out += f', {d.year}'
+        return out
+    return _TXT.sub(one, text)
+md = lambda d, fmt='%b %-d': D(d).strftime(fmt) if not isinstance(d, dt.datetime) else d.strftime(fmt)   # 'Nov 11'
 DAY, HOUR, MIN = dt.timedelta(days=1), dt.timedelta(hours=1), dt.timedelta(minutes=1)
 Y = CFG['year']
 T0 = dt.datetime.combine(D(Y['warmup_start']), dt.time(0))     # model start (Envoy warm-up)
@@ -65,7 +106,7 @@ def outage_index_at(t):
 DUPONT = 'NNNNOOODDDONNNOOODDDDOOOOOOO'   # 28-day cycle per crew; crews offset by 7 days (same rotation as Demo Mill)
 
 def crews(d):
-    k = (d - dt.date(2025, 11, 3)).days
+    k = (d - B('2025-11-03')).days
     on = {c: DUPONT[(k + 7 * i) % 28] for i, c in enumerate('ABCD')}
     return next(c for c, s in on.items() if s == 'D'), next(c for c, s in on.items() if s == 'N')
 
@@ -176,7 +217,7 @@ def section_name(asset_name):
 TAGS = [
     ('SPEED', 'Reel speed', 'fpm', 'Reel drum', 0, True, False),
     ('PROD', 'Production rate', 't/h', 'Reel drum', 2, True, False),
-    ('BREAKS', 'Sheet break counter (since Nov 1)', 'count', 'Reel drum', 0, False, False),
+    ('BREAKS', f'Sheet break counter (since {md(Y0)})', 'count', 'Reel drum', 0, False, False),
     ('REEL_MOIST', 'Reel moisture', '%', 'Reel drum', 2, False, True),
     ('REEL_BW', 'Reel basis weight', 'lb/1000 ft2', 'Reel drum', 2, True, True),
     ('PULPER_AMPS', 'Pulper rotor current', 'A', 'Pulper rotor', 1, False, False),

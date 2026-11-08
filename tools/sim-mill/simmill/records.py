@@ -4,6 +4,7 @@ year (stops, faults, position changes, outages) plus a seeded background of rout
 Same shapes and status logic as Demo Mill's structured.py, so the same importers read them.
 """
 import datetime as dt, random
+from .base import B, BT, md, tx, SHIFT
 from .base import (CFG, PLANTS, D, DT, DAY, HOUR, Y0, TODAY, OUTAGES, IN_YEAR, NEXT_OUTAGE, OUT_BY_ID, BY_NAME, POS_NAME, BY_POS,
                    NAME, LEAD_OF, crews, crew_at, section_name, next_outage, us, ORD)
 from .model import CAUSE_TEXT, ROUTES, due_at_next_outage, piece_at, CRITICAL
@@ -179,7 +180,7 @@ def build(m, proc, seed=5505):
         # deferred / carried items so the next outage has a history to it
         if o['date'] > TODAY:
             for desc, asset in (('Replace 2nd section PV fan belts and sheaves', '2nd section PV fan'), ('Rebuild couch roll seal strips', 'Couch roll')):
-                w = ow(asset, desc, 'MECH', 8, parts='Not reserved', created_=D('2026-09-15'))
+                w = ow(asset, desc, 'MECH', 8, parts='Not reserved', created_=B('2026-09-15'))
 
     # ─── stops: an emergency WO for each, a corrective one for each slowdown ───
     for e in ev:
@@ -201,10 +202,10 @@ def build(m, proc, seed=5505):
         if not f.get('found') or not yr(f['found'].date()): continue
         fd = f['found'].date()
         if f['story'] == 'F2':
-            w = WO(f['asset'], 'CM', 'Change reel drum DS bearing (outer race defect, Keel route Aug 12)', fd, priority=2, craft='MECH', est=10,
+            w = WO(f['asset'], 'CM', tx('Change reel drum DS bearing (outer race defect, Keel route Aug 12)'), fd, priority=2, craft='MECH', est=10,
                    outage=f['missed_outage'], parts='Reserved', story='F2', key='F2-wo',
-                   notes='Aug 18: bearing not in stores (22238 CCK/W33). Deferred from the Aug 19 outage; ordered, ETA Nov 5. Rescheduled for Nov 11.')
-            w.deferred_on = D('2026-08-18'); w.resched = (D('2026-08-20'), NEXT_OUTAGE['id']); w.wait_parts = (D('2026-08-20'), D('2026-11-05'))
+                   notes=tx('Aug 18: bearing not in stores (22238 CCK/W33). Deferred from the Aug 19 outage; ordered, ETA Nov 5. Rescheduled for Nov 11.'))
+            w.deferred_on = B('2026-08-18'); w.resched = (B('2026-08-20'), NEXT_OUTAGE['id']); w.wait_parts = (B('2026-08-20'), B('2026-11-05'))
             w.parts = 'On order'
             f['wo'] = w; wos.append(w); continue
         if f['fix_outage']:
@@ -246,7 +247,7 @@ def build(m, proc, seed=5505):
         if e['kind'] == 'break' and yr(e['start'].date()): bdays.setdefault(e['start'].date(), []).append(e)
     for d, bs in sorted(bdays.items()):
         if len(bs) >= 4:
-            where = max(set(b['where'] for b in bs), key=lambda w: sum(1 for b in bs if b['where'] == w))
+            where = max(sorted(set(b['where'] for b in bs)), key=lambda w: sum(1 for b in bs if b['where'] == w))   # sorted: ties break the same way every run
             issues.append(Issue(d + DAY, d + DAY * 2, BREAK_WHERE[where], f"{len(bs)} sheet breaks in 24 h, mostly at the {where}",
                                 ['Shift leads to review break tapes', 'Watching'], 'P04'))
     for f in faults:
@@ -257,18 +258,18 @@ def build(m, proc, seed=5505):
     P = PLANTS
     w2 = next(f['wo'] for f in faults if f['story'] == 'F2')
     issues += [
-        Issue(D('2026-08-13'), D('2026-08-20'), 'Reel drum DS bearing', 'Reel drum DS bearing in Alert on the Aug 12 route (0.17 in/s, outer race defect)',
-              ['WO raised for the Aug 19 outage', 'Bearing not in stores; ordering', 'Deferred from Aug 19: rescheduled Nov 11, parts on order'], 'P03', w2, 'F2', 'Waiting parts'),
-        Issue(D('2026-09-09'), None, 'Reel drum DS bearing', 'Reel drum DS bearing vibration rising (Envoy); bearing for Nov 11 on order, ETA Nov 5',
+        Issue(B('2026-08-13'), B('2026-08-20'), 'Reel drum DS bearing', tx('Reel drum DS bearing in Alert on the Aug 12 route (0.17 in/s, outer race defect)'),
+              [tx('WO raised for the Aug 19 outage'), 'Bearing not in stores; ordering', tx('Deferred from Aug 19: rescheduled Nov 11, parts on order')], 'P03', w2, 'F2', 'Waiting parts'),
+        Issue(B('2026-09-09'), None, 'Reel drum DS bearing', tx('Reel drum DS bearing vibration rising (Envoy); bearing for Nov 11 on order, ETA Nov 5'),
               ['Daily vibration readings by the shift; grease per Keel', 'Keel to re-check weekly', 'Danger at 0.40 in/s: decide run or stop'], 'P03', w2, 'F2', 'Waiting parts'),
-        Issue(D('2026-05-04'), D('2026-05-20'), '2nd press top felt', '2nd press top felt filling: Uhle vacuum up, press solids down',
-              ['Raise HP shower pressure; check nozzles', 'Spraywell audit pulled forward to May 13', '22% nozzles plugged: cleaned; felt still filling',
-               'Felt changed May 19 (7.5 h shut)'], 'P16', None, 'F1'),
-        Issue(D('2026-05-09'), D('2026-05-19'), '4th section rotary joint (DS)', '4th section steam at its limit on 34 Super: speed held back ~80 fpm',
+        Issue(B('2026-05-04'), B('2026-05-20'), '2nd press top felt', '2nd press top felt filling: Uhle vacuum up, press solids down',
+              ['Raise HP shower pressure; check nozzles', tx('Spraywell audit pulled forward to May 13'), '22% nozzles plugged: cleaned; felt still filling',
+               tx('Felt changed May 19 (7.5 h shut)')], 'P16', None, 'F1'),
+        Issue(B('2026-05-09'), B('2026-05-19'), '4th section rotary joint (DS)', '4th section steam at its limit on 34 Super: speed held back ~80 fpm',
               ['Running slower on 34 Super until the felt is changed'], 'P17', None, 'F1'),
-        Issue(D('2026-10-13'), None, 'REF 2 refiner', 'REF 2 specific energy climbing fast on the new plates (Sep 30 set)',
-              ['Check plate gap and pattern', 'Gap OK: plates wearing; Ridgeway to look', 'Both refiners due Nov 11: one plate set on hand, order another'], 'P04', None, 'F3'),
-        Issue(D('2026-02-10'), D('2026-02-13'), 'Forming fabric', 'Forming fabric hole Feb 9 (wad off the headbox approach): 9.5 h down',
+        Issue(B('2026-10-13'), None, 'REF 2 refiner', tx('REF 2 specific energy climbing fast on the new plates (Sep 30 set)'),
+              ['Check plate gap and pattern', 'Gap OK: plates wearing; Ridgeway to look', tx('Both refiners due Nov 11: one plate set on hand, order another')], 'P04', None, 'F3'),
+        Issue(B('2026-02-10'), B('2026-02-13'), 'Forming fabric', tx('Forming fabric hole Feb 9 (wad off the headbox approach): 9.5 h down'),
               ['Spare fabric on; RCFA opened', 'Clean headbox approach piping at the outage'], 'P04', None, 'F4'),
     ]
     for x in P['F5']['events']:
@@ -303,12 +304,12 @@ def build(m, proc, seed=5505):
         'slime': ('Process', 'Slime break-off at the headbox', 'Biocide program gap', ['Review biocide dosing with the chemical vendor']),
         'fogfan': ('Equipment failure', 'Hood supply fan bearing failure', 'No vibration monitoring on the fan', ['Add the hood fans to the vibration route']),
         'feltchange': ('Clothing', '2nd press top felt filled early: HP shower nozzles plugged (22%) so the felt wasn\'t conditioned',
-                       'Shower nozzles not checked since the Feb audit; heavier 34 Super run in May; strainer on the shower supply not cleaned',
+                       tx('Shower nozzles not checked since the Feb audit; heavier 34 Super run in May; strainer on the shower supply not cleaned'),
                        ['Weekly press shower nozzle check by operations', 'Clean the HP shower supply strainer every outage',
                         'Add Uhle vacuum rate-of-rise to the Envoy watch list']),
         'fabrichole': ('Clothing', 'A wad of stock off the headbox approach piping holed the forming fabric',
                        'Stock build-up in the approach piping; no wad detection at the breast roll',
-                       ['Clean headbox approach piping at the Mar 4 outage', P['F4']['overdue_action'], 'Add the approach piping to the outage clean list']),
+                       [tx('Clean headbox approach piping at the Mar 4 outage'), P['F4']['overdue_action'], 'Add the approach piping to the outage clean list']),
     }
     TEMPL['steamjoint'] = TEMPL['steamjoint']
     aseq = [0]
@@ -328,9 +329,9 @@ def build(m, proc, seed=5505):
             if due + DAY * 5 <= TODAY and rnd.random() < .8: comp = due - DAY * rnd.randint(0, 10)
             elif due <= TODAY and rnd.random() < .3: comp = min(TODAY, due + DAY * rnd.randint(3, 20))
             if e['story'] == 'F4':      # the planted overdue action; the other two were done
-                if t == P['F4']['overdue_action']: due, comp = D('2026-04-30'), None
-                else: comp = min(due, D('2026-03-04'))
-            if e['story'] == 'F1' and k == 2: comp = None; due = D('2026-07-15')
+                if t == P['F4']['overdue_action']: due, comp = B('2026-04-30'), None
+                else: comp = min(due, B('2026-03-04'))
+            if e['story'] == 'F1' and k == 2: comp = None; due = B('2026-07-15')
             owner = {'MECH': 'P05', 'E&I': 'P06'}.get('E&I' if e['cause'] in ('motorfail', 'drivefail') else 'MECH')
             if cat in ('Clothing', 'Process'): owner = rnd.choice(['P04', 'P16', 'P07'])
             if e['story'] == 'F4' and k == 1: owner = 'P14'
@@ -360,11 +361,11 @@ def build(m, proc, seed=5505):
             due = od - DAY * k + DAY * 3
             comp = due - DAY * rnd.randint(0, 3) if due <= TODAY else None
             act(t.format(d=f'{od:%b %d}'), 'Outage prep', own, od - DAY * (k + 10), due, comp, creator='P02')
-    act('Order a second set of 34" LC refiner plates (REF 1 and REF 2 both due Nov 11)', 'Outage prep', 'P15', D('2026-10-20'), D('2026-10-28'),
-        None, priority='Urgent', creator='P04', asset='REF 2 refiner', story='F3', desc='One Ridgeway set on hand; REF 2 wearing fast. Quote requested Oct 21.')
-    act('Expedite the reel drum DS bearing (22238 CCK/W33), ETA Nov 5', 'Reliability', 'P15', D('2026-08-20'), D('2026-10-15'), None, priority='Urgent',
-        creator='P03', asset='Reel drum DS bearing', story='F2', desc='Deferred from Aug 19: not in stores. WO {wo}.')
-    act('Root cause review: 3rd section rotary joint leaks (Jan, Jun, Oct)', 'Reliability', 'P17', D('2026-10-03'), D('2026-11-20'), None,
+    act(tx('Order a second set of 34" LC refiner plates (REF 1 and REF 2 both due Nov 11)'), 'Outage prep', 'P15', B('2026-10-20'), B('2026-10-28'),
+        None, priority='Urgent', creator='P04', asset='REF 2 refiner', story='F3', desc=tx('One Ridgeway set on hand; REF 2 wearing fast. Quote requested Oct 21.'))
+    act(tx('Expedite the reel drum DS bearing (22238 CCK/W33), ETA Nov 5'), 'Reliability', 'P15', B('2026-08-20'), B('2026-10-15'), None, priority='Urgent',
+        creator='P03', asset='Reel drum DS bearing', story='F2', desc=tx('Deferred from Aug 19: not in stores.') + ' WO {wo}.')
+    act(f"Root cause review: 3rd section rotary joint leaks ({', '.join(md(D(e['start']), '%b') for e in PLANTS['F5']['events'])})", 'Reliability', 'P17', B('2026-10-03'), B('2026-11-20'), None,
         priority='Important', creator='P01', asset='3rd section rotary joint (DS)', story='F5', desc='Three seal failures this year; none hit the RCFA threshold.')
 
     # number everything (by creation date) and fill in WO references

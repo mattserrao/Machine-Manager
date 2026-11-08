@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MM LLM</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.2132"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2132">
-<script src="mm-icons.js?v=2026-11-08.2132"></script>
+<script src="mm-theme.js?v=2026-11-08.2205"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2205">
+<script src="mm-icons.js?v=2026-11-08.2205"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1320px;margin:0 auto;padding:24px 20px 72px}
@@ -271,14 +271,14 @@
     </div>
   </div>
 </div>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2132"></script>
-<script src="mm-config.js?v=2026-11-08.2132"></script>
-<script src="mm-cloud.js?v=2026-11-08.2132"></script>
-<script src="mm-llm-org.js?v=2026-11-08.2132"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2205"></script>
+<script src="mm-config.js?v=2026-11-08.2205"></script>
+<script src="mm-cloud.js?v=2026-11-08.2205"></script>
+<script src="mm-llm-org.js?v=2026-11-08.2205"></script>
 <script>
   const VERSION = 'v0.7.0';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
-  MMCloud.mountAccount(document.getElementById('acct'), { compact: true });
+  MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
 
   // ---------- The diagram: stages (columns), blocks, and the links between them ----------
   const STAGES = [
@@ -460,11 +460,11 @@
         const { data } = await db.rpc('mm_llm_summary', { p_org: s.org.id });
         if (data && data.some(r => r.n > 0)) {
           org = { id: s.org.id, name: s.org.name };
-          isDemo = (pubs || []).some(p => p.id === org.id);   // e.g. the demo account, a member of the Demo Mill
+          isDemo = (pubs || []).some(p => p.id === org.id);   // e.g. the demo account, a viewer of Sim Mill
         }
       }
       if (!org && pubs && pubs[0]){
-        // several public demo orgs (Demo Mill, Sim Mill): ?org=<name> or the last one picked in this browser, else the first
+        // public demo orgs (Sim Mill): ?org=<name> or the last one picked in this browser, else the first
         let want = new URLSearchParams(location.search).get('org'); try { want = want || localStorage.getItem('mm-llm-org'); } catch (e) {}
         org = pubs.find(p => p.name === want) || pubs[0];
         if (pubs.length > 1){
@@ -808,6 +808,6 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   requestAnimationFrame(draw);
 </script>
-<script src="mm-nav.js?v=2026-11-08.2132"></script>
+<script src="mm-nav.js?v=2026-11-08.2205"></script>
 </body>
 </html>

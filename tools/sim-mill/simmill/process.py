@@ -8,6 +8,7 @@ stops, breaks and slowdowns (hour-weighted, like a historian's hourly average).
 """
 import datetime as dt, math
 import numpy as np
+from .base import B, BT, md, SHIFT
 from .base import (T0, H, HOUR, MIN, DAY, Y0, Y1, TODAY, TAG, T, MACHINE, GRADES, GRADE_IDS, GLABEL, full_tph, hidx, ts, D, DT,
                    PLANTS, BY_NAME, SECTION_NAME, us)
 from .model import grade_at, age_frac, piece_at, VIB_BASE, VIB_DANGER
@@ -72,7 +73,7 @@ def vib_curve(m):
             days = (ts(h) - f['onset']).total_seconds() / 86400
             if f['story'] == 'F2':
                 # fitted through the route readings: 0.06 at onset, 0.17 on Aug 12, 0.43 on Oct 31
-                d1 = (D(P['route_found']) - D(P['start'])).days; d2 = (D('2026-10-31') - D(P['start'])).days
+                d1 = (D(P['route_found']) - D(P['start'])).days; d2 = (B('2026-10-31') - D(P['start'])).days
                 p = math.log((P['at_today'] - VIB_BASE) / (0.17 - VIB_BASE)) / math.log(d2 / d1); a = (0.17 - VIB_BASE) / d1 ** p
                 x[h] = max(x[h], a * max(days, 0) ** p)
             else:
@@ -238,11 +239,11 @@ def envoy(values, grade, sheet, on, days):
 
 # 1-minute windows around the planted faults
 MINUTE_WINDOWS = [
-    ('F1', '2026-05-18T00:00', '2026-05-20T00:00', ['UHLE_P2T_VAC', 'PRESS_SOLIDS', 'DRY4_STEAM_P', 'SPEED', 'BREAKS']),
-    ('F2', '2026-10-28T00:00', '2026-11-01T00:00', ['REEL_DRUM_DS_VIB', 'REEL_DRUM_DS_TEMP', 'SPEED']),
-    ('F3', '2026-10-27T00:00', '2026-10-30T00:00', ['REF_B_SE', 'REF_B_KW', 'REF_A_SE', 'SPEED']),
-    ('F4', '2026-02-09T06:00', '2026-02-10T06:00', ['COUCH_VAC', 'FLATBOX_VAC', 'SPEED', 'BREAKS']),
-    ('F5', '2026-06-22T00:00', '2026-06-24T00:00', ['DRY3_DP', 'DRY3_STEAM_P', 'SPEED']),
+    ('F1', BT('2026-05-18T00:00'), BT('2026-05-20T00:00'), ['UHLE_P2T_VAC', 'PRESS_SOLIDS', 'DRY4_STEAM_P', 'SPEED', 'BREAKS']),
+    ('F2', BT('2026-10-28T00:00'), BT('2026-11-01T00:00'), ['REEL_DRUM_DS_VIB', 'REEL_DRUM_DS_TEMP', 'SPEED']),
+    ('F3', BT('2026-10-27T00:00'), BT('2026-10-30T00:00'), ['REF_B_SE', 'REF_B_KW', 'REF_A_SE', 'SPEED']),
+    ('F4', BT('2026-02-09T06:00'), BT('2026-02-10T06:00'), ['COUCH_VAC', 'FLATBOX_VAC', 'SPEED', 'BREAKS']),
+    ('F5', BT('2026-06-22T00:00'), BT('2026-06-24T00:00'), ['DRY3_DP', 'DRY3_STEAM_P', 'SPEED']),
 ]
 
 def minute_series(p, m, tag, a, b, rng):

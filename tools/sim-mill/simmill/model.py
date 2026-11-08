@@ -10,6 +10,7 @@ New for a realistic year: per-position life (fabrics, felts, plates, press and f
 five planted faults (config/plants.yaml), RCFA trigger rule. Everything is seeded: one seed, one year.
 """
 import datetime as dt, math, random
+from .base import B, BT, md, tx, SHIFT
 from .base import (CFG, PLANTS, CATALOG, D, DT, DAY, HOUR, MIN, T0, T_END, Y0, TODAY, OUTAGES, IN_YEAR, NEXT_OUTAGE,
                    GRADES, full_tph, POS_NAME, BY_NAME, crew_at, ORD)
 
@@ -47,12 +48,12 @@ def position_runs(rnd):
     for s, d in enumerate(CFG['machine']['dryers'], 1):
         for k in range(1, d.get('feltRolls', 0) + 1):
             # felt rolls: on since a random date in the last three years (seeded), recovered at the outage when due
-            since = D('2023-06-01') + DAY * rnd.randint(0, 900)
+            since = B('2023-06-01') + DAY * rnd.randint(0, 900)
             spec[f'd{s}-froll-{k}'] = dict(kind='roll', **CFG['felt_roll'], since=since)
     planted_breaks = {   # position -> [(when, reason, condition, note, story)] unplanned removals
         PLANTS['F1']['position']: [(DT(PLANTS['F1']['change']), 'performance', 'worn',
                                     'Filled at 3 weeks: Uhle vacuum up 4.6 inHg, press solids down 1.8 points, 4th section steam at its limit on 34 Super. '
-                                    'Changed early in a 7.5 h shut. 22% of the HP shower nozzles were plugged (Spraywell audit May 13).', 'F1')],
+                                    + tx('Changed early in a 7.5 h shut. 22% of the HP shower nozzles were plugged (Spraywell audit May 13).'), 'F1')],
         PLANTS['F4']['position']: [(DT(PLANTS['F4']['event']), 'damaged', 'damaged',
                                     '5-inch hole at the TS from a wad off the headbox approach. 9.5 h unplanned shut; spare off the floor.', 'F4')],
     }
@@ -79,7 +80,7 @@ def position_runs(rnd):
                         'fabric': 'Normal wear at removal.'}[p['kind']]
                 story = ''
                 if pos == PLANTS['F3']['position'] and o['date'] == D(PLANTS['F3']['previous_removed_worn']):
-                    cond, note, story = 'worn', 'Bars 85% worn at 12 weeks (normal ~60%); leading edges rounded. Ridgeway report RR-PL-260930-B.', 'F3'
+                    cond, note, story = 'worn', tx('Bars 85% worn at 12 weeks (normal ~60%); leading edges rounded. Ridgeway report RR-PL-260930-B.'), 'F3'
                 if p['kind'] == 'fabric' and pos.startswith('p') and rnd.random() < .25:
                     note = 'Some filling at the edges; cleaned with the HP shower at mid-life.'
                 r.append(dict(cur, removed=o['start'] + HOUR * 2, reason='planned', condition=cond, note=note, story=story))
@@ -87,9 +88,44 @@ def position_runs(rnd):
                            story='F3' if pos == PLANTS['F3']['position'] and o['date'] == D(PLANTS['F3']['installed']) else '')
         cur.update(removed=None, reason='', condition='good', note='')
         r.append(cur)
+        r = earlier_runs(pos, p, r) + r
         for x in r: x['target_days'] = life; x['kind'] = p['kind']
         runs[pos] = r
     return runs
+
+HISTORY_NOTES = {
+    'fabric': ['Normal wear at removal.', 'Ran to target; caliper and air perm within the vendor\'s end-of-life range.',
+               'Some filling at the edges; cleaned with the HP shower at mid-life.'],
+    'dryer': ['Normal wear at removal.', 'Seam held; slight edge fray at the DS.', 'Ran to target; permeability down about 25%.'],
+    'forming': ['Normal wear; edge wear at the TS.', 'Ran to target; vac box loads crept up over the last two weeks.'],
+    'refiner': ['Bars worn as expected; energy per ton steady to the end.', 'Normal wear; Ridgeway plate report on file.'],
+    'roll': ['Sent out to recover and regrind.', 'Cover hardness up 2 P&J; recovered and reground.', 'Bearings replaced at the shop; cover reground.'],
+}
+
+def earlier_runs(pos, p, r):
+    """Two or three runs before the first modelled piece, so every position has a history to look back on. Their own
+    random stream (by position), so the rest of the year draws exactly what it did without them. Changes land on the
+    6-week outage grid."""
+    rh = random.Random(f'history:{pos}')
+    life = p['life_w'] * 7
+    n = 3 if life <= 90 else 2 if life <= 500 else 1
+    kind = p['kind'] if p['kind'] != 'fabric' else ('forming' if pos == 'form-bottom' else 'dryer' if pos.startswith('d') else 'fabric')
+    cad, anchor = CFG['outages']['cadence_days'], D(CFG['outages']['anchor'])
+    first = r[0]; nxt_installed = first['installed']; num = int(first['serial'].rsplit('-', 1)[1]); prefix = first['serial'].rsplit('-', 1)[0]
+    out = []
+    for i in range(n):
+        removed = nxt_installed - HOUR * 12 if nxt_installed.hour == 20 else nxt_installed - HOUR * 2
+        want = removed - DAY * round(life * rh.uniform(.86, 1.04))
+        k = round((want.date() - anchor).days / cad); g = anchor + DAY * (k * cad)
+        installed = dt.datetime.combine(g, dt.time(20))
+        if installed >= removed - DAY * 14: installed = dt.datetime.combine(g - DAY * cad, dt.time(20))
+        num -= rh.randint(40, 400)
+        early = kind in ('fabric', 'forming') and rh.random() < .12
+        out.insert(0, dict(position=pos, installed=installed, removed=removed, vendor=p['vendor'], style=p['style'], serial=f'{prefix}-{num}',
+                           story='', reason='performance' if early else 'planned', condition='worn' if not early else 'wear',
+                           note='Pulled a cycle early: drainage falling off, couldn\'t hold speed on 34 Super.' if early else rh.choice(HISTORY_NOTES[kind])))
+        nxt_installed = installed
+    return out
 
 def piece_at(runs, pos, t):
     for r in runs[pos]:
@@ -129,11 +165,12 @@ CRITICAL = [('pulp', 'Pulper rotor', 'PULPER_VIB'), ('refA', 'REF 1 refiner moto
 VIB_BASE, VIB_ALERT, VIB_DANGER = 0.06, 0.15, 0.40
 
 def route_dates():
-    """Keel monthly vibration route: the second Wednesday of each month."""
-    out, d = [], D('2025-09-01')
-    while d <= TODAY:
+    """Keel monthly vibration route: the second Wednesday of each month of the base year, moved with the roll (so the
+    planted Aug 12 finding stays on a route day)."""
+    out, d, end = [], D('2025-09-01'), TODAY - SHIFT
+    while d <= end:
         first = d.replace(day=1); wed = first + DAY * ((2 - first.weekday()) % 7) + DAY * 7
-        if wed not in out and wed <= TODAY: out.append(wed)
+        if wed + SHIFT not in out and wed <= end: out.append(wed + SHIFT)
         d = (first + DAY * 32).replace(day=1)
     return out
 ROUTES = route_dates()
@@ -245,9 +282,9 @@ def stops(rnd, sched, runs):
         t += dt.timedelta(minutes=rnd.randint(20, 40))
         if in_outage(t) or any(e['start'] <= t < e['end'] for e in ev if e['kind'] in ('planned', 'unplanned')): continue
         g = grade_at(sched, t)
-        haz = bpd / 24 * GRADES[g]['brk'] / 1.15 * (1.25 if t.month in (6, 7, 8) else 1.0)
+        haz = bpd / 24 * GRADES[g]['brk'] / 1.15 * (1.25 if (t - SHIFT).month in (6, 7, 8) else 1.0)
         haz *= 1 + 0.6 * max(0, age_frac(runs, 'p2-felt-top', t) - 0.7) + 0.4 * max(0, age_frac(runs, 'form-bottom', t) - 0.8)
-        if dt.datetime.combine(D('2026-05-01'), dt.time(0)) <= t < DT(PLANTS['F1']['change']): haz *= 2.2      # F1: the filled felt
+        if dt.datetime.combine(B('2026-05-01'), dt.time(0)) <= t < DT(PLANTS['F1']['change']): haz *= 2.2      # F1: the filled felt
         if rnd.random() < haz * 0.5:      # (30 min steps)
             r = rnd.random()
             where = 'reel' if r < .35 else 'dryer' if r < .75 else 'press'

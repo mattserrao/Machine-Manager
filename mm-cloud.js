@@ -1,12 +1,14 @@
 // Machine Manager — shared sign-in, data and file storage for every tool page.
 // Load after vendor/supabase-*.js and mm-config.js. Exposes window.MMCloud.
 //
-// Signed out  → demo mode: each tool keeps its data in this browser only.
+// Signed out  → demo mode. The demo tools (My Machine, Outage Planning, Consumables, Task Package Library) show the
+//               public demo org (Sim Mill) read-only; the other tools keep their data in this browser only.
 // Signed in   → data lives in Supabase under the chosen org, shared live with its members.
 //
 //   MMCloud.mountAccount(el)        account chip + sign-in, the same on every page
 //   MMCloud.openStore(tool, opts)   synced records for a tool (see below)
 //   MMCloud.files(tool)             upload / download / remove files for a tool
+//   MMCloud.demoSession(tool)       signed out, a demo tool: a view-only session on the public demo org, else null
 (() => {
   const cfg = window.MM_CONFIG || {};
   const enabled = !!(cfg.supabaseUrl && cfg.supabaseKey && window.supabase);
@@ -62,7 +64,23 @@
     if (error) throw error;
     if (data && data.user && cached) cached.user = data.user;
   }
-  const canEdit = s => !!(s && s.org && s.org.role !== 'viewer');
+  const canEdit = s => !!(s && s.org && s.org.role !== 'viewer' && !s.demo);
+
+  // Signed out: the demo tools read the public demo org (mm_demo_org / mm_demo_records), view only.
+  const DEMO_TOOLS = ['mymachine', 'outages', 'consumables', 'task-packages'];
+  let demoOrg = null;
+  function demoOrgInfo(){
+    if (!enabled) return Promise.resolve(null);
+    return demoOrg || (demoOrg = client.rpc('mm_demo_org').then(({ data, error }) => {
+      if (error) throw error;
+      const o = (data || [])[0]; return o ? { id: o.id, name: o.name, role: 'viewer' } : null;
+    }).catch(e => { demoOrg = null; throw e; }));
+  }
+  async function demoSession(tool){
+    if (!DEMO_TOOLS.includes(tool) || await session()) return null;
+    const org = await demoOrgInfo();
+    return org ? { demo: true, user: { id: 'demo', email: null }, orgs: [org], org } : null;
+  }
 
   // Reload open tool pages when this browser signs in or out (or switches org) in another tab.
   // Token refreshes also touch mm-auth, so only react when the signed-in user changes.
@@ -118,7 +136,7 @@
     dlg = mk('dialog', 'mmc-dlg');
     dlg.innerHTML = `<form>
       <h3>Sign in</h3>
-      <p>Use the account your administrator set up for you. Without signing in you're using the demo, which saves only in this browser.</p>
+      <p>Use the account your administrator set up for you. Without signing in you're looking at the demo mill.</p>
       <label>Email<input name="email" type="email" autocomplete="username" required></label>
       <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
       <div class="mmc-err"></div>
@@ -149,8 +167,16 @@
       b.append('Offline', mk('span', 'mmc-pill', 'Can’t reach server'));
       who.appendChild(mk('span', '', 'Showing this browser’s copy'));
     } else if (!s){
-      b.append('Demo', mk('span', 'mmc-pill', 'saved in this browser'));
-      box.title = 'Demo mode: sample data, saved only in this browser. Sign in to share with your team.';
+      let d = null;
+      if (opts.tool || opts.demo) { try { d = await demoSession(opts.tool || 'mymachine'); } catch (e) {} }
+      if (d){
+        b.append('Demo', mk('span', 'mmc-pill ro', 'view only'));
+        who.appendChild(mk('span', '', d.org.name));
+        box.title = `Demo: ${d.org.name}, a simulated mill, read-only. Sign in to work on your own machine.`;
+      } else {
+        b.append('Demo', mk('span', 'mmc-pill', 'saved in this browser'));
+        box.title = 'Demo mode: sample data, saved only in this browser. Sign in to share with your team.';
+      }
       const go = mk('button', 'mmc-btn primary', 'Sign in'); go.addEventListener('click', openSignIn); box.appendChild(go);
     } else {
       b.append(opts.compact && s.org ? s.org.name : s.user.email,
@@ -224,7 +250,7 @@
     // Catch up on what changed while live updates weren't arriving (a little overlap is harmless:
     // rows already seen are ignored by version).
     const catchUp = async () => {
-      if (!loaded) return;
+      if (!loaded || st.demo) return;
       try {
         const from = since ? new Date(Date.parse(since) - 2 * 60000).toISOString() : null;
         (await fetchRows(st.org.id, tool, { includeDeleted: true, since: from })).forEach(r => applyRow(r));
@@ -233,7 +259,19 @@
 
     st.ready = (async () => {
       const s = await session();
-      if (!s || !s.org) return null;
+      if (!s){
+        const d = await demoSession(tool);
+        if (!d) return null;
+        Object.assign(st, { org: d.org, user: d.user, edit: false, demo: true });
+        const { data: rows, error } = await client.rpc('mm_demo_records', { p_tool: tool });
+        if (error) throw error;
+        rows.forEach(r => applyRow(r));
+        const data = {};
+        for (const r of rows) data[r.id] = r.data;
+        loaded = true;
+        return data;
+      }
+      if (!s.org) return null;
       Object.assign(st, { org: s.org, user: s.user, edit: canEdit(s) });
       await new Promise(res => {
         const t = setTimeout(res, 8000);
@@ -378,5 +416,5 @@
     };
   }
 
-  window.MMCloud = { enabled, client, session, signIn, signOut, setOrg, canEdit, saveTheme, openSignIn, mountAccount, openStore, files, canon };
+  window.MMCloud = { enabled, client, session, demoSession, signIn, signOut, setOrg, canEdit, saveTheme, openSignIn, mountAccount, openStore, files, canon };
 })();

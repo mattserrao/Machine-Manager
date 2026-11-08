@@ -275,7 +275,7 @@ begin
   if jsonb_array_length(p_rows) > 5000 then raise exception 'at most 5000 rows per call' using errcode = '22023'; end if;
   if p_table like 'records:%' then
     v_tool := substr(p_table, 9);
-    if v_tool not in ('mymachine', 'outages', 'consumables') then raise exception 'records for % can''t be loaded', v_tool using errcode = '22023'; end if;
+    if v_tool not in ('mymachine', 'outages', 'consumables', 'task-packages') then raise exception 'records for % can''t be loaded', v_tool using errcode = '22023'; end if;
     if p_mode = 'reset' then delete from public.mm_records r where r.org_id = o and r.tool = v_tool; end if;
     insert into public.mm_records as r (org_id, tool, id, data, deleted)
     select o, v_tool, x->>'id', coalesce(x->'data', '{}'::jsonb), false from jsonb_array_elements(p_rows) x
@@ -664,7 +664,7 @@ end $$;
 -- Two tiers: every signed-in user can read the assistant's saved answers for orgs they can see (members, or a
 -- public demo org); only users on llm.query_access can ask new questions (through the mm-llm-ask edge function,
 -- which runs the tools as that user and saves the answer). Grant in the SQL editor:
---   select public.mm_llm_grant_query('demodemo@gmail.com', 'Demo Mill', 40);   -- questions per day
+--   select public.mm_llm_grant_query('demodemo@gmail.com', 'Sim Mill', 40);    -- questions per day
 
 create table if not exists llm.query_access (
   user_id uuid not null references auth.users(id) on delete cascade,
@@ -798,3 +798,26 @@ do $$ declare f text; begin
     execute format('grant execute on function public.%s to anon, authenticated, service_role', f);
   end loop;
 end $$;
+
+-- Step 06 (Sim Mill is the demo): signed-out visitors see the public demo org's Machine Manager records, read-only.
+-- Only the demo tools, only orgs on llm.public_orgs (the first published, if there are several), and only id / data /
+-- version / updated_at: who edited a record stays private. Members still read their own org through mm_records.
+create or replace function public.mm_demo_org()
+returns table (id uuid, name text)
+language sql stable security definer set search_path = '' as $$
+  select p.org_id, p.name from llm.public_orgs p order by p.created_at limit 1;
+$$;
+create or replace function public.mm_demo_records(p_tool text)
+returns table (id text, data jsonb, version int, updated_at timestamptz)
+language sql stable security definer set search_path = '' as $$
+  select r.id, r.data, r.version, r.updated_at
+  from public.mm_records r
+  where r.org_id = (select p.org_id from llm.public_orgs p order by p.created_at limit 1)
+    and r.tool = p_tool and p_tool in ('mymachine', 'outages', 'consumables', 'task-packages')
+    and not r.deleted
+  order by r.id;
+$$;
+revoke execute on function public.mm_demo_org() from public;
+revoke execute on function public.mm_demo_records(text) from public;
+grant execute on function public.mm_demo_org() to anon, authenticated, service_role;
+grant execute on function public.mm_demo_records(text) to anon, authenticated, service_role;

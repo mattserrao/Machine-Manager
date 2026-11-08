@@ -328,7 +328,7 @@ def position_run_files(paths):
 
 
 # ═════════════════════════ Machine Manager records (.json; step 05) ═════════════════════════
-RECORD_TOOLS = ('mymachine', 'outages', 'consumables')
+RECORD_TOOLS = ('mymachine', 'outages', 'consumables', 'task-packages')
 
 def record_files(folder):
     """records/<tool>.json = { record id: data } -> { tool: [{ id, data }] } for the tools the ingest accepts."""

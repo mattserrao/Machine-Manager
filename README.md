@@ -19,7 +19,7 @@ Without signing in, every tool runs as a demo that saves only in your browser. S
 | `mm-ui.js`, `mm-nav.js`, `mm-config.js` | Small shared helpers, the app menu, the Supabase project |
 | `supabase/` | Database schema (`schema.sql`, MM LLM in `llm.sql`), migrations, the `mm-llm-ingest` edge function and setup notes |
 | `tools/ingest/` | MM LLM importers, loader and answer-key check |
-| `tools/demo-data/`, `demo-data/` | MM LLM demo data: one fictional PM1 year, its backbone and storylines (Demo Mill) |
+| `tools/demo-data/`, `demo-data/` | The original scripted demo year (Demo Mill: kept, no longer published) |
 | `tools/sim-mill/`, `demo-data/sim-mill/` | Sim Mill: a data-generating model of The Paper Mill's mill (Python port of its sim), one modelled year, its answer key |
 | `Daily.html`, `Downtime.html`, `VendorReports.html` | The data pages: the mill day, downtime / RCFA, vendor reports by position and run (`mm-llm-org.js`, `mm-data.css`). `DailyNotes.html` is the old Daily notes board |
 | `tests/`, `tools/` | Tests (run on every pull request) and helper scripts |

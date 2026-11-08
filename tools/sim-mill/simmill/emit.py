@@ -14,6 +14,7 @@ them), plus the three new feeds: downtime events, daily production and position 
 """
 import csv, datetime as dt, json, math, os, shutil
 import numpy as np
+from .base import B, BT, md, SHIFT
 from .base import (CFG, PLANTS, D, DAY, HOUR, MIN, T0, Y0, Y1, TODAY, H, OUTAGES, OUT_BY_ID, NEXT_OUTAGE, MACHINE, TAG, BY_NAME,
                    BY_POS, POS_NAME, SECTION_NAME, GRADES, GRADE_IDS, GLABEL, NAME, LEAD_OF, crews, crew_at, next_outage, outage_on,
                    section_name, us, hidx, ts, write_csv, full_tph)
@@ -143,7 +144,7 @@ def write_pi_envoy(m, p, out):
         write_csv(os.path.join(out, 'pi', 'hourly', f'{MACHINE}_hourly_{mon}.csv'), ['Timestamp'] + tags, rows)
     rng = np.random.default_rng(3304)
     for story, a, b, short in PR.MINUTE_WINDOWS:
-        a, b = dt.datetime.fromisoformat(a), dt.datetime.fromisoformat(b); wt = [f'{MACHINE}:{s}' for s in short]
+        wt = [f'{MACHINE}:{s}' for s in short]
         cols = {t: PR.minute_series(p, m, t, a, b, rng) for t in wt}
         n = len(next(iter(cols.values())))
         rows = [dict({'Timestamp': (a + MIN * i).isoformat(timespec='minutes')}, **{t: fmt(float(cols[t][i]), t) for t in wt}) for i in range(n)]

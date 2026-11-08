@@ -10,6 +10,7 @@ Measured values come from the model (Pi series, position runs, faults), so the d
 import datetime as dt, io, os, random
 from xml.sax.saxutils import escape
 import numpy as np
+from .base import B, BT, md, tx, SHIFT
 from .base import (CFG, PLANTS, D, DAY, HOUR, Y0, TODAY, OUTAGES, IN_YEAR, NEXT_OUTAGE, MACHINE, TAG, BY_NAME, BY_POS, POS_NAME,
                    SECTION_NAME, GRADES, GRADE_IDS, GLABEL, NAME, VENDORS, hidx, us, ORD, write_csv)
 from .base import full_tph
@@ -62,7 +63,7 @@ def render_docx(path, title, blocks, doc_id):
     from docx.shared import Pt
     doc = Document()
     doc.core_properties.author = f'{HEAD} Reliability'; doc.core_properties.title = title
-    doc.core_properties.created = doc.core_properties.modified = dt.datetime(2026, 10, 31, 12)
+    doc.core_properties.created = doc.core_properties.modified = BT('2026-10-31T12:00')
     doc.add_heading(title, 1)
     for b in blocks:
         if b[0] == 'h': doc.add_heading(b[1], 2)
@@ -114,9 +115,9 @@ def build(m, p, rec, out):
                 rows.append([POS_NAME[pos], r['style'], us(r['installed'].date()), f'{age / 7:.1f}', f'{cal:.2f}', f'{perm:.0f}', third,
                              f"{cond}. {'Change at this outage as planned' if chg else 'Continue'}"])
             if not notes: notes.append('No unusual wear. Clothing running as expected for its age.')
-            if vendor == 'Marlow Press Fabrics' and d == D('2026-05-27'):
-                notes = ['The 2nd press top felt changed early on 05/19/2026 (34 days) was analysed separately: see MP-FA-260526. '
-                         'The replacement is running normally; Uhle vacuum back to 9.8 inHg.']
+            if vendor == 'Marlow Press Fabrics' and d == B('2026-05-27'):
+                notes = [tx('The 2nd press top felt changed early on 05/19/2026 (34 days) was analysed separately: see MP-FA-260526. '
+                            'The replacement is running normally; Uhle vacuum back to 9.8 inHg.')]
             blocks = [('kv', [('Customer', f'{HEAD} (recycled linerboard, fourdrinier)'), ('Survey date', us(d)), ('Issued', us(d + 2 * DAY)),
                               ('Surveyed by', v['rep']), ('Distribution', f"{NAME('P01')}, {NAME('P16')}")]),
                       ('h', 'Measurements'),
@@ -125,16 +126,16 @@ def build(m, p, rec, out):
             add('clothing_survey', rid, vendor, d, f'{vendor} - Clothing survey, {MACHINE} outage {us(d)}', blocks, poss,
                 fields={'report_no': rid, 'vendor': vendor, 'survey_date': us(d)})
     # F1: the felt analysis of the felt that filled
-    F1 = PLANTS['F1']; uh = pi_day('UHLE_P2T_VAC', D('2026-05-18')); ps = pi_day('PRESS_SOLIDS', D('2026-05-18'))
-    add('felt_analysis', 'MP-FA-260526', 'Marlow Press Fabrics', D('2026-05-26'),
-        'Marlow Press Fabrics - Used felt analysis: 2nd press top felt removed 05/19/2026',
-        [('kv', [('Felt', f"Seamed felt, 1400 gsm, serial {piece_at(runs, 'p2-felt-top', dt.datetime(2026, 5, 1)).get('serial')}"),
-                 ('Installed / removed', '04/15/2026 to 05/19/2026 (34 days, target 42)'), ('Analysed by', VENDORS['Marlow Press Fabrics']['rep'])]),
+    F1 = PLANTS['F1']; uh = pi_day('UHLE_P2T_VAC', B('2026-05-18')); ps = pi_day('PRESS_SOLIDS', B('2026-05-18'))
+    add('felt_analysis', tx('MP-FA-260526'), 'Marlow Press Fabrics', B('2026-05-26'),
+        tx('Marlow Press Fabrics - Used felt analysis: 2nd press top felt removed 05/19/2026'),
+        [('kv', [('Felt', f"Seamed felt, 1400 gsm, serial {piece_at(runs, 'p2-felt-top', BT('2026-05-01T00:00')).get('serial')}"),
+                 ('Installed / removed', tx('04/15/2026 to 05/19/2026 (34 days, target 42)')), ('Analysed by', VENDORS['Marlow Press Fabrics']['rep'])]),
          ('h', 'Findings'),
          ('table', ['Measure', 'This felt', 'Typical at 5 weeks'], [['Fill (contaminants)', '71%', '40-45%'], ['Water content', '1,180 gsm', '780 gsm'],
                                                                       ['Air permeability', '9 cfm', '19 cfm'], ['Contaminant', 'Stickies, filler and fines', '']]),
-         ('p', f'Uhle box vacuum (Pi) was {uh:.1f} inHg on 05/18 against ~10 inHg for a felt this age; press exit solids {ps:.1f}%. '
-               'The felt was not being cleaned: the Spraywell audit of 05/13/2026 found 22% of the 2nd press top HP shower nozzles plugged.'),
+         ('p', f"Uhle box vacuum (Pi) was {uh:.1f} inHg on {md(B('2026-05-18'), '%m/%d')} against ~10 inHg for a felt this age; press exit solids {ps:.1f}%. "
+               + tx('The felt was not being cleaned: the Spraywell audit of 05/13/2026 found 22% of the 2nd press top HP shower nozzles plugged.')),
          ('h', 'Recommendation'), ('p', 'Check the HP shower nozzles weekly and clean the shower supply strainer at every outage. '
                                          'Watch the Uhle vacuum rate of rise: more than 0.1 inHg a day before week 4 means the felt is filling.')],
         ['p2-felt-top'], 'F1', {'fill': '71%', 'days': '34'})
@@ -158,9 +159,9 @@ def build(m, p, rec, out):
                 if f['story'] == 'F2':
                     story = 'F2'
                     recs.append(f"{asset}: outer race defect, {x:.2f} in/s ({st}). " +
-                                ('Change at the next outage (Aug 19). Plan the bearing now.' if r <= D('2026-08-19') else
-                                 'Deferred from Aug 19 (no bearing in stores). Rate of rise is accelerating: change no later than the Nov 11 outage; '
-                                 'consider a planned stop if it passes 0.50 in/s.'))
+                                (tx('Change at the next outage (Aug 19). Plan the bearing now.') if r <= B('2026-08-19') else
+                                 tx('Deferred from Aug 19 (no bearing in stores). Rate of rise is accelerating: change no later than the Nov 11 outage; '
+                                    'consider a planned stop if it passes 0.50 in/s.')))
                 else:
                     recs.append(f'{asset}: {x:.2f} in/s ({st}). Plan a bearing change.')
             rows.append([asset, TAG[f'{MACHINE}:{tag}']['tag'], f'{x:.3f}', st, note])
@@ -176,7 +177,7 @@ def build(m, p, rec, out):
             {'report_no': rid, 'reel_vib': f"{pi_at('REEL_DRUM_DS_VIB', t):.2f}"})
 
     # ─── Spraywell shower audits ───
-    for d, f1 in ((D('2026-02-04'), False), (D(str(F1['audit'])), True), (D('2026-08-05'), False), (D('2026-10-21'), False)):
+    for d, f1 in ((B('2026-02-04'), False), (D(str(F1['audit'])), True), (B('2026-08-05'), False), (B('2026-10-21'), False)):
         rid = f'SW-SA-{d:%y%m%d}'; rows = []
         for sh in ('Forming HP shower', '1st press top felt HP shower', '1st press bottom felt HP shower', '2nd press top felt HP shower',
                    '2nd press bottom felt HP shower'):
@@ -208,15 +209,15 @@ def build(m, p, rec, out):
                  ('h', 'Comments'), ('p', 'Wear well above normal for 12 weeks (typical 55-62%). Check stock cleanliness (sand from the cleaners) '
                                           'and the plate gap control.' if wear > 70 else 'Normal wear for the run length.')],
                 [pos], r['story'], {'wear': f'{wear}%'})
-    se_b = pi_day('REF_B_SE', D('2026-10-25')); se_a = pi_day('REF_A_SE', D('2026-10-25'))
-    add('plate_report', 'RR-FV-261026', 'Ridgeway Refining', D('2026-10-26'), 'Ridgeway Refining - Field visit: REF 2 plates wearing fast',
-        [('kv', [('Visit', '10/26/2026'), ('Rep', VENDORS['Ridgeway Refining']['rep']), ('Plates', 'Set installed 09/30/2026')]),
+    se_b = pi_day('REF_B_SE', B('2026-10-25')); se_a = pi_day('REF_A_SE', B('2026-10-25'))
+    add('plate_report', tx('RR-FV-261026'), 'Ridgeway Refining', B('2026-10-26'), 'Ridgeway Refining - Field visit: REF 2 plates wearing fast',
+        [('kv', [('Visit', tx('10/26/2026')), ('Rep', VENDORS['Ridgeway Refining']['rep']), ('Plates', tx('Set installed 09/30/2026'))]),
          ('h', 'Findings'),
-         ('p', f'REF 2 specific energy {se_b:.1f} kWh/t on 10/25 against {se_a:.1f} on REF 1 at a similar stage; climbing about 1.4% a day since 10/07. '
+         ('p', f"REF 2 specific energy {se_b:.1f} kWh/t on {md(B('2026-10-25'), '%m/%d')} against {se_a:.1f} on REF 1 at a similar stage; climbing about 1.4% a day since {md(F3['rise_from'], '%m/%d')}. "
                'The previous REF 2 set came out at 85% bar wear. Probable cause: sand carry-over from the LC cleaners into the REF 2 line.'),
          ('h', 'Recommendation'),
-         ('p', 'Change REF 2 plates at the 11/11/2026 outage (6 weeks early) together with REF 1 (due). The mill has one set on hand: '
-               'order a second set now (lead time 10 days). Check the LC cleaner reject rates.')],
+         ('p', tx('Change REF 2 plates at the 11/11/2026 outage (6 weeks early) together with REF 1 (due). The mill has one set on hand: '
+                  'order a second set now (lead time 10 days). Check the LC cleaner reject rates.'))],
         ['ref-refb', 'ref-refa'], 'F3', {'sets_on_hand': '1'})
 
     # ─── Pellham roll service for every roll that came out in the year ───
@@ -233,13 +234,13 @@ def build(m, p, rec, out):
                 [pos], '', {})
 
     # ─── Brightwater steam surveys ───
-    for d, f5 in ((D('2026-03-18'), False), (D('2026-10-14'), True)):
+    for d, f5 in ((B('2026-03-18'), False), (B('2026-10-14'), True)):
         rid = f'BS-SS-{d:%y%m%d}'; rows = []
         for s in range(1, 5):
             rows.append([f'{ORD(s)} section rotary joint (DS)', f"{pi_day(f'DRY{s}_STEAM_P', d):.0f} psig", f"{pi_day(f'DRY{s}_DP', d):.2f} psi",
                          'Seal worn: replace joint' if (f5 and s == 3) else 'OK'])
         notes = ['All joints and syphons within spec.'] if not f5 else [
-            'The 3rd section DS rotary joint has had three seal failures this year (01/06, 06/23, 10/02), each a 2-3 h stop. The carbon ring '
+            f"The 3rd section DS rotary joint has had three seal failures this year ({', '.join(md(D(e['start']), '%m/%d') for e in PLANTS['F5']['events'])}), each a 2-3 h stop. The carbon ring "
             'wears unevenly: the joint body is misaligned on its support bracket. Replace the joint and re-align the bracket at the next outage. '
             'Seal kits alone will keep failing.']
         add('steam_survey', rid, 'Brightwater Steam Systems', d, f'Brightwater Steam Systems - {MACHINE} steam and condensate survey {us(d)}',
@@ -258,7 +259,7 @@ def build(m, p, rec, out):
                           ('Downtime', f"{r['downtime_h']} h"), ('Production loss', r['loss']), ('Lead', NAME(r['lead'])), ('Status', r['status'])]),
                   ('h', 'Timeline'), ('table', ['When', 'What'], timeline),
                   ('h', 'Root cause'), ('p', r['root_cause']), ('h', 'Contributing factors'), ('p', r['contributing']),
-                  ('h', 'Actions (as of 10/31/2026)'), ('table', ['Planner ID', 'Action', 'Owner', 'Due', 'Status'], acts)]
+                  ('h', f'Actions (as of {us(TODAY)})'), ('table', ['Planner ID', 'Action', 'Owner', 'Due', 'Status'], acts)]
         render_docx(os.path.join(out, 'docs', 'rcfa', f'{rid}.docx'), f"{rid}: {r['title']}", blocks, rid)
         manifest.append(dict(doc_id=rid, kind='rcfa', vendor='', date=e['start'].date().isoformat(), title=r['title'], positions=[], story=r['story'], fields={}))
 

@@ -34,4 +34,5 @@ python3 tests/browser/signed_in.py http://localhost:8799/
 python3 tests/browser/theme.py http://localhost:8799/
 python3 tests/browser/outages_demo.py http://localhost:8799/
 python3 tests/browser/consumables_organizer.py http://localhost:8799/
+python3 tests/browser/demo_sim_mill.py http://localhost:8799/
 echo "All tests passed."

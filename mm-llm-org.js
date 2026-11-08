@@ -1,7 +1,7 @@
 // Machine Manager — which organization's MM LLM data a page shows, and a few small helpers the data pages share
 // (Vendor Reports, Daily, Downtime / RCFA, MM LLM).
 //
-// Signed out: the public demo orgs (Demo Mill first, Sim Mill…), picked with a dropdown and remembered in this browser.
+// Signed out: the public demo org (Sim Mill), or a dropdown if several are published, remembered in this browser.
 // Signed in: the signed-in org if it has MM LLM data, plus the public demo orgs. ?org=<name> in the URL picks one.
 //
 //   const st = await MMLLMOrg.resolve();             // { db, s, orgs: [{ id, name, demo }], org } or { error }
@@ -10,11 +10,13 @@
 //   MMLLMOrg.table(rows, [['day', 'Day'], ['tons', 'Tons', 'n']])                   // a plain table element
 (() => {
   const KEY = 'mm-llm-org';
-  // What each demo org's year is, for the pages' captions and default dates. Others: from their data.
+  // A caption for each demo org. Its "today" comes from its data: Sim Mill's year is regenerated every 6 weeks, so the
+  // last day loaded is the demo's today and the year runs back 364 days from it.
   const DEMO = {
-    'Demo Mill': { today: '2026-10-31', from: '2025-11-01', about: 'Fictional twin-wire linerboard machine (scripted year)' },
-    'Sim Mill': { today: '2026-10-31', from: '2025-11-01', about: 'The Paper Mill’s recycled-board machine, one modelled year' },
+    'Demo Mill': { about: 'Fictional twin-wire linerboard machine (scripted year)' },
+    'Sim Mill': { about: 'The Paper Mill’s recycled-board machine, one modelled year' },
   };
+  const info = name => DEMO[name] ? { ...DEMO[name] } : null;
 
   async function resolve(){
     if (!window.MMCloud || !MMCloud.enabled) return { error: 'The data lives in Supabase, which isn’t set up for this copy of the site.' };
@@ -35,11 +37,11 @@
     if (!orgs.length) return { error: 'No organization with MM LLM data is published yet.', db, s };
     const want = new URLSearchParams(location.search).get('org') || (() => { try { return localStorage.getItem(KEY); } catch (e) { return null; } })();
     const org = orgs.find(o => o.name === want || o.id === want) || orgs[0];
-    return { db, s, orgs, org, info: DEMO[org.name] || null };
+    return { db, s, orgs, org, info: info(org.name) };
   }
 
   function choose(st, org){
-    st.org = org; st.info = DEMO[org.name] || null;
+    st.org = org; st.info = info(org.name);
     try { localStorage.setItem(KEY, org.name); } catch (e) {}
     const u = new URL(location.href); u.searchParams.set('org', org.name); history.replaceState(null, '', u);
   }
@@ -59,12 +61,17 @@
     return data || [];
   }
 
-  // "Today" for an org: the demo's fixed day, else the last day of its production or BUS data.
+  // "Today" for an org: the last day of its production or BUS data. A demo org also gets st.info.today and .from
+  // (the 365-day year ending today) for captions and default ranges.
   async function today(st){
-    if (st.info) return st.info.today;
+    if (st.info && st.info.today) return st.info.today;
     const sm = await rpc(st, 'mm_llm_summary');
-    const d = sm.map(r => r.last_day).filter(Boolean).sort().pop();
-    return d || new Date().toISOString().slice(0, 10);
+    const d = sm.map(r => r.last_day).filter(Boolean).sort().pop() || new Date().toISOString().slice(0, 10);
+    if (st.info){
+      const f = new Date(d + 'T12:00:00Z'); f.setUTCDate(f.getUTCDate() - 364);
+      Object.assign(st.info, { today: d, from: f.toISOString().slice(0, 10) });
+    }
+    return d;
   }
 
   const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));

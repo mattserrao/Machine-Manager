@@ -112,6 +112,12 @@ def upload_files(target, source, paths, log=print):
         if (i + 1) % 100 == 0: log(f'  uploaded {i + 1}/{len(paths)}')
     log(f'  uploaded {len(paths)} files')
 
+def prune(target, source, paths, log=print):
+    """After uploading: remove the org's stored files the new load didn't send (a rolled year has new file names)."""
+    keep = [os.path.relpath(p, source).replace(os.sep, '/') for p in paths]
+    r = target.fn(dict(action='prune', keep=keep))
+    log(f"  pruned {r.get('removed', 0)} old files ({r.get('kept', 0)} kept)")
+
 def embed(target, log=print):
     """Embeds in small batches; the edge function occasionally runs out of compute, so back off and shrink."""
     total, size, fails = 0, 6, 0
@@ -143,5 +149,5 @@ if __name__ == '__main__':
     token = a.token or os.environ.get('MM_INGEST_TOKEN') or sys.exit('need --token or MM_INGEST_TOKEN')
     target = Local(a.dsn, token) if a.dsn else Supabase(a.url, a.key, token)
     print('loading rows…'); push(target, tables, only=only)
-    if a.files and not a.dsn: print('uploading originals…'); upload_files(target, a.source, paths)
+    if a.files and not a.dsn: print('uploading originals…'); upload_files(target, a.source, paths); prune(target, a.source, paths)
     if a.embed and not a.dsn: print('embedding chunks…'); embed(target)

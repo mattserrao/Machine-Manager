@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>My Machine</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.2132"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2132">
-<script src="mm-icons.js?v=2026-11-08.2132"></script>
+<script src="mm-theme.js?v=2026-11-08.2205"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2205">
+<script src="mm-icons.js?v=2026-11-08.2205"></script>
 <style>
   /* shared look: mm-theme.css */
   .wrap{padding:14px 14px 60px;transition:margin-right .18s}
@@ -293,13 +293,13 @@
 <aside id="drawer" class="drawer" hidden></aside>
 <div id="toast"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2132"></script>
-<script src="mm-config.js?v=2026-11-08.2132"></script>
-<script src="mm-cloud.js?v=2026-11-08.2132"></script>
-<script src="mm-ui.js?v=2026-11-08.2132"></script>
-<script src="mm-records.js?v=2026-11-08.2132"></script>
-<script src="mm-machine.js?v=2026-11-08.2132"></script>
-<script src="mm-demo.js?v=2026-11-08.2132"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2205"></script>
+<script src="mm-config.js?v=2026-11-08.2205"></script>
+<script src="mm-cloud.js?v=2026-11-08.2205"></script>
+<script src="mm-ui.js?v=2026-11-08.2205"></script>
+<script src="mm-records.js?v=2026-11-08.2205"></script>
+<script src="mm-machine.js?v=2026-11-08.2205"></script>
+<script src="mm-demo.js?v=2026-11-08.2205"></script>
 <script>
 (() => {
   'use strict';
@@ -359,7 +359,7 @@
       if (!warned){ warned = true; toast('Can’t reach the server — keep this page open, it will keep retrying.'); }
     } else if (x === 'viewonly'){
       el.textContent = 'View only';
-      if (!viewWarned){ viewWarned = true; toast('You have view-only access — changes you make here aren’t saved.'); }
+      if (!viewWarned){ viewWarned = true; toast(cloud && cloud.demo ? `This is the ${cloud.org.name} demo, view only: changes aren’t saved. Sign in to work on your own machine.` : 'You have view-only access — changes you make here aren’t saved.'); }
     }
   }
   let remoteFrame = 0;
@@ -1080,13 +1080,15 @@
     const raw = d.items && typeof d.items === 'object' ? Object.keys(d.items) : [];
     for (const k of Object.keys(items)) if (!known.has(k)) delete items[k];
     const skipped = raw.length - Object.keys(items).length;
-    if (cloud && !confirm(`Importing replaces ${cloud.org ? cloud.org.name + '’s' : 'the shared'} My Machine for everyone in the organization` +
+    const viewOnly = !!(cloud && !cloud.edit);       // a viewer (or the read-only demo): show the file here, save nothing
+    if (cloud && !viewOnly && !confirm(`Importing replaces ${cloud.org ? cloud.org.name + '’s' : 'the shared'} My Machine for everyone in the organization` +
       ` (${Object.keys(items).length} positions${skipped ? `, ${skipped} skipped as unreadable or unknown` : ''}).\n\nImport anyway?`)) return;
     const prev = clone(S);
     S = { machine, items };
     if (draft) { draft = null; }
     drawer.hidden = true; document.body.classList.remove('drawer-open'); selected = null;
     save(); renderAll();
+    if (viewOnly) return toast(`Showing ${S.machine.name || 'the machine'} from the file. View only, so it isn’t saved; reload to go back.`);
     toast(`Imported ${S.machine.name || 'machine'}${skipped ? ` · ${skipped} position${skipped === 1 ? '' : 's'} skipped` : ''}`, 'Undo', () => { S = prev; save(); renderAll(); });
   }
 
@@ -1127,7 +1129,7 @@
   /* ---------- Start ---------- */
   (async () => {
     if (window.MMCloud && MMCloud.enabled){
-      MMCloud.mountAccount($('acct'), { compact: true });
+      MMCloud.mountAccount($('acct'), { compact: true, tool: 'mymachine' });
       cloud = MMCloud.openStore('mymachine', { snapshot: toRecords, onChange: onRemote, onStatus: cloudStatus });
       let data = null;
       try { data = await cloud.ready; }
@@ -1162,6 +1164,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.2132"></script>
+<script src="mm-nav.js?v=2026-11-08.2205"></script>
 </body>
 </html>

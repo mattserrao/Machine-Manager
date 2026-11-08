@@ -14,5 +14,7 @@ safe to run again.
 
 | `05-sim-mill.sql` | Any time after step 04 (applied 2026-11-08) | Sim Mill: `llm.downtime`, `llm.production_daily`, `llm.position_runs`; the ingest also loads `records:mymachine` / `records:outages` / `records:consumables` for the token's org; `mm_llm_public_org` lists every public org (Demo Mill stays first); `mm_llm_summary` and `mm_llm_position_history` cover the new tables; new tools `mm_llm_downtime`, `mm_llm_downtime_summary`, `mm_llm_repeat_stops`, `mm_llm_rcfa_status`, `mm_llm_position_life`, `mm_llm_production`, `mm_llm_documents`, `mm_llm_bus_day`. Only adds; the same statements are in `../llm.sql` (end state). |
 
+| `06-demo-sim-mill.sql` | Any time after step 05 (applied 2026-11-08) | Sim Mill becomes the only demo: `mm_demo_org` and `mm_demo_records` let signed-out visitors read the public demo org's My Machine, Outage Planning, Consumables and task-package records (read-only, no user ids). Access was switched with the admin functions: `mm_llm_set_public('Demo Mill', false)` (data kept), `mm_add_member('Sim Mill', 'demodemo@gmail.com', 'viewer')`, `mm_llm_grant_query('demodemo@gmail.com', 'Sim Mill', 40)` and `… 'Demo Mill', 0)`, and demodemo's Demo Mill membership removed. PM1 untouched. |
+
 After step 3, delete the empty `wb-files` bucket under **Storage** in the dashboard
 (Supabase doesn't allow deleting buckets from SQL).

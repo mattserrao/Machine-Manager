@@ -16,9 +16,13 @@ def check(name, ok, detail=""):
 def titles(pg, sec):
     return pg.locator(f".org-sec:has(.ft:text-is('{sec}')) .org-grid > .note .title").all_text_contents()
 
+# Signed out, the demo tools read Sim Mill read-only (tests/browser/demo_sim_mill.py). This test is about the
+# browser-only demo the pages fall back to when the server can't be reached, so it blocks the server.
+def offline(ctx): ctx.route("**/*.supabase.co/**", lambda r: r.abort())
+
 with sync_playwright() as p:
     br = p.chromium.launch(channel=os.environ.get("PW_CHANNEL") or None, headless=True)
-    ctx = br.new_context(viewport={"width": 1400, "height": 900}); pg = ctx.new_page(); errs = []
+    ctx = br.new_context(viewport={"width": 1400, "height": 900}); offline(ctx); pg = ctx.new_page(); errs = []
     pg.on("pageerror", lambda e: errs.append(str(e)[:200]))
     pg.goto(URL, wait_until="networkidle"); pg.wait_for_timeout(1200)
     if pg.locator("#tipsOk").is_visible(): pg.click("#tipsOk")
