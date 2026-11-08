@@ -10,5 +10,7 @@ safe to run again.
 | `02-copy-whiteboard.sql` | Right after the new Whiteboard is live on GitHub Pages | Copies every board, note, arrow and frame from `wb_boards` / `wb_items` into `mm_records` (tool `whiteboard`). Run it after the merge so nothing written by the old page is missed; running it again only adds what's missing. |
 | `03-drop-old-whiteboard.sql` | Once the copied boards look right in the new Whiteboard | Removes `wb_boards`, `wb_items`, `wb_apply` and the `wb-files` storage policies. Can't be undone. |
 
+| `../llm.sql` (step 04) | Any time (applied 2026-11-08) | MM LLM: the `llm` schema (equipment, BUS lines, WOs, actions, RCFAs, Envoy, packed Pi series, documents and searchable chunks with embeddings), ingest tokens, the `mm_llm_*` tool functions. Only adds things; `mm_records` is untouched. The same file is the end state, so it is applied directly rather than copied here. |
+
 After step 3, delete the empty `wb-files` bucket under **Storage** in the dashboard
 (Supabase doesn't allow deleting buckets from SQL).

@@ -1,0 +1,290 @@
+{
+ "about": "Demo questions for MM LLM with expected answers and evidence. Each check is a SQL boolean over the tool functions (the same ones the orchestrator calls); :org is the Demo Mill org id. tools/ingest/verify_answers.py runs them as a signed-in member, so row-level security applies. Demo 'today' is 2026-10-31.",
+ "questions": [
+  {
+   "id": "S01-Q1",
+   "story": "S01",
+   "output": "Outage brief",
+   "question": "What should we prioritize for the Nov 11 outage?",
+   "expect": "Lead with the dryer can 27 DS bearing: outer race defect on the Oct 19 vibration route (0.24 in/s, Alert), rising since early September, WO scheduled for Nov 11 with parts not reserved. Also: BP 1 and BP 2 refiner plates due with only one Ridgeway set on hand, the 2nd section drive coupling (parts not reserved), and the 6 WOs carried over from the annual.",
+   "tools": [
+    "mm_llm_outage_scope",
+    "mm_llm_envoy",
+    "mm_llm_search_docs",
+    "mm_llm_position_history"
+   ],
+   "checks": [
+    {
+     "desc": "Nov 11 scope has the can 27 bearing WO with parts not reserved",
+     "sql": "exists (select 1 from public.mm_llm_outage_scope(:org, 'OUT-2026-11-11') where description ilike '%can 27 DS bearing%' and parts_status = 'Not reserved')"
+    },
+    {
+     "desc": "Envoy flagged can 27 on most days after the annual restart",
+     "sql": "(select count(*) from public.mm_llm_envoy(:org, 'PM1:DRY2_C27_DS_VIB', '2026-10-12', '2026-10-31')) >= 15"
+    },
+    {
+     "desc": "the Oct 19 vibration route is found for 'can 27 outer race defect'",
+     "sql": "exists (select 1 from public.mm_llm_search_docs(:org, 'can 27 outer race defect', 3) where doc_id = 'KV-VR-261019')"
+    },
+    {
+     "desc": "both base ply plate changes are in the Nov 11 scope",
+     "sql": "(select count(*) from public.mm_llm_outage_scope(:org, 'OUT-2026-11-11') where description in ('Change BP 1 refiner plates', 'Change BP 2 refiner plates')) = 2"
+    }
+   ]
+  },
+  {
+   "id": "S01-Q2",
+   "story": "S01",
+   "output": "Ask MM",
+   "question": "When did we first see the can 27 problem?",
+   "expect": "Envoy first flagged the can 27 DS bearing on Sep 22 (report Sep 23); the Sep 14 route already showed a BPFO tone at 0.07 in/s. It was flagged before the Oct 5 annual outage but was not in the annual scope.",
+   "tools": [
+    "mm_llm_envoy",
+    "mm_llm_search_docs",
+    "mm_llm_outage_scope"
+   ],
+   "checks": [
+    {
+     "desc": "first Envoy flag on can 27 DS is Sep 22",
+     "sql": "(select min(period) from public.mm_llm_envoy(:org, 'PM1:DRY2_C27_DS_VIB', '2026-08-01', null)) = '2026-09-22'"
+    },
+    {
+     "desc": "the Sep 14 route mentions BPFO",
+     "sql": "exists (select 1 from public.mm_llm_search_docs(:org, 'BPFO tone', 5) where doc_id = 'KV-VR-260914')"
+    },
+    {
+     "desc": "can 27 was not in the annual scope",
+     "sql": "not exists (select 1 from public.mm_llm_outage_scope(:org, 'OUT-2026-ANNUAL') where description ilike '%can 27%')"
+    }
+   ]
+  },
+  {
+   "id": "S02-Q1",
+   "story": "S02",
+   "output": "Troubleshooting",
+   "question": "We're steam limited on 33# again and the 2nd press Uhle vacuum is creeping up. What should we check?",
+   "expect": "Same pattern as March-April: plugged 2nd press HP shower nozzles (18% plugged on the Apr 15 audit) filled the felt (high fill on the Halden survey), per RCFA-2026-03. Check the HP shower nozzles and strainer; the filtered-water action from that RCFA is still open.",
+   "tools": [
+    "mm_llm_search_docs",
+    "mm_llm_position_history",
+    "mm_llm_envoy"
+   ],
+   "checks": [
+    {
+     "desc": "shower audit with 18% plugged is found",
+     "sql": "exists (select 1 from public.mm_llm_search_docs(:org, '2nd press HP shower plugged nozzles', 5) where doc_id = 'SN-SA-260415')"
+    },
+    {
+     "desc": "RCFA-2026-03 is in the felt's history",
+     "sql": "exists (select 1 from public.mm_llm_position_history(:org, 'p2-felt-top') where source = 'RCFA' and ref = 'RCFA-2026-03')"
+    },
+    {
+     "desc": "the filtered-water action is still open",
+     "sql": "exists (select 1 from public.mm_llm_position_history(:org, 'p2-felt-top') where source = 'Action' and summary ilike '%filtered water%' and status not ilike 'Completed%')"
+    },
+    {
+     "desc": "Envoy flagged the 2nd press Uhle vacuum from Mar 24",
+     "sql": "(select min(period) from public.mm_llm_envoy(:org, 'PM1:UHLE_P2_VAC', '2026-03-01', '2026-04-20')) = '2026-03-24'"
+    }
+   ]
+  },
+  {
+   "id": "S02-Q2",
+   "story": "S02",
+   "output": "Ask MM",
+   "question": "Why did the 2nd press felt come off early in April?",
+   "expect": "High fill from plugged HP shower nozzles: Halden survey and Spraywell audit of Apr 15; pulled at 6 of 12 weeks.",
+   "tools": [
+    "mm_llm_position_history",
+    "mm_llm_search_docs"
+   ],
+   "checks": [
+    {
+     "desc": "the early felt change WO is in the history",
+     "sql": "exists (select 1 from public.mm_llm_position_history(:org, 'p2-felt-top') where source = 'WO' and summary ilike '%pulled early%')"
+    },
+    {
+     "desc": "the Halden Apr 15 survey is linked to the felt",
+     "sql": "exists (select 1 from public.mm_llm_position_history(:org, 'p2-felt-top') where source = 'Document' and ref = 'HF-SV-260415')"
+    }
+   ]
+  },
+  {
+   "id": "S03-Q1",
+   "story": "S03",
+   "output": "RCFA draft",
+   "question": "Draft the RCFA timeline for the Feb 18 base ply wire hole.",
+   "expect": "02:40 Feb 18 hole at TS, machine down 10 h (speed 0 in Pi), emergency WO to change the fabric, BUS entries Feb 18-20, RCFA-2026-02 opened Feb 24 with three actions; lumpbreaker doctor blade changed Mar 4.",
+   "tools": [
+    "mm_llm_position_history",
+    "mm_llm_pi_values"
+   ],
+   "checks": [
+    {
+     "desc": "Pi shows the machine stopped on Feb 18",
+     "sql": "exists (select 1 from public.mm_llm_pi_values(:org, 'PM1:SPEED', '2026-02-18 07:40+00', '2026-02-18 17:00+00') where value = 0)"
+    },
+    {
+     "desc": "the emergency WO is in the base ply fabric history",
+     "sql": "exists (select 1 from public.mm_llm_position_history(:org, 'form-bottom') where source = 'WO' and summary ilike '%4 in hole%')"
+    },
+    {
+     "desc": "RCFA-2026-02 is in the history",
+     "sql": "exists (select 1 from public.mm_llm_position_history(:org, 'form-bottom') where ref = 'RCFA-2026-02')"
+    }
+   ]
+  },
+  {
+   "id": "S03-Q2",
+   "story": "S03",
+   "output": "Morning watch",
+   "question": "Which RCFA actions are overdue?",
+   "expect": "The RCFA-2026-02 lumpbreaker doctor loading check (due Jun 30, owner Hank Vosburgh) among the overdue list.",
+   "tools": [
+    "mm_llm_overdue_actions"
+   ],
+   "checks": [
+    {
+     "desc": "the doctor loading check is overdue",
+     "sql": "exists (select 1 from public.mm_llm_overdue_actions(:org, '2026-10-31') where title ilike '%doctor loading check%' and bucket = 'RCFA')"
+    }
+   ]
+  },
+  {
+   "id": "S04-Q1",
+   "story": "S04",
+   "output": "Outage brief",
+   "question": "Do we have what we need for refiner plates at the Nov 11 outage?",
+   "expect": "No: BP 1 and BP 2 are both due Nov 11 and BP 2 is wearing fast (Envoy SE flags from Oct 13, Ridgeway annual inspection: elevated edge rounding). Only one Ridgeway set is on hand and the order action is still open.",
+   "tools": [
+    "mm_llm_outage_scope",
+    "mm_llm_envoy",
+    "mm_llm_search_docs",
+    "mm_llm_position_history",
+    "mm_llm_search_records"
+   ],
+   "checks": [
+    {
+     "desc": "first BP 2 SE flag is Oct 13",
+     "sql": "(select min(period) from public.mm_llm_envoy(:org, 'PM1:REF_BP2_SE', '2026-08-15', null)) = '2026-10-13'"
+    },
+    {
+     "desc": "the Ridgeway inspection is found for 'edge rounding'",
+     "sql": "exists (select 1 from public.mm_llm_search_docs(:org, 'edge rounding BP 2', 5) where doc_id = 'RR-PI-261007')"
+    },
+    {
+     "desc": "the plate order action is open",
+     "sql": "exists (select 1 from public.mm_llm_search_records(:org, 'order Ridgeway refiner plates', 10) where source = 'Action' and status not ilike 'Completed%')"
+    },
+    {
+     "desc": "the BUS sheet says one set on hand",
+     "sql": "exists (select 1 from public.mm_llm_position_history(:org, 'ref-bp2') where source = 'BUS' and summary ilike '%1 Ridgeway set%')"
+    }
+   ]
+  },
+  {
+   "id": "S05-Q1",
+   "story": "S05",
+   "output": "Troubleshooting",
+   "question": "Is there a pattern behind the breaks at the 3rd section this summer?",
+   "expect": "About 22 breaks Jun-Aug at the 3rd section and calender, more on 26# and hot afternoons, lining up with low PV-3 pocket ventilation fan amps (Envoy flagged twice in the July cluster). The PV-3 damper WO was closed 'could not reproduce' and there is no RCFA.",
+   "tools": [
+    "mm_llm_position_history",
+    "mm_llm_envoy",
+    "mm_llm_pi_daily"
+   ],
+   "checks": [
+    {
+     "desc": "22 break lines on the BUS sheet for the 3rd section top felt and calender top roll, Jun–Aug",
+     "sql": "(select count(*) from public.mm_llm_position_history(:org, '3rd section top felt', '2026-06-01', '2026-08-31') where source = 'BUS' and summary like 'Break%') + (select count(*) from public.mm_llm_position_history(:org, 'Calender top roll', '2026-06-01', '2026-08-31') where source = 'BUS' and summary like 'Break%') = 22"
+    },
+    {
+     "desc": "Envoy flagged PV-3 amps twice in Jul 12–20",
+     "sql": "(select count(*) from public.mm_llm_envoy(:org, 'PM1:DRY3_PV_FAN_AMPS', '2026-07-12', '2026-07-20')) = 2"
+    },
+    {
+     "desc": "the PV-3 WO was closed as could not reproduce",
+     "sql": "exists (select 1 from public.mm_llm_position_history(:org, '3rd section pocket ventilation') where source = 'WO' and summary ilike '%could not reproduce%')"
+    }
+   ]
+  },
+  {
+   "id": "S06-Q1",
+   "story": "S06",
+   "output": "Ask MM",
+   "question": "How did the last forming fabric trial go?",
+   "expect": "Halden PF-3315 on the base ply, Dec 10 - Jan 21: formation equal, but slower drainage (higher couch vacuum) and about 15 fpm lost on 33#; the mill went back to the Northbank NX-2740.",
+   "tools": [
+    "mm_llm_search_docs"
+   ],
+   "checks": [
+    {
+     "desc": "the end-of-trial report is found",
+     "sql": "exists (select 1 from public.mm_llm_search_docs(:org, 'PF-3315 trial', 5) where doc_id = 'HF-TR-260121')"
+    }
+   ]
+  },
+  {
+   "id": "S07-Q1",
+   "story": "S07",
+   "output": "Ask MM",
+   "question": "When was the calender bottom roll last ground, and what did they find?",
+   "expect": "Reground during the October 2026 annual outage (removed Oct 6) after the May 27 Teague inspection found hardness drifting high and crown at the low edge; post-grind report Oct 20: 85.2 Shore D, crown 0.020 in.",
+   "tools": [
+    "mm_llm_search_docs",
+    "mm_llm_position_history"
+   ],
+   "checks": [
+    {
+     "desc": "the post-grind report is found",
+     "sql": "exists (select 1 from public.mm_llm_search_docs(:org, 'calender bottom roll regrind', 5) where doc_id = 'TR-RS-261020')"
+    },
+    {
+     "desc": "the scanned May report is searchable (OCR text)",
+     "sql": "exists (select 1 from public.mm_llm_search_docs(:org, 'hardness drifted high crown tolerance', 5) where doc_id = 'TR-RS-260527')"
+    }
+   ]
+  },
+  {
+   "id": "S08-Q1",
+   "story": "S08",
+   "output": "Morning watch",
+   "question": "What needs an owner or a push before Monday's BUS meeting?",
+   "expect": "14 overdue actions (mostly the annual punch list, plus the RCFA-2026-02 doctor loading check), 2 Nov 11 WOs without parts reserved (can 27 bearing, 2nd section drive coupling), and the BUS items waiting on parts.",
+   "tools": [
+    "mm_llm_overdue_actions",
+    "mm_llm_outage_scope"
+   ],
+   "checks": [
+    {
+     "desc": "14 overdue actions on Oct 31",
+     "sql": "(select count(*) from public.mm_llm_overdue_actions(:org, '2026-10-31')) = 14"
+    },
+    {
+     "desc": "2 Nov 11 WOs without parts reserved",
+     "sql": "(select count(*) from public.mm_llm_outage_scope(:org, 'OUT-2026-11-11') where parts_status = 'Not reserved') = 2"
+    }
+   ]
+  },
+  {
+   "id": "S09-Q1",
+   "story": "S09",
+   "output": "Outage brief",
+   "question": "What carried over from the annual outage, and what should go into Nov 11?",
+   "expect": "12 WOs did not close in the annual: 6 deferred for parts and 6 not finished, which are rescheduled to Nov 11. Add the can 27 bearing, which was never in the annual scope.",
+   "tools": [
+    "mm_llm_outage_scope"
+   ],
+   "checks": [
+    {
+     "desc": "6 annual WOs carried to Nov 11",
+     "sql": "(select count(*) from public.mm_llm_outage_scope(:org, 'OUT-2026-11-11') where notes ilike '%carried to Nov 11%') = 6"
+    },
+    {
+     "desc": "6 annual WOs deferred",
+     "sql": "(select count(*) from public.mm_llm_outage_scope(:org, 'OUT-2026-ANNUAL') where status = 35) = 6"
+    }
+   ]
+  }
+ ]
+}

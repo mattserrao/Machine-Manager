@@ -44,6 +44,27 @@ They work, but everyone on a shared login appears as the same person in the chan
 - **Deleting** is soft at first, so it syncs live and can be undone. A nightly job removes records deleted more than 90 days ago, and editors' pages remove stored files that no record points to any more (checked at most weekly).
 - **Pan, zoom and the current board** are kept per person, in their browser.
 
+## MM LLM data (the assistant's sources)
+
+The assistant reads its own tables in the `llm` schema (`supabase/llm.sql`): BUS sheet lines, work orders, actions,
+RCFAs, Envoy exceptions, Pi series, and documents split into searchable chunks. Members of an organization can
+read its rows; nobody writes to them from the web page.
+
+**Loading files** (BUS sheets, JDE / Planner exports, Envoy CSVs, Pi data, vendor reports, drawings):
+
+1. In the **SQL Editor**, create a short-lived ingest token for the organization:
+   ```sql
+   select public.mm_llm_new_ingest_token('Demo Mill', 3);   -- org name, hours it stays valid
+   ```
+   Copy the token it returns; only a hash is stored.
+2. Run the loader (see `tools/ingest/`) with that token. It sends everything through the `mm-llm-ingest` edge
+   function, which checks the token, loads the rows, stores the original files in `mm-files` under
+   `<organization id>/llm/`, and embeds document chunks with Supabase's built-in `gte-small` model (no outside key).
+3. When it's done, remove the token: `delete from private.llm_ingest_tokens;`
+
+A load replaces that organization's MM LLM rows. **Demo Mill** is the fictional organization the demo uses; it
+has no members yet, so nobody can see it until someone is added with `mm_add_member('Demo Mill', ...)`.
+
 ## Updating the database
 
 `schema.sql` is the full, current schema and builds a new project in one go (safe to re-run). For the existing project, apply the steps in `migrations/` in order; see `migrations/README.md`.

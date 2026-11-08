@@ -27,8 +27,38 @@ jobs:
       - run: pip install "psycopg[binary]"
       - name: Load the schema (twice, to prove it can be re-run)
         run: |
-          psql -h localhost -U postgres -d mm_test -v ON_ERROR_STOP=1 -q -f tests/db/supabase-shim.sql -f supabase/schema.sql -f supabase/schema.sql
+          psql -h localhost -U postgres -d mm_test -v ON_ERROR_STOP=1 -q -f tests/db/supabase-shim.sql -f supabase/schema.sql -f supabase/schema.sql -f supabase/llm.sql -f supabase/llm.sql
       - run: python tests/db/test_schema.py
+      - run: python tests/db/test_llm.py
+
+  answer-key:
+    # Generate the demo year, load it through the importers into a fresh database, and check that the
+    # tool functions can answer every demo question (as a signed-in viewer, so RLS applies).
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_PASSWORD: pg, POSTGRES_DB: mm_demo }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PGPASSWORD: pg
+      DSN: host=localhost dbname=mm_demo user=postgres password=pg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+      - run: sudo apt-get update -q && sudo apt-get install -y -q tesseract-ocr poppler-utils
+      - run: pip install "psycopg[binary]" pyyaml openpyxl numpy reportlab pypdf python-docx pillow
+      - name: Generate the demo year
+        run: python3 tools/demo-data/structured.py && python3 tools/demo-data/pi_envoy.py && python3 tools/demo-data/docs.py
+      - name: Load and verify
+        run: |
+          psql -h localhost -U postgres -d mm_demo -v ON_ERROR_STOP=1 -q -f tests/db/supabase-shim.sql -f supabase/schema.sql -f supabase/llm.sql
+          TOKEN=$(psql -h localhost -U postgres -d mm_demo -Atc "select public.mm_llm_new_ingest_token('Demo Mill', 1)")
+          python3 tools/ingest/load.py --source demo-data/out --backbone demo-data/backbone --dsn "$DSN" --token "$TOKEN"
+          python3 tools/ingest/verify_answers.py --dsn "$DSN" --org "Demo Mill"
 
   scripts:
     runs-on: ubuntu-latest
