@@ -405,7 +405,7 @@
   function onTP(id, data){ if (data) tp[id] = data; else delete tp[id]; drawPanel(); }
   function onM(id, data){
     if (id === 'machine'){ machineRaw = data; machine = data ? MM.normalize(JSON.parse(JSON.stringify(data))) : null; }
-    else if (id.startsWith('item:')){ const k = id.slice(5); if (data) items[k] = data; else delete items[k]; }
+    else if (id.startsWith('item:')){ const k = id.slice(5), it = data && MM.cleanItem(data); if (!/^[a-z0-9-]{1,60}$/.test(k)) return; if (it) items[k] = it; else delete items[k]; }
     softRender();
   }
   let warned = false, viewWarned = false, stT;
@@ -651,7 +651,7 @@
   // "Changed at this outage" → new run in My Machine starting on the outage date (old run kept in history).
   function markChanged(p, o){
     const before = items[p.id] ? JSON.parse(JSON.stringify(items[p.id])) : undefined;
-    items[p.id] = MM.replaced(items[p.id], o.date);
+    try { items[p.id] = MM.replaced(items[p.id], o.date); } catch (e) { return toast(e.message); }
     saveM(); render();
     toast(`${p.name}: new ${p.kind === 'refiner' ? 'plate set' : 'run'} from ${fmtShort(o.date)} saved to My Machine`, { label: 'Undo', fn: () => {
       if (before) items[p.id] = before; else delete items[p.id];
