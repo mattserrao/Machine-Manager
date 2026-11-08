@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MM LLM</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.2042"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2042">
-<script src="mm-icons.js?v=2026-11-08.2042"></script>
+<script src="mm-theme.js?v=2026-11-08.2108"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2108">
+<script src="mm-icons.js?v=2026-11-08.2108"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1320px;margin:0 auto;padding:24px 20px 72px}
@@ -70,6 +70,32 @@
   .sheet-h .live:empty{display:none}
   .sheet-b{overflow:auto;padding:16px 20px 24px}
   .sub-h{margin:0 0 6px;font-size:15px;font-weight:600}
+  /* ---- About tabs ---- */
+  .atabs{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--line)}
+  .atabs button{font:inherit;font-size:13px;color:var(--muted);background:none;border:0;border-bottom:2px solid transparent;padding:9px 12px 8px;margin-bottom:-1px;cursor:pointer}
+  .atabs button:hover{color:var(--ink)}
+  .atabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:500}
+  /* ---- Sim Mill data model: flowchart ---- */
+  .sm-wrap{overflow-x:auto;margin:14px 0 0;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface)}
+  svg.smflow{display:block;min-width:1240px;width:100%;height:auto;font-family:inherit}
+  .smflow .colh{font-size:12px;font-weight:600;fill:var(--ink)}
+  .smflow .colsub{font-size:10.5px;fill:var(--muted)}
+  .smflow .lane{fill:var(--surface-2);stroke:none}
+  .smflow .bx{fill:var(--surface);stroke:var(--line-strong);stroke-width:1}
+  .smflow .bx.new{stroke:var(--accent);stroke-width:1.5}
+  .smflow .bx.chk{stroke:var(--warn-line);stroke-dasharray:4 3}
+  .smflow .t{font-size:12px;font-weight:600;fill:var(--ink)}
+  .smflow .s{font-size:10.5px;fill:var(--muted)}
+  .smflow .w{fill:none;stroke:var(--line-strong);stroke-width:1.4}
+  .smflow .w.dash{stroke-dasharray:4 4}
+  .smflow .w.acc{stroke:var(--accent)}
+  .smflow .ah{fill:var(--line-strong)} .smflow .ah.acc{fill:var(--accent)}
+  .smflow g.n{cursor:default} .smflow g.n:hover .bx{stroke:var(--accent)}
+  .sm-key{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 0 0;font-size:12px;color:var(--muted)}
+  .sm-key i{display:inline-block;width:22px;height:12px;border-radius:3px;border:1px solid var(--line-strong);vertical-align:-2px;margin-right:6px;background:var(--surface)}
+  .sm-key i.new{border:1.5px solid var(--accent)} .sm-key i.chk{border:1px dashed var(--warn-line)}
+  .sm-steps{margin:18px 0 0;padding:0 0 0 18px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+  .sm-steps li{margin:0 0 6px} .sm-steps code{font:12px var(--mono)}
 
   /* ---- Narrower screens: columns stack, wires hide, a down-arrow joins each stage ---- */
   @media (max-width:980px){
@@ -186,7 +212,12 @@
         <p class="live" id="aboutLive"></p></div>
       <button class="btn icon" type="button" id="aboutClose" aria-label="Close" data-ic="x" data-ic-size="sm"></button>
     </div>
+    <div class="atabs" role="tablist" aria-label="About the model">
+      <button type="button" role="tab" id="tabFlowBtn" aria-controls="tabFlow" aria-selected="true">Information flow</button>
+      <button type="button" role="tab" id="tabSimBtn" aria-controls="tabSim" aria-selected="false" tabindex="-1">Sim Mill: data from The Paper Mill</button>
+    </div>
     <div class="sheet-b">
+    <div id="tabFlow" role="tabpanel" aria-labelledby="tabFlowBtn">
   <section class="intro">
         <h3 class="sub-h">Information flow</h3>
         <p>Mill sources are imported, tagged to a PM1 position and stored in Supabase. The orchestrator answers through a small set of tools, so any model can sit behind it. Select a block to see what it connects to.</p>
@@ -208,16 +239,34 @@
         <div class="rule"><b>Models are swappable</b><span>Prompts and tools live in this app, not in a vendor's features. The adapter maps one request format to each provider; embeddings record which model made them.</span></div>
         <div class="rule"><b>Answers cite records</b><span>Every statement links back to the row, page or trend it came from, so it can be checked before it goes on an outage plan.</span></div>
       </div>
+    </div>
+
+    <div id="tabSim" role="tabpanel" aria-labelledby="tabSimBtn" hidden>
+      <section class="intro">
+        <h3 class="sub-h">How The Paper Mill generates Sim Mill’s data</h3>
+        <p>The game’s simulation is stripped to a headless model, a Python port of it runs one mill year, and the year is written out as the files a mill would send. They go in through the same importers and ingest as real data, so everything the assistant and the data pages read about Sim Mill came this way.</p>
+      </section>
+      <div class="sm-wrap"><svg class="smflow" id="smflow" role="img" aria-labelledby="smflowT smflowD"><title id="smflowT">Sim Mill data flow</title><desc id="smflowD">From The Paper Mill game, through the headless reference model and the Python port, to mill files, the import path, Supabase and the pages that read it.</desc></svg></div>
+      <div class="sm-key"><span><i></i>Existing path (same as real mill data)</span><span><i class="new"></i>Added for Sim Mill</span><span><i class="chk"></i>Check that holds it to the step before</span></div>
+      <ol class="sm-steps">
+        <li><b>Strip the game.</b> On the-paper-mill’s <code>sim-headless</code> branch the 3D view, sound, panels and game systems (seasons, survival, leaders, civics, event cards, joke upsets) are left out; 34 of 116 source files run in Node. The full headless build replays 3 sim days to exactly the browser’s numbers.</li>
+        <li><b>Run a reference year.</b> 365 days on Sim Mill’s calendar (20 h outages every 6 weeks), with the game’s season-tuned failure rates stretched to a year. Its upset catalogue, critical assets, grades and per-grade tag values are exported to <code>tools/sim-mill/reference/</code>.</li>
+        <li><b>Port it.</b> <code>tools/sim-mill</code> (Python) runs the same machine: grade wheel, upsets, sheet breaks, bearing faults found on the vibration route or failing, plus what the game doesn’t have: the life of every fabric, felt, plate and roll, and five planted faults. <code>validate_ref.py</code> holds it to the reference year.</li>
+        <li><b>Write the mill’s files.</b> Daily BUS sheets, JDE and Planner exports, the RCFA log and write-ups, Pi and Envoy, vendor PDFs; and three new feeds: downtime events, daily production and position runs. Plus My Machine, Outage Planning and Consumables records.</li>
+        <li><b>Load it like real data.</b> <code>load.py</code> and the importers send everything through the token-guarded <code>mm-llm-ingest</code> into the org’s tables, files and embeddings.</li>
+        <li><b>Read it.</b> The assistant’s tools, the 11 Sim Mill demo questions (31 checks), and the Daily, Downtime / RCFA and Vendor Reports pages.</li>
+      </ol>
+    </div>
 
     </div>
   </div>
 </div>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2042"></script>
-<script src="mm-config.js?v=2026-11-08.2042"></script>
-<script src="mm-cloud.js?v=2026-11-08.2042"></script>
-<script src="mm-llm-org.js?v=2026-11-08.2042"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2108"></script>
+<script src="mm-config.js?v=2026-11-08.2108"></script>
+<script src="mm-cloud.js?v=2026-11-08.2108"></script>
+<script src="mm-llm-org.js?v=2026-11-08.2108"></script>
 <script>
-  const VERSION = 'v0.5.2';
+  const VERSION = 'v0.6.0';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true });
 
@@ -571,6 +620,95 @@
       ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) ask(); });
     }
   })();
+  // ---------- About: tabs ----------
+  const tabBtns = [document.getElementById('tabFlowBtn'), document.getElementById('tabSimBtn')];
+  function showTab(i, focus){
+    tabBtns.forEach((b, k) => { b.setAttribute('aria-selected', String(k === i)); b.tabIndex = k === i ? 0 : -1;
+      document.getElementById(b.getAttribute('aria-controls')).hidden = k !== i; });
+    if (focus) tabBtns[i].focus();
+    if (i === 0) requestAnimationFrame(draw); else drawSim();
+  }
+  tabBtns.forEach((b, i) => {
+    b.addEventListener('click', () => showTab(i));
+    b.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft'){ e.preventDefault(); showTab((i + 1) % 2, true); } });
+  });
+
+  // ---------- About: Sim Mill flowchart (fixed layout, SVG; scrolls sideways on small screens) ----------
+  let simDrawn = false;
+  function drawSim(){
+    if (simDrawn) return; simDrawn = true;
+    const svg = document.getElementById('smflow'), NS = 'http://www.w3.org/2000/svg';
+    const COLS = [['The Paper Mill', 'the game, mattserrao/the-paper-mill'], ['Reference model', 'branch sim-headless (Node)'],
+                  ['Sim Mill model', 'tools/sim-mill (Python)'], ['Mill files', 'as a mill would send them'],
+                  ['Same import path', 'importers + ingest'], ['Where it’s read', 'tools and pages']];
+    const CW = 196, GAP = 24, X0 = 16, Y0 = 56, BH = 54, RG = 14, W = X0 * 2 + COLS.length * CW + (COLS.length - 1) * GAP;
+    const N = [   // id, column, row, title, sub, kind ('' | 'new' | 'chk')
+      ['game', 0, 0, 'Browser game', 'three.js 3D, seasons, survival', ''],
+      ['src', 0, 1, 'The simulation', 'src/js: step(), seeded dice', ''],
+      ['parts', 0, 2, 'What it already models', 'wet end, steam, breaks, 10 assets', ''],
+      ['strip', 1, 0, 'Strip the game', '34 of 116 files + DOM shim', 'new'],
+      ['parity', 1, 1, 'Parity check', '3 days = browser, exactly', 'chk'],
+      ['year', 1, 2, 'Reference year', '20 h outages / 6 wk, MTBF ×45', 'new'],
+      ['ref', 1, 3, 'reference/', 'catalogue, grades, tag stats', 'new'],
+      ['cfg', 2, 0, 'mill.yaml + plants.yaml', 'machine, calendar, F1–F5', 'new'],
+      ['model', 2, 1, 'model.py', 'grades, position life, stops', 'new'],
+      ['proc', 2, 2, 'process.py', '47 Pi tags, Envoy rule', 'new'],
+      ['rec', 2, 3, 'records.py + docs.py', 'WOs, actions, BUS, RCFAs, PDFs', 'new'],
+      ['val', 2, 4, 'validate_ref + run --check', 'port vs reference; targets', 'chk'],
+      ['f1', 3, 0, 'BUS · JDE · Planner · RCFA', 'xlsx, CSV exports, log + docx', ''],
+      ['f2', 3, 1, 'Pi hourly + Envoy', 'CSV, 1-min windows at faults', ''],
+      ['f3', 3, 2, 'Vendor reports, drawings', '84 PDFs and write-ups', ''],
+      ['f4', 3, 3, 'Downtime · production · runs', 'three new feeds', 'new'],
+      ['f5', 3, 4, 'Machine Manager records', 'My Machine, outages, stores', 'new'],
+      ['imp', 4, 1, 'load.py + importers', 'map columns, tag positions', ''],
+      ['ing', 4, 2, 'mm-llm-ingest', 'token decides the org', ''],
+      ['db', 4, 3, 'Supabase: Sim Mill', 'llm tables, files, vectors, records', ''],
+      ['tools', 5, 0, 'Assistant tools', 'outage scope, Envoy, docs…', ''],
+      ['qs', 5, 1, 'Demo questions', '11 questions, 31 checks', 'new'],
+      ['pages', 5, 2, 'Daily, Downtime, Vendors', 'the three data pages', 'new'],
+      ['mm', 5, 3, 'My Machine · Outage Planning', 'members of Sim Mill', ''],
+    ];
+    const E = [['game', 'src'], ['src', 'parts'], ['src', 'strip', 'acc'], ['strip', 'parity', 'dash'], ['strip', 'year'], ['year', 'ref'],
+               ['ref', 'model', 'acc'], ['ref', 'val', 'dash'], ['cfg', 'model'], ['model', 'proc'], ['proc', 'rec'], ['rec', 'val', 'dash'],
+               ['rec', 'f1', 'acc'], ['proc', 'f2', 'acc'], ['rec', 'f3', 'acc'], ['model', 'f4', 'acc'], ['model', 'f5', 'acc'],
+               ['f1', 'imp'], ['f2', 'imp'], ['f3', 'imp'], ['f4', 'imp'], ['f5', 'ing'], ['imp', 'ing'], ['ing', 'db'],
+               ['db', 'tools', 'acc'], ['db', 'qs', 'acc'], ['db', 'pages', 'acc'], ['db', 'mm', 'acc']];
+    const pos = {}, H = Y0 + 5 * (BH + RG) + 10;
+    const mk = (t, a, txt) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; };
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const defs = mk('defs', {});
+    [['ah', 'ah'], ['ahA', 'ah acc']].forEach(([id, cls]) => { const m = mk('marker', { id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' });
+      m.appendChild(mk('path', { d: 'M0,0 L10,5 L0,10 z', class: cls })); defs.appendChild(m); });
+    svg.appendChild(defs);
+    COLS.forEach(([h, sub], c) => {
+      const x = X0 + c * (CW + GAP);
+      svg.appendChild(mk('rect', { x: x - 6, y: 8, width: CW + 12, height: H - 14, rx: 10, class: 'lane' }));
+      svg.appendChild(mk('text', { x, y: 27, class: 'colh' }, `${c + 1}  ${h}`));
+      svg.appendChild(mk('text', { x, y: 42, class: 'colsub' }, sub));
+    });
+    const wires = mk('g', {}); svg.appendChild(wires);
+    N.forEach(([id, c, r, t, sub, kind]) => {
+      const x = X0 + c * (CW + GAP), y = Y0 + r * (BH + RG); pos[id] = { x, y, c };
+      const g = mk('g', { class: 'n' });
+      g.appendChild(mk('title', {}, `${t}: ${sub}`));
+      g.appendChild(mk('rect', { x, y, width: CW, height: BH, rx: 8, class: 'bx' + (kind ? ' ' + kind : '') }));
+      g.appendChild(mk('text', { x: x + 10, y: y + 22, class: 't' }, t));
+      g.appendChild(mk('text', { x: x + 10, y: y + 40, class: 's' }, sub));
+      svg.appendChild(g);
+    });
+    E.forEach(([a, b, k]) => {
+      const A = pos[a], B = pos[b]; let d;
+      if (A.c === B.c){
+        if (B.y === A.y + BH + RG) d = `M${A.x + CW / 2} ${A.y + BH} V${B.y}`;
+        else { const x = A.x + CW; d = `M${x} ${A.y + BH / 2} C${x + 14} ${A.y + BH / 2}, ${x + 14} ${B.y + BH / 2}, ${x} ${B.y + BH / 2}`; }
+      } else {
+        const x1 = A.x + CW, y1 = A.y + BH / 2, x2 = B.x, y2 = B.y + BH / 2, mx = x1 + (x2 - x1) / 2;
+        d = `M${x1} ${y1} C${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+      }
+      wires.appendChild(mk('path', { d, class: 'w' + (k === 'acc' ? ' acc' : k === 'dash' ? ' dash' : ''), 'marker-end': `url(#${k === 'acc' ? 'ahA' : 'ah'})` }));
+    });
+  }
+
   // ---------- About the model sheet ----------
   const about = document.getElementById('about'), aboutBtn = document.getElementById('aboutBtn');
   function openAbout(){ about.hidden = false; document.body.style.overflow = 'hidden'; requestAnimationFrame(draw); document.getElementById('aboutClose').focus(); }
@@ -586,6 +724,6 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   requestAnimationFrame(draw);
 </script>
-<script src="mm-nav.js?v=2026-11-08.2042"></script>
+<script src="mm-nav.js?v=2026-11-08.2108"></script>
 </body>
 </html>
