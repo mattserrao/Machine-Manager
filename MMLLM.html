@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MM LLM</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.2126"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2126">
-<script src="mm-icons.js?v=2026-11-08.2126"></script>
+<script src="mm-theme.js?v=2026-11-08.2132"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2132">
+<script src="mm-icons.js?v=2026-11-08.2132"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1320px;margin:0 auto;padding:24px 20px 72px}
@@ -271,10 +271,10 @@
     </div>
   </div>
 </div>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2126"></script>
-<script src="mm-config.js?v=2026-11-08.2126"></script>
-<script src="mm-cloud.js?v=2026-11-08.2126"></script>
-<script src="mm-llm-org.js?v=2026-11-08.2126"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2132"></script>
+<script src="mm-config.js?v=2026-11-08.2132"></script>
+<script src="mm-cloud.js?v=2026-11-08.2132"></script>
+<script src="mm-llm-org.js?v=2026-11-08.2132"></script>
 <script>
   const VERSION = 'v0.7.0';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
@@ -589,12 +589,15 @@
       if (Array.isArray(r.charts) && r.charts.length) return r.charts;
       return (r.tool_trace || r.trace || []).filter(t => t.tool === 'make_chart' && t.args && Array.isArray(t.args.labels)).map(t => t.args);
     }
-    function niceMax(v) { if (v <= 0) return 1; const e = Math.pow(10, Math.floor(Math.log10(v))), f = v / e; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * e; }
+    // Smallest round top (four gridlines of round steps) at or above the largest value.
+    function niceMax(v) { if (v <= 0) return 1; const e = Math.pow(10, Math.floor(Math.log10(v))), f = v / e;
+      return [1, 1.2, 1.6, 2, 2.4, 3, 4, 5, 6, 8, 10].find(x => x >= f - 1e-9) * e; }
     function chartBox(c) {
       const NS = 'http://www.w3.org/2000/svg', el = (n, a, t) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (t != null) e.textContent = t; return e; };
       const box = mk('div', 'mchart'); box.append(mk('h4', '', c.title || 'Chart'));
       if (c.source) box.append(mk('p', 'src', 'Source: ' + c.source));
-      const W = 720, H = 320, L = 64, R = 12, T = 12, B = 64, n = c.labels.length, k = c.series.length;
+      const n = c.labels.length, k = c.series.length, rot = (720 - 76) / n < 46;
+      const W = 720, H = rot ? 330 : 300, L = 64, R = 12, T = 12, B = rot ? 64 : 34;
       const all = c.series.flatMap(x => x.values), max = niceMax(Math.max(0, ...all)), y = v => T + (H - T - B) * (1 - Math.max(0, v) / max);
       const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': c.title || 'Chart', 'font-family': 'system-ui, sans-serif', 'font-size': '11' });
       const fmtN = v => Number(v).toLocaleString(undefined, { maximumFractionDigits: 1 }) + (c.unit ? ' ' + c.unit : '');
@@ -602,7 +605,7 @@
         svg.append(el('line', { x1: L, x2: W - R, y1: yy, y2: yy, stroke: 'var(--line)', 'stroke-width': 1 }));
         svg.append(el('text', { x: L - 6, y: yy + 4, 'text-anchor': 'end', fill: 'var(--muted)' }, Number(v).toLocaleString())); }
       if (c.unit) svg.append(el('text', { x: 12, y: T + (H - T - B) / 2, transform: `rotate(-90 12 ${T + (H - T - B) / 2})`, 'text-anchor': 'middle', fill: 'var(--muted)' }, c.unit));
-      const slot = (W - L - R) / n, rot = slot < 46;
+      const slot = (W - L - R) / n;
       c.labels.forEach((lab, i) => { const x = L + slot * (i + .5);
         svg.append(el('text', rot ? { x, y: H - B + 14, transform: `rotate(-40 ${x} ${H - B + 14})`, 'text-anchor': 'end', fill: 'var(--ink-2)' } : { x, y: H - B + 16, 'text-anchor': 'middle', fill: 'var(--ink-2)' }, lab)); });
       c.series.forEach((s, j) => {
@@ -623,7 +626,7 @@
       box.append(svg);
       const bar = mk('div', 'cbar');
       if (k > 1) { const key = mk('div', 'key'); c.series.forEach((s, j) => { const sp = mk('span'), i = mk('i'); i.style.background = SER[j % SER.length]; sp.append(i, s.name); key.append(sp); }); bar.append(key); }
-      const dl = mk('button', 'btn', 'Download PNG'); dl.type = 'button'; dl.addEventListener('click', () => savePng(svg, c.title)); bar.prepend(dl);
+      const dl = mk('button', 'btn', 'Download PNG'); dl.type = 'button'; dl.addEventListener('click', () => savePng(svg, c.title, c.source)); bar.prepend(dl);
       box.append(bar);
       const det = mk('details'), sum = mk('summary', '', 'Show the numbers'), tbl = mk('table'), hr = mk('tr');
       hr.append(mk('th', '', ''), ...c.series.map(s => mk('th', '', (s.name || 'Value') + (c.unit ? ` (${c.unit})` : ''))));
@@ -632,14 +635,21 @@
       return box;
     }
     // CSS variables don't survive into an <img>, so resolve every var(--x) before rasterising.
-    function savePng(svg, title) {
+    function savePng(svg, title, src) {
       const cs = getComputedStyle(document.documentElement), clone = svg.cloneNode(true), vb = svg.viewBox.baseVal;
       clone.querySelectorAll('*').forEach(e => ['fill', 'stroke'].forEach(a => { const v = e.getAttribute(a); if (v && v.startsWith('var(')) e.setAttribute(a, cs.getPropertyValue(v.slice(4, -1)).trim() || '#888'); }));
       clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); clone.setAttribute('width', vb.width); clone.setAttribute('height', vb.height);
-      const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect'); bg.setAttribute('width', '100%'); bg.setAttribute('height', '100%');
-      bg.setAttribute('fill', cs.getPropertyValue('--surface').trim() || '#fff'); clone.prepend(bg);
+      // the PNG travels without the page, so it carries its own title and source line
+      const NS = 'http://www.w3.org/2000/svg', head = 46, ink = cs.getPropertyValue('--ink').trim() || '#111', mut = cs.getPropertyValue('--muted').trim() || '#666';
+      const g = document.createElementNS(NS, 'g'); g.setAttribute('transform', `translate(0 ${head})`); while (clone.firstChild) g.append(clone.firstChild);
+      const txt = (y, size, fill, weight, t) => { const e = document.createElementNS(NS, 'text'); e.setAttribute('x', 12); e.setAttribute('y', y);
+        e.setAttribute('font-size', size); e.setAttribute('fill', fill); e.setAttribute('font-weight', weight); e.textContent = t; return e; };
+      const bg = document.createElementNS(NS, 'rect'); bg.setAttribute('width', '100%'); bg.setAttribute('height', '100%');
+      bg.setAttribute('fill', cs.getPropertyValue('--surface').trim() || '#fff');
+      clone.append(bg, txt(20, 15, ink, 600, title || 'Chart'), txt(38, 11, mut, 400, src ? 'Source: ' + src : ''), g);
+      clone.setAttribute('viewBox', `0 0 ${vb.width} ${vb.height + head}`); clone.setAttribute('height', vb.height + head);
       const img = new Image(), sc = 2;
-      img.onload = () => { const cv = document.createElement('canvas'); cv.width = vb.width * sc; cv.height = vb.height * sc;
+      img.onload = () => { const cv = document.createElement('canvas'); cv.width = vb.width * sc; cv.height = (vb.height + head) * sc;
         const g = cv.getContext('2d'); g.scale(sc, sc); g.drawImage(img, 0, 0);
         cv.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b);
           a.download = (String(title || 'chart').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'chart') + '.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }, 'image/png'); };
@@ -798,6 +808,6 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   requestAnimationFrame(draw);
 </script>
-<script src="mm-nav.js?v=2026-11-08.2126"></script>
+<script src="mm-nav.js?v=2026-11-08.2132"></script>
 </body>
 </html>
