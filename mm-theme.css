@@ -92,6 +92,9 @@
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;color:var(--ink);background-color:var(--bg);
   font-family:var(--font);font-size:13px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+/* The page (and its dot grid) always reaches the bottom of the screen, however short the content.
+   min-height:100% alone doesn't, because <html> has no set height. dvh follows a phone's browser bars. */
+body{min-height:100vh;min-height:100dvh}
 button{font:inherit;color:inherit;cursor:pointer;background-color:transparent}
 input,select,textarea{font:inherit;color:var(--ink);background-color:var(--surface-2)}
 input::placeholder,textarea::placeholder{color:var(--ink-3)}
@@ -264,7 +267,10 @@ button.mmnav:hover{background:var(--hover-2);color:var(--ink)}
   input:not([type=checkbox]):not([type=radio]):not([type=range]):not(.keep-size),select,textarea:not(.inline){font-size:16px!important}
 
   /* the version footer sits under the content instead of floating over it (board pages: it's in the app menu) */
-  #ver{position:static;display:block;text-align:right;padding:16px 4px calc(8px + env(safe-area-inset-bottom))}
+  /* the version sits in the bottom-right corner of the page: the bottom of the screen on a short page,
+     after the content on a long one. body keeps room for it so it never covers anything. */
+  body:not(.mm-canvas){position:relative;padding-bottom:calc(30px + env(safe-area-inset-bottom))}
+  body:not(.mm-canvas) #ver{position:absolute;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));margin:0;pointer-events:auto}
   body.mm-canvas #ver{display:none}
 
 

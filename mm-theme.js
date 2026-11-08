@@ -11,6 +11,7 @@
 // Signed out / demo: this browser only. <html data-theme="light|dark"> drives the tokens in mm-theme.css.
 (() => {
   const KEY = 'mm-theme', PREFS = ['system', 'light', 'dark'];
+  const BG = { dark: '#262624', light: '#f8f8f7' };      // --bg in mm-theme.css
   const mq = window.matchMedia ? matchMedia('(prefers-color-scheme: light)') : null;
   const ls = { get(){ try { return localStorage.getItem(KEY); } catch (e) { return null; } },
                set(v){ try { localStorage.setItem(KEY, v); } catch (e) {} } };
@@ -21,6 +22,10 @@
   function apply(){
     const m = mode(), root = document.documentElement;
     if (root.dataset.theme !== m) root.dataset.theme = m;
+    // Phone browsers tint their own bars (status bar, Safari's toolbar) from this, so they match the page.
+    let tc = document.querySelector('meta[name="theme-color"]');
+    if (!tc){ tc = document.createElement('meta'); tc.name = 'theme-color'; document.head.appendChild(tc); }
+    tc.content = BG[m];
     root.dataset.themePref = pref;
     subs.forEach(fn => { try { fn(pref, m); } catch (e) {} });
   }
