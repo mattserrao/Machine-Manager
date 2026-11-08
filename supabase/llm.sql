@@ -123,20 +123,28 @@ create table if not exists llm.ingest_files (
   source_file text not null, kind text, rows int, imported_at timestamptz not null default now(),
   primary key (org_id, source_file));
 
--- Public demo organizations (e.g. Demo Mill, all fictional data): anyone, signed in or not, can read their MM LLM
+-- Public demo organizations (llm.public_orgs; e.g. Demo Mill, all fictional data): anyone, signed in or not, can read their MM LLM
 -- rows and files. Set with  select public.mm_llm_set_public('Demo Mill', true);  in the SQL editor.
-create table if not exists private.llm_public_orgs (
-  org_id uuid primary key references public.orgs(id) on delete cascade, created_at timestamptz not null default now());
-revoke all on private.llm_public_orgs from public, anon, authenticated;
+-- The list itself is public (it only names the demo orgs), so the lookup below needs no elevated rights.
+create table if not exists llm.public_orgs (
+  org_id uuid primary key references public.orgs(id) on delete cascade, name text not null,
+  created_at timestamptz not null default now());
+alter table llm.public_orgs enable row level security;
+drop policy if exists public_orgs_read on llm.public_orgs;
+create policy public_orgs_read on llm.public_orgs for select to anon, authenticated using (true);
+revoke all on llm.public_orgs from anon, authenticated;
+grant select on llm.public_orgs to anon, authenticated;
+grant all on llm.public_orgs to service_role;
+grant usage on schema llm to anon;
 grant usage on schema private to anon;
 
 create or replace function private.llm_is_public(p_org uuid) returns boolean
 language sql stable security definer set search_path = '' as $$
-  select exists (select 1 from private.llm_public_orgs where org_id = p_org);
+  select exists (select 1 from llm.public_orgs where org_id = p_org);
 $$;
 create or replace function private.llm_is_public_path(p_org text) returns boolean
 language sql stable security definer set search_path = '' as $$
-  select exists (select 1 from private.llm_public_orgs where org_id::text = p_org);
+  select exists (select 1 from llm.public_orgs where org_id::text = p_org);
 $$;
 revoke execute on function private.llm_is_public(uuid) from public;
 revoke execute on function private.llm_is_public_path(text) from public;
@@ -166,16 +174,16 @@ declare o uuid;
 begin
   select id into o from public.orgs where name = p_org_name;
   if o is null then raise exception 'No organization named %', p_org_name; end if;
-  if p_public then insert into private.llm_public_orgs (org_id) values (o) on conflict do nothing;
-  else delete from private.llm_public_orgs where org_id = o; end if;
+  if p_public then insert into llm.public_orgs (org_id, name) values (o, p_org_name) on conflict (org_id) do update set name = excluded.name;
+  else delete from llm.public_orgs where org_id = o; end if;
   return format('%s MM LLM data is now %s', p_org_name, case when p_public then 'public' else 'members only' end);
 end $$;
 revoke execute on function public.mm_llm_set_public(text, boolean) from public, anon, authenticated;
 
 -- The public demo org the MM LLM page loads when nobody is signed in (or the signed-in org has no data yet).
 create or replace function public.mm_llm_public_org() returns table (id uuid, name text)
-language sql stable security definer set search_path = '' as $$
-  select o.id, o.name from public.orgs o join private.llm_public_orgs p on p.org_id = o.id order by p.created_at limit 1;
+language sql stable security invoker set search_path = '' as $$
+  select p.org_id, p.name from llm.public_orgs p order by p.created_at limit 1;
 $$;
 revoke execute on function public.mm_llm_public_org() from public;
 grant execute on function public.mm_llm_public_org() to anon, authenticated;
