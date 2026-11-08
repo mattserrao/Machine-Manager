@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Operations Outage Planning</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1254"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1254">
-<script src="mm-icons.js?v=2026-11-08.1254"></script>
+<script src="mm-theme.js?v=2026-11-08.1513"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1513">
+<script src="mm-icons.js?v=2026-11-08.1513"></script>
 <style>
   /* shared look: mm-theme.css */
   main{padding:16px 16px 60px}
@@ -24,7 +24,7 @@
   /* outages read left to right along a timeline */
   .lane{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding:18px 2px 6px;
     background:linear-gradient(var(--line-strong),var(--line-strong)) 0 6px/100% 1px no-repeat}
-  .lane > .card{flex:0 0 320px;position:relative}
+  .lane > .card{flex:0 0 320px;min-width:0;position:relative}   /* min-width:0: never grow to fit the summary line */
   .lane > .card.small{overflow:visible}
   .lane > .card.small::before{content:"";position:absolute;left:18px;top:-16px;width:9px;height:9px;border-radius:50%;
     background:var(--bg);border:2px solid var(--line-strong)}
@@ -54,7 +54,8 @@
   .chip{color:var(--ink-2);background:var(--hover)}
   .chip.warn{color:var(--warn-ink);background:var(--warn-soft)}
   .chip.bad{color:var(--on-primary);background:var(--bad)}
-  .sum .peek{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sum .peek{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;overflow:hidden;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow-wrap:anywhere}
   .sum .open{font-size:12px;font-weight:500;color:var(--accent);margin-top:10px;display:inline-flex;align-items:center;gap:4px}
   /* opened card: fills the screen below the top bar; page behind stops scrolling */
   body.focus{overflow:hidden}
@@ -63,6 +64,14 @@
     outline:none;border-color:var(--line-strong)}
   body.panel-open .card.big{right:328px}
   .card.big .ch{flex:none}
+  .pager,.card.big .nav{display:none}
+  .card.big .nav{gap:2px;align-items:center;margin-left:auto}
+  .card.big .nav + .shrink{margin-left:0}
+  .card.big.slide-l{animation:op-slide-l .2s ease-out}
+  .card.big.slide-r{animation:op-slide-r .2s ease-out}
+  @keyframes op-slide-l{from{transform:translateX(28px);opacity:.5}to{transform:none;opacity:1}}
+  @keyframes op-slide-r{from{transform:translateX(-28px);opacity:.5}to{transform:none;opacity:1}}
+  @media (prefers-reduced-motion:reduce){ .card.big.slide-l,.card.big.slide-r{animation:none} }
   .card.big .body{flex:1;min-height:0;overflow:auto}
   .card.big .body > .sec + .sec{border-top:1px solid var(--line)}
   @media (min-width:900px){
@@ -215,7 +224,20 @@
     .lane{scroll-snap-type:x mandatory;scroll-padding-left:2px;gap:10px;margin:0 -12px;padding-left:14px;padding-right:14px;scroll-padding-left:14px;
       background-position:14px 6px;background-size:calc(100% - 28px) 1px;scrollbar-width:none}
     .lane::-webkit-scrollbar{display:none}
-    .lane > .card{flex-basis:calc(100% - 44px);scroll-snap-align:start}
+    .lane > .card{flex-basis:calc(100% - 36px);scroll-snap-align:start;scroll-snap-stop:always}
+    .lane > .card.small:hover{background:var(--surface)}
+    /* where you are in the row: tap a dot to jump; arrows for one at a time */
+    .pager{display:flex;align-items:center;gap:6px;margin:8px 2px 0;min-height:32px}
+    .pager .dots{display:flex;gap:2px;flex:1;flex-wrap:wrap}
+    .pager .dot{width:22px;height:22px;display:grid;place-items:center;border-radius:50%;border:0;background:none;padding:0;cursor:pointer}
+    .pager .dot::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--line-strong);transition:transform .15s,background-color .15s}
+    .pager .dot.ghost::before{background:transparent;box-shadow:inset 0 0 0 1px var(--line-strong)}
+    .pager .dot.on::before{background:var(--accent);transform:scale(1.25)}
+    .pager .at{font-size:12px;color:var(--muted);white-space:nowrap}
+    .pager .ib:disabled{opacity:.35}
+    /* opened card: swipe the header (or use the arrows) for the previous / next outage */
+    .card.big .ch{touch-action:pan-y}
+    .card.big .nav{display:flex}
     /* the packages panel opens as a sheet over the page instead of squeezing it */
     #panel{left:0;right:0;top:auto;bottom:0;width:auto;height:min(72dvh,560px);border-radius:14px 14px 0 0;border-bottom:0;
       box-shadow:0 -12px 32px rgba(0,0,0,.35);padding-bottom:env(safe-area-inset-bottom);z-index:120}
@@ -258,6 +280,7 @@
       <button class="btn" id="pkgBtn" title="Drag task packages onto an outage">Packages</button>
       <button class="btn" id="pastBtn" title="Show outages that have already happened">Past</button>
       <button class="btn" id="printBtn" title="Print the upcoming outage cards">Print</button>
+      <button class="btn" id="resetDemoBtn" title="Put the sample outages back the way they started" hidden>Reset demo</button>
       <span id="saveState"></span>
     </div>
   </div>
@@ -297,16 +320,19 @@
 <div id="toast"></div>
 <div id="ver"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1254"></script>
-<script src="mm-config.js?v=2026-11-08.1254"></script>
-<script src="mm-cloud.js?v=2026-11-08.1254"></script>
-<script src="mm-ui.js?v=2026-11-08.1254"></script>
-<script src="mm-records.js?v=2026-11-08.1254"></script>
-<script src="mm-machine.js?v=2026-11-08.1254"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1513"></script>
+<script src="mm-config.js?v=2026-11-08.1513"></script>
+<script src="mm-cloud.js?v=2026-11-08.1513"></script>
+<script src="mm-ui.js?v=2026-11-08.1513"></script>
+<script src="mm-records.js?v=2026-11-08.1513"></script>
+<script src="mm-machine.js?v=2026-11-08.1513"></script>
+<script src="mm-demo.js?v=2026-11-08.1513"></script>
+<script src="mm-task-examples.js?v=2026-11-08.1513"></script>
+<script src="mm-demo-outages.js?v=2026-11-08.1513"></script>
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.4.3';
+  const VERSION = 'v0.5.0';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'Operations Outage Planning ' + VERSION;
 
@@ -459,7 +485,10 @@
     $('pastBtn').classList.toggle('on', showPast);
     $('pastBtn').textContent = showPast ? 'Hide past' : `Past (${older.length})`;
 
-    const main = $('main'); main.textContent = '';
+    const main = $('main');
+    const kept = [...main.querySelectorAll('.lane')].map(l => l.scrollLeft);   // a redraw shouldn't swipe you back to the start
+    shown = [...up, ...recent, ...(showPast ? older : [])].map(o => o.id);
+    main.textContent = '';
     const lane = (title, os, cls) => {
       if (!os.length) return;
       main.appendChild(el('div', 'lane-h', title));
@@ -477,6 +506,7 @@
     }
     lane('Recently finished', recent, 'past');
     if (showPast) lane('Earlier', older.slice().reverse(), 'past');
+    main.querySelectorAll('.lane').forEach((l, i) => { if (kept[i]) l.scrollLeft = kept[i]; pager(l); });
     if (!up.length) main.insertBefore(el('div', 'foot', 'No upcoming outages. Use Edit schedule to add the next ones.'), main.firstChild);
 
     const f = el('div', 'foot');
@@ -488,6 +518,58 @@
   }
 
   const TIMELINE_CYCLES = 6;
+  let shown = [];          // outage ids in the order they're on screen (for previous / next on an opened card)
+
+  /* ---------- Phones: one outage card per swipe ----------
+     The lane is a scroll-snap row, so a right-to-left swipe moves to the next outage. Under it a pager
+     shows where you are; dots jump, arrows step. Hidden on wider screens (CSS). */
+  function pager(l){
+    const cards = [...l.children].filter(c => c.classList.contains('card'));
+    if (cards.length < 2) return;
+    const pg = el('div', 'pager'), dots = el('div', 'dots'), at = el('span', 'at');
+    const prev = el('button', 'ib'), next = el('button', 'ib');
+    prev.appendChild(MMIcons.el('left', 'sm')); next.appendChild(MMIcons.el('right', 'sm'));
+    prev.setAttribute('aria-label', 'Previous outage'); next.setAttribute('aria-label', 'Next outage');
+    const go = i => { i = Math.max(0, Math.min(cards.length - 1, i)); l.scrollTo({ left: cards[i].offsetLeft - cards[0].offsetLeft, behavior: 'smooth' }); };
+    const ds = cards.map((c, i) => {
+      const d = el('button', 'dot' + (c.classList.contains('ghost') ? ' ghost' : ''));
+      d.setAttribute('aria-label', (c.querySelector('.date') || {}).textContent || `Outage ${i + 1}`);
+      d.addEventListener('click', () => go(i)); dots.appendChild(d); return d;
+    });
+    let cur = -1;
+    const index = () => { const step = cards[1].offsetLeft - cards[0].offsetLeft; return step > 0 ? Math.round(l.scrollLeft / step) : 0; };
+    const mark = () => {
+      const i = Math.max(0, Math.min(cards.length - 1, index())); if (i === cur) return; cur = i;
+      ds.forEach((d, k) => { d.classList.toggle('on', k === i); d.setAttribute('aria-current', k === i ? 'true' : 'false'); });
+      const dt = cards[i].querySelector('.date');
+      at.textContent = `${dt ? dt.textContent.replace(/, \d{4}$/, '') + ' · ' : ''}${i + 1} of ${cards.length}`;
+      prev.disabled = i === 0; next.disabled = i === cards.length - 1;
+    };
+    prev.addEventListener('click', () => go(index() - 1));
+    next.addEventListener('click', () => go(index() + 1));
+    l.addEventListener('scroll', () => requestAnimationFrame(mark), { passive: true });
+    pg.append(dots, at, prev, next);
+    l.after(pg);
+    mark();
+  }
+  // Opened card: previous / next outage, keeping it open.
+  function step(id, dir){
+    const i = shown.indexOf(id), to = shown[i + dir];
+    if (i < 0 || !to) return false;
+    setBig(to, true, true);
+    const c = document.querySelector('.card.big');
+    if (c) c.classList.add(dir > 0 ? 'slide-l' : 'slide-r');
+    return true;
+  }
+  function swipeable(c, id){
+    const h = c.querySelector('.ch'); let x0 = null, y0 = 0;
+    h.addEventListener('touchstart', e => { if (e.touches.length === 1){ x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; } }, { passive: true });
+    h.addEventListener('touchend', e => {
+      if (x0 === null) return;
+      const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) step(id, dx < 0 ? 1 : -1);   // right to left → next
+    }, { passive: true });
+  }
   function ghostCard(date){
     const c = el('section', 'card small ghost');
     const h = el('div', 'ch'), d = el('div', 'd');
@@ -524,6 +606,14 @@
     if (isNext){ const n = el('span', 'pill', 'Next'); n.style.setProperty('--sc', 'var(--accent)'); bd.appendChild(n); }
     h.append(d, bd);
     if (big){
+      const i = shown.indexOf(o.id), nav = el('div', 'nav');
+      [[-1, 'left', 'Previous outage'], [1, 'right', 'Next outage']].forEach(([dir, ic, lbl]) => {
+        const b = el('button', 'ib'); b.appendChild(MMIcons.el(ic, 'sm')); b.setAttribute('aria-label', lbl); b.title = lbl;
+        b.disabled = i < 0 || !shown[i + dir];
+        b.addEventListener('click', e => { e.stopPropagation(); step(o.id, dir); });
+        nav.appendChild(b);
+      });
+      h.appendChild(nav);
       const x = el('button', 'shrink'); x.title = 'Make smaller'; x.setAttribute('aria-label', 'Make ' + fmtLong(o.date) + ' card smaller');
       x.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M9.5 2.5v4h4M6.5 13.5v-4h-4M9.5 6.5l4.5-4.5M6.5 9.5L2 14" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
       x.addEventListener('click', e => { e.stopPropagation(); setBig(o.id, false); });
@@ -553,6 +643,7 @@
       c.addEventListener('keydown', e => { if (e.target === c && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); setBig(o.id, true, true); } });
       return c;
     }
+    swipeable(c, o.id);
     const body = el('div', 'body'); c.appendChild(body);
 
     // fabrics & rolls from My Machine
@@ -600,7 +691,7 @@
     try { localStorage.setItem('mm-op-big', JSON.stringify([...bigCards])); } catch (e) {}
     render();
     const c = document.querySelector(`.card[data-id="${id}"]`);
-    if (c){ if (!on){ c.scrollIntoView({ block: 'nearest' }); c.focus({ preventScroll: true }); } else { const s = c.querySelector('.shrink'); if (s) s.focus({ preventScroll: true }); } }
+    if (c){ if (!on){ c.scrollIntoView({ block: 'nearest', inline: 'start' }); c.focus({ preventScroll: true }); } else { const s = c.querySelector('.shrink'); if (s) s.focus({ preventScroll: true }); } }
   }
   // While a card is open: lock the page behind it and keep it just under the top bar.
   function fitOpenCard(){
@@ -1035,17 +1126,93 @@
   let lastDay = todayStr();
   setInterval(() => { if (todayStr() !== lastDay){ lastDay = todayStr(); softRender(); } }, 60000);
 
-  /* ---------- Start: signed-in users with My Machine set up ---------- */
+  /* ---------- Demo mode (signed out): everything stays in this browser ----------
+     Outages: their own localStorage key, seeded from mm-demo-outages.js.
+     Machine: the same browser copy My Machine's demo uses (seeded from mm-demo.js if it has none yet),
+              so changes made in either tool show in the other.
+     Packages: the Ops Task Library's demo library in this browser (IndexedDB), or its examples if it
+              hasn't been opened yet. Read only here, as when signed in. */
+  const DEMO_KEY = 'machine-manager-outages-demo', MYMACHINE_KEY = 'machine-manager-mymachine';
+  function localStore(save){
+    return { edit: true, conflicts: 0, ready: Promise.resolve(null),
+      save(){ try { save(); status('saved'); } catch (e) { status('error'); } } };
+  }
+  function readJSON(k){ try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
+  function demoLibrary(){
+    return new Promise(res => {
+      try {
+        const q = indexedDB.open('mm-task-packages', 1);
+        q.onupgradeneeded = () => q.result.createObjectStore('kv');
+        q.onerror = () => res(null);
+        q.onsuccess = () => {
+          try { const g = q.result.transaction('kv').objectStore('kv').get('app'); g.onsuccess = () => res(g.result || null); g.onerror = () => res(null); }
+          catch (e) { res(null); }
+        };
+      } catch (e) { res(null); }
+    });
+  }
+  // Boards (as the library keeps them) → the same records a signed-in library store hands back.
+  function boardRecords(boards){
+    const r = {};
+    for (const b of boards){
+      r[TR.board(b.id)] = { name: b.name, meta: b.meta || {}, created: b.created || null };
+      for (const n of Object.values(b.notes || {})){ const d = { ...n }; delete d.id; r[TR.note(b.id, n.id)] = d; }
+      for (const f of b.frames || []){ const d = { ...f }; delete d.id; r[TR.frame(b.id, f.id)] = d; }
+    }
+    return r;
+  }
+  function seedDemo(){
+    O = { settings: null, outages: {}, tasks: {}, pkgs: {}, pdone: {}, man: {} };
+    const lib = TR.collect(tp);
+    const rec = MMDemoOutages.build({ addDays, daysBetween, today: todayStr(), phasesOf: pid => lib[pid] ? libPhases(pid) : null,
+      metaOf: pid => lib[pid] ? { name: lib[pid].data.name, ...(lib[pid].data.meta || {}) } : null });
+    for (const [k, v] of Object.entries(rec)) onO(k, v);
+  }
+  async function startDemo(note){
+    session = { demo: true, org: { name: 'PM1' } };
+    $('brandSub').textContent = 'Demo · saved in this browser';
+    // Machine
+    let m = readJSON(MYMACHINE_KEY);
+    if (!(m && m.machine) && window.MMDemo){ m = MMDemo.build(); try { localStorage.setItem(MYMACHINE_KEY, JSON.stringify({ version: 'outages ' + VERSION, saved: new Date().toISOString(), ...m })); } catch (e) {} }
+    if (m && m.machine){ onM(MR.machine, m.machine); for (const [k, v] of Object.entries(m.items || {})) onM(MR.item(k), v); }
+    mStore = localStore(() => {
+      const prev = readJSON(MYMACHINE_KEY) || {};
+      localStorage.setItem(MYMACHINE_KEY, JSON.stringify({ ...prev, saved: new Date().toISOString(), machine: machineRaw, items }));
+    });
+    // Task packages
+    const app = await demoLibrary();
+    const boards = app && app.boards && Object.keys(app.boards).length ? Object.values(app.boards)
+      : (window.MMTaskExamples ? MMTaskExamples.examples.map(x => MMTaskExamples.buildExample(x)) : []);
+    tp = boardRecords(boards);
+    // Outages
+    oStore = localStore(() => localStorage.setItem(DEMO_KEY, JSON.stringify(oRecords())));
+    const saved = readJSON(DEMO_KEY);
+    if (saved && typeof saved === 'object' && Object.keys(saved).length) for (const [k, v] of Object.entries(saved)) onO(k, v);
+    else { seedDemo(); oStore.save(); }
+    $('resetDemoBtn').hidden = false;
+    if (!machine) return gate('settings', 'Set up My Machine first', 'Outage Planning uses the machine layout and fabric and roll dates from My Machine to show what’s due at each outage.', { label: 'Open My Machine', href: 'MyMachine.html' });
+    render();
+    $('pkgBtn').hidden = false;
+    if (note) toast(note);
+  }
+  $('resetDemoBtn').addEventListener('click', () => {
+    const prev = JSON.stringify(oRecords());
+    seedDemo(); oStore.save(); render(); drawPanel();
+    toast('Demo outages reset', { label: 'Undo', fn: () => {
+      O = { settings: null, outages: {}, tasks: {}, pkgs: {}, pdone: {}, man: {} };
+      for (const [k, v] of Object.entries(JSON.parse(prev))) onO(k, v);
+      oStore.save(); render(); drawPanel();
+    } });
+  });
+
+  /* ---------- Start: signed in with My Machine set up, or the demo ---------- */
   (async () => {
-    if (!window.MMCloud || !MMCloud.enabled)
-      return gate('lock', 'Sign-in isn’t available', 'Outage Planning shares data through your organization’s account, which isn’t set up on this site.');
+    if (!window.MMCloud || !MMCloud.enabled) return startDemo();
     MMCloud.mountAccount($('acct'), { compact: true });
     try { session = await MMCloud.session(); }
-    catch (e) { return gate('alert', 'Can’t reach the server', 'Check your connection and reload the page.', { label: 'Reload', fn: () => location.reload() }); }
-    if (!session)
-      return gate('lock', 'Sign in to plan outages', 'Outage Planning is shared with your team, so it needs an account. The other tools can still be tried in demo mode.', { label: 'Sign in', fn: () => MMCloud.openSignIn() });
-    if (!session.org)
-      return gate('lock', 'No organization yet', 'Your account isn’t in an organization yet. Ask your administrator to add you.');
+    catch (e) { return startDemo('Can’t reach the server — showing the demo in this browser.'); }
+    if (!session) return startDemo('Showing demo outages for PM1. Sign in to plan your team’s.');
+    if (!session.org) return startDemo('Your account isn’t in an organization yet — showing the demo.');
     $('brandSub').textContent = `${session.org.name} · outages`;
     gate('loader', 'Loading…', 'Getting your outages and machine.');
     oStore = MMCloud.openStore('outages', { snapshot: oRecords, onChange: onO, onStatus: status });
@@ -1068,6 +1235,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.1254"></script>
+<script src="mm-nav.js?v=2026-11-08.1513"></script>
 </body>
 </html>

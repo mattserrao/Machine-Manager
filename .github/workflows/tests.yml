@@ -52,6 +52,7 @@ jobs:
       - run: python tests/browser/boards.py http://localhost:8000/
       - run: python tests/browser/signed_in.py http://localhost:8000/
       - run: python tests/browser/theme.py http://localhost:8000/
+      - run: python tests/browser/outages_demo.py http://localhost:8000/
 
   version-stamps:
     runs-on: ubuntu-latest
