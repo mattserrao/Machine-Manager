@@ -541,18 +541,38 @@ window.MMBoard = { start(cfg){
     toast(`Moved to ${f ? f.title || T.frame : 'Other'}`);
     requestAnimationFrame(() => centerOn(id));
   }
+  // Collapsed categories fold to a small bubble with just the name, in place. Per person: this browser only.
+  const foldKey = () => `mm-org-folded:${cfg.tool}:${B.id}`;
+  function folded(){ try { return new Set(JSON.parse(localStorage.getItem(foldKey())) || []); } catch (e) { return new Set(); } }
+  function setFolded(key, on){
+    const f = folded(); on ? f.add(key) : f.delete(key);
+    try { localStorage.setItem(foldKey(), JSON.stringify([...f])); } catch (e) {}
+    const sec = world.querySelector(`.org-sec[data-key="${CSS.escape(key)}"]`);
+    if (sec){ sec.classList.toggle('folded', on); const b = sec.querySelector('.org-fold'); if (b) b.setAttribute('aria-expanded', String(!on)); }
+  }
   function renderOrg(){
     world.querySelectorAll(':scope > .org-sec').forEach(e => e.remove());
     const list = tops(), groups = new Map(frameOrder().map(f => [f, []])), other = [];
     for (const n of list){ const f = catOf(n); (f ? groups.get(f) : other).push(n); }
+    const fold = folded();
     const sec = (f, notes) => {
-      const s = el('section', 'org-sec'); if (f){ s.dataset.id = f.id; s.style.setProperty('--fc', f.color || 'var(--line-strong)'); }
+      const key = f ? f.id : '_other', name = f ? (f.title || T.frame) : 'Other';
+      const s = el('section', 'org-sec' + (fold.has(key) ? ' folded' : '')); s.dataset.key = key;
+      if (f){ s.dataset.id = f.id; s.style.setProperty('--fc', f.color || 'var(--line-strong)'); }
+      // folded: the bubble (name only); click it to open the category again
+      const bub = el('button', 'org-bubble', name); bub.type = 'button'; bub.title = `Show ${name}`;
+      bub.addEventListener('click', () => setFolded(key, false));
+      s.appendChild(bub);
       const h = el('div', 'org-h');
-      const t = el('h2', 'ft', f ? (f.title || T.frame) : 'Other'); h.appendChild(t);
+      const fb = el('button', 'ib org-fold'); fb.type = 'button'; fb.appendChild(I('down', 'sm'));
+      fb.title = `Collapse ${name}`; fb.setAttribute('aria-label', fb.title); fb.setAttribute('aria-expanded', String(!fold.has(key)));
+      fb.addEventListener('click', e => { e.stopPropagation(); setFolded(key, true); });
+      h.appendChild(fb);
+      const t = el('h2', 'ft', name); h.appendChild(t);
       h.appendChild(el('span', 'org-n', String(notes.length)));
       h.appendChild(el('span', 'spacer'));
       if (f){
-        const add = el('button', 'ib'); add.appendChild(I('plus', 'sm')); add.title = `New ${W.card} in ${f.title || T.frame}`; add.setAttribute('aria-label', add.title);
+        const add = el('button', 'ib org-add'); add.appendChild(I('plus', 'sm')); add.title = `New ${W.card} in ${f.title || T.frame}`; add.setAttribute('aria-label', add.title);
         add.addEventListener('click', e => { e.stopPropagation(); const r = add.getBoundingClientRect(); if (P.newInCat) P.newInCat(f, r); });
         const more = el('button', 'ib org-more', '⋯'); more.title = 'Category options'; more.setAttribute('aria-label', 'Options for ' + (f.title || T.frame));
         more.addEventListener('click', e => { e.stopPropagation(); const r = more.getBoundingClientRect(); openFrameMenu(r.right - 220, r.bottom + 6, f.id); });
@@ -1323,6 +1343,10 @@ window.MMBoard = { start(cfg){
   }
   const fitOnOpen = () => fitAll(OPEN_MIN_ZOOM);
   function centerOn(id){
+    if (ORG && N(id)){                                   // a card in a folded category: open the category first
+      const r = noteEl(rootOf(N(id)).id), fs = r && r.closest('.org-sec.folded');
+      if (fs) setFolded(fs.dataset.key, false);
+    }
     const e = visibleElFor(id); if (!e) return;
     if (ORG){
       e.scrollIntoView({ block:'center', behavior:'smooth' });

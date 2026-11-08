@@ -424,8 +424,8 @@ body.mm-organizer #snapBtn,body.mm-organizer #libBtn,body.mm-organizer #helpBtn{
 body.mm-organizer #empty{pointer-events:none}
 .org-sec{margin:0 0 28px}
 .org-h{display:flex;align-items:center;gap:8px;margin:0 2px 10px;min-height:32px}
-.org-h::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--fc,var(--line-strong));flex:none}
-.org-h .ft{font-size:15px;font-weight:600;margin:0;color:var(--ink);line-height:1.2}
+.org-h .ft{font-size:15px;font-weight:600;margin:0;color:var(--ink);line-height:1.2;display:flex;align-items:center;gap:8px}
+.org-h .ft::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--fc,var(--line-strong));flex:none}
 .org-h .ft input{font:inherit;font-weight:600;border:1px solid var(--accent-line);border-radius:var(--r-sm);padding:3px 6px;background:var(--surface);color:var(--ink);outline:none;min-width:200px}
 .org-h .org-n{font-size:12px;color:var(--muted);background:var(--hover);border-radius:999px;padding:1px 8px}
 .org-h .spacer{flex:1}
@@ -448,3 +448,15 @@ body.mm-organizer .note:not(.sized) .text{max-height:none}
   body.mm-organizer #tips{bottom:calc(8px + env(safe-area-inset-bottom))!important}
 }
 @media print{ body.mm-organizer #board{overflow:visible} }
+/* folded category: just a bubble with its name, in place; folded neighbours sit side by side */
+.org-bubble{display:none}
+.org-sec.folded{display:inline-block;margin:0 6px 14px 0;vertical-align:top}
+.org-sec.folded > .org-h,.org-sec.folded > .org-grid{display:none}
+.org-sec.folded > .org-bubble{display:inline-flex;align-items:center;gap:8px;height:34px;padding:0 14px 0 12px;border-radius:999px;
+  border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap}
+.org-sec.folded > .org-bubble::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--fc,var(--line-strong))}
+.org-sec.folded > .org-bubble:hover{background:var(--hover)}
+.org-sec.folded:has(.note.hit) > .org-bubble{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-line)}
+.org-h .org-fold{margin-left:-6px}
+.org-h .org-fold svg{transition:transform .15s}
+@media (pointer:coarse){ .org-sec.folded > .org-bubble{height:40px;padding:0 16px 0 14px} }

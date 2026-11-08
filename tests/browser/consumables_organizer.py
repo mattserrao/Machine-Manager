@@ -58,7 +58,7 @@ with sync_playwright() as p:
     check("undo works", sn.count() == n0)
 
     # New card from a category's +
-    pg.locator(".org-sec:has(.ft:text-is('Deckle strips')) .org-h .ib").first.click(); pg.wait_for_timeout(200)
+    pg.locator(".org-sec:has(.ft:text-is('Deckle strips')) .org-add").click(); pg.wait_for_timeout(200)
     pg.locator("#menu .mi", has_text="Blank info card").click(); pg.wait_for_timeout(400)
     pg.locator("#edText").fill("AAA test strip"); pg.keyboard.press("Escape"); pg.wait_for_timeout(400)
     check("+ on a category adds the card there", "AAA test strip" in titles(pg, "Deckle strips"))
@@ -71,6 +71,19 @@ with sync_playwright() as p:
     pg.wait_for_timeout(800)                 # saves are debounced
     pg.reload(wait_until="networkidle"); pg.wait_for_timeout(1200)
     check("changes survive a reload", "AAA test strip" in titles(pg, "Deckle strips") and "Felts" in pg.locator(".org-sec .ft").all_text_contents())
+
+    # Fold a category to a bubble, in place; remembered; the bubble opens it again
+    sec = pg.locator(".org-sec:has(.ft:text-is('Doctor blades'))")
+    sec.locator(".org-fold").click(); pg.wait_for_timeout(200)
+    check("collapse folds a category to a bubble", sec.locator(".org-bubble").is_visible() and not sec.locator(".org-grid").is_visible())
+    check("the bubble shows just the name", sec.locator(".org-bubble").inner_text().strip() == "Doctor blades")
+    order = pg.evaluate("[...document.querySelectorAll('.org-sec')].map(s => s.dataset.key)")
+    pg.reload(wait_until="networkidle"); pg.wait_for_timeout(1200)
+    sec = pg.locator(".org-sec:has(.org-bubble:text-is('Doctor blades'))")
+    check("folded state is remembered", sec.locator(".org-bubble").is_visible())
+    check("bubble stays in place", pg.evaluate("[...document.querySelectorAll('.org-sec')].map(s => s.dataset.key)") == order)
+    sec.locator(".org-bubble").click(); pg.wait_for_timeout(200)
+    check("clicking the bubble opens the category", sec.locator(".org-grid").is_visible())
 
     pg.fill("#search", "RP-58"); pg.wait_for_timeout(300)
     check("search highlights matching cards", pg.locator(".org-grid > .note.hit").count() >= 1)
