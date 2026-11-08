@@ -88,7 +88,8 @@
   .tile{padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface)}
   .tile b{display:block;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
   .tile span{font-size:12px;color:var(--muted)}
-  .qa{display:grid;grid-template-columns:minmax(240px,340px) 1fr;gap:16px;align-items:start}
+  .qa{display:grid;grid-template-columns:minmax(240px,340px) minmax(0,1fr);gap:16px;align-items:start}
+  .qa > *{min-width:0}
   .qlist{display:flex;flex-direction:column;gap:6px}
   .q{display:block;width:100%;text-align:left;font:inherit;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);
      border-radius:var(--r-lg);padding:9px 11px;cursor:pointer;font-size:13px;line-height:1.4}
@@ -127,7 +128,30 @@
   .ask .mine{margin:10px 0 0;display:flex;flex-wrap:wrap;gap:6px}
   .ask .mine button{font:inherit;font-size:12px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:999px;
      padding:3px 10px;cursor:pointer;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  @media (max-width:860px){ .qa{grid-template-columns:1fr} }
+  @media (max-width:860px){
+    .qa{grid-template-columns:minmax(0,1fr)}
+    .ans{padding:14px 12px;scroll-margin-top:calc(var(--top-full,56px) + 8px)}
+    .ans.open{min-height:calc(100dvh - var(--top-full,56px) - 24px)}
+    .ev td{max-width:none}
+    .ev td:not(.n){min-width:120px}
+  }
+  @media (max-width:600px){
+    main{padding:16px 14px 40px}
+    .tiles{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+    .tile{padding:8px 10px}
+    .tile b{font-size:16px}
+    .tile span{font-size:11px;line-height:1.3;display:block}
+    .demo-sub{font-size:12.5px}
+    .ask{padding:12px}
+    .ask .row .btn{flex:1 0 100%}
+    .ask .mine button{max-width:100%}
+    .foot{margin-top:24px}
+    body:not(.mm-canvas) .foot #ver{position:static}
+    .sheet-h{padding:14px 14px 10px}
+    .sheet-b{padding:12px 14px 20px}
+    .detail dl{grid-template-columns:1fr;gap:2px 0}
+    .detail dd{margin-bottom:6px}
+  }
 </style>
 </head>
 <body>
@@ -191,7 +215,7 @@
 <script src="mm-config.js?v=2026-11-08.1905"></script>
 <script src="mm-cloud.js?v=2026-11-08.1905"></script>
 <script>
-  const VERSION = 'v0.5.0';
+  const VERSION = 'v0.5.1';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true });
 
@@ -409,7 +433,7 @@
     catch (e) { $('qlist').appendChild(mk('p', 'demo-msg', 'The demo questions couldn’t be loaded.')); return; }
     if (!isDemo) { $('qlist').appendChild(mk('p', 'demo-msg', 'Demo questions are written for the Demo Mill.')); return; }
 
-    const qlist = $('qlist'), ans = $('ans'); let cur = null;
+    const qlist = $('qlist'), ans = $('ans'), narrow = matchMedia('(max-width:860px)'); let cur = null;
     key.questions.forEach(q => {
       const b = mk('button', 'q'); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
       b.append(document.createTextNode(q.question), mk('span', 'k', q.output));
@@ -427,6 +451,7 @@
       qlist.querySelectorAll('.q').forEach(x => x.setAttribute('aria-pressed', String(x === btn)));
       ans.textContent = '';
       ans.appendChild(mk('h3', '', q.question));
+      if (narrow.matches) ans.classList.add('open'), ans.scrollIntoView({ behavior: 'smooth', block: 'start' });
       const m = saved[q.id];
       if (m) {
         ans.append(mk('div', 'lbl', 'Model answer'), modelText(m.answer), meta(m));
@@ -514,6 +539,7 @@
         const q = ta.value.trim(); if (!q) return ta.focus();
         go.disabled = true; go.textContent = 'Thinking…';
         cur = 'ask'; ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', 'Searching the demo data… this usually takes 15–60 seconds.'));
+        if (narrow.matches) ans.classList.add('open'), ans.scrollIntoView({ behavior: 'smooth', block: 'start' });
         try {
           const { data, error } = await db.functions.invoke('mm-llm-ask', { body: { question: q } });
           let r = data;
