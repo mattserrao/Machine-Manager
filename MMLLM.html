@@ -397,7 +397,7 @@
         rows.forEach(r => {
           const tr = mk('tr');
           s.cols.forEach(c => {
-            const td = mk('td', typeof r[c] === 'number' ? 'n' : '');
+            const td = mk('td', typeof r[c] === 'number' || /^\d{4}-\d{2}-\d{2}$/.test(r[c] ?? '') ? 'n' : '');
             if (c === 'snippet' && r[c]) {               // ts_headline marks matches with <b>; show them safely as <mark>
               String(r[c]).split(/(<b>.*?<\/b>)/).forEach(part => {
                 const m = part.match(/^<b>(.*)<\/b>$/);
