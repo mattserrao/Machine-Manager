@@ -30,6 +30,54 @@
      "desc": "both base ply plate changes are in the Nov 11 scope",
      "sql": "(select count(*) from public.mm_llm_outage_scope(:org, 'OUT-2026-11-11') where description in ('Change BP 1 refiner plates', 'Change BP 2 refiner plates')) = 2"
     }
+   ],
+   "show": [
+    {
+     "label": "Nov 11 outage scope",
+     "fn": "mm_llm_outage_scope",
+     "args": {
+      "p_outage": "OUT-2026-11-11"
+     },
+     "cols": [
+      "wo_no",
+      "description",
+      "asset",
+      "status_text",
+      "parts_status"
+     ],
+     "limit": 8
+    },
+    {
+     "label": "Envoy: can 27 DS bearing since the restart",
+     "fn": "mm_llm_envoy",
+     "args": {
+      "p_term": "PM1:DRY2_C27_DS_VIB",
+      "p_from": "2026-10-12",
+      "p_to": "2026-10-31"
+     },
+     "cols": [
+      "period",
+      "tag",
+      "max",
+      "high",
+      "hours_outside"
+     ],
+     "limit": 6,
+     "newest": true
+    },
+    {
+     "label": "Documents: \"can 27 outer race defect\"",
+     "fn": "mm_llm_search_docs",
+     "args": {
+      "p_query": "can 27 outer race defect",
+      "p_limit": 3
+     },
+     "cols": [
+      "doc_id",
+      "title",
+      "snippet"
+     ]
+    }
    ]
   },
   {
@@ -55,6 +103,56 @@
     {
      "desc": "can 27 was not in the annual scope",
      "sql": "not exists (select 1 from public.mm_llm_outage_scope(:org, 'OUT-2026-ANNUAL') where description ilike '%can 27%')"
+    }
+   ],
+   "show": [
+    {
+     "label": "Envoy: can 27 DS bearing, first flags",
+     "fn": "mm_llm_envoy",
+     "args": {
+      "p_term": "PM1:DRY2_C27_DS_VIB",
+      "p_from": "2026-08-01"
+     },
+     "cols": [
+      "period",
+      "tag",
+      "max",
+      "high",
+      "hours_outside"
+     ],
+     "limit": 5
+    },
+    {
+     "label": "Documents: \"BPFO tone\"",
+     "fn": "mm_llm_search_docs",
+     "args": {
+      "p_query": "BPFO tone",
+      "p_limit": 3
+     },
+     "cols": [
+      "doc_id",
+      "title",
+      "snippet"
+     ]
+    },
+    {
+     "label": "Annual outage scope mentioning can 27",
+     "fn": "mm_llm_outage_scope",
+     "args": {
+      "p_outage": "OUT-2026-ANNUAL"
+     },
+     "cols": [
+      "wo_no",
+      "description",
+      "asset",
+      "status_text",
+      "parts_status"
+     ],
+     "filter": {
+      "col": "description",
+      "contains": "can 27"
+     },
+     "empty": "None - can 27 was not in the annual scope"
     }
    ]
   },
@@ -86,6 +184,55 @@
      "desc": "Envoy flagged the 2nd press Uhle vacuum from Mar 24",
      "sql": "(select min(period) from public.mm_llm_envoy(:org, 'PM1:UHLE_P2_VAC', '2026-03-01', '2026-04-20')) = '2026-03-24'"
     }
+   ],
+   "show": [
+    {
+     "label": "Documents: \"2nd press HP shower plugged nozzles\"",
+     "fn": "mm_llm_search_docs",
+     "args": {
+      "p_query": "2nd press HP shower plugged nozzles",
+      "p_limit": 3
+     },
+     "cols": [
+      "doc_id",
+      "title",
+      "snippet"
+     ]
+    },
+    {
+     "label": "2nd press top felt history (Mar-May)",
+     "fn": "mm_llm_position_history",
+     "args": {
+      "p_term": "p2-felt-top",
+      "p_from": "2026-03-01",
+      "p_to": "2026-05-31"
+     },
+     "cols": [
+      "source",
+      "day",
+      "ref",
+      "summary",
+      "status"
+     ],
+     "limit": 10
+    },
+    {
+     "label": "Envoy: 2nd press Uhle box vacuum",
+     "fn": "mm_llm_envoy",
+     "args": {
+      "p_term": "PM1:UHLE_P2_VAC",
+      "p_from": "2026-03-01",
+      "p_to": "2026-04-20"
+     },
+     "cols": [
+      "period",
+      "tag",
+      "max",
+      "high",
+      "hours_outside"
+     ],
+     "limit": 5
+    }
    ]
   },
   {
@@ -106,6 +253,25 @@
     {
      "desc": "the Halden Apr 15 survey is linked to the felt",
      "sql": "exists (select 1 from public.mm_llm_position_history(:org, 'p2-felt-top') where source = 'Document' and ref = 'HF-SV-260415')"
+    }
+   ],
+   "show": [
+    {
+     "label": "2nd press top felt history (Apr)",
+     "fn": "mm_llm_position_history",
+     "args": {
+      "p_term": "p2-felt-top",
+      "p_from": "2026-04-01",
+      "p_to": "2026-04-30"
+     },
+     "cols": [
+      "source",
+      "day",
+      "ref",
+      "summary",
+      "status"
+     ],
+     "limit": 10
     }
    ]
   },
@@ -132,6 +298,41 @@
      "desc": "RCFA-2026-02 is in the history",
      "sql": "exists (select 1 from public.mm_llm_position_history(:org, 'form-bottom') where ref = 'RCFA-2026-02')"
     }
+   ],
+   "show": [
+    {
+     "label": "Base ply forming fabric history (Feb 15 - Mar 10)",
+     "fn": "mm_llm_position_history",
+     "args": {
+      "p_term": "form-bottom",
+      "p_from": "2026-02-15",
+      "p_to": "2026-03-10"
+     },
+     "cols": [
+      "source",
+      "day",
+      "ref",
+      "summary",
+      "status"
+     ],
+     "limit": 10
+    },
+    {
+     "label": "Pi: machine speed by day",
+     "fn": "mm_llm_pi_daily",
+     "args": {
+      "p_tag": "PM1:SPEED",
+      "p_from": "2026-02-16",
+      "p_to": "2026-02-20"
+     },
+     "cols": [
+      "day",
+      "avg",
+      "min",
+      "max",
+      "hours"
+     ]
+    }
    ]
   },
   {
@@ -147,6 +348,26 @@
     {
      "desc": "the doctor loading check is overdue",
      "sql": "exists (select 1 from public.mm_llm_overdue_actions(:org, '2026-10-31') where title ilike '%doctor loading check%' and bucket = 'RCFA')"
+    }
+   ],
+   "show": [
+    {
+     "label": "Overdue actions (Oct 31)",
+     "fn": "mm_llm_overdue_actions",
+     "args": {
+      "p_as_of": "2026-10-31"
+     },
+     "cols": [
+      "title",
+      "bucket",
+      "assigned_to",
+      "due",
+      "days_late"
+     ],
+     "filter": {
+      "col": "bucket",
+      "contains": "RCFA"
+     }
     }
    ]
   },
@@ -180,6 +401,70 @@
      "desc": "the BUS sheet says one set on hand",
      "sql": "exists (select 1 from public.mm_llm_position_history(:org, 'ref-bp2') where source = 'BUS' and summary ilike '%1 Ridgeway set%')"
     }
+   ],
+   "show": [
+    {
+     "label": "Nov 11 scope: plates",
+     "fn": "mm_llm_outage_scope",
+     "args": {
+      "p_outage": "OUT-2026-11-11"
+     },
+     "cols": [
+      "wo_no",
+      "description",
+      "asset",
+      "status_text",
+      "parts_status"
+     ],
+     "filter": {
+      "col": "description",
+      "contains": "plates"
+     }
+    },
+    {
+     "label": "Envoy: BP 2 specific energy",
+     "fn": "mm_llm_envoy",
+     "args": {
+      "p_term": "PM1:REF_BP2_SE",
+      "p_from": "2026-09-01",
+      "p_to": "2026-10-31"
+     },
+     "cols": [
+      "period",
+      "tag",
+      "max",
+      "high",
+      "hours_outside"
+     ],
+     "limit": 5
+    },
+    {
+     "label": "Records: \"order Ridgeway refiner plates\"",
+     "fn": "mm_llm_search_records",
+     "args": {
+      "p_query": "order Ridgeway refiner plates",
+      "p_limit": 5
+     },
+     "cols": [
+      "source",
+      "day",
+      "summary",
+      "status"
+     ]
+    },
+    {
+     "label": "Documents: \"edge rounding BP 2\"",
+     "fn": "mm_llm_search_docs",
+     "args": {
+      "p_query": "edge rounding BP 2",
+      "p_limit": 3
+     },
+     "cols": [
+      "doc_id",
+      "title",
+      "snippet"
+     ]
+    }
    ]
   },
   {
@@ -206,6 +491,60 @@
      "desc": "the PV-3 WO was closed as could not reproduce",
      "sql": "exists (select 1 from public.mm_llm_position_history(:org, '3rd section pocket ventilation') where source = 'WO' and summary ilike '%could not reproduce%')"
     }
+   ],
+   "show": [
+    {
+     "label": "3rd section top felt: BUS break lines (Jun-Aug)",
+     "fn": "mm_llm_position_history",
+     "args": {
+      "p_term": "3rd section top felt",
+      "p_from": "2026-06-01",
+      "p_to": "2026-08-31"
+     },
+     "cols": [
+      "day",
+      "summary"
+     ],
+     "filter": {
+      "col": "summary",
+      "contains": "Break"
+     },
+     "limit": 20
+    },
+    {
+     "label": "Envoy: PV-3 pocket ventilation fan amps (summer)",
+     "fn": "mm_llm_envoy",
+     "args": {
+      "p_term": "PM1:DRY3_PV_FAN_AMPS",
+      "p_from": "2026-06-01",
+      "p_to": "2026-08-31"
+     },
+     "cols": [
+      "period",
+      "tag",
+      "max",
+      "low",
+      "hours_outside"
+     ]
+    },
+    {
+     "label": "PV-3 pocket ventilation history",
+     "fn": "mm_llm_position_history",
+     "args": {
+      "p_term": "3rd section pocket ventilation"
+     },
+     "cols": [
+      "source",
+      "day",
+      "ref",
+      "summary",
+      "status"
+     ],
+     "filter": {
+      "col": "source",
+      "contains": "WO"
+     }
+    }
    ]
   },
   {
@@ -221,6 +560,21 @@
     {
      "desc": "the end-of-trial report is found",
      "sql": "exists (select 1 from public.mm_llm_search_docs(:org, 'PF-3315 trial', 5) where doc_id = 'HF-TR-260121')"
+    }
+   ],
+   "show": [
+    {
+     "label": "Documents: \"PF-3315 trial\"",
+     "fn": "mm_llm_search_docs",
+     "args": {
+      "p_query": "PF-3315 trial",
+      "p_limit": 3
+     },
+     "cols": [
+      "doc_id",
+      "title",
+      "snippet"
+     ]
     }
    ]
   },
@@ -243,6 +597,40 @@
      "desc": "the scanned May report is searchable (OCR text)",
      "sql": "exists (select 1 from public.mm_llm_search_docs(:org, 'hardness drifted high crown tolerance', 5) where doc_id = 'TR-RS-260527')"
     }
+   ],
+   "show": [
+    {
+     "label": "Documents: \"calender bottom roll regrind\"",
+     "fn": "mm_llm_search_docs",
+     "args": {
+      "p_query": "calender bottom roll regrind",
+      "p_limit": 3
+     },
+     "cols": [
+      "doc_id",
+      "title",
+      "snippet"
+     ]
+    },
+    {
+     "label": "Calender bottom roll history",
+     "fn": "mm_llm_position_history",
+     "args": {
+      "p_term": "cal-bottom"
+     },
+     "cols": [
+      "source",
+      "day",
+      "ref",
+      "summary",
+      "status"
+     ],
+     "filter": {
+      "col": "source",
+      "contains": "WO|Document"
+     },
+     "limit": 8
+    }
    ]
   },
   {
@@ -264,6 +652,41 @@
      "desc": "2 Nov 11 WOs without parts reserved",
      "sql": "(select count(*) from public.mm_llm_outage_scope(:org, 'OUT-2026-11-11') where parts_status = 'Not reserved') = 2"
     }
+   ],
+   "show": [
+    {
+     "label": "Overdue actions (Oct 31)",
+     "fn": "mm_llm_overdue_actions",
+     "args": {
+      "p_as_of": "2026-10-31"
+     },
+     "cols": [
+      "title",
+      "bucket",
+      "assigned_to",
+      "due",
+      "days_late"
+     ],
+     "limit": 14
+    },
+    {
+     "label": "Nov 11 WOs without parts reserved",
+     "fn": "mm_llm_outage_scope",
+     "args": {
+      "p_outage": "OUT-2026-11-11"
+     },
+     "cols": [
+      "wo_no",
+      "description",
+      "asset",
+      "status_text",
+      "parts_status"
+     ],
+     "filter": {
+      "col": "parts_status",
+      "contains": "Not reserved"
+     }
+    }
    ]
   },
   {
@@ -283,6 +706,43 @@
     {
      "desc": "6 annual WOs deferred",
      "sql": "(select count(*) from public.mm_llm_outage_scope(:org, 'OUT-2026-ANNUAL') where status = 35) = 6"
+    }
+   ],
+   "show": [
+    {
+     "label": "Carried over to Nov 11",
+     "fn": "mm_llm_outage_scope",
+     "args": {
+      "p_outage": "OUT-2026-11-11"
+     },
+     "cols": [
+      "wo_no",
+      "description",
+      "asset",
+      "notes"
+     ],
+     "filter": {
+      "col": "notes",
+      "contains": "carried"
+     }
+    },
+    {
+     "label": "Deferred from the annual",
+     "fn": "mm_llm_outage_scope",
+     "args": {
+      "p_outage": "OUT-2026-ANNUAL"
+     },
+     "cols": [
+      "wo_no",
+      "description",
+      "asset",
+      "status_text",
+      "notes"
+     ],
+     "filter": {
+      "col": "status_text",
+      "contains": "Deferred"
+     }
     }
    ]
   }

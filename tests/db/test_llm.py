@@ -46,8 +46,10 @@ check("re-ingesting a row updates it", ingest(svc, tok_a, "equipment", [{"asset_
 check("defaults apply to columns the rows leave out", ingest(svc, tok_a, "ingest_files", [{"source_file": "a.csv", "kind": "x"}]) == 1
       and admin.execute("select imported_at is not null from llm.ingest_files where org_id = %s", (A,)).fetchone()[0])
 svc = anon; anon = psycopg.connect(DSN, autocommit=True); as_user(anon, None)
-check("anon can't read llm tables", raises(lambda: anon.execute("select count(*) from llm.equipment").fetchone()) is not None)
-check("anon can't call the tools", raises(lambda: anon.execute("select * from public.mm_llm_overdue_actions(%s)", (A,)).fetchall()) is not None)
+check("anon sees no rows of a private org", anon.execute("select count(*) from llm.equipment").fetchone()[0] == 0)
+check("anon gets nothing from the tools for a private org", len(anon.execute("select * from public.mm_llm_overdue_actions(%s, '2026-03-01')", (A,)).fetchall()) == 0)
+check("no public demo org yet", anon.execute("select count(*) from public.mm_llm_public_org()").fetchone()[0] == 0)
+check("anon can't make an org public", raises(lambda: anon.execute("select public.mm_llm_set_public(%s, true)", (name_a,)).fetchone()) is not None)
 check("anon can't create tokens", raises(lambda: anon.execute("select public.mm_llm_new_ingest_token('x', 1)").fetchone()) is not None)
 
 u_a, u_b = uuid.uuid4(), uuid.uuid4()
@@ -60,6 +62,18 @@ as_user(c, u_b); check("another org's member sees none of them", c.execute("sele
 ingest(svc, tok_a, "actions", [{"task_id": "t1", "title": "Fix guard", "progress": "Not started", "due": "2026-01-01", "as_of": "2026-02-01", "late": True}])
 as_user(c, u_a); check("tools work for a member", len(c.execute("select * from public.mm_llm_overdue_actions(%s)", (A,)).fetchall()) == 1)
 as_user(c, u_b); check("tools return nothing for another org's member", len(c.execute("select * from public.mm_llm_overdue_actions(%s)", (A,)).fetchall()) == 0)
+# a public demo org: anyone can read it, signed in or not
+admin.execute("select public.mm_llm_set_public(%s, true)", (name_a,))
+check("the public demo org is advertised", anon.execute("select id from public.mm_llm_public_org()").fetchone()[0] == A)
+check("anon reads the public org", anon.execute("select count(*) from llm.equipment where org_id = %s", (A,)).fetchone()[0] == 2)
+check("anon's tools work on the public org", len(anon.execute("select * from public.mm_llm_overdue_actions(%s)", (A,)).fetchall()) == 1)
+as_user(c, u_b); check("a signed-in non-member reads the public org too", c.execute("select count(*) from llm.equipment where org_id = %s", (A,)).fetchone()[0] == 2)
+check("…but still not the other private org", anon.execute("select count(*) from llm.equipment where org_id = %s", (B,)).fetchone()[0] == 0)
+admin.execute("insert into storage.objects (bucket_id, name) values ('mm-files', %s), ('mm-files', %s), ('mm-files', %s)",
+              (f"{A}/llm/docs/x.pdf", f"{A}/whiteboard/y.png", f"{B}/llm/docs/z.pdf"))
+check("anon can read the public org's llm files only", [r[0] for r in anon.execute("select name from storage.objects order by name").fetchall()] == [f"{A}/llm/docs/x.pdf"])
+admin.execute("select public.mm_llm_set_public(%s, false)", (name_a,))
+check("making it private again hides it", anon.execute("select count(*) from llm.equipment").fetchone()[0] == 0)
 check("reset clears the org's rows", ingest(svc, tok_a, "actions", [], "reset") == 0 and admin.execute("select count(*) from llm.actions where org_id = %s", (A,)).fetchone()[0] == 0)
 
 print(f"\n{len(failures)} failing" if failures else "\nall passed"); sys.exit(1 if failures else 0)

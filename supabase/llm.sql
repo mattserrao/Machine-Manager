@@ -14,7 +14,8 @@
 --                                    searchable chunks (full text always; embedding when the embedder has run)
 --   ingest_files                     what was imported, when, from which file
 --
--- Access: members of an org can read its rows (RLS, same rule as mm_records). Nobody writes from the web page:
+-- Access: members of an org can read its rows (RLS, same rule as mm_records), and anyone can read a public demo
+-- org's rows (mm_llm_set_public; the Demo Mill is one). Nobody writes from the web page:
 -- imports go through the mm-llm-ingest edge function and mm_llm_ingest(), guarded by an ingest token an admin creates in the SQL editor
 -- (select public.mm_llm_new_ingest_token('Demo Mill', 6);). Tokens are stored hashed and expire.
 --
@@ -122,18 +123,67 @@ create table if not exists llm.ingest_files (
   source_file text not null, kind text, rows int, imported_at timestamptz not null default now(),
   primary key (org_id, source_file));
 
--- Read access for members; no writes from the API.
+-- Public demo organizations (e.g. Demo Mill, all fictional data): anyone, signed in or not, can read their MM LLM
+-- rows and files. Set with  select public.mm_llm_set_public('Demo Mill', true);  in the SQL editor.
+create table if not exists private.llm_public_orgs (
+  org_id uuid primary key references public.orgs(id) on delete cascade, created_at timestamptz not null default now());
+revoke all on private.llm_public_orgs from public, anon, authenticated;
+grant usage on schema private to anon;
+
+create or replace function private.llm_is_public(p_org uuid) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from private.llm_public_orgs where org_id = p_org);
+$$;
+create or replace function private.llm_is_public_path(p_org text) returns boolean
+language sql stable security definer set search_path = '' as $$
+  select exists (select 1 from private.llm_public_orgs where org_id::text = p_org);
+$$;
+revoke execute on function private.llm_is_public(uuid) from public;
+revoke execute on function private.llm_is_public_path(text) from public;
+grant execute on function private.llm_is_public(uuid) to anon, authenticated;
+grant execute on function private.llm_is_public_path(text) to anon, authenticated;
+
+-- Read access: members of the org, or anyone for a public demo org. No writes from the API.
 do $$ declare t text; begin
   foreach t in array array['equipment','pi_tags','outages','bus_items','work_orders','actions','rcfa','envoy','pi_series',
                            'documents','doc_chunks','ingest_files'] loop
     execute format('alter table llm.%I enable row level security', t);
     execute format('drop policy if exists %I on llm.%I', t || '_read', t);
-    execute format('create policy %I on llm.%I for select to authenticated using (private.has_org_role(org_id))', t || '_read', t);
+    execute format('drop policy if exists %I on llm.%I', t || '_public_read', t);
+    execute format('create policy %I on llm.%I for select to authenticated using (private.has_org_role(org_id) or private.llm_is_public(org_id))', t || '_read', t);
+    execute format('create policy %I on llm.%I for select to anon using (private.llm_is_public(org_id))', t || '_public_read', t);
     execute format('revoke all on llm.%I from anon, authenticated', t);
-    execute format('grant select on llm.%I to authenticated', t);
+    execute format('grant select on llm.%I to anon, authenticated', t);
     execute format('grant all on llm.%I to service_role', t);
   end loop;
 end $$;
+grant usage on schema llm to anon;
+
+-- SQL editor only: make an org's MM LLM data public (or private again).
+create or replace function public.mm_llm_set_public(p_org_name text, p_public boolean default true)
+returns text language plpgsql security definer set search_path = '' as $$
+declare o uuid;
+begin
+  select id into o from public.orgs where name = p_org_name;
+  if o is null then raise exception 'No organization named %', p_org_name; end if;
+  if p_public then insert into private.llm_public_orgs (org_id) values (o) on conflict do nothing;
+  else delete from private.llm_public_orgs where org_id = o; end if;
+  return format('%s MM LLM data is now %s', p_org_name, case when p_public then 'public' else 'members only' end);
+end $$;
+revoke execute on function public.mm_llm_set_public(text, boolean) from public, anon, authenticated;
+
+-- The public demo org the MM LLM page loads when nobody is signed in (or the signed-in org has no data yet).
+create or replace function public.mm_llm_public_org() returns table (id uuid, name text)
+language sql stable security definer set search_path = '' as $$
+  select o.id, o.name from public.orgs o join private.llm_public_orgs p on p.org_id = o.id order by p.created_at limit 1;
+$$;
+revoke execute on function public.mm_llm_public_org() from public;
+grant execute on function public.mm_llm_public_org() to anon, authenticated;
+
+-- Original files of a public demo org: readable by anyone (bucket mm-files, folder <org>/llm/).
+drop policy if exists mm_llm_files_public_read on storage.objects;
+create policy mm_llm_files_public_read on storage.objects for select to anon, authenticated
+  using (bucket_id = 'mm-files' and (storage.foldername(name))[2] = 'llm' and private.llm_is_public_path((storage.foldername(name))[1]));
 
 
 -- ───────────────────────── Ingest (token-guarded) ─────────────────────────
@@ -240,7 +290,7 @@ end $$;
 
 
 -- ───────────────────────── Tools ─────────────────────────
--- Read-only, security invoker: the signed-in user's org membership (RLS) decides what they return.
+-- Read-only, security invoker: RLS decides what they return (members' orgs, plus public demo orgs for anyone).
 
 -- Full-text search over documents. Positions narrow it to chunks tagged with any of them.
 create or replace function public.mm_llm_search_docs(p_org uuid, p_query text, p_limit int default 8, p_positions text[] default null)
@@ -266,7 +316,7 @@ do $$ begin
         where c.org_id = p_org and c.embedding is not null
         order by extensions.cosine_distance(c.embedding, p_embedding) limit least(p_limit, 50);
       $b$;
-      grant execute on function public.mm_llm_search_docs_vec(uuid, extensions.vector, int) to authenticated;
+      grant execute on function public.mm_llm_search_docs_vec(uuid, extensions.vector, int) to anon, authenticated;
     $f$;
   end if;
 end $$;
@@ -331,6 +381,19 @@ language sql stable security invoker set search_path = '' as $$
   select r.source, r.day, r.ref, r.summary, r.status, pg_catalog.ts_rank(pg_catalog.to_tsvector('english', r.summary), q.q)
   from r, q where pg_catalog.to_tsvector('english', r.summary) @@ q.q
   order by 6 desc, r.day desc limit least(p_limit, 100);
+$$;
+
+-- What an org has loaded: row counts per source and the data's date range.
+create or replace function public.mm_llm_summary(p_org uuid)
+returns table (source text, n bigint, first_day date, last_day date)
+language sql stable security invoker set search_path = '' as $$
+  select 'BUS lines', count(*), min(sheet_date), max(sheet_date) from llm.bus_items where org_id = p_org
+  union all select 'Work orders', count(*), min(requested), max(requested) from llm.work_orders where org_id = p_org
+  union all select 'Actions', count(*), min(created), max(created) from llm.actions where org_id = p_org
+  union all select 'RCFAs', count(*), min(event_date), max(event_date) from llm.rcfa where org_id = p_org
+  union all select 'Envoy exceptions', count(*), min(period), max(period) from llm.envoy where org_id = p_org
+  union all select 'Pi tags', count(distinct tag), min((t0 at time zone 'America/New_York')::date), max((t0 at time zone 'America/New_York')::date) from llm.pi_series where org_id = p_org
+  union all select 'Documents', count(*), min(doc_date), max(doc_date) from llm.documents where org_id = p_org;
 $$;
 
 -- What is planned for an outage: its WOs (with parts status) and when it is.
@@ -399,11 +462,11 @@ language sql stable security invoker set search_path = '' as $$
 $$;
 
 do $$ declare f text; begin
-  foreach f in array array['mm_llm_search_docs(uuid, text, int, text[])', 'mm_llm_search_records(uuid, text, int)', 'mm_llm_position_history(uuid, text, date, date)',
+  foreach f in array array['mm_llm_summary(uuid)', 'mm_llm_search_docs(uuid, text, int, text[])', 'mm_llm_search_records(uuid, text, int)', 'mm_llm_position_history(uuid, text, date, date)',
                            'mm_llm_outage_scope(uuid, text)', 'mm_llm_overdue_actions(uuid, date)',
                            'mm_llm_envoy(uuid, text, date, date)', 'mm_llm_pi_daily(uuid, text, date, date)',
                            'mm_llm_pi_values(uuid, text, timestamptz, timestamptz)'] loop
-    execute format('revoke execute on function public.%s from public, anon', f);
-    execute format('grant execute on function public.%s to authenticated', f);
+    execute format('revoke execute on function public.%s from public', f);
+    execute format('grant execute on function public.%s to anon, authenticated', f);   -- RLS decides what comes back
   end loop;
 end $$;

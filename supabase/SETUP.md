@@ -62,8 +62,13 @@ read its rows; nobody writes to them from the web page.
    `<organization id>/llm/`, and embeds document chunks with Supabase's built-in `gte-small` model (no outside key).
 3. When it's done, remove the token: `delete from private.llm_ingest_tokens;`
 
-A load replaces that organization's MM LLM rows. **Demo Mill** is the fictional organization the demo uses; it
-has no members yet, so nobody can see it until someone is added with `mm_add_member('Demo Mill', ...)`.
+A load replaces that organization's MM LLM rows.
+
+**Public demo:** an organization's MM LLM data can be made readable by anyone, signed in or not:
+`select public.mm_llm_set_public('Demo Mill', true);` (`false` makes it members-only again). The **Demo Mill**
+(fictional data) is public, and the MM LLM page loads it for anyone who isn't signed in, or whose organization
+has no MM LLM data yet. Only the `llm` tables and the `<org>/llm/` files of a public org are opened this way;
+every other table and file stays members-only. Never make an organization with real mill data public.
 
 ## Updating the database
 
