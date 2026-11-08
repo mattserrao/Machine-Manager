@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><!-- boards zoom themselves; stops iOS zooming the page when typing on a card -->
 <title>Whiteboard</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1214"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1214">
-<script src="mm-icons.js?v=2026-11-08.1214"></script>
-<link rel="stylesheet" href="mm-board.css?v=2026-11-08.1214">
+<script src="mm-theme.js?v=2026-11-08.1254"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1254">
+<script src="mm-icons.js?v=2026-11-08.1254"></script>
+<link rel="stylesheet" href="mm-board.css?v=2026-11-08.1254">
 <style>
   /* this page only (shared styles: mm-board.css) */
   #tabs{bottom:14px;left:14px;max-width:calc(100vw - 260px);overflow-x:auto}
@@ -26,7 +26,7 @@
       <path id="tmpLink" class="tmp" d="" marker-end="url(#arrowSel)"/>
     </svg>
   </div>
-  <div id="empty"><div><h1>Blank whiteboard</h1><p>Double-click anywhere or press <b>New note</b> to start. Press <b>?</b> for shortcuts.</p></div></div>
+  <div id="empty"><div><h1>Blank whiteboard</h1><p><span class="t-mouse">Double-click</span><span class="t-touch">Double-tap</span> anywhere or press <b>New note</b> to start.<span class="t-mouse"> Press <b>?</b> for shortcuts.</span></p></div></div>
   <div id="marquee" hidden></div>
 </div>
 
@@ -88,7 +88,7 @@
     </div>
     <div class="sheet-body">
       <textarea id="edText" placeholder="Write something… (first line becomes the title)"></textarea>
-      <div class="fmt-hint"><code>- </code> bullet · <code>- [ ] </code> checkbox · <code>Tab</code> indent · <code>**bold**</code> · <code>*italic*</code> · <code>[text](https://…)</code></div>
+      <div class="fmt-hint"><code>- </code> bullet · <code>- [ ] </code> checkbox · <span class="t-mouse"><code>Tab</code> indent · </span><code>**bold**</code> · <code>*italic*</code> · <code>[text](https://…)</code></div>
       <div class="frow" id="edStatus"></div>
       <div class="frow">
         <label>Due <input type="date" id="edDue"></label>
@@ -107,7 +107,7 @@
       <button id="edDelete" class="btn danger">Delete note</button>
       <button id="edDetach" class="btn">Pop out of stack</button>
       <span class="spacer"></span>
-      <span class="kbd-hint">Enter to close · Shift+Enter new line</span>
+      <span class="kbd-hint t-mouse">Enter to close · Shift+Enter new line</span>
       <button id="edDone" class="btn primary">Done</button>
     </div>
   </div>
@@ -119,7 +119,7 @@
     <div class="sheet-body">
       <div class="keys">
         <h4>Notes</h4>
-        <kbd>N</kbd><span>New note (or double-click the board)</span>
+        <kbd>N</kbd><span>New note (or <span class="t-mouse">double-click</span><span class="t-touch">double-tap</span> the board)</span>
         <kbd>Click</kbd><span>Open the note editor</span>
         <kbd>Double-click</kbd><span>Edit text right on the card</span>
         <kbd>Enter</kbd><span>Open the selected note · close the editor</span>
@@ -166,10 +166,10 @@
   <div>
     <b>Getting started</b>
     <ul>
-      <li>Double-click the board for a new note · click a note to edit, double-click to type on it</li>
+      <li><span class="t-mouse">Double-click</span><span class="t-touch">Double-tap</span> the board for a new note · <span class="t-mouse">click</span><span class="t-touch">tap</span> a note to edit, <span class="t-mouse">double-click</span><span class="t-touch">double-tap</span> to type on it</li>
       <li>Drag a note onto another’s bottom edge to stack it (up to 4 levels)</li>
-      <li>Drag the blue dot on a note’s edge to draw an arrow · the frame button makes a frame to group notes</li>
-      <li>Right-click anything for options · <b>File</b> to export, import or print · <b>?</b> for shortcuts</li>
+      <li>Drag the blue dot on a<span class="t-touch"> selected</span> note’s edge to draw an arrow · the frame button makes a frame to group notes</li>
+      <li><span class="t-mouse">Right-click</span><span class="t-touch">Press and hold</span> anything for options · <b>File</b> to export, import or print<span class="t-mouse"> · <b>?</b> for shortcuts</span></li>
     </ul>
   </div>
   <button class="btn" id="tipsOk">Got it</button>
@@ -225,16 +225,16 @@
   </div>
 </div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1214"></script>
-<script src="mm-config.js?v=2026-11-08.1214"></script>
-<script src="mm-cloud.js?v=2026-11-08.1214"></script>
-<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.1214"></script>
-<script src="mm-ui.js?v=2026-11-08.1214"></script>
-<script src="mm-records.js?v=2026-11-08.1214"></script>
-<script src="mm-board.js?v=2026-11-08.1214"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1254"></script>
+<script src="mm-config.js?v=2026-11-08.1254"></script>
+<script src="mm-cloud.js?v=2026-11-08.1254"></script>
+<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.1254"></script>
+<script src="mm-ui.js?v=2026-11-08.1254"></script>
+<script src="mm-records.js?v=2026-11-08.1254"></script>
+<script src="mm-board.js?v=2026-11-08.1254"></script>
 <script>
 MMBoard.start({
-    version:'v0.5.0',
+    version:'v0.5.1',
     shell:'tabs', tool:'whiteboard', title:'Whiteboard', idb:'whiteboard-notes', idPrefix:'', viewKey:'mm-wb-view',
     fileExt:'whiteboard', appTag:'machine-manager-whiteboard', urlParam:'board', statusMenu:true,
     words:{ card:'note', Card:'Note', cards:'notes', sub:'subnote', subs:'subnotes', owner:'Owner' },
@@ -279,6 +279,6 @@ MMBoard.start({
   },
 });
 </script>
-<script src="mm-nav.js?v=2026-11-08.1214"></script>
+<script src="mm-nav.js?v=2026-11-08.1254"></script>
 </body>
 </html>

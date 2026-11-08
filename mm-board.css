@@ -182,7 +182,7 @@ body.is-dragging,body.is-dragging *{cursor:grabbing!important}
     box-shadow:var(--shadow-pop);overflow:hidden}
 .sheet-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--c) var(--note-tint),var(--note-base))}
 .swatches{display:flex;gap:6px}
-#edLabel{font-size:12px;color:rgb(var(--fg-rgb) / .55);flex:1;text-align:right}
+#edLabel{font-size:12px;color:rgb(var(--fg-rgb) / .55);flex:1;text-align:left}
 .x{border:0;background:transparent;font-size:18px;line-height:1;padding:4px 6px;border-radius:var(--r-sm);color:rgb(var(--fg-rgb) / .6)}
 .x:hover{background:rgb(var(--fg-rgb) / .07)}
 .sheet-body{padding:14px;overflow:auto;display:flex;flex-direction:column;gap:12px}
@@ -344,3 +344,70 @@ textarea.inline.mini-inline{min-height:54px;font-size:12px;padding:5px 7px;borde
 .mini[data-level="4"]{font-size:12px}
 .tbar{font-size:13px;color:rgb(var(--fg-rgb) / .68)}
 .mini .ma{color:rgb(var(--fg-rgb) / .68)}
+
+/* ---------- Narrow windows (landscape phones, small laptops) ----------
+   The title stays put; the tool buttons scroll sideways in whatever room is left. */
+@media (min-width:761px) and (max-width:1100px){
+  body.mm-canvas #topleft{max-width:calc(100vw - 360px)}
+  body.mm-canvas #topleft > .brand{flex:none}
+  body.mm-canvas #topleft > #toolbar{min-width:0;overflow-x:auto;scrollbar-width:none}
+  body.mm-canvas #topleft > #toolbar::-webkit-scrollbar{display:none}
+  body.mm-canvas #topleft > #toolbar > *{flex:none}
+  body.mm-canvas #topleft > #toolbar[data-more~="r"]{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 32px),transparent)}
+  body.mm-canvas #topleft > #toolbar[data-more~="l"]{-webkit-mask-image:linear-gradient(to left,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to left,#000 calc(100% - 32px),transparent)}
+  body.mm-canvas #topleft > #toolbar[data-more~="l"][data-more~="r"]{-webkit-mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent);mask-image:linear-gradient(to right,transparent,#000 32px,#000 calc(100% - 32px),transparent)}
+  body.mm-canvas .brand p,body.mm-canvas .mmc-pill{display:none}
+  #searchbar{width:180px}
+}
+
+/* ---------- Phones ----------
+   Tabs and zoom share one docked strip along the bottom (clear of the home bar), so they read as chrome
+   instead of floating over cards. --bottom-h is its height, for anything placed above it. */
+@media (max-width:760px){
+  body.mm-canvas{--bottom-h:58px}
+  body.mm-canvas::after{content:"";position:fixed;left:0;right:0;bottom:0;height:calc(var(--bottom-h) + env(safe-area-inset-bottom));z-index:49;
+    background:var(--chrome);border-top:1px solid var(--line);pointer-events:none}
+  body.mm-canvas.lib-open::after{display:none}
+  #zoombar,#tabs{bottom:calc(9px + env(safe-area-inset-bottom))!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;gap:2px}
+  #zoombar{right:8px}
+  #zoomPct{display:none}                       /* pinch to zoom; − / + / fit stay */
+  #tabs{left:8px!important;max-width:calc(100vw - 150px)!important;overflow-x:auto;scrollbar-width:none}
+  #tabs::-webkit-scrollbar{display:none}
+  .tab{height:38px;padding:0 12px}
+  #ver{display:none}
+
+  /* getting-started card: full width, above the bottom strip, never taller than a third of the screen */
+  #tips{left:8px!important;right:8px!important;width:auto!important;bottom:calc(var(--bottom-h) + 8px + env(safe-area-inset-bottom))!important;
+    max-height:34vh;overflow:auto;font-size:13px}
+  #tips ul{padding-left:14px}
+
+  /* empty-board message: clear of the top and bottom bars */
+  #empty{padding:var(--top-full) 24px var(--bottom-h)}
+
+  /* note editor: no colour strip of empty space at the top, roomier text box */
+  .sheet-head{padding:8px 8px 8px 14px}
+  #edText{min-height:140px}
+  .frow{gap:10px}
+  .frow label{flex:1 1 140px}
+  .frow label input{flex:1;min-width:0}
+  #edOwner{width:auto}
+  .sheet-foot{flex-wrap:wrap}
+  .sheet-foot .btn{flex:none}
+
+  /* print preview: options above the preview */
+  #printDlg .sheet-body{flex-direction:column;overflow:auto}
+  .pd-opts{width:auto;overflow:visible;padding-right:0}
+  .pd-stage{min-height:260px;padding:10px}
+}
+
+/* ---------- Touch ----------
+   No hover on a phone: the arrow handle and resize corner show on the selected card, and are big enough to grab. */
+@media (hover:none) and (pointer:coarse){
+  .note.selected > .note-body .lh{opacity:1}
+  .lh{width:22px;height:22px;margin-top:-11px;right:-13px}
+  .rz{width:26px;height:26px}
+  .note.selected .rz{opacity:.8}
+  .frame .frz{width:28px;height:28px;opacity:1}
+  .menu .mi{min-height:42px}
+  .tab .tx{padding:4px 6px}
+}

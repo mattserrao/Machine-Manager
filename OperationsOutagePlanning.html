@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Operations Outage Planning</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1214"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1214">
-<script src="mm-icons.js?v=2026-11-08.1214"></script>
+<script src="mm-theme.js?v=2026-11-08.1254"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1254">
+<script src="mm-icons.js?v=2026-11-08.1254"></script>
 <style>
   /* shared look: mm-theme.css */
   main{padding:16px 16px 60px}
@@ -208,6 +208,34 @@
   .sheet-f .sp{flex:1}
   .err{color:var(--bad);font-size:13px}
 
+  /* ---------- Phones ---------- */
+  @media (max-width:760px){
+    main{padding:12px 12px 24px}
+    /* one outage per screen width, with the next one peeking in; swipe snaps card to card */
+    .lane{scroll-snap-type:x mandatory;scroll-padding-left:2px;gap:10px;margin:0 -12px;padding-left:14px;padding-right:14px;scroll-padding-left:14px;
+      background-position:14px 6px;background-size:calc(100% - 28px) 1px;scrollbar-width:none}
+    .lane::-webkit-scrollbar{display:none}
+    .lane > .card{flex-basis:calc(100% - 44px);scroll-snap-align:start}
+    /* the packages panel opens as a sheet over the page instead of squeezing it */
+    #panel{left:0;right:0;top:auto;bottom:0;width:auto;height:min(72dvh,560px);border-radius:14px 14px 0 0;border-bottom:0;
+      box-shadow:0 -12px 32px rgba(0,0,0,.35);padding-bottom:env(safe-area-inset-bottom);z-index:120}
+    body.panel-open main{margin-right:0}
+    body.panel-open .card.big{right:12px}
+    .card.big{left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom));top:calc(var(--topH,52px) + 8px)}
+    .card.big .ch{padding:12px 14px 10px}
+    .sec{padding:12px 14px 14px}
+    .mgrid{grid-template-columns:52px 1fr}
+    .mgrid input,.addtask input,#panel input{height:40px}
+    .tabs .tab{padding:7px 2px}
+    .row{grid-template-columns:1fr 110px auto}
+    .row input,.row select{height:40px}
+    #picker{left:8px!important;right:8px;min-width:0;max-height:60dvh}
+    #picker button{padding:10px}
+  }
+  /* no hover on touch screens: the delete buttons on tasks are always visible */
+  @media (hover:none){ .task .x{opacity:.6} }
+  @media (pointer:coarse){ .task input[type=checkbox],.st input{width:18px;height:18px} .shrink{width:40px;height:40px} .lib{padding:11px 12px} }
+
   @media print{
     .top,.addtask,.task .x,.btn,#toast,#panel,.pk-h .x{display:none!important}
     .lane{display:grid;grid-template-columns:repeat(2,1fr);background:none;padding:0}
@@ -258,7 +286,7 @@
 <aside id="panel" hidden aria-label="Task packages">
   <div class="ph2">
     <h2>Task packages <span class="sp"></span><button class="ib" id="panelClose" aria-label="Close" data-ic="x" data-ic-size="sm"></button></h2>
-    <p>Drag a package onto an outage card, or use <b>Add package</b> on the card.</p>
+    <p><span class="t-mouse">Drag a package onto an outage card, or click one to pick the outage.</span><span class="t-touch">Tap a package to add it to an outage.</span></p>
     <input id="pkgSearch" type="search" placeholder="Search packages" autocomplete="off">
   </div>
   <div id="pkgList"></div>
@@ -269,16 +297,16 @@
 <div id="toast"></div>
 <div id="ver"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1214"></script>
-<script src="mm-config.js?v=2026-11-08.1214"></script>
-<script src="mm-cloud.js?v=2026-11-08.1214"></script>
-<script src="mm-ui.js?v=2026-11-08.1214"></script>
-<script src="mm-records.js?v=2026-11-08.1214"></script>
-<script src="mm-machine.js?v=2026-11-08.1214"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1254"></script>
+<script src="mm-config.js?v=2026-11-08.1254"></script>
+<script src="mm-cloud.js?v=2026-11-08.1254"></script>
+<script src="mm-ui.js?v=2026-11-08.1254"></script>
+<script src="mm-records.js?v=2026-11-08.1254"></script>
+<script src="mm-machine.js?v=2026-11-08.1254"></script>
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.4.2';
+  const VERSION = 'v0.4.3';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'Operations Outage Planning ' + VERSION;
 
@@ -806,7 +834,12 @@
     list.textContent = '';
     if (!pk.length) list.appendChild(el('div', 'none', q ? 'No packages match.' : 'No packages in the library yet.'));
     for (const p of pk){
-      const b = el('div', 'lib', p.name); b.draggable = canEdit(); b.title = canEdit() ? 'Drag onto an outage' : '';
+      const b = el('div', 'lib', p.name); b.draggable = canEdit(); b.title = canEdit() ? 'Drag onto an outage, or click to pick one' : '';
+      if (canEdit()){
+        b.tabIndex = 0; b.setAttribute('role', 'button');
+        b.addEventListener('click', () => openOutagePicker(b, p));
+        b.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openOutagePicker(b, p); } });
+      }
       b.appendChild(el('small', '', [p.meta.area, `${p.steps} step${p.steps === 1 ? '' : 's'}`, p.meta.hours && `${p.meta.hours} h`, p.meta.crew && `${p.meta.crew} crew`].filter(Boolean).join(' · ')));
       b.addEventListener('dragstart', e => { e.dataTransfer.setData(DND, p.id); e.dataTransfer.setData('text/plain', p.name); e.dataTransfer.effectAllowed = 'copy'; b.classList.add('dragging'); });
       b.addEventListener('dragend', () => { b.classList.remove('dragging'); document.querySelectorAll('.card.drop').forEach(c => c.classList.remove('drop')); });
@@ -835,6 +868,28 @@
       b.addEventListener('click', () => addPackage(o, p.id));
       pk.appendChild(b);
     }
+    const r = btn.getBoundingClientRect();
+    pk.hidden = false;
+    pk.style.left = Math.max(8, Math.min(r.right - pk.offsetWidth, innerWidth - pk.offsetWidth - 8)) + 'px';
+    pk.style.top = (r.bottom + 6 + pk.offsetHeight > innerHeight ? Math.max(8, r.top - 6 - pk.offsetHeight) : r.bottom + 6) + 'px';
+    const f = pk.querySelector('button:not(:disabled)'); if (f) f.focus();
+  }
+  // From the packages panel: tap a package, then pick the outage (dragging doesn't work on touch screens).
+  function openOutagePicker(btn, p){
+    const pk = $('picker'); pk.textContent = '';
+    pk.appendChild(el('div', 'ml', `Add ${p.name} to`));
+    const up = outages().filter(o => o.date >= todayStr());
+    if (!up.length) pk.appendChild(el('div', 'none', 'No upcoming outages.'));
+    for (const o of up){
+      const has = Object.values(O.pkgs).some(k => k.outage === o.id && k.source === p.id);
+      const b = el('button', '', fmtShort(o.date)); b.disabled = has; b.setAttribute('role', 'menuitem');
+      b.appendChild(el('small', '', has ? 'Already added' : (o.type === 'annual' ? 'Annual outage' : 'Outage')));
+      b.addEventListener('click', () => addPackage(o, p.id));
+      pk.appendChild(b);
+    }
+    placePicker(pk, btn);
+  }
+  function placePicker(pk, btn){
     const r = btn.getBoundingClientRect();
     pk.hidden = false;
     pk.style.left = Math.max(8, Math.min(r.right - pk.offsetWidth, innerWidth - pk.offsetWidth - 8)) + 'px';
@@ -1008,11 +1063,11 @@
     render();
     $('pkgBtn').hidden = !canEdit();
     let wantPanel = false; try { wantPanel = !!localStorage.getItem('mm-op-panel'); } catch (e) {}
-    if (canEdit() && wantPanel && outages().length) setPanel(true);
+    if (canEdit() && wantPanel && outages().length && !matchMedia('(max-width:760px)').matches) setPanel(true);   // on a phone it would cover the page
     if (!outages().length && canEdit()) openEditor();
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.1214"></script>
+<script src="mm-nav.js?v=2026-11-08.1254"></script>
 </body>
 </html>

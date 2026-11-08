@@ -102,7 +102,13 @@
   .mmc-dlg label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:500;color:var(--ink-2)}
   .mmc-dlg input{font:inherit;font-size:13px;border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:0 10px;height:34px;background:var(--surface-2);color:var(--ink)}
   .mmc-dlg input:focus{outline:none;border-color:var(--accent)}
-  .mmc-err{color:var(--bad-ink);font-size:13px;min-height:1em}
+  .mmc-err{color:var(--bad-ink);font-size:13px}
+  .mmc-err:empty{display:none}
+  @media (pointer:coarse){ .mmc-dlg input{height:44px} }
+  @media (max-width:760px){
+    .mmc-dlg{width:100%;max-width:none;margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0;padding-bottom:env(safe-area-inset-bottom)}
+    .mmc-row .mmc-btn{flex:1;height:44px}
+  }
   .mmc-row{display:flex;justify-content:flex-end;gap:8px}`;
   let dlg = null;
   const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };

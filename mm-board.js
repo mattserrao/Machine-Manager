@@ -21,6 +21,7 @@ window.MMBoard = { start(cfg){
   const MAX_TUCK = 3;      // sub-cards per card, at every level (same rules as the Whiteboard)
   const MAX_DEPTH = 4;     // main note = level 1
   const DEFAULT_W = 236;
+  const TOUCH = matchMedia('(hover:none) and (pointer:coarse)');   // phones and tablets: no hover, finger-sized targets
   const GRID = 24;
   const COLORS = ['#ffffff','#fff4b8','#ffd8e1','#d4ecff','#d9f3d3','#e9e0ff','#ffe2c4'];
   const FRAME_COLORS = ['#2563eb','#16a34a','#d97706','#9333ea','#dc2626','#0891b2','#64748b'];
@@ -725,7 +726,7 @@ window.MMBoard = { start(cfg){
     render(); save();
     return n;
   }
-  function viewCenter(){ const r = board.getBoundingClientRect(); return toWorld(r.left + r.width/2, r.top + r.height/2); }
+  function viewCenter(){ const r = board.getBoundingClientRect(), a = openArea(); return toWorld(r.left + r.width/2, r.top + (a.top + a.bot)/2); }
   function newNoteInView(){
     const r = $('newBtn').getBoundingClientRect();
     const c = viewCenter(), j = () => (Math.random() - .5) * 60;
@@ -1212,7 +1213,7 @@ window.MMBoard = { start(cfg){
     B.pan.x = cx - br.left - w.x * z; B.pan.y = cy - br.top - w.y * z;
     applyView();
   }
-  function zoomCenter(f){ const r = board.getBoundingClientRect(); zoomAt(r.left + r.width/2, r.top + r.height/2, f(B.zoom)); viewChanged(); }
+  function zoomCenter(f){ const r = board.getBoundingClientRect(), a = openArea(); zoomAt(r.left + r.width/2, r.top + (a.top + a.bot)/2, f(B.zoom)); viewChanged(); }
   function contentBox(){
     const els = [...world.querySelectorAll(':scope > .note, :scope > .link-label, :scope > .frame')];
     if (!els.length) return null;
@@ -1223,28 +1224,38 @@ window.MMBoard = { start(cfg){
   // Fit every card on screen. minZoom: when a board first opens, don't shrink cards past the point where
   // their text stops being readable; if it still doesn't fit, start at the top-left of the content instead.
   const OPEN_MIN_ZOOM = 0.85;
+  // The part of the board not covered by the top bar (and tool row) or the bottom strip, in board coordinates.
+  function openArea(){
+    const r = board.getBoundingClientRect();
+    let top = 0, bot = r.height;
+    for (const id of ['topleft', 'toolbar', 'topright']){ const e = $(id); if (e && e.getClientRects().length) top = Math.max(top, e.getBoundingClientRect().bottom - r.top); }
+    for (const id of ['tabs', 'zoombar']){ const e = $(id); if (e && e.getClientRects().length) bot = Math.min(bot, e.getBoundingClientRect().top - r.top); }
+    const narrow = r.width < 600;
+    return { w:r.width, top, bot, side:narrow ? 16 : 60, pad:narrow ? 14 : 30 };
+  }
   function fitAll(minZoom){
-    const bb = contentBox(), r = board.getBoundingClientRect();
+    const bb = contentBox();
     if (!bb){ B.zoom = 1; B.pan = { x:0, y:0 }; applyView(); return; }
-    const want = Math.min(1.25, (r.width - 120) / bb.w, (r.height - 170) / bb.h);
+    const a = openArea(), h = a.bot - a.top;
+    const want = Math.min(1.25, (a.w - a.side * 2) / bb.w, (h - a.pad * 2) / bb.h);
     const floor = typeof minZoom === 'number' ? minZoom : 0.2;
     const z = Math.max(floor, want);
     B.zoom = z;
     if (want >= floor){
-      B.pan.x = Math.round(r.width/2 - (bb.x + bb.w/2) * z);
-      B.pan.y = Math.round(r.height/2 + 10 - (bb.y + bb.h/2) * z);
+      B.pan.x = Math.round(a.w/2 - (bb.x + bb.w/2) * z);
+      B.pan.y = Math.round(a.top + h/2 - (bb.y + bb.h/2) * z);
     } else {
-      B.pan.x = Math.round(40 - bb.x * z);
-      B.pan.y = Math.round(84 - bb.y * z);       // just under the top bar
+      B.pan.x = Math.round(a.side - bb.x * z);
+      B.pan.y = Math.round(a.top + a.pad - bb.y * z);       // just under the top bar
     }
     applyView(); viewChanged();
   }
   const fitOnOpen = () => fitAll(OPEN_MIN_ZOOM);
   function centerOn(id){
     const e = visibleElFor(id); if (!e) return;
-    const r = worldRect(e), br = board.getBoundingClientRect();
-    B.pan.x = Math.round(br.width/2 - (r.x + r.w/2) * B.zoom);
-    B.pan.y = Math.round(br.height/2 - (r.y + r.h/2) * B.zoom);
+    const r = worldRect(e), a = openArea();
+    B.pan.x = Math.round(a.w/2 - (r.x + r.w/2) * B.zoom);
+    B.pan.y = Math.round((a.top + a.bot)/2 - (r.y + r.h/2) * B.zoom);
     applyView(); viewChanged();
     if (e.animate) e.animate([{ boxShadow:'0 0 0 0 rgba(37,99,235,0)' }, { boxShadow:'0 0 0 8px rgba(37,99,235,.35)' }, { boxShadow:'0 0 0 0 rgba(37,99,235,0)' }], { duration:700 });
   }
@@ -1357,8 +1368,9 @@ window.MMBoard = { start(cfg){
   function textKeys(ta, onEnter){
     ta.addEventListener('keydown', e => {
       if (e.isComposing) return;
-      if (e.key === 'Enter' && !e.shiftKey && !e.altKey){ e.preventDefault(); e.stopPropagation(); onEnter(); return; }
-      if (e.key === 'Enter' && e.shiftKey){
+      // On a phone keyboard Return is the only way to start a new line, so it never closes the editor there (Done does).
+      if (e.key === 'Enter' && !e.shiftKey && !e.altKey && !TOUCH.matches){ e.preventDefault(); e.stopPropagation(); onEnter(); return; }
+      if (e.key === 'Enter' && (e.shiftKey || TOUCH.matches) && !e.altKey){
         const v = ta.value, s = ta.selectionStart;
         const ls = v.lastIndexOf('\n', s - 1) + 1;
         const line = v.slice(ls, s);
@@ -1432,7 +1444,7 @@ window.MMBoard = { start(cfg){
     const lvl = levelOf(n), parts = [];
     if (n.parent){ const pt = parseText(N(n.parent).text).title || 'Untitled'; parts.push(`Level ${lvl} of ${MAX_DEPTH} · inside “${pt.length > 24 ? pt.slice(0, 24) + '…' : pt}”`); }
     if (n.children.length) parts.push(`${n.children.length}/${MAX_TUCK} ${W.subs}`);
-    edLabel.textContent = parts.join(' · ');
+    edLabel.textContent = parts.join(' · ') || `Edit ${W.card}`;
     edDetach.hidden = !n.parent;
 
     edSwatches.textContent = ''; edSwatches.hidden = !SHOW_COLORS;

@@ -2,14 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><!-- boards zoom themselves; stops iOS zooming the page when typing on a card -->
 <title>Consumables Tracker</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1214"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1214">
-<script src="mm-icons.js?v=2026-11-08.1214"></script>
-<link rel="stylesheet" href="mm-board.css?v=2026-11-08.1214">
-<link rel="stylesheet" href="mm-board-library.css?v=2026-11-08.1214">
+<script src="mm-theme.js?v=2026-11-08.1254"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1254">
+<script src="mm-icons.js?v=2026-11-08.1254"></script>
+<link rel="stylesheet" href="mm-board.css?v=2026-11-08.1254">
+<link rel="stylesheet" href="mm-board-library.css?v=2026-11-08.1254">
 <style>
   /* this page only (shared styles: mm-board.css, mm-board-library.css) */
   /* consumable cards */
@@ -47,6 +47,17 @@
   .ce-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:13px}
   .ce-row input[type=text],.ce-row input[type=date]{font:inherit;font-size:13px;padding:5px 7px;border:1px solid var(--line-strong);border-radius:var(--r-sm)}
   .ce-row .grow{flex:1;min-width:140px}
+  /* touch: − / + big enough for a thumb (still fits the two-line row), editor rows easier to hit */
+  @media (pointer:coarse){
+    .qb{width:30px;height:30px;font-size:15px}
+    .qty{gap:4px}
+    .ce-x{position:relative;min-width:26px;min-height:32px}
+    .ce-x::after{content:"";position:absolute;inset:-6px}
+    .ce-grid input,.ce-row input[type=text],.ce-row input[type=date]{padding:8px}
+  }
+  @media (max-width:760px){
+    .ce-grid.kv2{grid-template-columns:110px 1fr 26px}
+  }
 </style>
 </head>
 <body class="mm-canvas">
@@ -61,7 +72,7 @@
       <path id="tmpLink" class="tmp" d="" marker-end="url(#arrowSel)"/>
     </svg>
   </div>
-  <div id="empty"><div><h1>No cards yet</h1><p>Press <b>New card</b> or double-click anywhere to add a consumable. Press <b>?</b> for shortcuts.</p></div></div>
+  <div id="empty"><div><h1>No cards yet</h1><p>Press <b>New card</b> or <span class="t-mouse">double-click</span><span class="t-touch">double-tap</span> anywhere to add a consumable.<span class="t-mouse"> Press <b>?</b> for shortcuts.</span></p></div></div>
   <div id="marquee" hidden></div>
 </div>
 
@@ -159,7 +170,7 @@
     </div>
     <div class="sheet-body">
       <textarea id="edText" placeholder="Write something… (first line becomes the title)"></textarea>
-      <div class="fmt-hint"><code>- </code> bullet · <code>- [ ] </code> checkbox · <code>Tab</code> indent · <code>**bold**</code> · <code>*italic*</code> · <code>[text](https://…)</code></div>
+      <div class="fmt-hint"><code>- </code> bullet · <code>- [ ] </code> checkbox · <span class="t-mouse"><code>Tab</code> indent · </span><code>**bold**</code> · <code>*italic*</code> · <code>[text](https://…)</code></div>
       <div id="edCons"></div>
       <div class="frow" id="edStatus" hidden></div>
       <div class="frow" hidden>
@@ -178,7 +189,7 @@
       <button id="edDelete" class="btn danger">Delete card</button>
       <button id="edDetach" class="btn">Pop out of stack</button>
       <span class="spacer"></span>
-      <span class="kbd-hint">Enter to close · Shift+Enter new line</span>
+      <span class="kbd-hint t-mouse">Enter to close · Shift+Enter new line</span>
       <button id="edDone" class="btn primary">Done</button>
     </div>
   </div>
@@ -190,7 +201,7 @@
     <div class="sheet-body">
       <div class="keys">
         <h4>Notes</h4>
-        <kbd>N</kbd><span>New card (or double-click the board)</span>
+        <kbd>N</kbd><span>New card (or <span class="t-mouse">double-click</span><span class="t-touch">double-tap</span> the board)</span>
         <kbd>Click</kbd><span>Open the note editor</span>
         <kbd>Double-click</kbd><span>Edit text right on the card</span>
         <kbd>Enter</kbd><span>Open the selected note · close the editor</span>
@@ -237,10 +248,10 @@
   <div>
     <b>Getting started</b>
     <ul>
-      <li>Each consumable is a card · <b>New card</b> picks the type · click a card to edit it</li>
+      <li>Each consumable is a card · <b>New card</b> picks the type · <span class="t-mouse">click</span><span class="t-touch">tap</span> a card to edit it</li>
       <li>Inventory cards: tap − / + to change what’s on hand · info cards: what goes where</li>
       <li>Frames group categories · drag a card onto another’s bottom edge to tuck in a note</li>
-      <li>Right-click anything for options · <b>File</b> to export, import or print · <b>?</b> for shortcuts</li>
+      <li><span class="t-mouse">Right-click</span><span class="t-touch">Press and hold</span> anything for options · <b>File</b> to export, import or print<span class="t-mouse"> · <b>?</b> for shortcuts</span></li>
     </ul>
   </div>
   <button class="btn" id="tipsOk">Got it</button>
@@ -296,16 +307,16 @@
   </div>
 </div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1214"></script>
-<script src="mm-config.js?v=2026-11-08.1214"></script>
-<script src="mm-cloud.js?v=2026-11-08.1214"></script>
-<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.1214"></script>
-<script src="mm-ui.js?v=2026-11-08.1214"></script>
-<script src="mm-records.js?v=2026-11-08.1214"></script>
-<script src="mm-board.js?v=2026-11-08.1214"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1254"></script>
+<script src="mm-config.js?v=2026-11-08.1254"></script>
+<script src="mm-cloud.js?v=2026-11-08.1254"></script>
+<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.1254"></script>
+<script src="mm-ui.js?v=2026-11-08.1254"></script>
+<script src="mm-records.js?v=2026-11-08.1254"></script>
+<script src="mm-board.js?v=2026-11-08.1254"></script>
 <script>
 MMBoard.start({
-    version:'v0.3.0',
+    version:'v0.3.1',
     shell:'library', tool:'consumables', title:'Consumables Tracker', idb:'mm-consumables', idPrefix:'cs-', viewKey:'mm-cs-view',
     fileExt:'consumables', appTag:'machine-manager-consumables', urlParam:'board', statusMenu:false, noDrag:'.qb',
     text:{ newBoard:'New board', newBoardName:'New consumables board', libTitle:'Boards', yours:'Your boards', makeOwn:'Start with empty category frames, or copy a board',
@@ -614,6 +625,6 @@ MMBoard.start({
   },
 });
 </script>
-<script src="mm-nav.js?v=2026-11-08.1214"></script>
+<script src="mm-nav.js?v=2026-11-08.1254"></script>
 </body>
 </html>
