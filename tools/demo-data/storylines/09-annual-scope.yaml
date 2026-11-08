@@ -1,0 +1,35 @@
+id: S09
+title: Annual outage scope build (Aug–Oct)
+summary: >
+  The scope for the October annual outage is built from August: ~120 WOs tagged ANNUAL, vendor
+  recommendations, RCFA actions and clothing and rolls due. Most of it closes during the outage. Scope that
+  was missed (can 27, S01) or deferred carries into the Nov 11 brief.
+positions: [cal-bottom, d2-felt-top, d3-felt-bottom, p1-roll-bottom]
+assets: [Calender bottom roll, 2nd section top felt, 3rd section bottom felt, 1st press bottom roll, Dryer can 27]
+pi_tags: []
+outages: [OUT-2026-ANNUAL, OUT-2026-11-11]
+people: [P01, P02, P05, P06]
+vendors: [V-TR, V-NB, V-CT, V-PR]
+timeline:
+  - date: 2026-08-03
+    sources: [jde, teams]
+    what: Scope kickoff; planner starts tagging WOs ANNUAL.
+  - date: 2026-09-08
+    sources: [jde, bus]
+    what: Scope freeze at ~120 WOs; 6 deferred for lack of parts.
+  - date: 2026-10-05
+    sources: [jde, mm]
+    what: Annual outage; dryer fabrics and the calender roll changed; 1st press bottom roll recovered.
+  - date: 2026-10-11
+    sources: [jde, teams]
+    what: Restart; 108 WOs complete, 12 carried over (6 deferred + 6 not finished).
+demo_questions:
+  - q: What carried over from the annual outage, and what should go into Nov 11?
+    output: Outage brief
+    expect: The 12 carry-over WOs, which ones fit a 14 h outage, plus the can 27 bearing that was never in scope.
+records:
+  annual_scope:   # WOs tagged to OUT-2026-ANNUAL, including clothing/plate changes and S07
+    total: 120
+    created: [2026-08-03, 2026-09-08]
+    deferred: 6        # not done: parts; status 35 after the outage
+    not_finished: 6    # carried to OUT-2026-11-11

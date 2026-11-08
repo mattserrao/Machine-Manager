@@ -1,6 +1,8 @@
-create extension if not exists pgcrypto;
+create schema if not exists extensions;
+create extension if not exists pgcrypto with schema extensions;
 do $$ begin create role anon nologin; exception when duplicate_object then null; end $$;
 do $$ begin create role authenticated nologin; exception when duplicate_object then null; end $$;
+do $$ begin create role service_role nologin bypassrls; exception when duplicate_object then null; end $$;
 create schema if not exists auth;
 create table if not exists auth.users (id uuid primary key default gen_random_uuid(), email text);
 create or replace function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.sub', true),'')::uuid $$;
@@ -11,5 +13,7 @@ create table if not exists storage.buckets (id text primary key, name text, publ
 create table if not exists storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text, name text);
 create or replace function storage.foldername(name text) returns text[] language sql immutable as $$ select (string_to_array(name,'/'))[1:array_length(string_to_array(name,'/'),1)-1] $$;
 alter table storage.objects enable row level security;
+grant usage on schema storage to anon, authenticated;
+grant select on storage.objects to anon, authenticated;
 do $$ begin create publication supabase_realtime; exception when duplicate_object then null; end $$;
-grant usage on schema public to authenticated, anon;
+grant usage on schema public to authenticated, anon, service_role;

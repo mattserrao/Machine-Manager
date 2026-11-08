@@ -17,7 +17,9 @@ Without signing in, every tool runs as a demo that saves only in your browser. S
 | `mm-theme.js` | Light / dark / system appearance, picked at the bottom of the app menu; saved on the signed-in account (or this browser when signed out) |
 | `mm-icons.js` | The line-icon set used instead of emoji (`data-ic="name"` or `MMIcons.svg(name)`) |
 | `mm-ui.js`, `mm-nav.js`, `mm-config.js` | Small shared helpers, the app menu, the Supabase project |
-| `supabase/` | Database schema, migrations and setup notes |
+| `supabase/` | Database schema (`schema.sql`, MM LLM in `llm.sql`), migrations, the `mm-llm-ingest` edge function and setup notes |
+| `tools/ingest/` | MM LLM importers, loader and answer-key check |
+| `tools/demo-data/`, `demo-data/` | MM LLM demo data: one fictional PM1 year, its backbone and storylines |
 | `tests/`, `tools/` | Tests (run on every pull request) and helper scripts |
 
 After changing any shared file (`mm-*.js`, `mm-*.css`, `vendor/`), run `python3 tools/stamp.py` so browsers load the new versions together.

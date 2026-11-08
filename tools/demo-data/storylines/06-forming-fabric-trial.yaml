@@ -1,0 +1,37 @@
+id: S06
+title: Halden trial forming fabric on the base ply — pulled for slow drainage
+summary: >
+  A Halden PF-3315 trial fabric runs on the base ply from Dec 10 to Jan 21. Formation is fine, but drainage
+  is slower: about 4% more couch vacuum and ~15 fpm lost on 33#. It is pulled at the outage and the base ply
+  goes back to the Northbank NX-2740 (this matches the trial already in the My Machine demo).
+positions: [form-bottom]
+assets: [Base ply forming fabric, Base ply couch roll, Base ply flat boxes]
+pi_tags: [PM1:FORM_BASE_COUCH_VAC, PM1:SPEED]
+outages: [OUT-2025-12-10, OUT-2026-01-21]
+people: [P04, P01]
+vendors: [V-HF, V-NB]
+timeline:
+  - date: 2025-12-10
+    sources: [mm, vendor]
+    what: Trial fabric installed; Halden start-up report with target drainage numbers.
+  - date: 2025-12-22
+    sources: [pi, bus]
+    what: Couch vacuum running ~0.7 inHg above the previous fabric; BUS note on speed loss on 33#.
+  - date: 2026-01-21
+    sources: [vendor, mm]
+    what: Pulled at the outage; Halden end-of-trial report; back to NX-2740 (the fabric that later holes in S03).
+demo_questions:
+  - q: How did the last forming fabric trial go?
+    output: Ask MM
+    expect: Halden PF-3315 on the base ply, Dec 10–Jan 21. Formation was fine but it needed ~4% more vacuum and lost ~15 fpm on 33#, so it was pulled and the base ply went back to NX-2740.
+records:
+  bus:
+    - key: S06-B1
+      asset: Base ply forming fabric
+      start: 2025-12-22
+      end: 2025-12-24
+      issue: Base ply couch vac running high on trial fabric - losing ~15 fpm on 33#
+      action: Halden reviewing; decision at 1/21 outage
+      owner: P04
+  action:
+    - {key: S06-A1, title: 'Trial decision: base ply fabric for the 1/21 outage', asset: Base ply forming fabric, created: 2025-12-22, due: 2026-01-14, completed: 2026-01-13, owner: P04, bucket: Process}

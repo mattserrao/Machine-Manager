@@ -1,0 +1,37 @@
+id: S08
+title: Action backlog growing after the annual outage
+summary: >
+  After the annual outage, actions from the outage punch list, RCFAs and BUS are logged faster than they
+  close. By Oct 31, 14 actions are overdue, several with no owner update in over 3 weeks, and two WOs
+  for Nov 11 have no parts reserved.
+positions: []
+assets: [PM1 Press section, PM1 2nd dryer section]
+pi_tags: []
+outages: [OUT-2026-ANNUAL, OUT-2026-11-11]
+people: [P01, P02, P05]
+vendors: []
+timeline:
+  - date: 2026-10-12
+    sources: [teams]
+    what: About 40 annual outage punch-list actions are logged in two days.
+  - date: 2026-10-26
+    sources: [teams, jde, bus]
+    what: Overdue count passes 10; BUS sheet carries 3 items "waiting on parts".
+  - date: 2026-10-31
+    sources: [teams, jde]
+    what: 14 actions overdue; 2 Nov 11 WOs without reserved parts (one is the can 27 bearing).
+demo_questions:
+  - q: What needs an owner or a push before Monday's BUS meeting?
+    output: Morning watch
+    expect: Lists the 14 overdue actions by owner, flags the 2 Nov 11 WOs without parts, and links the can 27 bearing.
+records:
+  punch_list:   # annual outage punch list in Teams; exactly overdue_at_end of them overdue on Oct 31
+    created: [2026-10-12, 2026-10-13]
+    count: 40
+    overdue_at_end: 13
+  wo:
+    - {key: S08-WO, asset: 2nd section drive group, created: 2026-10-22, type: CM, priority: 3, desc: Replace 2nd section drive coupling insert - worn, originator: P05, craft: MECH, est_hours: 4, outage: OUT-2026-11-11, parts: Not reserved}
+  bus:
+    - {key: S08-B1, asset: 2nd section drive group, start: 2026-10-26, end: null, issue: Drive coupling insert worn - waiting on parts, action: WO for 11/11; parts not reserved yet, owner: P05, wo: S08-WO, status: Waiting parts}
+    - {key: S08-B2, asset: Vacuum pump 2, start: 2026-10-26, end: null, issue: Vac pump 2 packing leak - waiting on packing, action: Adjusted; packing on order, owner: P05, status: Waiting parts}
+    - {key: S08-B3, asset: Reel spool handling, start: 2026-10-27, end: null, issue: Spool clamp sensor intermittent - waiting on sensor, action: Bypassed with manual check each turn-up, owner: P20, status: Waiting parts}

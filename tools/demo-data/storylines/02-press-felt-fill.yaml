@@ -1,0 +1,115 @@
+id: S02
+title: 2nd press felt filling early — plugged HP shower nozzles
+summary: >
+  In March the 2nd press felt fills faster than normal: Uhle box vacuum and press-out moisture rise and
+  the dryers run out of steam on 33#. The Apr 15 felt survey shows high fill, the shower audit finds
+  plugged nozzles on the 2nd press HP shower, and an RCFA follows. One RCFA action is still open.
+positions: [p2-felt-top]
+assets: [2nd press top felt, 2nd press top felt Uhle box, 2nd press top felt HP shower, 3rd section steam & condensate]
+pi_tags: [PM1:UHLE_P2_VAC, PM1:PRESS_OUT_MOIST, PM1:DRY3_STEAM_P, PM1:SPEED]
+outages: [OUT-2026-03-04, OUT-2026-04-15]
+people: [P04, P01, P05, P09]
+vendors: [V-HF, V-SN]
+timeline:
+  - date: 2026-03-04
+    sources: [mm, jde]
+    what: New 2nd press felt installed at the outage (planned 12-week life).
+  - date: 2026-03-10
+    sources: [pi]
+    what: Uhle vacuum starts climbing ~0.1 inHg/day; press-out moisture creeps up.
+  - date: 2026-03-16
+    sources: [bus, pi]
+    what: '"Steam limited on 33#, slowed 40 fpm" — repeats most 33# days for four weeks.'
+  - date: 2026-03-24
+    sources: [envoy]
+    what: Envoy flags 2nd press Uhle box vacuum high (report Mar 25).
+  - date: 2026-03-25
+    sources: [envoy, pi]
+    what: Next 33# run - 3rd section steam pinned at its 135 psig limit; Envoy flags it (report Mar 26).
+  - date: 2026-03-27
+    sources: [bus, teams]
+    what: Process engineer asks Halden for a felt survey at the next outage; action logged.
+  - date: 2026-04-15
+    sources: [vendor, mm, jde]
+    what: Felt pulled at 6 weeks. Halden survey shows high fill; Spraywell audit finds 18% of 2nd press HP shower nozzles plugged.
+  - date: 2026-04-22
+    sources: [rcfa, teams]
+    what: RCFA-2026-03 opened. Cause is plugged nozzles and a nozzle PM that was too infrequent. Actions are a monthly nozzle check, a strainer upgrade and filtered shower water (still open).
+  - date: 2026-05-27
+    sources: [jde]
+    what: Shower strainer upgrade done at the outage.
+demo_questions:
+  - q: We're steam limited on 33# again and Uhle vacuum is creeping up. What should we check?
+    output: Troubleshooting
+    expect: Points to the March–April event, plugged 2nd press HP shower nozzles, RCFA-2026-03, and the still-open filtered water action.
+  - q: Why did the 2nd press felt come off early in April?
+    output: Ask MM
+    expect: High fill from plugged HP shower nozzles (survey and audit of Apr 15), pulled at 6 of 12 weeks.
+records:
+  wo:
+    - key: S02-WO1
+      asset: 2nd press top felt HP shower
+      created: 2026-04-01
+      type: CM
+      priority: 3
+      desc: Shower audit and nozzle replacement - 2nd press HP shower (Spraywell)
+      originator: P04
+      craft: MECH
+      est_hours: 6
+      outage: OUT-2026-04-15
+      completed: 2026-04-15
+      notes: 18% of nozzles plugged, all replaced
+    - key: S02-WO3
+      asset: 2nd press top felt HP shower
+      created: 2026-04-24
+      type: PJ
+      priority: 3
+      desc: Upgrade 2nd press HP shower strainer to 100 micron (RCFA-2026-03)
+      originator: P05
+      craft: MECH
+      est_hours: 10
+      outage: OUT-2026-05-27
+      completed: 2026-05-27
+  pm_series:
+    - desc: Monthly HP shower nozzle check - press section
+      asset: 2nd press top felt HP shower
+      start: 2026-05-12
+      every_days: 28
+      craft: OPS
+      est_hours: 2
+  bus:
+    - key: S02-B1
+      asset: 2nd press top felt
+      start: 2026-03-16
+      end: 2026-04-15
+      issue: Steam limited on 33# - slowing ~40 fpm
+      action: Process eng. reviewing press dewatering (Uhle vac trending up)
+      updates:
+        2026-03-27: Felt survey requested from Halden for 4/15 outage
+        2026-04-15: Felt pulled at outage - high fill, see RCFA
+      owner: P04
+    - key: S02-B2
+      asset: 2nd press top felt
+      start: 2026-04-16
+      end: 2026-04-17
+      issue: 2nd press felt pulled at 6 wks - high fill, 18% HP nozzles plugged
+      action: RCFA to open this week
+      owner: P01
+  action:
+    - {key: S02-A1, title: Request Halden felt survey at the 4/15 outage, asset: 2nd press top felt, created: 2026-03-27, due: 2026-04-10, completed: 2026-04-08, owner: P04, bucket: Process}
+    - {key: S02-A2, title: Add monthly HP shower nozzle check to PM, asset: 2nd press top felt HP shower, created: 2026-04-22, due: 2026-05-15, completed: 2026-05-12, owner: P05, bucket: RCFA, ref: RCFA-2026-03}
+    - {key: S02-A3, title: Upgrade 2nd press shower strainer, asset: 2nd press top felt HP shower, created: 2026-04-22, due: 2026-05-27, completed: 2026-05-27, owner: P05, bucket: RCFA, ref: RCFA-2026-03}
+    - {key: S02-A4, title: Evaluate filtered water supply for press HP showers, asset: 2nd press top felt HP shower, created: 2026-04-22, due: 2026-12-15, owner: P04, bucket: RCFA, ref: RCFA-2026-03}
+  rcfa:
+    - id: RCFA-2026-03
+      event: 2026-04-15
+      opened: 2026-04-22
+      title: 2nd press felt early fill-up
+      asset: 2nd press top felt
+      downtime_h: 0
+      loss: ~40 fpm on 33# for 4 weeks
+      category: Equipment - PM gap
+      root_cause: Plugged 2nd press HP shower nozzles; nozzle check interval too long
+      contributing: Shower water quality; no strainer on HP header
+      lead: P04
+      actions: [S02-A2, S02-A3, S02-A4]

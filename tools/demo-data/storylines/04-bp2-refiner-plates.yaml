@@ -1,0 +1,49 @@
+id: S04
+title: BP 2 refiner plates wearing fast — order before Nov 11
+summary: >
+  The BP 2 plates installed Aug 19 are due at 12 weeks, on Nov 11. From late September, specific energy
+  creeps up at the same freeness. A Ridgeway inspection during the annual outage notes more edge rounding
+  than expected. BP 1 is also due Nov 11, so two Ridgeway sets are needed and only one is on hand.
+positions: [ref-bp2, ref-bp1]
+assets: [BP 2 refiner, BP 2 refiner motor]
+pi_tags: [PM1:REF_BP2_SE, PM1:REF_BP2_KW, PM1:REF_BP1_SE]
+outages: [OUT-2026-08-19, OUT-2026-ANNUAL, OUT-2026-11-11]
+people: [P21, P04, P02]
+vendors: [V-RR]
+timeline:
+  - date: 2026-08-19
+    sources: [mm, jde, vendor]
+    what: New BP 1 and BP 2 plates installed; Ridgeway plate report notes plate pattern and starting bar height.
+  - date: 2026-09-28
+    sources: [pi]
+    what: BP 2 specific energy starts creeping up ~0.12 kWh/t per running day at constant freeness.
+  - date: 2026-10-07
+    sources: [vendor]
+    what: Annual outage inspection by Ridgeway shows edge rounding beyond normal for 7 weeks. Recommends changing at the next opportunity and checking the stock for grit.
+  - date: 2026-10-13
+    sources: [pi, envoy]
+    what: BP 2 specific energy outside its Envoy limit for the first time.
+  - date: 2026-10-14
+    sources: [envoy, bus]
+    what: Envoy report for Oct 13 arrives; BUS line "BP2 SE high — plates due Nov 11".
+  - date: 2026-10-23
+    sources: [mm, teams]
+    what: Consumables show 1 Ridgeway set on hand. Action is open to order 2 more sets, with no PO yet.
+demo_questions:
+  - q: Do we have what we need for refiner plates at the Nov 11 outage?
+    output: Outage brief
+    expect: BP 1 and BP 2 both due Nov 11, BP 2 wearing fast; only 1 Ridgeway set on hand, order action still open.
+records:
+  wo:
+    - {key: S04-WO2, asset: BP 2 refiner, created: 2026-10-14, type: PM, priority: 3, desc: Change BP 2 refiner plates, originator: P21, craft: MECH, est_hours: 6, outage: OUT-2026-11-11, parts: Reserved}
+  bus:
+    - key: S04-B1
+      asset: BP 2 refiner
+      start: 2026-10-14
+      end: null
+      issue: BP2 specific energy high - plates wearing fast
+      action: Plates on WO for 11/11; only 1 Ridgeway set on hand for BP1 + BP2
+      owner: P21
+      wo: S04-WO2
+  action:
+    - {key: S04-A1, title: Order 2 sets Ridgeway base ply refiner plates, asset: BP 2 refiner, created: 2026-10-23, due: 2026-11-02, owner: P02, bucket: Outage prep}

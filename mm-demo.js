@@ -14,25 +14,25 @@
     const items = {};
 
     // ---------- Base ply forming fabric: six runs, fully filled out ----------
-    const AJ = { vendor: 'AstenJohnson', style: 'SSB 2740-L triple layer' };
+    const NB = { vendor: 'Northbank Fabrics', style: 'NX-2740 triple layer' };
     const shut = MM.addDays(O(6), 29);                         // unplanned shut after a hole
     items['form-bottom'] = {
-      installed: O(2), target: 12, targetUnit: 'weeks', ...AJ, serial: 'AJ-26-21907',
+      installed: O(2), target: 12, targetUnit: 'weeks', ...NB, serial: 'NB-26-21907',
       condition: 'wear', conditionDate: MM.addDays(today, -5),
       conditionNote: 'Edge wear at TS starting to show; vac box pressures creeping up.',
       note: 'Normal break-in. Drainage and retention steady through week 8.',
       history: [
-        run(O(11), O(9), { ...AJ, serial: 'AJ-25-11842', reason: 'planned', condition: 'worn',
+        run(O(11), O(9), { ...NB, serial: 'NB-25-11842', reason: 'planned', condition: 'worn',
           note: 'Ran full 12 weeks. Couch vac up 1.5 inHg over the last two weeks; sheet moisture at the press still in spec.' }),
-        run(O(9), O(8), { vendor: 'Albany International', style: 'PF-3315 (trial)', serial: 'AI-25-40377', reason: 'performance', condition: 'good',
-          note: 'Vendor trial style. Formation was fine but drainage was slower — had to run 4% more vacuum and lost ~15 fpm. Pulled at the outage and went back to the SSB 2740.' }),
-        run(O(8), O(6), { ...AJ, serial: 'AJ-25-12610', reason: 'planned', condition: 'worn',
+        run(O(9), O(8), { vendor: 'Halden Felt Co.', style: 'PF-3315 (trial)', serial: 'HF-25-40377', reason: 'performance', condition: 'good',
+          note: 'Vendor trial style. Formation was fine but drainage was slower — had to run 4% more vacuum and lost ~15 fpm. Pulled at the outage and went back to the NX-2740.' }),
+        run(O(8), O(6), { ...NB, serial: 'NB-25-12610', reason: 'planned', condition: 'worn',
           note: 'Full 12 weeks. Light filling at the edges, cleaned with HP showers at week 9.' }),
-        run(O(6), shut, { ...AJ, serial: 'AJ-26-13054', reason: 'damaged', condition: 'damaged',
+        run(O(6), shut, { ...NB, serial: 'NB-26-13054', reason: 'damaged', condition: 'damaged',
           note: '4-inch hole at the TS from a wad off the lumpbreaker. 10-hour unplanned shut to change. Lumpbreaker doctor blade replaced at the same time.' }),
-        run(shut, O(4), { ...AJ, serial: 'AJ-26-13981', reason: 'planned', condition: 'wear',
+        run(shut, O(4), { ...NB, serial: 'NB-26-13981', reason: 'planned', condition: 'wear',
           note: 'Spare off the floor. Changed early at the outage to get back on the outage cycle.' }),
-        run(O(4), O(2), { ...AJ, serial: 'AJ-26-20455', reason: 'planned', condition: 'worn',
+        run(O(4), O(2), { ...NB, serial: 'NB-26-20455', reason: 'planned', condition: 'worn',
           note: 'Ran full 12 weeks. Seam held well; wear on the machine side was even across the width.' })
       ]
     };
@@ -40,29 +40,29 @@
     // ---------- Everything else: realistic ages and a couple of earlier runs ----------
     // cur = installed at outage O(cur); life = target in weeks
     const SPEC = {
-      'ref-bp1':        { cur: 1,  life: 12, vendor: 'Andritz', style: '36" LC plate, 3.0/4.0 bar/groove' },
-      'ref-bp2':        { cur: 2,  life: 12, vendor: 'Andritz', style: '36" LC plate, 3.0/4.0 bar/groove' },
-      'ref-tp1':        { cur: 1,  life: 12, vendor: 'Valmet', style: '34" plate, 2.5/3.5 bar/groove' },
-      'ref-tp2':        { cur: 1,  life: 12, vendor: 'Valmet', style: '34" plate, 2.5/3.5 bar/groove' },
-      'form-top':       { cur: 2,  life: 14, vendor: 'AstenJohnson', style: 'TP 2160 triple layer' },
-      'lumpbreaker':    { cur: 8,  life: 52, vendor: 'Stowe Woodward', style: 'Rubber cover, 35 P&J', roll: true },
-      'p1-felt-top':    { cur: 1,  life: 6,  vendor: 'Albany International', style: 'Seamed felt, 1350 g/m²' },
-      'p2-felt-top':    { cur: 2,  life: 12, vendor: 'Albany International', style: 'Seamed felt, 1450 g/m²' },
-      'p-tandem-felt':  { cur: 1,  life: 6,  vendor: 'Xerium', style: 'Bottom felt, 1600 g/m²',
+      'ref-bp1':        { cur: 1,  life: 12, vendor: 'Ridgeway Refining', style: '36" LC plate, 3.0/4.0 bar/groove' },
+      'ref-bp2':        { cur: 2,  life: 12, vendor: 'Ridgeway Refining', style: '36" LC plate, 3.0/4.0 bar/groove' },
+      'ref-tp1':        { cur: 1,  life: 12, vendor: 'Brennock Plates', style: '34" plate, 2.5/3.5 bar/groove' },
+      'ref-tp2':        { cur: 1,  life: 12, vendor: 'Brennock Plates', style: '34" plate, 2.5/3.5 bar/groove' },
+      'form-top':       { cur: 2,  life: 14, vendor: 'Northbank Fabrics', style: 'TP 2160 triple layer' },
+      'lumpbreaker':    { cur: 8,  life: 52, vendor: 'Pellham Roll Service', style: 'Rubber cover, 35 P&J', roll: true },
+      'p1-felt-top':    { cur: 1,  life: 6,  vendor: 'Halden Felt Co.', style: 'Seamed felt, 1350 g/m²' },
+      'p2-felt-top':    { cur: 2,  life: 12, vendor: 'Halden Felt Co.', style: 'Seamed felt, 1450 g/m²' },
+      'p-tandem-felt':  { cur: 1,  life: 6,  vendor: 'Marlow Press Fabrics', style: 'Bottom felt, 1600 g/m²',
                           condition: 'worn', conditionNote: 'Filling up — Uhle box vacuum up 2 inHg, moisture streak at the FS.', flaggedDaysAgo: 3 },
-      'p1-roll-top':    { cur: 9,  life: 104, vendor: 'Stowe Woodward', style: 'Granite-style composite cover', roll: true },
-      'p1-roll-bottom': { cur: 6,  life: 104, vendor: 'Stowe Woodward', style: 'Suction roll, rubber 10 P&J', roll: true },
-      'p2-roll-top':    { cur: 11, life: 78, vendor: 'Stowe Woodward', style: 'Composite cover', roll: true },
-      'p2-roll-bottom': { cur: 14, life: 78, vendor: 'Stowe Woodward', style: 'Blind-drilled rubber, 12 P&J', roll: true,
+      'p1-roll-top':    { cur: 9,  life: 104, vendor: 'Pellham Roll Service', style: 'Granite-style composite cover', roll: true },
+      'p1-roll-bottom': { cur: 6,  life: 104, vendor: 'Pellham Roll Service', style: 'Suction roll, rubber 10 P&J', roll: true },
+      'p2-roll-top':    { cur: 11, life: 78, vendor: 'Pellham Roll Service', style: 'Composite cover', roll: true },
+      'p2-roll-bottom': { cur: 14, life: 78, vendor: 'Pellham Roll Service', style: 'Blind-drilled rubber, 12 P&J', roll: true,
                           condition: 'wear', conditionNote: 'Cover hardness up 3 P&J; crown OK on last check.', flaggedDaysAgo: 12 },
-      'd1-felt':        { cur: 7,  life: 52, vendor: 'AstenJohnson', style: 'Dryer fabric, spiral seam' },
-      'd2-felt-top':    { cur: 5,  life: 52, vendor: 'AstenJohnson', style: 'Dryer fabric, pin seam',
+      'd1-felt':        { cur: 7,  life: 52, vendor: 'Northbank Fabrics', style: 'Dryer fabric, spiral seam' },
+      'd2-felt-top':    { cur: 5,  life: 52, vendor: 'Northbank Fabrics', style: 'Dryer fabric, pin seam',
                           condition: 'damaged', conditionNote: 'Seam starting to open at the FS (~6 in). Patched to hold until the outage.', flaggedDaysAgo: 1 },
-      'd2-felt-bottom': { cur: 8,  life: 52, vendor: 'AstenJohnson', style: 'Dryer fabric, pin seam' },
-      'd3-felt-top':    { cur: 4,  life: 65, vendor: 'Voith', style: 'Dryer fabric, spiral seam' },
-      'd3-felt-bottom': { cur: 10, life: 78, vendor: 'Voith', style: 'Dryer fabric, spiral seam' },
-      'cal-top':        { cur: 12, life: 104, vendor: 'Valmet', style: 'Chilled iron', roll: true },
-      'cal-bottom':     { cur: 3,  life: 104, vendor: 'Valmet', style: 'Soft cover, 85 Shore D', roll: true }
+      'd2-felt-bottom': { cur: 8,  life: 52, vendor: 'Northbank Fabrics', style: 'Dryer fabric, pin seam' },
+      'd3-felt-top':    { cur: 4,  life: 65, vendor: 'Corrie Textiles', style: 'Dryer fabric, spiral seam' },
+      'd3-felt-bottom': { cur: 10, life: 78, vendor: 'Corrie Textiles', style: 'Dryer fabric, spiral seam' },
+      'cal-top':        { cur: 12, life: 104, vendor: 'Teague Roll Works', style: 'Chilled iron', roll: true },
+      'cal-bottom':     { cur: 3,  life: 104, vendor: 'Teague Roll Works', style: 'Soft cover, 85 Shore D', roll: true }
     };
     const NOTES = {
       fabric: ['Normal wear at removal.', 'Ran to target; even wear across the width.', 'Some edge filling, nothing unusual.'],
