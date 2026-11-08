@@ -32,6 +32,17 @@ a#mode[href]:hover{background:var(--hover-2)}
 #search{border:0;outline:none;font-size:13px;flex:1;min-width:0;padding:0;background:transparent}
 #search:focus-visible{outline:none}
 #searchCount{font-size:11px;color:var(--muted);min-width:0;white-space:nowrap}
+/* phones: search folds to an icon button; tapping it opens the field across the top row */
+@media (max-width:760px){
+  #searchbar{width:36px;height:36px;padding:0!important;justify-content:center;gap:0}
+  #searchbar > label{align-items:center;justify-content:center;width:34px;height:34px;cursor:pointer}
+  #search{flex:0 0 0;width:0}
+  #searchCount{display:none}
+  #topright:has(#searchbar:focus-within),#topright:has(#search:not(:placeholder-shown)){left:8px;z-index:52;background:var(--surface)}
+  #topright:has(#searchbar:focus-within) #searchbar,#topright:has(#search:not(:placeholder-shown)) #searchbar{flex:1;width:auto;justify-content:flex-start;padding:0 8px 0 0!important}
+  #topright:has(#searchbar:focus-within) #search,#topright:has(#search:not(:placeholder-shown)) #search{flex:1;font-size:16px}
+  #topright:has(#searchbar:focus-within) #searchCount,#topright:has(#search:not(:placeholder-shown)) #searchCount{display:inline}
+}
 #zoomPct{font-size:12px;min-width:48px;height:28px;text-align:center;font-variant-numeric:tabular-nums;border:0;background:transparent;border-radius:var(--r-sm);color:var(--ink-2)}
 #zoomPct:hover{background:var(--hover)}
 .tab{border:1px solid transparent;background:transparent;border-radius:var(--r-sm);padding:5px 10px;font-size:13px;font-weight:500;color:var(--ink-2);white-space:nowrap;display:flex;align-items:center;gap:6px}

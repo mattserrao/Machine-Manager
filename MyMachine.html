@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>My Machine</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0205">
-<script src="mm-icons.js?v=2026-11-08.0205"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0220">
+<script src="mm-icons.js?v=2026-11-08.0220"></script>
 <style>
   /* shared look: mm-theme.css */
   .wrap{padding:14px 14px 60px;transition:margin-right .18s}
@@ -108,7 +108,7 @@
   .md-tx{font-size:18px;font-weight:500;fill:var(--ink-3)}
 
   /* ---------- Drawer ---------- */
-  .drawer{position:fixed;top:calc(var(--top-h) + 10px);right:12px;bottom:12px;width:360px;z-index:100;display:flex;flex-direction:column;background:var(--overlay);
+  .drawer{position:fixed;top:calc(var(--top-full) + 10px);right:12px;bottom:12px;width:360px;z-index:100;display:flex;flex-direction:column;background:var(--overlay);
     border-radius:var(--r-lg);border:1px solid var(--line-strong);box-shadow:var(--shadow-pop);overflow:hidden}
   .d-head{display:flex;align-items:center;gap:8px;padding:12px 12px 12px 16px;border-bottom:1px solid var(--line)}
   .due{border-radius:var(--r-lg);padding:10px 12px;font-size:13px;line-height:1.45;background:var(--hover);color:var(--ink-2)}
@@ -203,6 +203,9 @@
   @media (max-width:820px){
     body.drawer-open .wrap{margin-right:0}
     .drawer{left:14px;width:auto}
+    #summary{flex-wrap:wrap;min-width:0}
+    .tables{grid-template-columns:minmax(0,1fr)} .tables > .card{min-width:0;overflow-x:auto}
+    th{padding:8px 8px 6px 12px} td{padding:8px 8px 8px 12px}
   }
 </style>
 </head>
@@ -259,13 +262,13 @@
 <aside id="drawer" class="drawer" hidden></aside>
 <div id="toast"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0205"></script>
-<script src="mm-config.js?v=2026-11-08.0205"></script>
-<script src="mm-cloud.js?v=2026-11-08.0205"></script>
-<script src="mm-ui.js?v=2026-11-08.0205"></script>
-<script src="mm-records.js?v=2026-11-08.0205"></script>
-<script src="mm-machine.js?v=2026-11-08.0205"></script>
-<script src="mm-demo.js?v=2026-11-08.0205"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0220"></script>
+<script src="mm-config.js?v=2026-11-08.0220"></script>
+<script src="mm-cloud.js?v=2026-11-08.0220"></script>
+<script src="mm-ui.js?v=2026-11-08.0220"></script>
+<script src="mm-records.js?v=2026-11-08.0220"></script>
+<script src="mm-machine.js?v=2026-11-08.0220"></script>
+<script src="mm-demo.js?v=2026-11-08.0220"></script>
 <script>
 (() => {
   'use strict';
@@ -1117,6 +1120,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.0205"></script>
+<script src="mm-nav.js?v=2026-11-08.0220"></script>
 </body>
 </html>

@@ -5,13 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Whiteboard</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0205">
-<script src="mm-icons.js?v=2026-11-08.0205"></script>
-<link rel="stylesheet" href="mm-board.css?v=2026-11-08.0205">
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0220">
+<script src="mm-icons.js?v=2026-11-08.0220"></script>
+<link rel="stylesheet" href="mm-board.css?v=2026-11-08.0220">
 <style>
   /* this page only (shared styles: mm-board.css) */
   #tabs{bottom:14px;left:14px;max-width:calc(100vw - 260px);overflow-x:auto}
-  @media (max-width:720px){ #search{width:110px} #topleft{max-width:calc(100vw - 300px)} #acct .who{display:none} #toolbar .wide{display:none} .brand > div:last-child{display:none} }
 </style>
 </head>
 <body class="mm-canvas">
@@ -53,7 +52,7 @@
 
 <div id="topright">
 <div id="searchbar" class="bar">
-  <span style="color:var(--ink-3);display:flex" data-ic="search" data-ic-size="sm"></span>
+  <label for="search" style="color:var(--ink-3);display:flex" data-ic="search" data-ic-size="sm" title="Search"></label>
   <input id="search" type="search" placeholder="Search notes  ( / )" autocomplete="off">
   <span id="searchCount"></span>
 </div>
@@ -225,13 +224,13 @@
   </div>
 </div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0205"></script>
-<script src="mm-config.js?v=2026-11-08.0205"></script>
-<script src="mm-cloud.js?v=2026-11-08.0205"></script>
-<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.0205"></script>
-<script src="mm-ui.js?v=2026-11-08.0205"></script>
-<script src="mm-records.js?v=2026-11-08.0205"></script>
-<script src="mm-board.js?v=2026-11-08.0205"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0220"></script>
+<script src="mm-config.js?v=2026-11-08.0220"></script>
+<script src="mm-cloud.js?v=2026-11-08.0220"></script>
+<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.0220"></script>
+<script src="mm-ui.js?v=2026-11-08.0220"></script>
+<script src="mm-records.js?v=2026-11-08.0220"></script>
+<script src="mm-board.js?v=2026-11-08.0220"></script>
 <script>
 MMBoard.start({
     version:'v0.5.0',
@@ -279,6 +278,6 @@ MMBoard.start({
   },
 });
 </script>
-<script src="mm-nav.js?v=2026-11-08.0205"></script>
+<script src="mm-nav.js?v=2026-11-08.0220"></script>
 </body>
 </html>

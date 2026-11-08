@@ -177,7 +177,7 @@ button.mmnav:hover{background:var(--hover-2);color:var(--ink)}
 .mm-empty ul{margin:0;padding-left:18px;color:var(--ink-2);font-size:13px;line-height:1.7}
 
 /* ---------- Toast: just under the top bar, centred, so it never sits on table rows or the drawer ---------- */
-#toast{position:fixed;left:50%;top:calc(var(--top-h) + 8px);transform:translate(-50%,-6px);opacity:0;z-index:500;display:flex;align-items:center;gap:12px;
+#toast{position:fixed;left:50%;top:calc(var(--top-full) + 8px);transform:translate(-50%,-6px);opacity:0;z-index:500;display:flex;align-items:center;gap:12px;
   background:var(--overlay);color:var(--ink);border:1px solid var(--line-strong);font-size:13px;padding:8px 12px;border-radius:var(--r);
   transition:opacity .18s,transform .18s;pointer-events:none;max-width:min(560px,calc(100vw - 32px));box-shadow:var(--shadow-pop)}
 #toast.show{opacity:1;transform:translate(-50%,0)}
@@ -188,8 +188,48 @@ button.mmnav:hover{background:var(--hover-2);color:var(--ink)}
 /* ---------- Version footer ---------- */
 #ver{position:fixed;right:10px;bottom:6px;z-index:40;font-size:11px;color:var(--ink-3);pointer-events:none;letter-spacing:.02em}
 
+/* ---------- Phones: two-row top bar ----------
+   Row 1: [menu · App title] …… [search] [account]. The title is never hidden; it truncates if it must.
+   Row 2: the app's tool buttons, one row that scrolls sideways (no wrapping, nothing overlaps).
+   --top-full is the whole bar's height, for anything placed just below it. */
+:root{--tools-h:0px;--top-full:calc(var(--top-h) + var(--tools-h))}
 @media (max-width:760px){
+  :root{--top-h:52px;--tools-h:46px}
   .mmc-pill,.brand p{display:none}
-  .mm-top{gap:6px;padding:0 8px}
-  .mm-top .bar + .bar,#topleft .bar + .bar{padding-left:4px}
+  .brand{flex:0 1 auto;min-width:0}
+  .brand > div{min-width:0}
+  .brand h1{font-size:15px;overflow:hidden;text-overflow:ellipsis}
+  .logo{width:36px;height:36px}
+
+  /* tool row (in-flow pages: any .bar after the brand; canvas pages: #toolbar) */
+  .mm-top .bar:not(.brand),body.mm-canvas #toolbar{display:flex;flex-wrap:nowrap;align-items:center;gap:6px;height:var(--tools-h);
+    overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;scrollbar-width:none;
+    border:0!important;border-top:1px solid var(--line)!important;margin:0!important;padding:0 8px!important}
+  .mm-top .bar:not(.brand)::-webkit-scrollbar,body.mm-canvas #toolbar::-webkit-scrollbar{display:none}
+  .mm-top .bar:not(.brand) > *,body.mm-canvas #toolbar > *{flex:none}
+  .mm-top .bar:not(.brand) .btn,body.mm-canvas #toolbar .btn{height:34px}
+  .mm-top .bar:not(.brand) .ib,body.mm-canvas #toolbar .ib{height:34px;min-width:34px}
+  #helpBtn{display:none}  /* keyboard shortcuts: not useful on a phone */
+
+  /* in-flow pages */
+  .mm-top{flex-wrap:wrap;height:auto;min-height:var(--top-h);column-gap:6px;row-gap:0;padding:0 8px}
+  .mm-top .topleft{display:contents}
+  .mm-top .brand{height:var(--top-h);flex:1 1 0}  /* takes the room that's left, so the account never wraps */
+  .mm-top > #acct,.mm-top > .mm-right{flex:none;margin-left:0}
+  .mm-top > #acct,.mm-top > .mm-right{order:2}
+  .mm-top .bar:not(.brand){order:3;flex:0 0 calc(100% + 16px);margin:0 -8px!important}
+
+  /* canvas pages */
+  body.mm-canvas::before{height:var(--top-full)}
+  body.mm-canvas.lib-open{--tools-h:0px}
+  body.mm-canvas #topleft{left:8px;max-width:calc(100vw - 172px)}
+  body.mm-canvas #topright{right:8px;gap:6px}
+  body.mm-canvas #toolbar{position:fixed;top:var(--top-h);left:0;right:0;z-index:50;background:transparent}
+
+  /* account: status dot + short name, button */
+  .mmc{gap:8px}
+  .mmc .who b{display:block;max-width:96px;overflow:hidden;text-overflow:ellipsis}
+  .mmc .who b::before{display:inline-block;margin-right:6px;vertical-align:1px}
+  .mmc .who > span,.mmc .who select{display:none}
+  .mmc-btn{height:34px}
 }
