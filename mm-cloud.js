@@ -154,25 +154,47 @@
   /* ───────────── Synced records for a tool ─────────────
      const store = MMCloud.openStore('mymachine', {
        snapshot: () => ({ id: data, ... }),    // the tool's current records, called when saving
-       onChange: (id, data | null) => {},      // someone else changed (or deleted) a record
-       onStatus: s => {},                      // 'saving' | 'saved' | 'error' | 'viewonly' | 'live' | 'reconnecting'
+       onChange: (id, data | null, info) => {},// someone else changed (or deleted) a record; info.conflict if it was ours too
+       onStatus: (s, detail) => {},            // 'saving' | 'saved' | 'error' | 'viewonly' | 'live' | 'reconnecting' | 'rejected'
      });
      const data = await store.ready;           // null if signed out / no org (use demo storage), else { id: data }
      store.save();                             // after any local change: sends what differs, with version checks
-   A record that someone else changed first is refused by the server; their version comes
-   back through onChange, so nothing is silently overwritten. */
+     store.save(['item:x']);                   // same, but only compares these records (plus deletions)
+   A record that someone else changed first is refused by the server; their version comes back through
+   onChange, so nothing is silently overwritten. A change the server rejects as invalid or not allowed is
+   reported once ('rejected', with the reason) and not retried until that record changes again. */
   const canon = v => Array.isArray(v) ? '[' + v.map(x => canon(x === undefined ? null : x)).join(',') + ']'
     : (v && typeof v === 'object') ? '{' + Object.keys(v).filter(k => v[k] !== undefined).sort().map(k => JSON.stringify(k) + ':' + canon(v[k])).join(',') + '}'
     : JSON.stringify(v === undefined ? null : v);
+  const PAGE = 1000, CHUNK = 200, RETRY_MIN = 5000, RETRY_MAX = 60000, CATCHUP_AFTER = 60000;
+
+  // Every row of a tool, paged by id (each page is an index range, so page 50 costs what page 1 does).
+  // includeDeleted: also rows that were deleted (needed when catching up on what changed).
+  async function fetchRows(org, tool, opts = {}){
+    const rows = [];
+    for (let after = null; ; ){
+      let q = client.from('mm_records').select('*').eq('org_id', org).eq('tool', tool);
+      if (!opts.includeDeleted) q = q.eq('deleted', false);
+      if (opts.since) q = q.gte('updated_at', opts.since);
+      if (after != null) q = q.gt('id', after);
+      const { data, error } = await q.order('id').limit(PAGE);
+      if (error) throw error;
+      rows.push(...data);
+      if (data.length < PAGE) return rows;
+      after = data[data.length - 1].id;
+    }
+  }
 
   function openStore(tool, opts = {}){
-    const st = { tool, edit: false, org: null, user: null, conflicts: 0 };
-    const shadow = new Map(), inflight = new Map(), buffer = [];
+    const st = { tool, edit: false, org: null, user: null, conflicts: 0, rejected: 0 };
+    const shadow = new Map(), inflight = new Map(), buffer = [], refused = new Map(), dirty = new Set();
     let loaded = false, busy = false, again = false, timer = null, retry = null, failing = false, subs = 0;
-    const status = x => { try { opts.onStatus && opts.onStatus(x); } catch (e) {} };
+    let delay = RETRY_MIN, full = true, since = null, hiddenAt = 0, live = false;
+    const status = (x, d) => { try { opts.onStatus && opts.onStatus(x, d); } catch (e) {} };
     const notify = (id, data, info) => { try { opts.onChange && opts.onChange(id, data, info || {}); } catch (e) { console.error(e); } };
 
     function applyRow(row, forced){
+      if (row.updated_at && (!since || row.updated_at > since)) since = row.updated_at;
       const sh = shadow.get(row.id), s = canon(row.data), inf = inflight.get(row.id);
       if (!forced && sh && row.version <= sh.v) return;
       const same = (inf && inf.s === s && inf.deleted === row.deleted) || (sh && sh.s === s && sh.deleted === row.deleted);
@@ -180,17 +202,15 @@
       if (same && !forced) return;
       if (loaded) notify(row.id, row.deleted ? null : row.data, { conflict: !!forced });
     }
-    async function fetchAll(){
-      const rows = [], PAGE = 1000;
-      for (let from = 0; ; from += PAGE){
-        const { data, error } = await client.from('mm_records').select('*').eq('org_id', st.org.id).eq('tool', tool)
-          .order('id').range(from, from + PAGE - 1);
-        if (error) throw error;
-        rows.push(...data);
-        if (data.length < PAGE) return rows;
-      }
-    }
-    const refetch = async () => { try { (await fetchAll()).forEach(r => applyRow(r)); } catch (e) {} };
+    // Catch up on what changed while live updates weren't arriving (a little overlap is harmless:
+    // rows already seen are ignored by version).
+    const catchUp = async () => {
+      if (!loaded) return;
+      try {
+        const from = since ? new Date(Date.parse(since) - 2 * 60000).toISOString() : null;
+        (await fetchRows(st.org.id, tool, { includeDeleted: true, since: from })).forEach(r => applyRow(r));
+      } catch (e) {}
+    };
 
     st.ready = (async () => {
       const s = await session();
@@ -198,48 +218,57 @@
       Object.assign(st, { org: s.org, user: s.user, edit: canEdit(s) });
       await new Promise(res => {
         const t = setTimeout(res, 8000);
+        // Filtered by tool: a page only hears about its own tool. Rows of other organizations are
+        // already withheld by row-level security; the org check is for people in several.
         st.channel = client.channel(`mm-${tool}-${s.org.id}`)
-          .on('postgres_changes', { event: '*', schema: 'public', table: 'mm_records', filter: `org_id=eq.${s.org.id}` }, p => {
-            const row = p.new; if (!row || row.tool !== tool) return;
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'mm_records', filter: `tool=eq.${tool}` }, p => {
+            const row = p.new; if (!row || row.org_id !== st.org.id) return;
             loaded ? applyRow(row) : buffer.push(row);
           })
           .subscribe(x => {
-            if (x === 'SUBSCRIBED'){ if (subs++ && loaded) refetch(); clearTimeout(t); res(); status('live'); }
-            else if (x === 'CHANNEL_ERROR' || x === 'TIMED_OUT' || x === 'CLOSED') status('reconnecting');
+            if (x === 'SUBSCRIBED'){ live = true; if (subs++ && loaded) catchUp(); clearTimeout(t); res(); status('live'); }
+            else if (x === 'CHANNEL_ERROR' || x === 'TIMED_OUT' || x === 'CLOSED'){ live = false; status('reconnecting'); }
           });
       });
-      const rows = await fetchAll();
+      const rows = await fetchRows(s.org.id, tool);
       rows.forEach(r => applyRow(r));
       const data = {};
       for (const r of rows) if (!r.deleted) data[r.id] = r.data;
       loaded = true;
       buffer.splice(0).forEach(r => applyRow(r));
-      document.addEventListener('visibilitychange', () => { if (!document.hidden) refetch(); });
-      window.addEventListener('online', () => { refetch(); flush(); });
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) hiddenAt = Date.now();
+        else if (!live || (hiddenAt && Date.now() - hiddenAt > CATCHUP_AFTER)) catchUp();
+      });
+      window.addEventListener('online', () => { catchUp(); flush(); });
       window.addEventListener('beforeunload', e => { if (st.pending()){ flush(); e.preventDefault(); e.returnValue = ''; } });
       return data;
     })();
 
     function changes(){
       const snap = (opts.snapshot && opts.snapshot()) || {}, out = [];
-      for (const [id, data] of Object.entries(snap)){
+      const ids = full ? Object.keys(snap) : [...dirty].filter(id => snap[id] != null);
+      for (const id of ids){
+        const data = snap[id];
         if (data == null) continue;
         const s = canon(data), sh = shadow.get(id);
+        if (refused.get(id) === s) continue;              // the server already said no to exactly this
         if (!sh || sh.deleted || sh.s !== s) out.push({ s, deleted: false, c: { id, data, deleted: false, base: sh ? sh.v : null } });
       }
       for (const [id, sh] of shadow) if (!sh.deleted && snap[id] == null) out.push({ s: sh.s, deleted: true, c: { id, deleted: true, base: sh.v } });
-      return out;
+      return out.sort((a, b) => a.c.id < b.c.id ? -1 : a.c.id > b.c.id ? 1 : 0);
     }
     async function flush(){
       clearTimeout(timer); timer = null;
       if (!loaded || !st.edit) return;
       if (busy){ again = true; return; }
       busy = true; clearTimeout(retry);
-      let conflicts = 0;
+      let conflicts = 0, rejected = 0, reason = '';
       try {
         const ch = changes();
-        for (let i = 0; i < ch.length; i += 200){
-          const part = ch.slice(i, i + 200);
+        full = false; dirty.clear();
+        for (let i = 0; i < ch.length; i += CHUNK){
+          const part = ch.slice(i, i + CHUNK);
           part.forEach(x => inflight.set(x.c.id, { s: x.s, deleted: x.deleted }));
           let res;
           try { res = await client.rpc('mm_apply', { p_org: st.org.id, p_tool: tool, p_changes: part.map(x => x.c) }); }
@@ -247,38 +276,59 @@
           if (res.error) throw res.error;
           res.data.forEach((r, j) => {
             const x = part[j];
-            if (r.ok){ const sh = shadow.get(x.c.id); if (!sh || sh.v < r.version) shadow.set(x.c.id, { v: r.version, s: x.s, deleted: x.deleted }); }
+            if (r.ok){ refused.delete(x.c.id); const sh = shadow.get(x.c.id); if (!sh || sh.v < r.version) shadow.set(x.c.id, { v: r.version, s: x.s, deleted: x.deleted }); }
+            else if (r.error){ rejected++; reason = r.error; refused.set(x.c.id, x.s); console.warn(`[${tool}] ${x.c.id} not saved: ${r.error}`); }
             else if (r.row){ conflicts++; applyRow(r.row, true); }
             else { conflicts++; shadow.delete(x.c.id); notify(x.c.id, null, { conflict: true }); }
           });
         }
-        failing = false; st.conflicts = conflicts;
+        failing = false; delay = RETRY_MIN; st.conflicts = conflicts; st.rejected = rejected;
+        if (rejected) status('rejected', reason);
         status('saved');
       } catch (e) {
+        full = true;                                     // compare everything on the retry
         failing = true; status('error');
-        retry = setTimeout(flush, 5000);
+        retry = setTimeout(flush, delay);
+        delay = Math.min(RETRY_MAX, delay * 2);
       } finally {
         busy = false;
         if (again){ again = false; flush(); }
       }
     }
-    st.save = () => {
+    st.save = ids => {
       if (!loaded) return;
+      if (Array.isArray(ids)) ids.forEach(id => dirty.add(id)); else full = true;
       if (!st.edit){ if (changes().length) status('viewonly'); return; }
       status('saving'); clearTimeout(timer); timer = setTimeout(flush, 350);
     };
     st.flush = flush;
     st.pending = () => st.edit && (busy || !!timer || failing);
+    st.catchUp = catchUp;
     return st;
   }
 
   /* ───────────── Files for a tool ─────────────
      const f = MMCloud.files('vendor-reports');
      const path = await f.upload(file);        // stored privately under <org>/<tool>/
-     const blob = await f.download(path);  const link = await f.url(path);  await f.remove(path); */
+     const blob = await f.download(path);  const link = await f.url(path);  await f.remove(path);
+     await f.sweep();                          // editors: remove files no record points to (at most weekly) */
+  const SWEEP_EVERY = 7 * 864e5, SWEEP_MIN_AGE = 2 * 864e5;
   function files(tool){
     const need = async () => { const s = await session(); if (!s || !s.org) throw new Error('Sign in to store files.'); return s; };
     const bucket = () => client.storage.from('mm-files');
+    // Every stored file under <org>/<tool>/, walking sub-folders.
+    async function listAll(prefix){
+      const out = [];
+      for (let offset = 0; ; offset += 1000){
+        const { data, error } = await bucket().list(prefix, { limit: 1000, offset, sortBy: { column: 'name', order: 'asc' } });
+        if (error) throw error;
+        for (const o of data){
+          const p = `${prefix}/${o.name}`;
+          if (o.id == null) out.push(...await listAll(p)); else out.push({ path: p, created: Date.parse(o.created_at) || 0 });
+        }
+        if (data.length < 1000) return out;
+      }
+    }
     return {
       async upload(file, name){
         const s = await need();
@@ -291,6 +341,21 @@
       async download(path){ await need(); const { data, error } = await bucket().download(path); if (error) throw error; return data; },
       async url(path, seconds = 3600){ await need(); const { data, error } = await bucket().createSignedUrl(path, seconds); if (error) throw error; return data.signedUrl; },
       async remove(path){ await need(); const { error } = await bucket().remove([path]); if (error) throw error; },
+      // Files stay while any record (deleted ones included, until the nightly purge) points to them,
+      // and for 2 days after upload so a file isn't removed before its record is saved.
+      async sweep(force){
+        const s = await need();
+        if (!canEdit(s)) return 0;
+        const key = `mm-sweep:${s.org.id}:${tool}`;
+        if (!force && Date.now() - (Number(lsGet(key)) || 0) < SWEEP_EVERY) return 0;
+        lsSet(key, String(Date.now()));
+        const { data: refs, error } = await client.rpc('mm_file_refs', { p_org: s.org.id, p_tool: tool });
+        if (error) throw error;
+        const keep = new Set((refs || []).map(r => typeof r === 'string' ? r : r.mm_file_refs));
+        const old = (await listAll(`${s.org.id}/${tool}`)).filter(f => !keep.has(f.path) && Date.now() - f.created > SWEEP_MIN_AGE).map(f => f.path);
+        for (let i = 0; i < old.length; i += 100){ const { error: e2 } = await bucket().remove(old.slice(i, i + 100)); if (e2) throw e2; }
+        return old.length;
+      },
     };
   }
 
