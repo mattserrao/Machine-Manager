@@ -7,7 +7,7 @@
 --   bus_items                        one row per BUS sheet line (sheet date × issue); issue_key groups an issue across days
 --   work_orders, actions             latest state from the JDE / Planner exports (re-imports update in place)
 --   rcfa                             the RCFA log
---   envoy                            Envoy exceptions (one row per tag per day)
+--   bonvoy                            Bonvoy exceptions (one row per tag per day)
 --   pi_series                        Pi series packed as arrays: hourly averages one row per tag per UTC day ('h'),
 --                                    1-minute data one row per tag per hour around events ('m')
 --   documents, doc_chunks            every document (vendor report, RCFA write-up, drawing, reference chart) and its
@@ -24,7 +24,7 @@
 --
 -- Tools (what the orchestrator calls; security invoker, so RLS applies to the signed-in user):
 --   mm_llm_search_docs, mm_llm_search_docs_vec, mm_llm_search_records, mm_llm_position_history, mm_llm_outage_scope,
---   mm_llm_overdue_actions, mm_llm_envoy, mm_llm_pi_daily, mm_llm_pi_values,
+--   mm_llm_overdue_actions, mm_llm_bonvoy, mm_llm_pi_daily, mm_llm_pi_values,
 --   mm_llm_downtime, mm_llm_downtime_summary, mm_llm_repeat_stops, mm_llm_rcfa_status, mm_llm_position_life, mm_llm_production,
 --   mm_llm_documents, mm_llm_bus_day (step 05; the last two feed the Vendor Reports and Daily pages)
 --
@@ -89,14 +89,22 @@ create table if not exists llm.rcfa (
   root_cause text, contributing text, lead text, action_ids text[], source_file text,
   primary key (org_id, rcfa_id));
 
-create table if not exists llm.envoy (
+create table if not exists llm.bonvoy (
   org_id uuid not null references public.orgs(id) on delete cascade,
   period date not null, tag text not null, report_date date, description text, area text, asset_no text, asset text,
   position_id text, units text, grade text, mean double precision, std double precision, low double precision,
   high double precision, min double precision, max double precision, hours_outside int, first_outside text,
   last_outside text, direction text, source_file text,
   primary key (org_id, period, tag));
-create index if not exists envoy_asset_idx on llm.envoy (org_id, asset_no, period);
+create index if not exists bonvoy_asset_idx on llm.bonvoy (org_id, asset_no, period);
+-- The daily Bonvoy Report (step 07): flagged trends from the Pi historian, written by MM LLM (mocked for the demo).
+create table if not exists llm.bonvoy_reports (
+  org_id uuid not null references public.orgs(id) on delete cascade,
+  day date not null, report_date date, headline text, summary text, flagged int, items jsonb, watch jsonb,
+  generated_by text, model text, source_file text,
+  primary key (org_id, day));
+-- Where a Pi tag's values come from (step 07)
+alter table llm.pi_tags add column if not exists source text;          -- engine | derived | condition (Sim Mill), null for others
 
 create table if not exists llm.pi_series (
   org_id uuid not null references public.orgs(id) on delete cascade,
@@ -185,8 +193,8 @@ grant execute on function private.llm_is_public_path(text) to anon, authenticate
 
 -- Read access: members of the org, or anyone for a public demo org. No writes from the API.
 do $$ declare t text; begin
-  foreach t in array array['equipment','pi_tags','outages','bus_items','work_orders','actions','rcfa','envoy','pi_series',
-                           'documents','doc_chunks','ingest_files','downtime','production_daily','position_runs'] loop
+  foreach t in array array['equipment','pi_tags','outages','bus_items','work_orders','actions','rcfa','bonvoy','pi_series',
+                           'documents','doc_chunks','ingest_files','downtime','production_daily','position_runs','bonvoy_reports'] loop
     execute format('alter table llm.%I enable row level security', t);
     execute format('drop policy if exists %I on llm.%I', t || '_read', t);
     execute format('drop policy if exists %I on llm.%I', t || '_public_read', t);
@@ -284,8 +292,8 @@ begin
     get diagnostics n = row_count;
     return n;
   end if;
-  if p_table not in ('equipment','pi_tags','outages','bus_items','work_orders','actions','rcfa','envoy','pi_series',
-                     'documents','doc_chunks','ingest_files','downtime','production_daily','position_runs') then
+  if p_table not in ('equipment','pi_tags','outages','bus_items','work_orders','actions','rcfa','bonvoy','pi_series',
+                     'documents','doc_chunks','ingest_files','downtime','production_daily','position_runs','bonvoy_reports') then
     raise exception 'unknown table %', p_table using errcode = '22023';
   end if;
   if p_mode = 'reset' then
@@ -404,9 +412,9 @@ language sql stable security invoker set search_path = '' as $$
     select 'RCFA', r.event_date, r.rcfa_id, r.title || ' — ' || r.root_cause, r.status
       from llm.rcfa r where r.org_id = p_org and r.asset_no in (select asset_no from a)
     union all
-    select 'Envoy', v.period, v.tag, v.description || ': ' || v.direction || ', max ' || v.max || ' ' || v.units || ' vs limit ' ||
+    select 'Bonvoy', v.period, v.tag, v.description || ': ' || v.direction || ', max ' || v.max || ' ' || v.units || ' vs limit ' ||
            case when v.direction = 'High' then v.high else v.low end || ' (' || v.hours_outside || ' h)', null
-      from llm.envoy v where v.org_id = p_org and v.asset_no in (select asset_no from a)
+      from llm.bonvoy v where v.org_id = p_org and v.asset_no in (select asset_no from a)
     union all
     select 'Document', d.doc_date, d.doc_id, d.title, d.kind
       from llm.documents d where d.org_id = p_org
@@ -462,7 +470,8 @@ language sql stable security invoker set search_path = '' as $$
   union all select 'Work orders', count(*), min(requested), max(requested) from llm.work_orders where org_id = p_org
   union all select 'Actions', count(*), min(created), max(created) from llm.actions where org_id = p_org
   union all select 'RCFAs', count(*), min(event_date), max(event_date) from llm.rcfa where org_id = p_org
-  union all select 'Envoy exceptions', count(*), min(period), max(period) from llm.envoy where org_id = p_org
+  union all select 'Bonvoy exceptions', count(*), min(period), max(period) from llm.bonvoy where org_id = p_org
+  union all select 'Bonvoy reports', count(*), min(day), max(day) from llm.bonvoy_reports where org_id = p_org
   union all select 'Pi tags', count(distinct tag), min((t0 at time zone 'America/New_York')::date), max((t0 at time zone 'America/New_York')::date) from llm.pi_series where org_id = p_org
   union all select 'Documents', count(*), min(doc_date), max(doc_date) from llm.documents where org_id = p_org
   union all select 'Downtime events', count(*), min((starts_at at time zone 'America/New_York')::date), max((starts_at at time zone 'America/New_York')::date) from llm.downtime where org_id = p_org
@@ -493,13 +502,13 @@ language sql stable security invoker set search_path = '' as $$
   order by t.due;
 $$;
 
--- Envoy exceptions for a tag, asset or position (or everything when p_term is null) in a date range.
-create or replace function public.mm_llm_envoy(p_org uuid, p_term text default null, p_from date default null, p_to date default null)
+-- Bonvoy exceptions for a tag, asset or position (or everything when p_term is null) in a date range.
+create or replace function public.mm_llm_bonvoy(p_org uuid, p_term text default null, p_from date default null, p_to date default null)
 returns table (period date, tag text, asset text, direction text, max double precision, high double precision,
                low double precision, hours_outside int, grade text)
 language sql stable security invoker set search_path = '' as $$
   select v.period, v.tag, v.asset, v.direction, v.max, v.high, v.low, v.hours_outside, v.grade
-  from llm.envoy v
+  from llm.bonvoy v
   where v.org_id = p_org and (p_from is null or v.period >= p_from) and (p_to is null or v.period <= p_to)
     and (p_term is null or v.tag = p_term or v.asset_no = p_term or lower(v.asset) = lower(p_term) or v.position_id = p_term)
   order by v.period, v.tag limit 1000;
@@ -651,7 +660,7 @@ $$;
 do $$ declare f text; begin
   foreach f in array array['mm_llm_summary(uuid)', 'mm_llm_search_docs(uuid, text, int, text[])', 'mm_llm_search_records(uuid, text, int)', 'mm_llm_position_history(uuid, text, date, date)',
                            'mm_llm_outage_scope(uuid, text)', 'mm_llm_overdue_actions(uuid, date)',
-                           'mm_llm_envoy(uuid, text, date, date)', 'mm_llm_pi_daily(uuid, text, date, date)',
+                           'mm_llm_bonvoy(uuid, text, date, date)', 'mm_llm_pi_daily(uuid, text, date, date)',
                            'mm_llm_downtime(uuid, date, date, text)', 'mm_llm_downtime_summary(uuid, date, date, text)', 'mm_llm_repeat_stops(uuid, date, date, int)', 'mm_llm_rcfa_status(uuid, date)', 'mm_llm_position_life(uuid, text, date)', 'mm_llm_production(uuid, date, date, text)', 'mm_llm_documents(uuid, text)', 'mm_llm_bus_day(uuid, date)',
                            'mm_llm_pi_values(uuid, text, timestamptz, timestamptz)'] loop
     execute format('revoke execute on function public.%s from public', f);
@@ -791,7 +800,7 @@ grant execute on function public.mm_llm_my_answers(uuid, int) to authenticated;
 do $$ declare f text; begin
   foreach f in array array['mm_llm_context(uuid)', 'mm_llm_summary(uuid)', 'mm_llm_search_docs(uuid, text, int, text[])', 'mm_llm_search_records(uuid, text, int)',
                            'mm_llm_position_history(uuid, text, date, date)', 'mm_llm_outage_scope(uuid, text)', 'mm_llm_overdue_actions(uuid, date)',
-                           'mm_llm_envoy(uuid, text, date, date)', 'mm_llm_pi_daily(uuid, text, date, date)',
+                           'mm_llm_bonvoy(uuid, text, date, date)', 'mm_llm_pi_daily(uuid, text, date, date)',
                            'mm_llm_downtime(uuid, date, date, text)', 'mm_llm_downtime_summary(uuid, date, date, text)', 'mm_llm_repeat_stops(uuid, date, date, int)', 'mm_llm_rcfa_status(uuid, date)', 'mm_llm_position_life(uuid, text, date)', 'mm_llm_production(uuid, date, date, text)', 'mm_llm_documents(uuid, text)', 'mm_llm_bus_day(uuid, date)',
                            'mm_llm_pi_values(uuid, text, timestamptz, timestamptz)'] loop
     execute format('revoke execute on function public.%s from public', f);
@@ -821,3 +830,45 @@ revoke execute on function public.mm_demo_org() from public;
 revoke execute on function public.mm_demo_records(text) from public;
 grant execute on function public.mm_demo_org() to anon, authenticated, service_role;
 grant execute on function public.mm_demo_records(text) to anon, authenticated, service_role;
+
+-- Step 07 (Bonvoy): the daily Bonvoy Report (flagged trends from the Pi historian, written by MM LLM; mocked for the
+-- demo by the generator), and Pi tags linked to My Machine positions with where their values come from.
+
+-- The Bonvoy Reports of an org, newest first (a list for the page's day picker).
+create or replace function public.mm_llm_bonvoy_reports(p_org uuid, p_from date default null, p_to date default null)
+returns table (day date, report_date date, flagged int, headline text, watch int, generated_by text)
+language sql stable security invoker set search_path = '' as $$
+  select r.day, r.report_date, r.flagged, r.headline, coalesce(jsonb_array_length(r.watch), 0), r.generated_by
+  from llm.bonvoy_reports r
+  where r.org_id = p_org and (p_from is null or r.day >= p_from) and (p_to is null or r.day <= p_to)
+  order by r.day desc;
+$$;
+-- One day's Bonvoy Report (the latest when p_day is null).
+create or replace function public.mm_llm_bonvoy_report(p_org uuid, p_day date default null)
+returns table (day date, report_date date, headline text, summary text, flagged int, items jsonb, watch jsonb, generated_by text, model text)
+language sql stable security invoker set search_path = '' as $$
+  select r.day, r.report_date, r.headline, r.summary, r.flagged, r.items, r.watch, r.generated_by, r.model
+  from llm.bonvoy_reports r
+  where r.org_id = p_org and (p_day is null or r.day = p_day)
+  order by r.day desc limit 1;
+$$;
+-- The Pi tags on a My Machine position: latest daily average, Bonvoy flags in the last 14 days, the latest report flagging it.
+create or replace function public.mm_llm_position_tags(p_org uuid, p_position text)
+returns table (tag text, description text, units text, source text, last_day date, last_avg double precision,
+               flags_14d int, last_flag date, last_report date)
+language sql stable security invoker set search_path = '' as $$
+  with t as (select * from llm.pi_tags where org_id = p_org and position_id = p_position),
+       d as (select coalesce((select max(period) from llm.bonvoy where org_id = p_org), current_date) as today)
+  select t.tag, t.description, t.units, t.source, d.today,
+         (select x.avg from public.mm_llm_pi_daily(p_org, t.tag, d.today, d.today) x),
+         (select count(*)::int from llm.bonvoy b where b.org_id = p_org and b.tag = t.tag and b.period > d.today - 14),
+         (select max(b.period) from llm.bonvoy b where b.org_id = p_org and b.tag = t.tag),
+         (select max(r.day) from llm.bonvoy_reports r where r.org_id = p_org and r.items @> jsonb_build_array(jsonb_build_object('tag', t.tag)))
+  from t, d order by t.tag;
+$$;
+do $$ declare f text; begin
+  foreach f in array array['mm_llm_bonvoy_reports(uuid, date, date)', 'mm_llm_bonvoy_report(uuid, date)', 'mm_llm_position_tags(uuid, text)'] loop
+    execute format('revoke execute on function public.%s from public', f);
+    execute format('grant execute on function public.%s to anon, authenticated, service_role', f);
+  end loop;
+end $$;

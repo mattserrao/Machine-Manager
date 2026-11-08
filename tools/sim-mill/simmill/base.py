@@ -57,7 +57,7 @@ def tx(text):
 md = lambda d, fmt='%b %-d': D(d).strftime(fmt) if not isinstance(d, dt.datetime) else d.strftime(fmt)   # 'Nov 11'
 DAY, HOUR, MIN = dt.timedelta(days=1), dt.timedelta(hours=1), dt.timedelta(minutes=1)
 Y = CFG['year']
-T0 = dt.datetime.combine(D(Y['warmup_start']), dt.time(0))     # model start (Envoy warm-up)
+T0 = dt.datetime.combine(D(Y['warmup_start']), dt.time(0))     # model start (Bonvoy warm-up)
 Y0, TODAY, Y1 = D(Y['start']), D(Y['today']), D(Y['end'])
 T_END = dt.datetime.combine(Y1, dt.time(0))
 H = int((T_END - T0).total_seconds() // 3600)                   # hours modelled
@@ -213,7 +213,7 @@ def section_name(asset_name):
 
 
 # ═════════════════════════ Pi tags ═════════════════════════
-# tag, description, units, asset, decimals, by_grade (Envoy baseline per grade), sheet_only (blank when the sheet is off)
+# tag, description, units, asset, decimals, by_grade (Bonvoy baseline per grade), sheet_only (blank when the sheet is off)
 TAGS = [
     ('SPEED', 'Reel speed', 'fpm', 'Reel drum', 0, True, False),
     ('PROD', 'Production rate', 't/h', 'Reel drum', 2, True, False),
@@ -272,6 +272,9 @@ for t in TAG.values():
     while not p and q:                      # nearest position up the tree (a Uhle box belongs to its felt)
         p = BY_NO[q]['position_id']; q = BY_NO[q]['parent_asset']
     t['position_id'] = p
+# Tags that read a position's condition without sitting on it: the table vacuums and couch solids show the forming fabric.
+for short, pos in (('FLATBOX_VAC', 'form-bottom'), ('COUCH_VAC', 'form-bottom'), ('COUCH_SOLIDS', 'form-bottom')):
+    TAG[f'{MACHINE}:{short}']['position_id'] = pos
 T = lambda short: f'{MACHINE}:{short}'
 
 
@@ -283,8 +286,14 @@ def write_csv(path, cols, rows):
 
 def write_backbone(folder):
     write_csv(os.path.join(folder, 'equipment.csv'), ['asset_no', 'name', 'section', 'kind', 'position_id', 'parent_asset'], EQUIP)
-    write_csv(os.path.join(folder, 'pi_tags.csv'), ['tag', 'description', 'units', 'asset_no', 'section', 'position_id'],
-              [{k: t[k] for k in ('tag', 'description', 'units', 'asset_no', 'section', 'position_id')} for t in TAG.values()])
+    import yaml as _y
+    tm = _y.safe_load(open(os.path.join(HERE, 'config', 'tags.yaml')))
+    src = {**{k: 'engine' for k in tm['engine']}, **{k: 'derived' for k in tm['derived']}, **{k: 'condition' for k in tm['condition']},
+           **{k: 'model' for k in tm['model']}}
+    on = os.path.exists(os.path.join(HERE, 'engine', 'hourly.csv.gz')) and os.environ.get('SIM_ENGINE', '1') != '0'
+    write_csv(os.path.join(folder, 'pi_tags.csv'), ['tag', 'description', 'units', 'asset_no', 'section', 'position_id', 'source'],
+              [dict({k: t[k] for k in ('tag', 'description', 'units', 'asset_no', 'section', 'position_id')},
+                    source=(src.get(t['short'], 'model') if on else 'model')) for t in TAG.values()])
     write_csv(os.path.join(folder, 'outages.csv'), ['id', 'type', 'start', 'end', 'note'],
               [dict(id=o['id'], type=o['type'], start=o['start'].isoformat(timespec='minutes'), end=o['end'].isoformat(timespec='minutes'),
                     note=o['note']) for o in OUTAGES if o['date'] >= Y0])

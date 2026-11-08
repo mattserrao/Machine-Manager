@@ -1,20 +1,20 @@
-"""MM LLM demo data, phase 3: mock Pi historian series and the Envoy exception reports derived from them.
+"""MM LLM demo data, phase 3: mock Pi historian series and the Bonvoy exception reports derived from them.
 
     demo-data/out/pi/hourly/PM1_hourly_YYYY-MM.csv   hourly averages, every tag, Nov 2025 – Oct 2026 (wide: Timestamp + one column per tag)
     demo-data/out/pi/minute/<story>_<from>_<to>.csv  1-minute data around the storyline events
     demo-data/out/pi/points.json                     point metadata (what the mock PI Web API serves for /points)
-    demo-data/out/envoy/Envoy_PM1_YYYY-MM-DD.csv     one exception report per day (header only when nothing tripped)
+    demo-data/out/bonvoy/Bonvoy_PM1_YYYY-MM-DD.csv     one exception report per day (header only when nothing tripped)
 
-    python3 tools/demo-data/pi_envoy.py            # generate (run structured.py first: it writes _truth/downtime.csv)
-    python3 tools/demo-data/pi_envoy.py --check    # generate to a temp folder, re-derive Envoy from the CSVs, check storyline anchors
+    python3 tools/demo-data/pi_bonvoy.py            # generate (run structured.py first: it writes _truth/downtime.csv)
+    python3 tools/demo-data/pi_bonvoy.py --check    # generate to a temp folder, re-derive Bonvoy from the CSVs, check storyline anchors
 
 How the series are made: the grade schedule, outages and _truth/downtime.csv (breaks and equipment stops) decide
 when the machine turns and when the sheet is on. Each tag has a running value (by grade where it matters, plus
 clothing and plate age), AR(1) noise at the tag's sigma, a few random process upsets, and the storyline effects
 (S01 bearing, S02 felt fill and steam, S04 plate wear, S05 PV fan, S06 trial fabric). The model starts two months
-before the demo year so Envoy has a baseline on day one.
+before the demo year so Bonvoy has a baseline on day one.
 
-Envoy rule (one place, used by the generator and the check): for each selected tag and calendar day, take the
+Bonvoy rule (one place, used by the generator and the check): for each selected tag and calendar day, take the
 hours with the sheet on (and not within 2 h of a restart). Baseline = mean and standard deviation of the same
 tag's eligible hours from 67 to 7 days back (same grade only, for grade-dependent tags). An exception is >= 3
 hours outside mean ± 3σ.
@@ -26,7 +26,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 BACKBONE = os.path.join(ROOT, 'demo-data', 'backbone')
 SEED = 3303
-T0 = dt.datetime(2025, 9, 1)                    # model start (warm-up for the Envoy baseline)
+T0 = dt.datetime(2025, 9, 1)                    # model start (warm-up for the Bonvoy baseline)
 Y0, Y1 = dt.date(2025, 11, 1), dt.date(2026, 10, 31)
 T_END = dt.datetime(2026, 11, 1)
 H = int((T_END - T0).total_seconds() // 3600)
@@ -61,7 +61,7 @@ CHANGES = {
 LIFE_WEEKS = {'p1-felt-top': 6, 'p-tandem-felt': 6, 'p2-felt-top': 12, 'form-bottom': 12, 'form-top': 12,
               'ref-bp1': 12, 'ref-bp2': 12, 'ref-tp1': 12, 'ref-tp2': 12}
 
-# Storyline tuning (chosen so Envoy's first flags land on the storyline dates; the check holds them there).
+# Storyline tuning (chosen so Bonvoy's first flags land on the storyline dates; the check holds them there).
 # Dates are the day a flag happens (the report's Period); the report itself arrives the next morning.
 S01 = dict(start='2026-09-01', base=.07, at=[(21, .014), (41, .14)], g33=1.2, gother=.8, tail=.35)
 S02 = dict(start='2026-03-10', end='2026-04-15 06:00', uhle_per_day=.115, moist_per_day=.06, slow='2026-03-16', cap='2026-03-24',
@@ -70,7 +70,7 @@ S04 = dict(start='2026-09-28', per_run_day=.12, power=1.0)
 S05 = dict(long_days=['2026-07-14', '2026-07-18'], depth=6.4)
 S06 = dict(start='2025-12-10 20:00', end='2026-01-21 06:00', couch=.7, speed_loss=15)
 
-ENVOY_TAGS = [t['tag'] for t in TAGS if t['tag'] not in ('PM1:SPEED', 'PM1:BREAKS')]
+BONVOY_TAGS = [t['tag'] for t in TAGS if t['tag'] not in ('PM1:SPEED', 'PM1:BREAKS')]
 BY_GRADE = {'PM1:DRY1_STEAM_P', 'PM1:DRY2_STEAM_P', 'PM1:DRY3_STEAM_P', 'PM1:HB_TOP_P', 'PM1:HB_BASE_P', 'PM1:HB_BASE_CONS',
             'PM1:PRESS1_LOAD', 'PM1:PRESS2_LOAD', 'PM1:REEL_BW', 'PM1:REF_BP1_KW', 'PM1:REF_BP2_KW', 'PM1:REF_TP1_KW', 'PM1:REF_TP2_KW'}
 SHEET_ONLY = {'PM1:REF_BP1_SE', 'PM1:REF_BP2_SE', 'PM1:REF_TP1_SE', 'PM1:REF_TP2_SE', 'PM1:PRESS_OUT_MOIST', 'PM1:REEL_MOIST', 'PM1:REEL_BW', 'PM1:HB_BASE_CONS'}
@@ -220,7 +220,7 @@ def build(truth):
              'PM1:DRY3_STEAM_P': ('2026-02-15', '2026-04-20'), 'PM1:DRY3_PV_FAN_AMPS': ('2026-05-15', '2026-09-10'),
              'PM1:FORM_BASE_COUCH_VAC': ('2025-11-25', '2026-02-05')}
     upsets = []
-    for t in ENVOY_TAGS:
+    for t in BONVOY_TAGS:
         sig = float(TAG[t]['sigma'])
         for day in range(H // 24):
             if rng.random() < .11:
@@ -264,7 +264,7 @@ def brentq(f, a, b):
     return (a + b) / 2
 
 
-# ═════════════════════════ Envoy ═════════════════════════
+# ═════════════════════════ Bonvoy ═════════════════════════
 def eligible_mask(sheet, on):
     ok = sheet >= .95
     restart = np.zeros(H, dtype=bool)
@@ -272,11 +272,11 @@ def eligible_mask(sheet, on):
         if on[h - 1] < .99 or sheet[h - 1] < .5: restart[h:h + 2] = True
     return ok & ~restart
 
-def envoy(values, grade, sheet, on, days):
+def bonvoy(values, grade, sheet, on, days):
     """values: tag -> hourly array (as written to the CSV). Returns {day: [row dict, ...]}."""
     elig = eligible_mask(sheet, on)
     out = {d: [] for d in days}
-    for t in ENVOY_TAGS:
+    for t in BONVOY_TAGS:
         x = values[t]; byg = t in BY_GRADE
         for d in days:
             i = int(hidx(dt.datetime.combine(d, dt.time(0)))); j = i + 24
@@ -311,7 +311,7 @@ def envoy(values, grade, sheet, on, days):
                                'Direction': 'High' if worst[1] > m else 'Low'})
     return out
 
-ENVOY_COLS = ['Report Date', 'Period', 'Tag', 'Description', 'Area', 'Asset Number', 'Asset', 'Units', 'Grade', 'Baseline Mean',
+BONVOY_COLS = ['Report Date', 'Period', 'Tag', 'Description', 'Area', 'Asset Number', 'Asset', 'Units', 'Grade', 'Baseline Mean',
               'Baseline Std Dev', 'Low Limit', 'High Limit', 'Min', 'Max', 'Hours Outside', 'First Outside', 'Last Outside', 'Direction']
 
 
@@ -380,9 +380,9 @@ def write_all(m, out):
     os.makedirs(os.path.join(out, 'pi'), exist_ok=True)
     json.dump({'server': 'MILLPI01', 'demo_now': '2026-10-31T23:00:00', 'points': points}, open(os.path.join(out, 'pi', 'points.json'), 'w'), indent=1)
     days = [Y0 + dt.timedelta(days=k) for k in range((Y1 - Y0).days + 1)]
-    ev = envoy(m['OUT'], m['grade'], m['sheet'], m['on'], days)
+    ev = bonvoy(m['OUT'], m['grade'], m['sheet'], m['on'], days)
     for d, rows in ev.items():
-        write_csv(os.path.join(out, 'envoy', f'Envoy_PM1_{d.isoformat()}.csv'), ENVOY_COLS, rows)
+        write_csv(os.path.join(out, 'bonvoy', f'Bonvoy_PM1_{d.isoformat()}.csv'), BONVOY_COLS, rows)
     return ev
 
 
@@ -404,7 +404,7 @@ def check(m, ev, out, truth):
     def need(ok, msg):
         if not ok: errs.append(msg)
     days = sorted(ev)
-    # 1) the CSVs re-read from disk produce exactly the same Envoy reports
+    # 1) the CSVs re-read from disk produce exactly the same Bonvoy reports
     times, vals = read_hourly(out)
     need(len(times) == 365 * 24, f'{len(times)} hourly rows, want {365 * 24}')
     i0 = int(hidx(dt.datetime.combine(Y0, dt.time(0))))
@@ -412,10 +412,10 @@ def check(m, ev, out, truth):
     for t in vals:
         a, b = m['OUT'][t][i0:], vals[t]
         need(np.allclose(np.nan_to_num(a, nan=-1), np.nan_to_num(b, nan=-1), atol=10 ** -DECIMALS(t)), f'{t}: CSV differs from the model')
-    ev2 = envoy(full, m['grade'], m['sheet'], m['on'], days)
+    ev2 = bonvoy(full, m['grade'], m['sheet'], m['on'], days)
     for d in days:
-        disk = list(csv.DictReader(open(os.path.join(out, 'envoy', f'Envoy_PM1_{d.isoformat()}.csv'))))
-        need([r['Tag'] for r in disk] == [r['Tag'] for r in ev2[d]], f'Envoy {d}: report not reproducible from the Pi CSVs')
+        disk = list(csv.DictReader(open(os.path.join(out, 'bonvoy', f'Bonvoy_PM1_{d.isoformat()}.csv'))))
+        need([r['Tag'] for r in disk] == [r['Tag'] for r in ev2[d]], f'Bonvoy {d}: report not reproducible from the Pi CSVs')
     # 2) machine stopped for outages and equipment stops; break counter matches the truth table
     spd = vals['PM1:SPEED']
     for a, b, kind in m['stops']:
@@ -424,9 +424,9 @@ def check(m, ev, out, truth):
         if hb > ha: need(np.all(spd[ha:hb] == 0), f'speed not 0 during {kind} {a}')
     need(int(vals['PM1:BREAKS'][-1]) == sum(1 for x in truth if x['kind'] == 'break'), 'break counter does not match _truth/downtime.csv')
     need(np.all(spd[(m['on'][i0:] >= 1)] > 1900), 'speed low while running')
-    # 3) Envoy volume
+    # 3) Bonvoy volume
     per_day = [len(ev[d]) for d in days]
-    need(2 <= float(np.median(per_day)) <= 15, f'median {np.median(per_day)} Envoy exceptions/day, want 3–15')
+    need(2 <= float(np.median(per_day)) <= 15, f'median {np.median(per_day)} Bonvoy exceptions/day, want 3–15')
     # 4) storyline anchors
     D = dt.date.fromisoformat
     f = flags(ev, 'PM1:DRY2_C27_DS_VIB'); fs = [d for d in f if d >= D('2026-08-01')]
@@ -472,14 +472,14 @@ if __name__ == '__main__':
         sys.exit('Run tools/demo-data/structured.py first (it writes _truth/downtime.csv).')
     out = os.path.join(tempfile.mkdtemp(), 'out') if checking else os.path.join(ROOT, 'demo-data', 'out')
     if not checking:   # keep phase 2's files; replace only ours
-        for sub in ('pi', 'envoy'):
+        for sub in ('pi', 'bonvoy'):
             shutil.rmtree(os.path.join(out, sub), ignore_errors=True)
         tmp = os.path.join(tempfile.mkdtemp(), 'out'); m, ev, truth = run(tmp)
-        for sub in ('pi', 'envoy'): shutil.move(os.path.join(tmp, sub), os.path.join(out, sub))
+        for sub in ('pi', 'bonvoy'): shutil.move(os.path.join(tmp, sub), os.path.join(out, sub))
     else:
         m, ev, truth = run(out)
     n = sum(len(v) for v in ev.values())
-    summary = f'{len(TAGS)} tags hourly · {len(MINUTE_WINDOWS)} minute windows · {len(ev)} Envoy reports, {n} exceptions (median {int(np.median([len(v) for v in ev.values()]))}/day)'
+    summary = f'{len(TAGS)} tags hourly · {len(MINUTE_WINDOWS)} minute windows · {len(ev)} Bonvoy reports, {n} exceptions (median {int(np.median([len(v) for v in ev.values()]))}/day)'
     if checking:
         errs = check(m, ev, out, truth)
         sys.path.insert(0, HERE); import mock_piwebapi
@@ -487,6 +487,6 @@ if __name__ == '__main__':
         shutil.rmtree(os.path.dirname(out))
         for e in errs: print('FAIL', e)
         if errs: sys.exit(1)
-        print('pi/envoy ok —', summary)
+        print('pi/bonvoy ok —', summary)
     else:
-        print('wrote demo-data/out/pi and envoy —', summary)
+        print('wrote demo-data/out/pi and bonvoy —', summary)

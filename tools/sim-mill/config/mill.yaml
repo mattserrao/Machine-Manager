@@ -19,7 +19,7 @@ machine:
   cans_per_section: 5
 
 year:
-  warmup_start: 2025-09-01      # the model runs from here so Envoy has a baseline on day one
+  warmup_start: 2025-09-01      # the model runs from here so Bonvoy has a baseline on day one
   start: 2025-11-01
   today: 2026-10-31             # demo "today"
   end: 2026-11-01

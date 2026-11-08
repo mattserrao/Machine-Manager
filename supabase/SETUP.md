@@ -47,10 +47,10 @@ They work, but everyone on a shared login appears as the same person in the chan
 ## MM LLM data (the assistant's sources)
 
 The assistant reads its own tables in the `llm` schema (`supabase/llm.sql`): BUS sheet lines, work orders, actions,
-RCFAs, Envoy exceptions, Pi series, and documents split into searchable chunks. Members of an organization can
+RCFAs, Bonvoy exceptions, Pi series, and documents split into searchable chunks. Members of an organization can
 read its rows; nobody writes to them from the web page.
 
-**Loading files** (BUS sheets, JDE / Planner exports, Envoy CSVs, Pi data, vendor reports, drawings):
+**Loading files** (BUS sheets, JDE / Planner exports, Bonvoy CSVs, Pi data, vendor reports, drawings):
 
 1. In the **SQL Editor**, create a short-lived ingest token for the organization:
    ```sql

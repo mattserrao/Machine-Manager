@@ -7,7 +7,7 @@
     demo-data/out/docs/reference/<REF id>.pdf (+ tables/<REF id>.csv)  reference charts, as a document and a typed table
     demo-data/out/_truth/documents.json               answer key: every document's fields an extractor should find
 
-    python3 tools/demo-data/docs.py            # generate (after structured.py and pi_envoy.py)
+    python3 tools/demo-data/docs.py            # generate (after structured.py and pi_bonvoy.py)
     python3 tools/demo-data/docs.py --check    # generate to a temp folder and check text extraction against the answer key
 
 Measured values come from the generated data, so documents agree with everything else: vibration route readings
@@ -39,7 +39,7 @@ OUTAGES = read(os.path.join(DATA, 'backbone', 'outages.csv'))
 IN_YEAR = [o for o in OUTAGES if D(o['start'][:10]) <= D('2026-10-31')]
 odate = lambda o: D(o['start'][:10])
 
-# Clothing / plate changes (the same schedule as structured.py and pi_envoy.py)
+# Clothing / plate changes (the same schedule as structured.py and pi_bonvoy.py)
 CHANGES = {
     'p2-felt-top': ['2025-09-17', '2025-12-10', '2026-03-04', '2026-04-15', '2026-07-08', '2026-10-05'],
     'form-bottom': ['2025-09-17', '2025-12-10', '2026-01-21', '2026-02-18', '2026-03-04', '2026-05-27', '2026-08-19'],
@@ -786,7 +786,7 @@ if __name__ == '__main__':
     checking = '--check' in sys.argv
     for need_file in ('_truth/downtime.csv', 'pi/points.json', 'rcfa/RCFA_log_PM1.csv'):
         if not os.path.exists(os.path.join(DATA, 'out', need_file)):
-            sys.exit(f'Missing demo-data/out/{need_file}: run structured.py and pi_envoy.py first.')
+            sys.exit(f'Missing demo-data/out/{need_file}: run structured.py and pi_bonvoy.py first.')
     out = os.path.join(tempfile.mkdtemp(), 'out') if checking else os.path.join(DATA, 'out')
     manifest = build(out)
     kinds = {}

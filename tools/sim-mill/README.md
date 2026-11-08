@@ -11,10 +11,14 @@ mill and writes every Machine Manager source. The year is written for Nov 1 2025
 | Path | What |
 |---|---|
 | `config/mill.yaml` | Machine (fourdrinier, 2 refiners, 2 press nips, 4 uno-run dryer sections of 5 cans with 5 felt rolls each), grades 24/28/31/34 Super, calendar (20 h outages every 6 weeks), realism rates, vendors, roster, clothing / plate / roll life, consumables |
+| `engine/` | **The Paper Mill engine's historian run** (the-paper-mill `headless/historian.js`): hourly running values of the engine tags Sim Mill uses, and its event log (grades, sheet breaks, upsets, failures, outages). Brought in with `engine_import.py`; rerun only when the engine or the base year changes |
+| `config/tags.yaml` | Where each of the 47 PM1 tags comes from: `engine` (21) and `derived` (6) tags take the engine's level plus the Python model's deviation from its grade median; `condition` (vibration, bearing temperature, Uhle vacuum) and `model` tags stay Python |
 | `config/plants.yaml` | The five planted faults F1–F5. Everything else is emergent |
 | `reference/` | From the-paper-mill `sim-headless`: the upset catalogue, critical assets, reliability constants and grades (`catalog.json`), the reference year's per-grade tag statistics and event summary |
-| `simmill/model.py` | Grade campaigns, position life, every stop (outages, upsets at a year's MTBF, sheet breaks, bearing faults found on the route or failing, motors, drives, the planted faults), RCFA rule |
-| `simmill/process.py` | Hourly Pi values for 47 tags, 1-minute windows around F1–F5, and the Envoy rule (same as Demo Mill's) |
+| `simmill/engine.py` | Loads `engine/` onto Sim Mill's clock (it moves with the roll) and evaluates the tag map |
+| `simmill/model.py` | Grade campaigns (the engine's), position life, every stop: the engine's sheet breaks, upsets and failures; outages; bearing faults found on the vibration route; the planted faults; RCFA rule. Without `engine/` it falls back to its own catalogue draws |
+| `simmill/bonvoy_report.py` | The Bonvoy Report for the last 7 days (mocked MM LLM write-up): flags ranked by σ × hours × days running, with clothing age, open WOs, RCFAs, vendor reports, the planted-fault story, and bearings above fixed alarm limits |
+| `simmill/process.py` | Hourly Pi values for 47 tags (27 driven by the engine), 1-minute windows around F1–F5, and the Bonvoy rule (same as Demo Mill's) |
 | `simmill/records.py` | JDE work orders, Planner actions, BUS issues, RCFAs and their actions |
 | `simmill/docs.py` | Vendor reports (clothing surveys, felt analysis, vibration routes, shower audits, plate reports, roll service, steam surveys), RCFA write-ups, drawings, reference charts |
 | `simmill/emit.py` | Writers, in Demo Mill's layouts, plus three new feeds: downtime events, daily production, position runs |
@@ -30,6 +34,13 @@ python3 tools/sim-mill/run.py --check        # ~10 s: generate to a temp folder 
 python3 tools/sim-mill/validate_ref.py       # port vs the-paper-mill reference year
 python3 tools/sim-mill/run.py                # write demo-data/sim-mill/out/
 ```
+
+**The engine drives it.** Grades, sheet breaks, upsets and reliability failures are the engine's own, at the times it had them;
+its running tag values give the level of 27 Pi tags. The Python model adds instrument noise (the game has none: many of its tags
+sit at a setpoint), the condition tags the game doesn't model, clothing and plate wear, and the planted faults (as deltas, so F1's
+press solids and F3's REF 2 energy still show on engine-driven tags). Bearing faults the engine had become P-F curves ending at its
+failure; faults found on the Keel route stay Python. To refresh: in the-paper-mill `python3 headless/build_headless.py --full && node headless/historian.js`,
+then `python3 tools/sim-mill/engine_import.py <the-paper-mill>/headless/out/historian` and re-check the answer key.
 
 **The roll.** `run.py --cycles k` moves every date by k × 42 days (outage grid, weekdays and the planted faults keep
 their places; the Keel route stays on the base year's second Wednesdays); `--auto` picks the cycles that have passed.

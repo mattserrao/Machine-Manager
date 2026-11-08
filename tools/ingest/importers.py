@@ -5,7 +5,7 @@ export with different headers is a mapping change, not a code change. Every row 
 by the Tagger (exact matches against the equipment register first; free text in documents by name matching).
 Nothing here reads the demo answer key (_truth/).
 """
-import csv, datetime as dt, hashlib, os, re, subprocess, tempfile
+import csv, datetime as dt, hashlib, json, os, re, subprocess, tempfile
 from zoneinfo import ZoneInfo
 
 MILL_TZ = ZoneInfo('America/New_York')
@@ -68,7 +68,8 @@ def backbone(folder):
     equipment = [dict(asset_no=e['asset_no'], name=e['name'], section=e['section'], kind=e['kind'],
                       position_id=e['position_id'] or None, parent_asset=e['parent_asset'] or None) for e in eq]
     tags = [dict(tag=t['tag'], description=t['description'], units=t['units'], asset_no=t['asset_no'],
-                 position_id=t['position_id'] or None, section=t['section']) for t in rd('pi_tags.csv')]
+                 position_id=t['position_id'] or None, section=t['section'], **({'source': t['source'] or None} if 'source' in t else {}))
+            for t in rd('pi_tags.csv')]
     loc = lambda s: dt.datetime.fromisoformat(s).replace(tzinfo=MILL_TZ).isoformat()
     outages = [dict(outage_id=o['id'], kind=o['type'], starts_at=loc(o['start']), ends_at=loc(o['end']), note=o['note']) for o in rd('outages.csv')]
     return equipment, tags, outages
@@ -169,8 +170,8 @@ def rcfa_log(path, tagger):
     return out
 
 
-# ═════════════════════════ Envoy (.csv) ═════════════════════════
-def envoy_reports(paths, tagger):
+# ═════════════════════════ Bonvoy (.csv) ═════════════════════════
+def bonvoy_exceptions(paths, tagger):
     out = []
     for path in sorted(paths):
         for r in csv.DictReader(open(path)):
@@ -290,6 +291,16 @@ DOWNTIME_KIND = {'Planned': 'planned', 'Unplanned': 'unplanned', 'Sheet break': 
 
 def local_ts(s):
     return dt.datetime.fromisoformat(s).replace(tzinfo=MILL_TZ).isoformat()
+
+def bonvoy_report_files(paths):
+    """The daily Bonvoy Reports (.json, one per day): summary, ranked flagged trends and the alarm watch list."""
+    out = []
+    for path in sorted(paths):
+        r = json.load(open(path))
+        out.append(dict(day=r['day'], report_date=r.get('report_date'), headline=r.get('headline'), summary=r.get('summary'),
+                        flagged=r.get('flagged'), items=r.get('items') or [], watch=r.get('watch') or [],
+                        generated_by=r.get('generated_by'), model=r.get('model'), source_file=os.path.basename(path)))
+    return out
 
 def downtime_files(paths, tagger):
     out = []

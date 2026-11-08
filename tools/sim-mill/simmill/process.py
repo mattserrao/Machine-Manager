@@ -1,5 +1,5 @@
 """Sim Mill process model: hourly Pi values for every tag, 1-minute windows around the planted faults, and the daily
-Envoy exception reports derived from them.
+Bonvoy exception reports derived from them.
 
 The running values are calibrated to the reference year (reference/grade_stats.json, the-paper-mill sim-headless):
 steam by grade, refining energy, vacuums, solids, moisture, syphon differential. On top: clothing and plate age (from
@@ -9,6 +9,7 @@ stops, breaks and slowdowns (hour-weighted, like a historian's hourly average).
 import datetime as dt, math
 import numpy as np
 from .base import B, BT, md, SHIFT
+from . import engine as ENG
 from .base import (T0, H, HOUR, MIN, DAY, Y0, Y1, TODAY, TAG, T, MACHINE, GRADES, GRADE_IDS, GLABEL, full_tph, hidx, ts, D, DT,
                    PLANTS, BY_NAME, SECTION_NAME, us)
 from .model import grade_at, age_frac, piece_at, VIB_BASE, VIB_DANGER
@@ -161,6 +162,18 @@ def build(m, seed=3303):
     R['REEL_DRUM_DS_TEMP'] = 132 + 95 * (R['REEL_DRUM_DS_VIB'] - VIB_BASE) + 2 * np.sin((day - 200) / 365 * 2 * math.pi)
     R['BREAKS'] = st['breaks']
 
+    # The engine drives the process tags (config/tags.yaml): its running level for the hour, plus the Python model's
+    # deviation from its own grade median (clothing and plate wear, the planted faults). Hours the engine has no running
+    # value for keep the Python value.
+    src = {}
+    for k in list(R):
+        eng = ENG.series(k)
+        if eng is None: continue
+        py = np.asarray(R[k], dtype=float) * np.ones(H)
+        med = np.array([np.median(py[grade == gi]) if (grade == gi).any() else 0.0 for gi in range(len(GRADE_IDS))])
+        R[k] = np.where(np.isfinite(eng), eng + (py - med[grade]), py)
+        src[k] = float(np.isfinite(eng).mean())
+
     # noise (AR(1), each tag at its sigma) and the stops
     OUT = {}
     for tag, meta in TAG.items():
@@ -181,11 +194,11 @@ def build(m, seed=3303):
         elif k in SHEET_ONLY or tag in SHEET_ONLY: v = np.where(sheet > 0.25, x, np.nan)
         else: v = x * on
         OUT[tag] = np.round(v, meta['decimals'])
-    return dict(OUT=OUT, R=R, grade=grade, on=on, sheet=sheet, state=st)
+    return dict(OUT=OUT, R=R, grade=grade, on=on, sheet=sheet, state=st, engine_cover=src)
 
 
-# ═════════════════════════ Envoy (same rule as Demo Mill's pi_envoy.py) ═════════════════════════
-ENVOY_TAGS = [t for t in TAG if TAG[t]['short'] not in ('SPEED', 'PROD', 'BREAKS')]
+# ═════════════════════════ Bonvoy (same rule as Demo Mill's pi_bonvoy.py) ═════════════════════════
+BONVOY_TAGS = [t for t in TAG if TAG[t]['short'] not in ('SPEED', 'PROD', 'BREAKS')]
 
 def eligible_mask(sheet, on):
     ok = sheet >= .95
@@ -194,15 +207,15 @@ def eligible_mask(sheet, on):
         if on[h - 1] < .99 or sheet[h - 1] < .5: restart[h:h + 2] = True
     return ok & ~restart
 
-ENVOY_COLS = ['Report Date', 'Period', 'Tag', 'Description', 'Area', 'Asset Number', 'Asset', 'Units', 'Grade', 'Baseline Mean',
+BONVOY_COLS = ['Report Date', 'Period', 'Tag', 'Description', 'Area', 'Asset Number', 'Asset', 'Units', 'Grade', 'Baseline Mean',
               'Baseline Std Dev', 'Low Limit', 'High Limit', 'Min', 'Max', 'Hours Outside', 'First Outside', 'Last Outside', 'Direction']
 
-def envoy(values, grade, sheet, on, days):
+def bonvoy(values, grade, sheet, on, days):
     """For each tag and calendar day: hours with the sheet on (not within 2 h of a restart) against the mean +/- 3 sigma of
     the same tag 67 to 7 days back (same grade for grade-dependent tags). >= 3 hours outside is an exception."""
     elig = eligible_mask(sheet, on)
     out = {d: [] for d in days}
-    for t in ENVOY_TAGS:
+    for t in BONVOY_TAGS:
         x = values[t]; byg = TAG[t]['by_grade']; meta = TAG[t]
         for d in days:
             i = int(hidx(dt.datetime.combine(d, dt.time(0)))); j = i + 24

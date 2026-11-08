@@ -1,4 +1,4 @@
-tag,description,units,asset_no,section,position_id,mean,sigma,envoy_sigma
+tag,description,units,asset_no,section,position_id,mean,sigma,bonvoy_sigma
 PM1:REF_BP1_KW,BP1 refiner motor load,kW,00041070,sec-refiners,ref-bp1,1150,40,3
 PM1:REF_BP2_KW,BP2 refiner motor load,kW,00041084,sec-refiners,ref-bp2,1150,40,3
 PM1:REF_TP1_KW,TP1 refiner motor load,kW,00041098,sec-refiners,ref-tp1,1150,40,3

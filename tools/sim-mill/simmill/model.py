@@ -11,6 +11,7 @@ five planted faults (config/plants.yaml), RCFA trigger rule. Everything is seede
 """
 import datetime as dt, math, random
 from .base import B, BT, md, tx, SHIFT
+from . import engine as ENG
 from .base import (CFG, PLANTS, CATALOG, D, DT, DAY, HOUR, MIN, T0, T_END, Y0, TODAY, OUTAGES, IN_YEAR, NEXT_OUTAGE,
                    GRADES, full_tph, POS_NAME, BY_NAME, crew_at, ORD)
 
@@ -18,7 +19,16 @@ SEED = 20251101
 
 # ═════════════════════════ Grade campaigns ═════════════════════════
 def grade_schedule(rnd):
-    """[(start, end, grade)] from T0 to T_END walking the wheel; a campaign is a tonnage at ~92% of full rate."""
+    """[(start, end, grade)] from T0 to T_END. With the engine: its grade changes. Without: walk the wheel, a campaign
+    being a tonnage at ~92% of full rate."""
+    if ENG.ON:
+        ch = [(e['t'], e['grade']) for e in ENG.events() if e['type'] == 'grade']
+        ch[0] = (T0, ch[0][1])                       # the engine starts at 6 AM; its first grade covers the night before
+        out = []
+        for (a, g), nxt in zip(ch, ch[1:] + [(T_END, None)]):
+            a, b = max(a, T0), min(nxt[0], T_END)
+            if b > a: out.append((a.replace(second=0, microsecond=0), b.replace(second=0, microsecond=0), g))
+        return out
     wheel = CFG['wheel']; out, t, i = [], T0, 0
     while t < T_END:
         g = wheel[i % len(wheel)]; lo, hi = GRADES[g]['mix']
@@ -156,7 +166,9 @@ EVENT_ASSET = {
 CAUSE_TEXT = {e['id']: e['name'] for e in CATALOG['events']}
 CAUSE_TEXT.update(bearingfail='Bearing failure', motorfail='Motor failure', drivefail='Drive trip', bearingplan='Bearing change (found on the vibration route)',
                   outage='Planned outage', break_='Sheet break', feltchange='Unplanned felt change', fabrichole='Forming fabric hole',
-                  jointleak='Rotary joint leak')
+                  jointleak='Rotary joint leak', rectfail='Rectifier fault (MCC DC bus down)', hbdoor='Headbox side door blew off',
+                  motorplan='Motor change (found on test)')
+EVENT_ASSET.setdefault('hbdoor', ('Headbox', 'stop'))
 # Critical assets (07i ASSETS) and the Pi tag that watches each one's bearings
 CRITICAL = [('pulp', 'Pulper rotor', 'PULPER_VIB'), ('refA', 'REF 1 refiner motor', 'REF_A_VIB'), ('refB', 'REF 2 refiner motor', 'REF_B_VIB'),
             ('fan', 'Fan pump', 'FAN_PUMP_VIB'), ('couch', 'Couch roll', 'COUCH_DS_VIB'), ('pr1', '1st press drive', 'PRESS1_DS_VIB'),
@@ -177,6 +189,58 @@ ROUTES = route_dates()
 
 def in_outage(t):
     return next((o for o in OUTAGES if o['start'] <= t < o['end']), None)
+
+def engine_stops(ev, rnd, busy):
+    """The engine's sheet breaks, upsets and reliability failures as Sim Mill stops (appended to ev). Returns the bearing
+    faults behind the engine's bearing failures, for the vibration series: each rises over a P-F interval to the failure
+    the engine had (missed on the route, so 'not caught')."""
+    AID = {aid: (asset, tag) for aid, asset, tag in CRITICAL}
+    planted = [e for e in ev if e.get('story')]
+    clash = lambda a, b: any(e['start'] < b and a < e['end'] for e in planted)
+    faults = []
+    for e in ENG.events():
+        if e['type'] not in ('break', 'upset', 'failure', 'planned') or e['start'] < T0 or e['start'] >= T_END: continue
+        a, b = e['start'].replace(second=0, microsecond=0), e['end'].replace(second=0, microsecond=0)
+        if b <= a or in_outage(a) or clash(a, b): continue
+        k = int(a.timestamp()) // 60                         # a deterministic pick where the engine doesn't say
+        if e['type'] == 'break':
+            where = e.get('where') or 'dryer'
+            sec = {'reel': 'Reel drum', 'press': '2nd press top felt'}.get(where) or ['Dryer can 3', 'Dryer can 6', 'Dryer can 11', 'Dryer can 16'][k % 4]
+            ev.append(dict(start=a, end=b, kind='break', cause='break_', asset=sec, note=f'Sheet break at the {where}', story='', where=where))
+        elif e['type'] == 'upset':
+            if e['id'] not in EVENT_ASSET: continue
+            asset, eff = EVENT_ASSET[e['id']]
+            if eff == 'none': continue
+            if e['id'] == 'felt': asset = ['1st press top felt', '1st press bottom felt', '2nd press bottom felt'][k % 3]
+            if e['id'] in ('syphon', 'steamjoint'): asset = ['1st section rotary joint (DS)', '2nd section rotary joint (DS)', '4th section rotary joint (DS)'][k % 3]
+            if e['id'] == 'wrap': asset = f'Dryer can {k % 20 + 1}'
+            if e['id'] == 'refclash': asset = ['REF 1 refiner', 'REF 2 refiner'][k % 2]
+            head = next((c['head'] for c in CATALOG['events'] if c['id'] == e['id']), CAUSE_TEXT.get(e['id'], e['id']))
+            ev.append(dict(start=a, end=b, kind='unplanned' if eff == 'stop' else 'slowdown', cause=e['id'], asset=asset, note=head,
+                           story='', speed=0.7 if eff == 'slow' else 0.0))
+        elif e['type'] == 'failure':
+            if e['kind'] == 'rect':
+                if e.get('line') == 'WD': continue           # the winder: no machine time
+                asset = 'Dryer drive lineup' if e.get('line') == 'PM' else 'Pulper rotor'
+                mcc = 'MCC-2' if e.get('line') == 'PM' else 'MCC-1'
+                ev.append(dict(start=a, end=b, kind='unplanned', cause='rectfail', asset=asset, story='',
+                               note=f'{mcc} DC bus down: rectifier fault, {asset.lower()} and everything on the bus stopped.'))
+                continue
+            if e.get('asset') not in AID: continue
+            asset, tag = AID[e['asset']]
+            if e['kind'] == 'vib':
+                pf = 18 + rnd.random() * 27
+                faults.append(dict(asset=asset, tag=tag, onset=a - DAY * pf, pf_days=pf, story='', found=None, fail=a, fixed=b, fix_outage=None))
+                ev.append(dict(start=a, end=b, kind='unplanned', cause='bearingfail', asset=asset, story='',
+                               note=f"{asset} bearing failed (not caught on the route)."))
+            else:
+                cause = 'motorfail' if e['kind'] == 'adx' else 'drivefail'
+                ev.append(dict(start=a, end=b, kind='unplanned', cause=cause, asset=asset.replace(' DS bearing', ''), story='',
+                               note=f"{asset}: {CAUSE_TEXT[cause].lower()}."))
+        elif e['type'] == 'planned' and e.get('asset') in AID:
+            asset, _ = AID[e['asset']]
+            ev.append(dict(start=a, end=b, kind='planned', cause='bearingplan', asset=asset, story='', note=f'{asset}: planned repair (found by reliability).'))
+    return faults
 
 def stops(rnd, sched, runs):
     """Every stop and slowdown of the year (and the warm-up): dicts with start, end, kind, cause, asset, note, story.
@@ -200,10 +264,10 @@ def stops(rnd, sched, runs):
                        note='Steam blowing at the 3rd section DS rotary joint; seal kit changed.', story='F5'))
     busy = lambda a, b: any(e['start'] < b + HOUR * 6 and a < e['end'] + HOUR * 6 for e in ev if e['kind'] in ('planned', 'unplanned'))
 
-    # emergent upsets: the game's catalogue at a year's rates (Poisson per running hour)
+    # emergent upsets: the game's catalogue at a year's rates (Poisson per running hour); with the engine, its own upsets
     X = CFG['rates']['upset_mtbf_x']
     t = T0
-    for e in CATALOG['events']:
+    for e in ([] if ENG.ON else CATALOG['events']):
         rate = 1 / (e['mtbf_h'] * X); t = T0
         asset, eff = EVENT_ASSET[e['id']]
         while True:
@@ -253,6 +317,7 @@ def stops(rnd, sched, runs):
                                    note=f"{f['asset']} bearing changed: found on the {route:%b %d} vibration route.", story=''))
                 f['fixed'] = a + HOUR * 3
         else:
+            if ENG.ON: f['drop'] = True; continue          # missed on the route: the engine's failures stand in for these
             if fail >= T_END: continue
             if in_outage(fail): f['fixed'] = fail; continue
             h = 3 + rnd.random() * 3.5
@@ -262,7 +327,9 @@ def stops(rnd, sched, runs):
                            cause='bearingfail', asset=f['asset'], note=f"{f['asset']} bearing failed (not caught on the route).", story=''))
             f['fail'] = fail; f['fixed'] = fail + HOUR * h
     # motors (found on the monthly electrical test half the time) and drives (no warning)
-    for aid, asset, tag in CRITICAL:
+    faults = [f for f in faults if not f.get('drop')]
+    if ENG.ON: faults += engine_stops(ev, rnd, busy)
+    for aid, asset, tag in ([] if ENG.ON else CRITICAL):
         if aid == 'reel': continue
         for kind, rate, hrs in (('motorfail', 0.13, (4, 7)), ('drivefail', 0.12, (1, 2.2))):
             t = T0
@@ -277,14 +344,15 @@ def stops(rnd, sched, runs):
 
     # sheet breaks: hazard per running hour by grade, a summer bump, clothing age (2nd press felts, forming fabric)
     bpd = CFG['rates']['breaks_per_day']
-    t = T0
-    while t < T_END:
+    t = dt.datetime.combine(B('2026-05-01'), dt.time(0)) if ENG.ON else T0
+    t_end = DT(PLANTS['F1']['change']) if ENG.ON else T_END
+    while t < t_end:
         t += dt.timedelta(minutes=rnd.randint(20, 40))
-        if in_outage(t) or any(e['start'] <= t < e['end'] for e in ev if e['kind'] in ('planned', 'unplanned')): continue
+        if in_outage(t) or any(e['start'] <= t < e['end'] for e in ev if e['kind'] in ('planned', 'unplanned', 'break')): continue
         g = grade_at(sched, t)
         haz = bpd / 24 * GRADES[g]['brk'] / 1.15 * (1.25 if (t - SHIFT).month in (6, 7, 8) else 1.0)
         haz *= 1 + 0.6 * max(0, age_frac(runs, 'p2-felt-top', t) - 0.7) + 0.4 * max(0, age_frac(runs, 'form-bottom', t) - 0.8)
-        if dt.datetime.combine(B('2026-05-01'), dt.time(0)) <= t < DT(PLANTS['F1']['change']): haz *= 2.2      # F1: the filled felt
+        if dt.datetime.combine(B('2026-05-01'), dt.time(0)) <= t < DT(PLANTS['F1']['change']): haz *= 2.2 if not ENG.ON else 1.2   # F1: the filled felt (with the engine: the extra only)
         if rnd.random() < haz * 0.5:      # (30 min steps)
             r = rnd.random()
             where = 'reel' if r < .35 else 'dryer' if r < .75 else 'press'

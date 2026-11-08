@@ -19,8 +19,8 @@ timeline:
     sources: [jde]
     what: WO to check pocket ventilation fan PV-3 dampers — closed "could not reproduce".
   - date: 2026-07-15
-    sources: [pi, bus, envoy]
-    what: Cluster of 6 breaks in 9 days during a heat wave. PV fan amps 10% low on those days, and Envoy flags them twice.
+    sources: [pi, bus, bonvoy]
+    what: Cluster of 6 breaks in 9 days during a heat wave. PV fan amps 10% low on those days, and Bonvoy flags them twice.
   - date: 2026-08-28
     sources: [bus]
     what: The last of 22 summer breaks. Entries stop as the weather cools, and nothing stays open.

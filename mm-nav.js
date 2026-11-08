@@ -11,6 +11,7 @@
     { href: 'Daily.html', name: 'Daily', sub: 'Mill data', ic: 'book' },
     { href: 'Downtime.html', name: 'Downtime / RCFA', sub: 'Mill data', ic: 'alert' },
     { href: 'VendorReports.html', name: 'Vendor Reports', sub: 'Mill data', ic: 'file' },
+    { href: 'BonvoyReport.html', name: 'Bonvoy Report', sub: 'Mill data', ic: 'monitor' },
     { href: 'MMLLM.html', name: 'MM LLM', sub: 'Planned', ic: 'message' },
     { href: 'http://10.15.212.124:8000', name: 'FieldAgent', sub: 'Mill network', external: true, ic: 'network' },
   ];

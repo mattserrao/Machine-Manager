@@ -45,7 +45,7 @@ def mymachine(m):
     rec = {'machine': machine}; plan = change_plan(m['runs'])
     today = dt.datetime.combine(TODAY, dt.time(23)); nxt = md(NEXT_OUTAGE['date'])
     cond = {   # the current pieces worth flagging today
-        PLANTS['F3']['position']: ('wear', f"Specific energy climbing ~1.4%/day since {md(PLANTS['F3']['rise_from'])} (Envoy flags since). "
+        PLANTS['F3']['position']: ('wear', f"Specific energy climbing ~1.4%/day since {md(PLANTS['F3']['rise_from'])} (Bonvoy flags since). "
                                            f"Ridgeway: change at the {nxt} outage with REF 1; one set on hand.", 5),
         'p2-felt-top': ('good', '', 0),
     }

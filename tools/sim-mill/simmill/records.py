@@ -260,7 +260,7 @@ def build(m, proc, seed=5505):
     issues += [
         Issue(B('2026-08-13'), B('2026-08-20'), 'Reel drum DS bearing', tx('Reel drum DS bearing in Alert on the Aug 12 route (0.17 in/s, outer race defect)'),
               [tx('WO raised for the Aug 19 outage'), 'Bearing not in stores; ordering', tx('Deferred from Aug 19: rescheduled Nov 11, parts on order')], 'P03', w2, 'F2', 'Waiting parts'),
-        Issue(B('2026-09-09'), None, 'Reel drum DS bearing', tx('Reel drum DS bearing vibration rising (Envoy); bearing for Nov 11 on order, ETA Nov 5'),
+        Issue(B('2026-09-09'), None, 'Reel drum DS bearing', tx('Reel drum DS bearing vibration rising (Bonvoy); bearing for Nov 11 on order, ETA Nov 5'),
               ['Daily vibration readings by the shift; grease per Keel', 'Keel to re-check weekly', 'Danger at 0.40 in/s: decide run or stop'], 'P03', w2, 'F2', 'Waiting parts'),
         Issue(B('2026-05-04'), B('2026-05-20'), '2nd press top felt', '2nd press top felt filling: Uhle vacuum up, press solids down',
               ['Raise HP shower pressure; check nozzles', tx('Spraywell audit pulled forward to May 13'), '22% nozzles plugged: cleaned; felt still filling',
@@ -287,7 +287,7 @@ def build(m, proc, seed=5505):
         'drivefail': ('Electrical', 'Drive tripped on overcurrent; IGBT module failed', 'Drive at 95%+ load on heavy grades',
                       ['Load study for {a} on 34 Super', 'Spare drive module to stores']),
         'syphon': ('Equipment failure', 'Syphon came loose in the can and flooded it', 'Syphon clearance not checked at the last outage',
-                   ['Check syphon clearances on {a} section cans at the next outage', 'Add syphon ΔP to the Envoy watch list']),
+                   ['Check syphon clearances on {a} section cans at the next outage', 'Add syphon ΔP to the Bonvoy watch list']),
         'steamjoint': ('Equipment failure', 'Rotary joint carbon ring worn through', 'Joint seal kit beyond its life',
                        ['Seal kit change on a fixed interval for {a}']),
         'wrap': ('Process', 'Sheet wrapped the can after a break', 'Doctor blade worn; tail chute air low',
@@ -306,7 +306,7 @@ def build(m, proc, seed=5505):
         'feltchange': ('Clothing', '2nd press top felt filled early: HP shower nozzles plugged (22%) so the felt wasn\'t conditioned',
                        tx('Shower nozzles not checked since the Feb audit; heavier 34 Super run in May; strainer on the shower supply not cleaned'),
                        ['Weekly press shower nozzle check by operations', 'Clean the HP shower supply strainer every outage',
-                        'Add Uhle vacuum rate-of-rise to the Envoy watch list']),
+                        'Add Uhle vacuum rate-of-rise to the Bonvoy watch list']),
         'fabrichole': ('Clothing', 'A wad of stock off the headbox approach piping holed the forming fabric',
                        'Stock build-up in the approach piping; no wad detection at the breast roll',
                        [tx('Clean headbox approach piping at the Mar 4 outage'), P['F4']['overdue_action'], 'Add the approach piping to the outage clean list']),
@@ -335,7 +335,7 @@ def build(m, proc, seed=5505):
             owner = {'MECH': 'P05', 'E&I': 'P06'}.get('E&I' if e['cause'] in ('motorfail', 'drivefail') else 'MECH')
             if cat in ('Clothing', 'Process'): owner = rnd.choice(['P04', 'P16', 'P07'])
             if e['story'] == 'F4' and k == 1: owner = 'P14'
-            if 'Envoy' in title: owner = 'P03'
+            if 'Bonvoy' in title: owner = 'P03'
             a = act(f'{title} ({rid})', 'RCFA actions', owner, opened + DAY * 2, due, comp, priority='Important', creator=lead,
                     desc=f'From {rid}: {CAUSE_TEXT[e["cause"]]} on {e["asset"]}, {d:%b %d}. WO {{wo}}.', asset=e['asset'] if e['asset'] in BY_NAME else None,
                     story=e['story'])

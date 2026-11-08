@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bonvoy Report</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script src="mm-theme.js?v=2026-11-08.2256"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2256">
+<link rel="stylesheet" href="mm-data.css?v=2026-11-08.2256">
+<script src="mm-icons.js?v=2026-11-08.2256"></script>
+<style>
+  .dbar button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--r-sm);padding:5px 10px;cursor:pointer}
+  .dbar button:hover{border-color:var(--line-strong)}
+  .dbar button:disabled{opacity:.45;cursor:default}
+  .days{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px}
+  .days button{font:inherit;font-size:12px;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink-2);border-radius:var(--r-md,8px);padding:6px 10px;cursor:pointer;min-width:96px}
+  .days button b{display:block;font-size:13px;font-weight:600;color:var(--ink)}
+  .days button[aria-pressed="true"]{border-color:var(--accent-line);background:var(--accent-soft)}
+  .rep{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);padding:16px 18px 18px}
+  .rep-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px;margin:0 0 4px}
+  .rep-h h2{margin:0;font-size:18px;font-weight:600}
+  .rep-h .sub{font-size:12px;color:var(--muted)}
+  .badge{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:var(--accent-ink);background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:999px;padding:2px 8px}
+  .headline{margin:10px 0 6px;font-size:15px;font-weight:600;color:var(--ink)}
+  .summary{margin:0 0 4px;font-size:13px;line-height:1.6;color:var(--ink-2);max-width:900px}
+  .sec{margin:20px 0 8px;font-size:13px;font-weight:600;color:var(--ink)}
+  .sec span{font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}
+  .items{display:flex;flex-direction:column;gap:10px}
+  .it{display:grid;grid-template-columns:28px minmax(0,1fr) 300px;gap:14px;border:1px solid var(--line);border-radius:var(--r-md,8px);padding:12px 14px;background:var(--surface)}
+  .it .rk{font-size:13px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}
+  .it h3{margin:0 0 2px;font-size:14px;font-weight:600}
+  .it .meta{font-size:12px;color:var(--muted);margin:0 0 8px}
+  .it .meta .pill{margin-right:4px}
+  .it p{margin:0 0 6px;font-size:12.5px;line-height:1.55;color:var(--ink-2)}
+  .it p b{font-weight:600;color:var(--ink)}
+  .links{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;margin-top:6px}
+  .links a{color:var(--accent);text-decoration:none} .links a:hover{text-decoration:underline}
+  .links span{color:var(--muted)}
+  .spark{width:100%;height:auto;display:block}
+  .spark .band{fill:var(--accent-soft)} .spark .lim{stroke:var(--line-strong);stroke-dasharray:3 3;stroke-width:1}
+  .spark .rng{fill:var(--surface-2)} .spark .avg{fill:none;stroke:var(--accent);stroke-width:2}
+  .spark .dot{fill:var(--accent);stroke:var(--surface);stroke-width:2} .spark .dot.flag{fill:var(--bad)}
+  .spark text{font-size:10px;fill:var(--muted)}
+  .sparkcap{font-size:11px;color:var(--muted);margin-top:2px}
+  .watch{border:1px solid var(--line);border-left:3px solid var(--bad);border-radius:var(--r-md,8px);padding:10px 14px;font-size:12.5px;color:var(--ink-2);line-height:1.55}
+  .watch b{color:var(--ink)}
+  .quiet{padding:18px;border:1px dashed var(--line);border-radius:var(--r-md,8px);color:var(--muted);font-size:13px}
+  @media (max-width:900px){ .it{grid-template-columns:24px minmax(0,1fr)} .it .chart{grid-column:2} }
+  @media print{ .days,.dbar button{display:none} .it{break-inside:avoid} }
+</style>
+</head>
+<body>
+<header class="mm-top">
+  <div class="bar brand">
+    <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
+    <div><h1>Bonvoy Report</h1><p>The daily write-up of flagged trends from the Pi historian</p></div>
+  </div>
+  <div id="acct"></div>
+</header>
+<main class="data">
+  <div class="dbar">
+    <span class="org" id="org"></span>
+    <button id="prev" type="button" title="Previous report">‹</button>
+    <button id="next" type="button" title="Next report">›</button>
+    <span class="grow"></span>
+    <button id="print" type="button">Print</button>
+  </div>
+  <div class="days" id="days"></div>
+  <div id="body"><div class="dmsg">Loading…</div></div>
+  <div id="ver"></div>
+</main>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2256"></script>
+<script src="mm-config.js?v=2026-11-08.2256"></script>
+<script src="mm-cloud.js?v=2026-11-08.2256"></script>
+<script src="mm-llm-org.js?v=2026-11-08.2256"></script>
+<script>
+  // Each day's report: a summary, the flagged trends ranked by severity (sigma x hours x days in a row) with a 14-day trend
+  // of the tag against its band, and the bearings above their fixed alarm limits. Written by MM LLM from the Bonvoy
+  // exceptions and the Pi historian; for the demo the text is generated with the data (tools/sim-mill/simmill/bonvoy_report.py).
+  const VERSION = 'v0.1.0';
+  document.getElementById('ver').textContent = 'Bonvoy Report ' + VERSION;
+  MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
+  const $ = id => document.getElementById(id), O = MMLLMOrg, esc = O.esc;
+  let st, list = [], cur = null;
+  const addDays = (d, n) => { const t = new Date(d + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+  const long = d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+  const short = d => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+  const fmt = (v, u) => v == null ? '—' : `${(+v).toLocaleString(undefined, { maximumFractionDigits: Math.abs(v) < 10 ? 3 : 1 })}${u ? ' ' + u : ''}`;
+  const WO = { 10: 'entered', 20: 'approved', 30: 'planned, parts not reserved', 35: 'deferred', 40: 'scheduled', 45: 'waiting on parts', 70: 'in progress' };
+
+  // 14 days of daily averages (min-max range shaded) against the report day's ±3σ band; flagged days in red.
+  async function spark(box, it, day){
+    let rows = [];
+    try { rows = await O.rpc(st, 'mm_llm_pi_daily', { p_tag: it.tag, p_from: addDays(day, -13), p_to: day }); } catch (e) {}
+    if (!rows.length){ box.innerHTML = '<p class="sparkcap">No Pi data for this window.</p>'; return; }
+    const W = 300, H = 120, L = 6, R = 6, T = 8, B = 18, n = 14;
+    const vals = rows.flatMap(r => [r.min, r.max]).concat([it.low, it.high]).filter(v => v != null);
+    let lo = Math.min(...vals), hi = Math.max(...vals); const pad = (hi - lo) * .08 || 1; lo -= pad; hi += pad;
+    const x = d => L + (W - L - R) * (13 - Math.round((Date.parse(day) - Date.parse(d)) / 864e5)) / (n - 1);
+    const y = v => T + (H - T - B) * (1 - (v - lo) / (hi - lo));
+    const flagged = new Set(Array.from({ length: it.streak }, (_, k) => addDays(day, -k)));
+    let s = `<svg class="spark" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(it.description)}: 14-day daily averages against the normal band">`;
+    s += `<rect class="band" x="${L}" width="${W - L - R}" y="${y(it.high)}" height="${Math.max(1, y(it.low) - y(it.high))}"/>`;
+    s += `<line class="lim" x1="${L}" x2="${W - R}" y1="${y(it.high)}" y2="${y(it.high)}"/><line class="lim" x1="${L}" x2="${W - R}" y1="${y(it.low)}" y2="${y(it.low)}"/>`;
+    const up = rows.map(r => `${x(r.day)},${y(r.max)}`), dn = rows.slice().reverse().map(r => `${x(r.day)},${y(r.min)}`);
+    s += `<polygon class="rng" points="${up.concat(dn).join(' ')}"/>`;
+    s += `<polyline class="avg" points="${rows.map(r => `${x(r.day)},${y(r.avg)}`).join(' ')}"/>`;
+    for (const r of rows) s += `<circle class="dot${flagged.has(r.day) ? ' flag' : ''}" cx="${x(r.day)}" cy="${y(r.avg)}" r="3.5"><title>${short(r.day)}: avg ${fmt(r.avg, it.units)} (min ${fmt(r.min)}, max ${fmt(r.max)})${flagged.has(r.day) ? ' · flagged' : ''}</title></circle>`;
+    s += `<text x="${L}" y="${H - 4}">${short(addDays(day, -13))}</text><text x="${W - R}" y="${H - 4}" text-anchor="end">${short(day)}</text></svg>`;
+    box.innerHTML = s + `<div class="sparkcap">Daily average (line), daily range (grey), normal band ${fmt(it.low)} to ${fmt(it.high)} ${esc(it.units)} (blue). Red: flagged days.</div>`;
+  }
+
+  function item(it, day){
+    const el = document.createElement('div'); el.className = 'it';
+    const age = it.streak > 1 ? `<span class="pill warn">${it.streak} days running</span>` : '<span class="pill bad">New</span>';
+    const trend = it.trend_pct_per_day && Math.abs(it.trend_pct_per_day) >= .3 ? ` · moving ${Math.abs(it.trend_pct_per_day).toFixed(1)}% a day over the week` : '';
+    const links = [];
+    if (it.position_id) links.push(`<a href="MyMachine.html#item=${encodeURIComponent(it.position_id)}">${esc(it.position)} in My Machine</a>`);
+    for (const w of it.wos || []) links.push(`<span>WO ${esc(w.no)}: ${esc(w.desc)} (${esc(WO[w.status] || 'open')})</span>`);
+    for (const r of it.rcfas || []) links.push(`<a href="Downtime.html">${esc(r)}</a>`);
+    if (it.doc) links.push(`<a href="VendorReports.html?doc=${encodeURIComponent(it.doc.id)}">${esc(it.doc.id)}: ${esc(it.doc.title)}</a>`);
+    el.innerHTML = `<div class="rk">${it.rank}</div>
+      <div><h3>${esc(it.asset)} · ${esc(it.description)}</h3>
+        <div class="meta">${age}<span class="pill">${esc(it.direction)}</span>${it.hours} h outside the band (${esc(it.first)} to ${esc(it.last)}), ${it.sigma}σ at worst · ${esc(it.tag)}${it.grade ? ' · ' + esc(it.grade) : ''}${trend}</div>
+        <p><b>Likely cause.</b> ${esc(it.cause)}</p>
+        ${it.context ? `<p>${esc(it.context)}</p>` : ''}
+        <p><b>Check.</b> ${esc(it.check)}</p>
+        ${links.length ? `<div class="links">${links.join('')}</div>` : ''}</div>
+      <div class="chart"></div>`;
+    spark(el.querySelector('.chart'), it, day);
+    return el;
+  }
+
+  async function show(day){
+    cur = day;
+    const u = new URL(location.href); u.searchParams.set('day', day); history.replaceState(null, '', u);
+    $('days').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.day === day)));
+    const i = list.findIndex(r => r.day === day);
+    $('prev').disabled = i < 0 || i >= list.length - 1; $('next').disabled = i <= 0;
+    const body = $('body'); body.innerHTML = '<div class="dmsg">Loading…</div>';
+    let r;
+    try { [r] = await O.rpc(st, 'mm_llm_bonvoy_report', { p_day: day }); } catch (e) { body.innerHTML = `<div class="dmsg">${esc(e.message || e)}</div>`; return; }
+    if (!r){ body.innerHTML = '<div class="dmsg">No Bonvoy Report for this day.</div>'; return; }
+    const rep = document.createElement('section'); rep.className = 'rep';
+    rep.innerHTML = `<div class="rep-h"><h2>${long(r.day)}</h2><span class="sub">${esc(st.org.name)} · PM1 · issued ${short(r.report_date)} for the day before</span>
+        <span class="badge" title="${esc(r.model || '')}">Written by MM LLM from Pi${r.generated_by === 'mock' ? ' · mocked for the demo' : ''}</span></div>
+      <p class="headline">${esc(r.headline)}</p><p class="summary">${esc(r.summary)}</p>`;
+    const items = r.items || [], watch = r.watch || [];
+    const h = document.createElement('div'); h.className = 'sec';
+    h.innerHTML = `Flagged trends <span>${items.length} tag${items.length === 1 ? '' : 's'} 3+ hours outside their ±3σ band (the 60 days ending a week before), ranked by σ × hours × days in a row</span>`;
+    rep.appendChild(h);
+    if (items.length){ const box = document.createElement('div'); box.className = 'items'; items.forEach(it => box.appendChild(item(it, r.day))); rep.appendChild(box); }
+    else rep.appendChild(Object.assign(document.createElement('div'), { className: 'quiet', textContent: 'Quiet day: every tag stayed inside its normal band.' }));
+    if (watch.length){
+      const w = document.createElement('div'); w.className = 'sec';
+      w.innerHTML = 'Above alarm limits <span>Fixed vibration limits (Alert 0.15, Danger 0.40 in/s). A slow climb moves Bonvoy’s baseline with it, so these can drop out of the flags.</span>';
+      rep.appendChild(w);
+      for (const x of watch){
+        const d = document.createElement('div'); d.className = 'watch';
+        d.innerHTML = `<b>${esc(x.asset)}</b> · ${esc(x.description)} <b>${fmt(x.value, x.units)}</b> <span class="pill bad">${esc(x.level)}</span><br>${esc(x.note)}`;
+        rep.appendChild(d);
+      }
+    }
+    body.textContent = ''; body.appendChild(rep);
+  }
+
+  $('prev').onclick = () => { const i = list.findIndex(r => r.day === cur); if (i >= 0 && i < list.length - 1) show(list[i + 1].day); };
+  $('next').onclick = () => { const i = list.findIndex(r => r.day === cur); if (i > 0) show(list[i - 1].day); };
+  $('print').onclick = () => print();
+  async function start(){
+    $('days').textContent = '';
+    try { list = await O.rpc(st, 'mm_llm_bonvoy_reports', {}); } catch (e) { $('body').innerHTML = `<div class="dmsg">${esc(e.message || e)}</div>`; return; }
+    if (!list.length){ $('body').innerHTML = `<div class="dmsg">No Bonvoy Reports for ${esc(st.org.name)} yet.</div>`; return; }
+    for (const r of list){
+      const b = document.createElement('button'); b.type = 'button'; b.dataset.day = r.day;
+      b.innerHTML = `<b>${short(r.day)}</b>${r.flagged} flagged${r.watch ? ` · ${r.watch} alarm` : ''}`;
+      b.title = r.headline; b.onclick = () => show(r.day); $('days').appendChild(b);
+    }
+    const want = new URLSearchParams(location.search).get('day');
+    show(list.some(r => r.day === want) ? want : list[0].day);
+  }
+  (async () => {
+    st = await O.resolve();
+    if (st.error){ $('body').innerHTML = `<div class="dmsg">${esc(st.error)}</div>`; return; }
+    O.picker($('org'), st, start);
+    start();
+  })();
+</script>
+<script src="mm-nav.js?v=2026-11-08.2256"></script>
+</body>
+</html>

@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MM LLM</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.2205"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2205">
-<script src="mm-icons.js?v=2026-11-08.2205"></script>
+<script src="mm-theme.js?v=2026-11-08.2256"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2256">
+<script src="mm-icons.js?v=2026-11-08.2256"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1320px;margin:0 auto;padding:24px 20px 72px}
@@ -245,7 +245,7 @@
       <div class="rules">
         <div class="rule"><b>Every row has a position</b><span>BUS items, WOs, RCFAs, vendor findings and document chunks all carry a PM1 position id from My Machine. That key is what lets an outage brief pull everything for "2nd press felt".</span></div>
         <div class="rule"><b>Tables first, search second</b><span>Anything with rows and columns goes in a table and is answered with a query. Only narrative text (report findings, RCFA write-ups, manuals) is chunked and embedded for search.</span></div>
-        <div class="rule"><b>Pi stays in Pi</b><span>Trends are read on demand from the historian. Only Envoy exceptions are stored, as dated events.</span></div>
+        <div class="rule"><b>Pi stays in Pi</b><span>Trends are read on demand from the historian. Only Bonvoy exceptions are stored, as dated events.</span></div>
         <div class="rule"><b>Models are swappable</b><span>Prompts and tools live in this app, not in a vendor's features. The adapter maps one request format to each provider; embeddings record which model made them.</span></div>
         <div class="rule"><b>Answers cite records</b><span>Every statement links back to the row, page or trend it came from, so it can be checked before it goes on an outage plan.</span></div>
       </div>
@@ -254,27 +254,27 @@
     <div id="tabSim" role="tabpanel" aria-labelledby="tabSimBtn" hidden>
       <section class="intro">
         <h3 class="sub-h">How The Paper Mill generates Sim Mill’s data</h3>
-        <p>The game’s simulation is stripped to a headless model, a Python port of it runs one mill year, and the year is written out as the files a mill would send. They go in through the same importers and ingest as real data, so everything the assistant and the data pages read about Sim Mill came this way.</p>
+        <p>The game’s simulation is stripped to a headless engine that runs the mill year as its historian (grades, breaks, upsets, failures and the process tags); the Python model adds what the game doesn’t have and writes the year out as the files a mill would send. They go in through the same importers and ingest as real data, so everything the assistant and the data pages read about Sim Mill came this way.</p>
       </section>
-      <div class="sm-wrap"><svg class="smflow" id="smflow" role="img" aria-labelledby="smflowT smflowD"><title id="smflowT">Sim Mill data flow</title><desc id="smflowD">From The Paper Mill game, through the headless reference model and the Python port, to mill files, the import path, Supabase and the pages that read it.</desc></svg></div>
+      <div class="sm-wrap"><svg class="smflow" id="smflow" role="img" aria-labelledby="smflowT smflowD"><title id="smflowT">Sim Mill data flow</title><desc id="smflowD">From The Paper Mill game, through the headless engine's historian run and the Sim Mill model, to mill files, the import path, Supabase and the pages that read it.</desc></svg></div>
       <div class="sm-key"><span><i></i>Existing path (same as real mill data)</span><span><i class="new"></i>Added for Sim Mill</span><span><i class="chk"></i>Check that holds it to the step before</span></div>
       <ol class="sm-steps">
         <li><b>Strip the game.</b> On the-paper-mill’s <code>sim-headless</code> branch the 3D view, sound, panels and game systems (seasons, survival, leaders, civics, event cards, joke upsets) are left out; 34 of 116 source files run in Node. The full headless build replays 3 sim days to exactly the browser’s numbers.</li>
-        <li><b>Run a reference year.</b> 365 days on Sim Mill’s calendar (20 h outages every 6 weeks), with the game’s season-tuned failure rates stretched to a year. Its upset catalogue, critical assets, grades and per-grade tag values are exported to <code>tools/sim-mill/reference/</code>.</li>
-        <li><b>Port it.</b> <code>tools/sim-mill</code> (Python) runs the same machine: grade wheel, upsets, sheet breaks, bearing faults found on the vibration route or failing, plus what the game doesn’t have: the life of every fabric, felt, plate and roll, and five planted faults. <code>validate_ref.py</code> holds it to the reference year.</li>
-        <li><b>Write the mill’s files.</b> Daily BUS sheets, JDE and Planner exports, the RCFA log and write-ups, Pi and Envoy, vendor PDFs; and three new feeds: downtime events, daily production and position runs. Plus My Machine, Outage Planning and Consumables records.</li>
+        <li><b>Run the engine as the historian.</b> <code>headless/historian.js</code> runs 426 days (Sep 1 warm-up to Oct 31) on Sim Mill’s calendar (20 h outages every 6 weeks at 6 AM), with the game’s season-tuned failure rates stretched to a year. It writes the hourly running value of every DCS tag and the event log (grades, sheet breaks, upsets, failures, outages) to <code>tools/sim-mill/engine/</code>.</li>
+        <li><b>Build on it.</b> <code>tools/sim-mill</code> (Python) takes the engine’s grades and stops, and drives 27 of the 47 PM1 tags from the engine (<code>config/tags.yaml</code>). It adds what the game doesn’t have: instrument noise, bearing vibration and Uhle vacuum, the life of every fabric, felt, plate and roll, and five planted faults. <code>validate_ref.py</code> holds it to the engine’s reference year.</li>
+        <li><b>Write the mill’s files.</b> Daily BUS sheets, JDE and Planner exports, the RCFA log and write-ups, Pi and Bonvoy, vendor PDFs; three new feeds: downtime events, daily production and position runs; and the last week of Bonvoy Reports. Plus My Machine, Outage Planning, Consumables and task-package records.</li>
         <li><b>Load it like real data.</b> <code>load.py</code> and the importers send everything through the token-guarded <code>mm-llm-ingest</code> into the org’s tables, files and embeddings.</li>
-        <li><b>Read it.</b> The assistant’s tools, the 11 Sim Mill demo questions (31 checks), and the Daily, Downtime / RCFA and Vendor Reports pages.</li>
+        <li><b>Read it.</b> The assistant’s tools, the 11 Sim Mill demo questions (31 checks), and the Daily, Downtime / RCFA, Vendor Reports and Bonvoy Report pages. Every 6 weeks the year rolls forward a cycle.</li>
       </ol>
     </div>
 
     </div>
   </div>
 </div>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2205"></script>
-<script src="mm-config.js?v=2026-11-08.2205"></script>
-<script src="mm-cloud.js?v=2026-11-08.2205"></script>
-<script src="mm-llm-org.js?v=2026-11-08.2205"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2256"></script>
+<script src="mm-config.js?v=2026-11-08.2256"></script>
+<script src="mm-cloud.js?v=2026-11-08.2256"></script>
+<script src="mm-llm-org.js?v=2026-11-08.2256"></script>
 <script>
   const VERSION = 'v0.7.0';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
@@ -294,8 +294,8 @@
     // Sources
     { id: 'bus',    s: 'src', name: 'BUS daily sheet', d: 'Daily issues, actions and owners from the morning meeting.', k: 'rows + free text',
       how: 'One row per issue: date, area, position, issue, action, owner, status. The issue text is also embedded so similar past problems can be found.' },
-    { id: 'envoy',  s: 'src', name: 'Envoy reports', d: 'Pi trends outside their standard-deviation thresholds.', k: 'exception events',
-      how: 'Each flagged tag becomes an event: tag, position, value, limit, sigma, time. Envoy has already done the screening, so these are kept in full.' },
+    { id: 'bonvoy',  s: 'src', name: 'Bonvoy reports', d: 'Pi trends outside their standard-deviation thresholds.', k: 'exception events',
+      how: 'Each flagged tag becomes an event: tag, position, value, limit, sigma, time. Bonvoy has already done the screening, so these are kept in full.' },
     { id: 'pi',     s: 'src', name: 'Pi historian', d: 'Live process and equipment tags.', k: 'read on demand',
       how: 'Not copied. A connector reads trends for a tag and time window when a question needs them, and a tag map links Pi tags to PM1 positions.' },
     { id: 'rcfa',   s: 'src', name: 'RCFA log', d: 'Failures, root causes and corrective actions.', k: 'rows + narrative',
@@ -324,7 +324,7 @@
     // Storage
     { id: 'equip',  s: 'store', name: 'Equipment register', d: 'PM1 positions: the key every table joins on.', k: 'table',
       how: 'Built from My Machine (sections, fabrics, rolls, refiners) plus JDE numbers and Pi tags for each position.' },
-    { id: 'events', s: 'store', name: 'Event tables', d: 'BUS items, Envoy exceptions, RCFAs, actions, WOs, vendor findings.', k: 'Postgres tables',
+    { id: 'events', s: 'store', name: 'Event tables', d: 'BUS items, Bonvoy exceptions, RCFAs, actions, WOs, vendor findings.', k: 'Postgres tables',
       how: 'One table per source with shared columns: date, position, status, source link. Answers come from queries, so counts and dates are exact.' },
     { id: 'records',s: 'store', name: 'MM records', d: 'Synced records from every Machine Manager tool.', k: 'mm_records', live: true,
       how: 'The existing table. Already scoped to your organization with row-level security.' },
@@ -345,7 +345,7 @@
 
     // Outputs
     { id: 'outage', s: 'out', name: 'Outage brief', d: 'What to work on at the next outage, and why.', k: 'per outage',
-      how: 'Fabrics and rolls due, open WOs, Envoy exceptions, vendor recommendations and open RCFA actions, grouped by section, with "add to outage" on each item.' },
+      how: 'Fabrics and rolls due, open WOs, Bonvoy exceptions, vendor recommendations and open RCFA actions, grouped by section, with "add to outage" on each item.' },
     { id: 'trbl',   s: 'out', name: 'Troubleshooting', d: 'Help on an active problem from the BUS sheet.', k: 'per issue',
       how: 'Finds similar past issues and RCFAs, pulls recent trends and WOs for the position, and shows the relevant drawing or chart.' },
     { id: 'ask',    s: 'out', name: 'Ask MM', d: 'Plain questions across everything, with links.', k: 'chat',
@@ -358,7 +358,7 @@
 
   // from → to. dash: on demand / supporting link.
   const LINKS = [
-    ['bus','imp'],['envoy','imp'],['rcfa','imp'],['rcfa','parse'],['teams','imp'],['jde','imp'],
+    ['bus','imp'],['bonvoy','imp'],['rcfa','imp'],['rcfa','parse'],['teams','imp'],['jde','imp'],
     ['vendor','parse'],['ref','parse'],['pi','piconn',1],['mm','records'],['ref','files'],
     ['imp','tag'],['parse','tag'],['parse','files'],
     ['tag','events'],['tag','docs'],['equip','tag',1],['records','equip'],
@@ -482,7 +482,7 @@
     chip.textContent = isDemo ? 'Public demo · fictional data' : 'Your organization';
     sub.textContent = !isDemo ? 'Your organization’s MM LLM data.'
       : org.name === 'Sim Mill'
-      ? 'One modelled year (Nov 2025 – Oct 2026) of The Paper Mill’s own recycled-board machine: a Python port of the game’s simulation with five planted faults, loaded the same way real mill files will be. It also has downtime events, daily production and position runs (see Daily, Downtime / RCFA and Vendor Reports). “Today” is Oct 31, 2026, eleven days before the Nov 11 outage.'
+      ? 'One modelled year of The Paper Mill’s own recycled-board machine: the game’s engine runs the year and the Sim Mill model adds five planted faults, loaded the same way real mill files will be. It also has downtime events, daily production and position runs (see Daily, Downtime / RCFA and Vendor Reports). “Today” is the last day of the loaded year; the year moves forward one 6-week outage cycle at a time.'
       : 'One fictional year of PM1 data (Nov 2025 – Oct 2026), loaded the same way real mill files will be. “Today” in the demo is Oct 31, 2026, eleven days before the Nov 11 outage. Anyone can read the data and the prepared answers; signed-in users also see the model’s own answers.';
 
     const { data: summary } = await db.rpc('mm_llm_summary', { p_org: org.id });
@@ -722,7 +722,7 @@
   function drawSim(){
     if (simDrawn) return; simDrawn = true;
     const svg = document.getElementById('smflow'), NS = 'http://www.w3.org/2000/svg';
-    const COLS = [['The Paper Mill', 'the game, mattserrao/the-paper-mill'], ['Reference model', 'branch sim-headless (Node)'],
+    const COLS = [['The Paper Mill', 'the game, mattserrao/the-paper-mill'], ['Headless engine', 'branch sim-headless (Node)'],
                   ['Sim Mill model', 'tools/sim-mill (Python)'], ['Mill files', 'as a mill would send them'],
                   ['Same import path', 'importers + ingest'], ['Where it’s read', 'tools and pages']];
     const CW = 196, GAP = 24, X0 = 16, Y0 = 56, BH = 54, RG = 14, W = X0 * 2 + COLS.length * CW + (COLS.length - 1) * GAP;
@@ -732,28 +732,28 @@
       ['parts', 0, 2, 'What it already models', 'wet end, steam, breaks, 10 assets', ''],
       ['strip', 1, 0, 'Strip the game', '34 of 116 files + DOM shim', 'new'],
       ['parity', 1, 1, 'Parity check', '3 days = browser, exactly', 'chk'],
-      ['year', 1, 2, 'Reference year', '20 h outages / 6 wk, MTBF ×45', 'new'],
-      ['ref', 1, 3, 'reference/', 'catalogue, grades, tag stats', 'new'],
+      ['year', 1, 2, 'Historian run', '426 days, 20 h outages / 6 wk', 'new'],
+      ['ref', 1, 3, 'engine/ + reference/', 'hourly tags, events, catalogue', 'new'],
       ['cfg', 2, 0, 'mill.yaml + plants.yaml', 'machine, calendar, F1–F5', 'new'],
       ['model', 2, 1, 'model.py', 'grades, position life, stops', 'new'],
-      ['proc', 2, 2, 'process.py', '47 Pi tags, Envoy rule', 'new'],
+      ['proc', 2, 2, 'process.py + tags.yaml', '27 tags from the engine, Bonvoy', 'new'],
       ['rec', 2, 3, 'records.py + docs.py', 'WOs, actions, BUS, RCFAs, PDFs', 'new'],
-      ['val', 2, 4, 'validate_ref + run --check', 'port vs reference; targets', 'chk'],
+      ['val', 2, 4, 'validate_ref + run --check', 'vs the engine; targets', 'chk'],
       ['f1', 3, 0, 'BUS · JDE · Planner · RCFA', 'xlsx, CSV exports, log + docx', ''],
-      ['f2', 3, 1, 'Pi hourly + Envoy', 'CSV, 1-min windows at faults', ''],
+      ['f2', 3, 1, 'Pi hourly + Bonvoy', 'CSV, Bonvoy Reports (7 days)', ''],
       ['f3', 3, 2, 'Vendor reports, drawings', '84 PDFs and write-ups', ''],
       ['f4', 3, 3, 'Downtime · production · runs', 'three new feeds', 'new'],
       ['f5', 3, 4, 'Machine Manager records', 'My Machine, outages, stores', 'new'],
       ['imp', 4, 1, 'load.py + importers', 'map columns, tag positions', ''],
       ['ing', 4, 2, 'mm-llm-ingest', 'token decides the org', ''],
       ['db', 4, 3, 'Supabase: Sim Mill', 'llm tables, files, vectors, records', ''],
-      ['tools', 5, 0, 'Assistant tools', 'outage scope, Envoy, docs…', ''],
+      ['tools', 5, 0, 'Assistant tools', 'outage scope, Bonvoy, docs…', ''],
       ['qs', 5, 1, 'Demo questions', '11 questions, 31 checks', 'new'],
-      ['pages', 5, 2, 'Daily, Downtime, Vendors', 'the three data pages', 'new'],
+      ['pages', 5, 2, 'Daily, Downtime, Vendors', 'and the Bonvoy Report', 'new'],
       ['mm', 5, 3, 'My Machine · Outage Planning', 'members of Sim Mill', ''],
     ];
     const E = [['game', 'src'], ['src', 'parts'], ['src', 'strip', 'acc'], ['strip', 'parity', 'dash'], ['strip', 'year'], ['year', 'ref'],
-               ['ref', 'model', 'acc'], ['ref', 'val', 'dash'], ['cfg', 'model'], ['model', 'proc'], ['proc', 'rec'], ['rec', 'val', 'dash'],
+               ['ref', 'model', 'acc'], ['ref', 'proc', 'acc'], ['ref', 'val', 'dash'], ['cfg', 'model'], ['model', 'proc'], ['proc', 'rec'], ['rec', 'val', 'dash'],
                ['rec', 'f1', 'acc'], ['proc', 'f2', 'acc'], ['rec', 'f3', 'acc'], ['model', 'f4', 'acc'], ['model', 'f5', 'acc'],
                ['f1', 'imp'], ['f2', 'imp'], ['f3', 'imp'], ['f4', 'imp'], ['f5', 'ing'], ['imp', 'ing'], ['ing', 'db'],
                ['db', 'tools', 'acc'], ['db', 'qs', 'acc'], ['db', 'pages', 'acc'], ['db', 'mm', 'acc']];
@@ -808,6 +808,6 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   requestAnimationFrame(draw);
 </script>
-<script src="mm-nav.js?v=2026-11-08.2205"></script>
+<script src="mm-nav.js?v=2026-11-08.2256"></script>
 </body>
 </html>

@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>My Machine</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.2205"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2205">
-<script src="mm-icons.js?v=2026-11-08.2205"></script>
+<script src="mm-theme.js?v=2026-11-08.2256"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2256">
+<script src="mm-icons.js?v=2026-11-08.2256"></script>
 <style>
   /* shared look: mm-theme.css */
   .wrap{padding:14px 14px 60px;transition:margin-right .18s}
@@ -184,6 +184,12 @@
   .chform{border:1px solid var(--line-strong);background:var(--surface-2);border-radius:var(--r-lg);padding:12px;display:flex;flex-direction:column;gap:10px}
   .chform h4,.hedit h4{margin:0;font-size:13px;font-weight:600;color:var(--ink)}
   .hstats{display:flex;gap:6px;flex-wrap:wrap}
+  .pit{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r-sm)}
+  .pir{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:6px 9px;font-size:12.5px}
+  .pir + .pir{border-top:1px solid var(--line)}
+  .pir b{display:block;font-weight:500;color:var(--ink)} .pir span{font-size:11px;color:var(--muted)}
+  .pir .v{font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap} .pir .v small{color:var(--muted)}
+  .pir a.chip{text-decoration:none}
   .hcard{border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 8px 8px 11px;font-size:13px;display:flex;flex-direction:column;gap:4px}
   .hcard .top{display:flex;align-items:center;gap:6px}
   .hcard .when{flex:1;color:var(--ink-2);font-variant-numeric:tabular-nums}
@@ -293,13 +299,13 @@
 <aside id="drawer" class="drawer" hidden></aside>
 <div id="toast"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2205"></script>
-<script src="mm-config.js?v=2026-11-08.2205"></script>
-<script src="mm-cloud.js?v=2026-11-08.2205"></script>
-<script src="mm-ui.js?v=2026-11-08.2205"></script>
-<script src="mm-records.js?v=2026-11-08.2205"></script>
-<script src="mm-machine.js?v=2026-11-08.2205"></script>
-<script src="mm-demo.js?v=2026-11-08.2205"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2256"></script>
+<script src="mm-config.js?v=2026-11-08.2256"></script>
+<script src="mm-cloud.js?v=2026-11-08.2256"></script>
+<script src="mm-ui.js?v=2026-11-08.2256"></script>
+<script src="mm-records.js?v=2026-11-08.2256"></script>
+<script src="mm-machine.js?v=2026-11-08.2256"></script>
+<script src="mm-demo.js?v=2026-11-08.2256"></script>
 <script>
 (() => {
   'use strict';
@@ -730,6 +736,26 @@
     </div>`;
   }
 
+  // Pi tags on this position (from the org's MM LLM data, e.g. Sim Mill): latest daily average and Bonvoy flags.
+  // Hidden when the org has no Pi data linked to the position.
+  const piCache = {};
+  async function piTags(id){
+    const box = $('piTags'); if (!box || !cloud || !cloud.org || !window.MMCloud) return;
+    let rows = piCache[id];
+    if (!rows){
+      try { const { data, error } = await MMCloud.client.rpc('mm_llm_position_tags', { p_org: cloud.org.id, p_position: id }); if (error) throw error; rows = piCache[id] = data || []; }
+      catch (e) { return; }
+    }
+    if (!rows.length || $('piTags') !== box || drawer.dataset.id !== id) return;
+    const fmt = v => v == null ? '—' : (+v).toLocaleString(undefined, { maximumFractionDigits: Math.abs(v) < 10 ? 3 : 1 });
+    box.innerHTML = `<span class="lbl">Pi tags</span><div class="pit">${rows.map(r => `<div class="pir">
+        <div><b>${esc(r.description)}</b><span>${esc(r.tag)}${r.source ? ' · ' + esc(r.source) : ''}</span></div>
+        <div class="v">${fmt(r.last_avg)} <small>${esc(r.units)}</small></div>
+        <div class="f">${r.flags_14d ? `<a class="chip over" href="BonvoyReport.html${r.last_report ? '?day=' + r.last_report : ''}" title="Bonvoy flagged it on ${r.flags_14d} of the last 14 days (last ${fmtDate(r.last_flag)})">${r.flags_14d} Bonvoy flag${r.flags_14d === 1 ? '' : 's'}</a>` : '<span class="chip">No flags</span>'}</div>
+      </div>`).join('')}</div><span class="hint">Daily average on ${fmtDate(rows[0].last_day)}; Bonvoy flags in the 14 days to then.</span>`;
+    box.hidden = false;
+  }
+
   function openItem(id){
     if (draft) return; // Setup is open
     const p = positions(S.machine).find(q => q.id === id);
@@ -812,6 +838,7 @@
           <span class="hint">Turns yellow within 6 weeks of the target, red once it’s past.${tg && tg.dflt ? ' Default for refiner plates is 12 weeks.' : ''}</span>
         </div>
         ${dueBox}
+        <div class="fld pitags" id="piTags" hidden></div>
         <div class="grid2">
           <div class="fld"><label for="curVendor">Vendor</label><input id="curVendor" type="text" value="${esc(it.vendor)}"></div>
           <div class="fld"><label for="curStyle">Style</label><input id="curStyle" type="text" value="${esc(it.style)}"></div>
@@ -834,6 +861,7 @@
       </div>`);
     drawer.dataset.mode = 'item';
     drawer.dataset.id = id;
+    piTags(id);
   }
 
   function openSection(secId){
@@ -1164,6 +1192,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.2205"></script>
+<script src="mm-nav.js?v=2026-11-08.2256"></script>
 </body>
 </html>

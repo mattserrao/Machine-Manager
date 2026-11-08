@@ -21,7 +21,7 @@ F2:
   start: 2026-07-20             # defect starts (vibration from the 0.06 in/s baseline)
   route_found: 2026-08-12       # Keel monthly route: 0.17 in/s, outer race defect, Alert
   outage_missed: 2026-08-19     # WO scheduled for Aug 19 but the bearing wasn't in stores: deferred
-  # Envoy flags it from early August (the run decides the first day; the answer key reads it from the data)
+  # Bonvoy flags it from early August (the run decides the first day; the answer key reads it from the data)
   at_today: 0.43                # in/s on Oct 31 (Danger above 0.40)
   next_outage: 2026-11-11       # rescheduled; parts on order
 

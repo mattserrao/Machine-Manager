@@ -1,0 +1,45 @@
+# Where each PM1 Pi tag's value comes from, now that The Paper Mill engine drives Sim Mill (tools/sim-mill/engine/).
+#
+#   engine     the engine's running value for the hour (its 1-minute samples while the sheet was on), as an expression
+#              over engine tag keys (SIM.TAGS in the-paper-mill 11d-tags.js)
+#   derived    also an expression over engine keys, for a PM1 tag the engine has no direct sensor for
+#   condition  the Python condition model: bearing vibration and temperature, Uhle vacuum by felt age (not in the engine)
+#   model      the Python process model (the engine holds these at a fixed setpoint)
+#
+# For engine and derived tags the value is   engine expression + (Python value - Python's median for the grade):
+# the engine gives the level and the process (grades, breaks, upsets, steam), the Python model adds what it knows that
+# the engine doesn't (clothing and plate wear, the planted faults F1-F5). Then every tag gets the same instrument noise
+# (AR(1) at its sigma) and the stops are applied as before. Hours with no engine value (warm-up start, sheet off all
+# hour) keep the Python value.
+engine:
+  SPEED: speed
+  PROD: prod
+  REEL_MOIST: moist
+  REEL_BW: bw
+  PULPER_AMPS: amps
+  PULPER_CONS: cp
+  STOCK_CHEST_LVL: chest
+  FREENESS: csf
+  HB_CONS: hbc
+  FAN_PUMP_FLOW: fan
+  FLATBOX_VAC: vac
+  COUCH_SOLIDS: couchSol
+  PRESS_SOLIDS: pressSol
+  DRY1_STEAM_P: st1
+  DRY4_STEAM_P: st3
+  STEAM_FLOW: steam
+  DRY1_DP: dp1
+  DRY2_DP: dp2
+  DRY4_DP: dp3
+  REF_A_SE: kwh
+  HOOD_EXH_TEMP: hoodH
+derived:
+  REF_B_SE: kwh                         # same stock, its own plates: REF 2's wear (and F3) come in as the Python delta
+  REF_A_KW: refkw * 0.7457 / 2          # engine refiner load is both refiners, in hp
+  REF_B_KW: refkw * 0.7457 / 2
+  DRY2_STEAM_P: st1 + (st3 - st1) / 3   # the engine has a 1st and a last section; the middle two sit between
+  DRY3_STEAM_P: st1 + 2 * (st3 - st1) / 3
+  DRY3_DP: (dp2 + dp3) / 2
+condition: [UHLE_P1T_VAC, UHLE_P1B_VAC, UHLE_P2T_VAC, UHLE_P2B_VAC, PULPER_VIB, REF_A_VIB, REF_B_VIB, FAN_PUMP_VIB, COUCH_DS_VIB,
+            PRESS1_DS_VIB, PRESS2_DS_VIB, DRYER_DRIVE_VIB, REEL_DRUM_DS_VIB, REEL_DRUM_DS_TEMP, WINDER_DRUM_VIB]
+model: [HB_P, COUCH_VAC, PRESS1_LOAD, PRESS2_LOAD, BREAKS]

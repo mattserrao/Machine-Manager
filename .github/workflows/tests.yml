@@ -52,7 +52,7 @@ jobs:
       - run: sudo apt-get update -q && sudo apt-get install -y -q tesseract-ocr poppler-utils
       - run: pip install "psycopg[binary]" pyyaml openpyxl numpy reportlab pypdf python-docx pillow
       - name: Generate the demo year
-        run: python3 tools/demo-data/structured.py && python3 tools/demo-data/pi_envoy.py && python3 tools/demo-data/docs.py && python3 tools/demo-data/downtime_feed.py
+        run: python3 tools/demo-data/structured.py && python3 tools/demo-data/pi_bonvoy.py && python3 tools/demo-data/docs.py && python3 tools/demo-data/downtime_feed.py
       - name: Load and verify
         run: |
           psql -h localhost -U postgres -d mm_demo -v ON_ERROR_STOP=1 -q -f tests/db/supabase-shim.sql -f supabase/schema.sql -f supabase/llm.sql
@@ -79,10 +79,10 @@ jobs:
       - run: pip install pyyaml openpyxl numpy reportlab pypdf python-docx pillow
       - run: python3 tools/demo-data/backbone.py --check
       - run: python3 tools/demo-data/structured.py --check
-      - name: Pi + Envoy (needs phase 2's _truth, so generate it first)
-        run: python3 tools/demo-data/structured.py && python3 tools/demo-data/pi_envoy.py --check
+      - name: Pi + Bonvoy (needs phase 2's _truth, so generate it first)
+        run: python3 tools/demo-data/structured.py && python3 tools/demo-data/pi_bonvoy.py --check
       - name: Documents (needs phases 2–3 output)
-        run: python3 tools/demo-data/pi_envoy.py && python3 tools/demo-data/docs.py --check
+        run: python3 tools/demo-data/pi_bonvoy.py && python3 tools/demo-data/docs.py --check
       - run: python3 tools/sim-mill/run.py --check
       - run: python3 tools/sim-mill/validate_ref.py
 

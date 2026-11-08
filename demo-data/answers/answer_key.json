@@ -9,7 +9,7 @@
    "expect": "Lead with the dryer can 27 DS bearing: outer race defect on the Oct 19 vibration route (0.24 in/s, Alert), rising since early September, WO scheduled for Nov 11 with parts not reserved. Also: BP 1 and BP 2 refiner plates due with only one Ridgeway set on hand, the 2nd section drive coupling (parts not reserved), and the 6 WOs carried over from the annual.",
    "tools": [
     "mm_llm_outage_scope",
-    "mm_llm_envoy",
+    "mm_llm_bonvoy",
     "mm_llm_search_docs",
     "mm_llm_position_history"
    ],
@@ -19,8 +19,8 @@
      "sql": "exists (select 1 from public.mm_llm_outage_scope(:org, 'OUT-2026-11-11') where description ilike '%can 27 DS bearing%' and parts_status = 'Not reserved')"
     },
     {
-     "desc": "Envoy flagged can 27 on most days after the annual restart",
-     "sql": "(select count(*) from public.mm_llm_envoy(:org, 'PM1:DRY2_C27_DS_VIB', '2026-10-12', '2026-10-31')) >= 15"
+     "desc": "Bonvoy flagged can 27 on most days after the annual restart",
+     "sql": "(select count(*) from public.mm_llm_bonvoy(:org, 'PM1:DRY2_C27_DS_VIB', '2026-10-12', '2026-10-31')) >= 15"
     },
     {
      "desc": "the Oct 19 vibration route is found for 'can 27 outer race defect'",
@@ -48,8 +48,8 @@
      "limit": 8
     },
     {
-     "label": "Envoy: can 27 DS bearing since the restart",
-     "fn": "mm_llm_envoy",
+     "label": "Bonvoy: can 27 DS bearing since the restart",
+     "fn": "mm_llm_bonvoy",
      "args": {
       "p_term": "PM1:DRY2_C27_DS_VIB",
       "p_from": "2026-10-12",
@@ -85,16 +85,16 @@
    "story": "S01",
    "output": "Ask MM",
    "question": "When did we first see the can 27 problem?",
-   "expect": "Envoy first flagged the can 27 DS bearing on Sep 22 (report Sep 23); the Sep 14 route already showed a BPFO tone at 0.07 in/s. It was flagged before the Oct 5 annual outage but was not in the annual scope.",
+   "expect": "Bonvoy first flagged the can 27 DS bearing on Sep 22 (report Sep 23); the Sep 14 route already showed a BPFO tone at 0.07 in/s. It was flagged before the Oct 5 annual outage but was not in the annual scope.",
    "tools": [
-    "mm_llm_envoy",
+    "mm_llm_bonvoy",
     "mm_llm_search_docs",
     "mm_llm_outage_scope"
    ],
    "checks": [
     {
-     "desc": "first Envoy flag on can 27 DS is Sep 22",
-     "sql": "(select min(period) from public.mm_llm_envoy(:org, 'PM1:DRY2_C27_DS_VIB', '2026-08-01', null)) = '2026-09-22'"
+     "desc": "first Bonvoy flag on can 27 DS is Sep 22",
+     "sql": "(select min(period) from public.mm_llm_bonvoy(:org, 'PM1:DRY2_C27_DS_VIB', '2026-08-01', null)) = '2026-09-22'"
     },
     {
      "desc": "the Sep 14 route mentions BPFO",
@@ -107,8 +107,8 @@
    ],
    "show": [
     {
-     "label": "Envoy: can 27 DS bearing, first flags",
-     "fn": "mm_llm_envoy",
+     "label": "Bonvoy: can 27 DS bearing, first flags",
+     "fn": "mm_llm_bonvoy",
      "args": {
       "p_term": "PM1:DRY2_C27_DS_VIB",
       "p_from": "2026-08-01"
@@ -165,7 +165,7 @@
    "tools": [
     "mm_llm_search_docs",
     "mm_llm_position_history",
-    "mm_llm_envoy"
+    "mm_llm_bonvoy"
    ],
    "checks": [
     {
@@ -181,8 +181,8 @@
      "sql": "exists (select 1 from public.mm_llm_position_history(:org, 'p2-felt-top') where source = 'Action' and summary ilike '%filtered water%' and status not ilike 'Completed%')"
     },
     {
-     "desc": "Envoy flagged the 2nd press Uhle vacuum from Mar 24",
-     "sql": "(select min(period) from public.mm_llm_envoy(:org, 'PM1:UHLE_P2_VAC', '2026-03-01', '2026-04-20')) = '2026-03-24'"
+     "desc": "Bonvoy flagged the 2nd press Uhle vacuum from Mar 24",
+     "sql": "(select min(period) from public.mm_llm_bonvoy(:org, 'PM1:UHLE_P2_VAC', '2026-03-01', '2026-04-20')) = '2026-03-24'"
     }
    ],
    "show": [
@@ -217,8 +217,8 @@
      "limit": 10
     },
     {
-     "label": "Envoy: 2nd press Uhle box vacuum",
-     "fn": "mm_llm_envoy",
+     "label": "Bonvoy: 2nd press Uhle box vacuum",
+     "fn": "mm_llm_bonvoy",
      "args": {
       "p_term": "PM1:UHLE_P2_VAC",
       "p_from": "2026-03-01",
@@ -376,10 +376,10 @@
    "story": "S04",
    "output": "Outage brief",
    "question": "Do we have what we need for refiner plates at the Nov 11 outage?",
-   "expect": "No: BP 1 and BP 2 are both due Nov 11 and BP 2 is wearing fast (Envoy SE flags from Oct 13, Ridgeway annual inspection: elevated edge rounding). Only one Ridgeway set is on hand and the order action is still open.",
+   "expect": "No: BP 1 and BP 2 are both due Nov 11 and BP 2 is wearing fast (Bonvoy SE flags from Oct 13, Ridgeway annual inspection: elevated edge rounding). Only one Ridgeway set is on hand and the order action is still open.",
    "tools": [
     "mm_llm_outage_scope",
-    "mm_llm_envoy",
+    "mm_llm_bonvoy",
     "mm_llm_search_docs",
     "mm_llm_position_history",
     "mm_llm_search_records"
@@ -387,7 +387,7 @@
    "checks": [
     {
      "desc": "first BP 2 SE flag is Oct 13",
-     "sql": "(select min(period) from public.mm_llm_envoy(:org, 'PM1:REF_BP2_SE', '2026-08-15', null)) = '2026-10-13'"
+     "sql": "(select min(period) from public.mm_llm_bonvoy(:org, 'PM1:REF_BP2_SE', '2026-08-15', null)) = '2026-10-13'"
     },
     {
      "desc": "the Ridgeway inspection is found for 'edge rounding'",
@@ -422,8 +422,8 @@
      }
     },
     {
-     "label": "Envoy: BP 2 specific energy",
-     "fn": "mm_llm_envoy",
+     "label": "Bonvoy: BP 2 specific energy",
+     "fn": "mm_llm_bonvoy",
      "args": {
       "p_term": "PM1:REF_BP2_SE",
       "p_from": "2026-09-01",
@@ -472,10 +472,10 @@
    "story": "S05",
    "output": "Troubleshooting",
    "question": "Is there a pattern behind the breaks at the 3rd section this summer?",
-   "expect": "About 22 breaks Jun-Aug at the 3rd section and calender, more on 26# and hot afternoons, lining up with low PV-3 pocket ventilation fan amps (Envoy flagged twice in the July cluster). The PV-3 damper WO was closed 'could not reproduce' and there is no RCFA.",
+   "expect": "About 22 breaks Jun-Aug at the 3rd section and calender, more on 26# and hot afternoons, lining up with low PV-3 pocket ventilation fan amps (Bonvoy flagged twice in the July cluster). The PV-3 damper WO was closed 'could not reproduce' and there is no RCFA.",
    "tools": [
     "mm_llm_position_history",
-    "mm_llm_envoy",
+    "mm_llm_bonvoy",
     "mm_llm_pi_daily"
    ],
    "checks": [
@@ -484,8 +484,8 @@
      "sql": "(select count(*) from public.mm_llm_position_history(:org, '3rd section top felt', '2026-06-01', '2026-08-31') where source = 'BUS' and summary like 'Break%') + (select count(*) from public.mm_llm_position_history(:org, 'Calender top roll', '2026-06-01', '2026-08-31') where source = 'BUS' and summary like 'Break%') = 22"
     },
     {
-     "desc": "Envoy flagged PV-3 amps twice in Jul 12–20",
-     "sql": "(select count(*) from public.mm_llm_envoy(:org, 'PM1:DRY3_PV_FAN_AMPS', '2026-07-12', '2026-07-20')) = 2"
+     "desc": "Bonvoy flagged PV-3 amps twice in Jul 12–20",
+     "sql": "(select count(*) from public.mm_llm_bonvoy(:org, 'PM1:DRY3_PV_FAN_AMPS', '2026-07-12', '2026-07-20')) = 2"
     },
     {
      "desc": "the PV-3 WO was closed as could not reproduce",
@@ -512,8 +512,8 @@
      "limit": 20
     },
     {
-     "label": "Envoy: PV-3 pocket ventilation fan amps (summer)",
-     "fn": "mm_llm_envoy",
+     "label": "Bonvoy: PV-3 pocket ventilation fan amps (summer)",
+     "fn": "mm_llm_bonvoy",
      "args": {
       "p_term": "PM1:DRY3_PV_FAN_AMPS",
       "p_from": "2026-06-01",

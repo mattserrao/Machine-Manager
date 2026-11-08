@@ -24,7 +24,7 @@ def cycles_for(today):
 if '--auto' in sys.argv: os.environ['SIM_SHIFT_CYCLES'] = str(cycles_for(dt.date.today()))
 elif '--cycles' in sys.argv: os.environ['SIM_SHIFT_CYCLES'] = sys.argv[sys.argv.index('--cycles') + 1]
 
-from simmill import base, model, process, records, emit, docs, mm_records
+from simmill import base, model, process, records, emit, docs, mm_records, bonvoy_report
 from simmill.base import Y0, TODAY, DATA, PLANTS, MACHINE, D, B, BT, md
 
 def generate(out, seed=model.SEED, log=print):
@@ -36,9 +36,10 @@ def generate(out, seed=model.SEED, log=print):
     rec = records.build(m, p); log(f'records: {len(rec["wos"])} WOs, {len(rec["actions"])} actions, {len(rec["issues"])} BUS issues, {len(rec["rcfas"])} RCFAs')
     emit.write_structured(m, rec, out)
     bus = emit.write_bus(m, rec, os.path.join(out, 'bus'))
-    ev = emit.write_pi_envoy(m, p, out); log(f'pi + envoy written ({time.time() - t0:.1f}s)')
+    ev = emit.write_pi_bonvoy(m, p, out); log(f'pi + bonvoy written ({time.time() - t0:.1f}s)')
     emit.write_new_feeds(m, p, rec, out)
     man = docs.build(m, p, rec, out); log(f'documents: {len(man)} ({time.time() - t0:.1f}s)')
+    nb = bonvoy_report.build(m, p, rec, ev, man, out); log(f'Bonvoy reports: {nb} days ({time.time() - t0:.1f}s)')
     mm_records.write(m, rec, out)
     emit.write_truth(m, rec, ev, out)
     json.dump(man, open(os.path.join(out, '_truth', 'documents.json'), 'w'), indent=1)
@@ -100,13 +101,13 @@ def check(g, out):
     ok(5 <= len(od) <= 25, f'{len(od)} overdue actions on {md(TODAY)}')
     flags = lambda tag: sorted(d for d, rows in ev.items() if any(r['Tag'] == f'{MACHINE}:{tag}' for r in rows))
     f1 = [d for d in flags('UHLE_P2T_VAC') if B('2026-05-01') <= d <= B('2026-05-19')]
-    ok(len(f1) >= 3, f'F1: Envoy flags the 2nd press top Uhle vacuum before the felt change ({len(f1)} days, first {f1[:1]})')
+    ok(len(f1) >= 3, f'F1: Bonvoy flags the 2nd press top Uhle vacuum before the felt change ({len(f1)} days, first {f1[:1]})')
     f2 = [d for d in flags('REEL_DRUM_DS_VIB') if d >= B('2026-08-01')]
-    ok(len(f2) >= 15 and f2[0] <= B('2026-09-20'), f'F2: Envoy flags the reel drum DS bearing ({len(f2)} days, first {f2[:1]})')
+    ok(len(f2) >= 15 and f2[0] <= B('2026-09-20'), f'F2: Bonvoy flags the reel drum DS bearing ({len(f2)} days, first {f2[:1]})')
     f3 = [d for d in flags('REF_B_SE') if d >= B('2026-10-01')]
-    ok(len(f3) >= 5, f'F3: Envoy flags REF 2 specific energy in October ({len(f3)} days)')
+    ok(len(f3) >= 5, f'F3: Bonvoy flags REF 2 specific energy in October ({len(f3)} days)')
     f5 = flags('DRY3_DP'); hit = [x for x in PLANTS['F5']['events'] if any(dt.datetime.fromisoformat(x['start']).date() - dt.timedelta(days=5) <= d <= dt.datetime.fromisoformat(x['start']).date() for d in f5)]
-    ok(len(hit) >= 2, f'F5: Envoy flags the 3rd section syphon differential before {len(hit)} of 3 joint leaks')
+    ok(len(hit) >= 2, f'F5: Bonvoy flags the 3rd section syphon differential before {len(hit)} of 3 joint leaks')
     ok(not any(r['story'] == 'F5' for r in rec['rcfas']), 'F5: no RCFA for the 3rd section joint leaks')
     ok(any(r['story'] == 'F1' for r in rec['rcfas']) and any(r['story'] == 'F4' for r in rec['rcfas']), 'F1 and F4 have RCFAs')
     f4 = [a for a in rec['actions'] if a.story == 'F4' and a.progress_at(TODAY) != 'Completed' and a.due < TODAY]
@@ -114,7 +115,7 @@ def check(g, out):
     nx = [w for w in rec['wos'] if w.outage_at(TODAY) == base.NEXT_OUTAGE['id']]
     ok(any('reel drum DS bearing' in w.desc and w.status_at(TODAY) == 45 for w in nx), f"F2: {md(base.NEXT_OUTAGE['date'])} scope has the reel drum bearing WO, waiting on parts")
     ok(sum(1 for w in nx if 'refiner plates' in w.desc) == 2, f"F3: both refiner plate changes in the {md(base.NEXT_OUTAGE['date'])} scope")
-    # Envoy is backed by Pi: re-derive one month from the written CSVs
+    # Bonvoy is backed by Pi: re-derive one month from the written CSVs
     vals = {}
     for fn in sorted(glob.glob(os.path.join(out, 'pi', 'hourly', '*.csv'))):
         for r in csv.DictReader(open(fn)):
@@ -123,10 +124,21 @@ def check(g, out):
     ok(len(vals[f'{MACHINE}:SPEED']) == (base.Y1 - Y0).days * 24, 'Pi hourly covers the year')
     p = g['p']; i0 = int(base.hidx(dt.datetime.combine(Y0, dt.time(0))))
     same = all(abs(float(vals[t][h - i0] or 'nan') - p['OUT'][t][h]) < 1e-6 or (vals[t][h - i0] == '') for t in list(base.TAG)[:10] for h in range(i0, i0 + 500))
-    ok(same, 'Pi CSVs hold the model values the Envoy reports were derived from')
+    ok(same, 'Pi CSVs hold the model values the Bonvoy reports were derived from')
     ok(os.path.exists(os.path.join(out, 'records', 'mymachine.json')), 'My Machine, Outage Planning and Consumables records written')
     mm = json.load(open(os.path.join(out, 'records', 'mymachine.json')))
     ok(len([k for k in mm if k.startswith('item:')]) == len(base.POS_NAME), f'My Machine: one item per position ({len(base.POS_NAME)})')
+    from simmill import engine as ENG
+    if ENG.ON:
+        cov = g['p'].get('engine_cover', {})
+        ok(len(cov) == len(ENG.EXPR) and min(cov.values()) >= .8, f'engine drives {len(cov)} tags, each on {min(cov.values()):.0%}+ of hours')
+        eg = [e for e in m['events'] if e['kind'] == 'break' and e['start'].date() >= Y0]
+        ok(len(eg) >= 500, f'sheet breaks come from the engine ({len(eg)} in the year)')
+    reps = sorted(glob.glob(os.path.join(out, 'bonvoy', 'reports', '*.json')))
+    ok(len(reps) == bonvoy_report.REPORT_DAYS, f'Bonvoy Reports for the last {bonvoy_report.REPORT_DAYS} days ({len(reps)})')
+    rs = [json.load(open(f)) for f in reps]
+    ok(any(x['short'] in ('REEL_DRUM_DS_VIB', 'REF_B_SE') and x['story'] for r in rs for x in r['items']),
+       'Bonvoy Reports: the week flags the reel drum bearing or REF 2 plates with their story')
     print(f"{len(fails)} failing" if fails else 'all Sim Mill checks pass')
     return not fails
 
