@@ -42,4 +42,4 @@ body.lib-open #toolbar,body.lib-open #searchbar,body.lib-open #zoombar,body.lib-
 .fld input:focus,.fld textarea:focus{border-color:var(--accent-line)}
 .fld textarea{resize:vertical;line-height:1.45}
 #pkgDlg .frow .fld input[type=number]{width:96px}
-@media (max-width:720px){ #library{padding:76px 12px 40px} #libSearch{width:100%}  #search{width:110px} #topleft{max-width:calc(100vw - 300px)} #acct .who{display:none} #toolbar .wide{display:none} .brand > div:last-child{display:none} }
+@media (max-width:720px){ #library{padding:76px 12px 40px} #libSearch{width:100%} }
