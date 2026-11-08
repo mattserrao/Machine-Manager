@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MM LLM</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script src="mm-theme.js?v=2026-11-08.1712"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1712">
+<script src="mm-icons.js?v=2026-11-08.1712"></script>
+<style>
+  /* shared look: mm-theme.css */
+  main{max-width:1320px;margin:0 auto;padding:24px 20px 72px}
+  .intro{max-width:720px;margin:0 0 20px}
+  .intro h2{margin:0 0 6px;font-size:15px;font-weight:600}
+  .intro p{margin:0;font-size:13px;color:var(--muted);line-height:1.55}
+
+  /* ---- Flow: five columns, left to right ---- */
+  .flow{position:relative;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:36px;align-items:start}
+  .flow svg.wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+  .wires path{fill:none;stroke:var(--line-strong);stroke-width:1.2}
+  .wires path.dash{stroke-dasharray:4 4}
+  .flow.sel .wires path{opacity:.18}
+  .flow.sel .wires path.on{opacity:1;stroke:var(--accent);stroke-width:2}
+  .col{position:relative;z-index:1;display:flex;flex-direction:column;gap:10px;min-width:0}
+  .col > h3{margin:0 0 2px;display:flex;align-items:baseline;gap:8px;font-size:12px;font-weight:600;color:var(--ink)}
+  .col > h3 .n{font:500 11px var(--mono);color:var(--ink-3)}
+  .col > .cs{margin:-6px 0 4px;font-size:12px;color:var(--muted);line-height:1.4}
+  .blk{display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;background:var(--surface);
+    border:1px solid var(--line);border-radius:var(--r-lg);padding:10px 12px;transition:border-color .15s,opacity .15s,background .15s}
+  .blk:hover{border-color:var(--line-strong)}
+  .blk:focus-visible{outline:2px solid var(--accent-line);outline-offset:1px}
+  .blk .t{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--ink)}
+  .blk .t .mm-chip{margin-left:auto;height:18px;font-size:11px}
+  .blks{display:flex;flex-direction:column;gap:10px}
+  .blk .d,.blk .k{display:block}
+  .blk .d{margin-top:4px;font-size:12px;color:var(--muted);line-height:1.45}
+  .blk .k{margin-top:6px;font:500 11px var(--mono);color:var(--ink-3)}
+  .flow.sel .blk{opacity:.4}
+  .flow.sel .blk.rel{opacity:1}
+  .flow.sel .blk.cur{opacity:1;border-color:var(--accent-line);background:var(--accent-soft)}
+  .blk.group{border-style:dashed;background:transparent}
+
+  /* ---- Detail for the selected block ---- */
+  .detail{margin:24px 0 0;padding:16px 18px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);max-width:860px}
+  .detail h4{margin:0 0 6px;font-size:14px;font-weight:600}
+  .detail p{margin:0 0 10px;font-size:13px;color:var(--ink-2);line-height:1.55}
+  .detail dl{display:grid;grid-template-columns:110px 1fr;gap:6px 14px;margin:0;font-size:13px}
+  .detail dt{color:var(--muted);font-weight:500}
+  .detail dd{margin:0;color:var(--ink-2);line-height:1.5}
+  .detail .hint{color:var(--muted)}
+
+  /* ---- Ground rules under the diagram ---- */
+  .rules{margin:28px 0 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .rule{padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-lg)}
+  .rule b{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+  .rule span{font-size:12px;color:var(--muted);line-height:1.5}
+  .rules-h{margin:32px 0 0;font-size:13px;font-weight:600}
+
+  #ver{position:static;text-align:right;margin-top:28px;display:block}
+
+  /* ---- Narrower screens: columns stack, wires hide, a down-arrow joins each stage ---- */
+  @media (max-width:980px){
+    .flow{grid-template-columns:1fr;gap:28px}
+    .flow svg.wires{display:none}
+    .col:not(:last-of-type)::after{content:"";position:absolute;left:50%;bottom:-22px;width:1px;height:16px;background:var(--line-strong)}
+    .flow > .detail{margin:-8px 0 0}
+    .col .blks{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+  }
+</style>
+</head>
+<body>
+<header class="mm-top">
+  <div class="bar brand">
+    <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
+    <div><h1>MM LLM</h1><p>How mill data reaches the assistant</p></div>
+  </div>
+  <div id="acct"></div>
+</header>
+<main>
+  <section class="intro">
+    <h2>Information flow</h2>
+    <p>Mill sources are imported, tagged to a PM1 position and stored in Supabase. The orchestrator answers through a small set of tools, so any model can sit behind it. Select a block to see what it connects to.</p>
+  </section>
+
+  <div class="flow" id="flow">
+    <svg class="wires" id="wires" aria-hidden="true"></svg>
+  </div>
+
+  <div class="detail" id="detail" aria-live="polite">
+    <p class="hint">Select a block to see what it holds, how it is parsed and stored, and what it feeds.</p>
+  </div>
+
+  <h3 class="rules-h">Ground rules</h3>
+  <div class="rules">
+    <div class="rule"><b>Every row has a position</b><span>BUS items, WOs, RCFAs, vendor findings and document chunks all carry a PM1 position id from My Machine. That key is what lets an outage brief pull everything for "2nd press felt".</span></div>
+    <div class="rule"><b>Tables first, search second</b><span>Anything with rows and columns goes in a table and is answered with a query. Only narrative text (report findings, RCFA write-ups, manuals) is chunked and embedded for search.</span></div>
+    <div class="rule"><b>Pi stays in Pi</b><span>Trends are read on demand from the historian. Only Envoy exceptions are stored, as dated events.</span></div>
+    <div class="rule"><b>Models are swappable</b><span>Prompts and tools live in this app, not in a vendor's features. The adapter maps one request format to each provider; embeddings record which model made them.</span></div>
+    <div class="rule"><b>Answers cite records</b><span>Every statement links back to the row, page or trend it came from, so it can be checked before it goes on an outage plan.</span></div>
+  </div>
+
+  <div id="ver"></div>
+</main>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1712"></script>
+<script src="mm-config.js?v=2026-11-08.1712"></script>
+<script src="mm-cloud.js?v=2026-11-08.1712"></script>
+<script>
+  const VERSION = 'v0.2.0';
+  document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
+  MMCloud.mountAccount(document.getElementById('acct'), { compact: true });
+
+  // ---------- The diagram: stages (columns), blocks, and the links between them ----------
+  const STAGES = [
+    { id: 'src',   name: 'Data sources', sub: 'Where PM1 information lives today' },
+    { id: 'ing',   name: 'Ingest',       sub: 'Parse, extract, tag to a position' },
+    { id: 'store', name: 'Storage',      sub: 'Supabase: tables, vectors, files' },
+    { id: 'llm',   name: 'LLM layer',    sub: 'Orchestrator, tools and helper' },
+    { id: 'out',   name: 'Outputs',      sub: 'What the superintendent gets' },
+  ];
+
+  // kind: how the block's data is handled (shown as a mono line). live: in use today.
+  const BLOCKS = [
+    // Sources
+    { id: 'bus',    s: 'src', name: 'BUS daily sheet', d: 'Daily issues, actions and owners from the morning meeting.', k: 'rows + free text',
+      how: 'One row per issue: date, area, position, issue, action, owner, status. The issue text is also embedded so similar past problems can be found.' },
+    { id: 'envoy',  s: 'src', name: 'Envoy reports', d: 'Pi trends outside their standard-deviation thresholds.', k: 'exception events',
+      how: 'Each flagged tag becomes an event: tag, position, value, limit, sigma, time. Envoy has already done the screening, so these are kept in full.' },
+    { id: 'pi',     s: 'src', name: 'Pi historian', d: 'Live process and equipment tags.', k: 'read on demand',
+      how: 'Not copied. A connector reads trends for a tag and time window when a question needs them, and a tag map links Pi tags to PM1 positions.' },
+    { id: 'rcfa',   s: 'src', name: 'RCFA log', d: 'Failures, root causes and corrective actions.', k: 'rows + narrative',
+      how: 'Event, date, position, root cause, actions and owners go in a table; the write-up is chunked and embedded.' },
+    { id: 'teams',  s: 'src', name: 'Teams action tracker', d: 'Open actions, owners and due dates.', k: 'rows',
+      how: 'One row per action, synced from the tracker list. Overdue and outage-tagged actions surface in the outage brief.' },
+    { id: 'jde',    s: 'src', name: 'JDE work orders', d: 'Open and closed WOs by equipment.', k: 'rows',
+      how: 'WO number, equipment, description, priority, status, dates. JDE equipment numbers map to PM1 positions once, in the equipment register.' },
+    { id: 'vendor', s: 'src', name: 'Vendor reports', d: 'Clothing, roll, vibration and shower audits (PDF).', k: 'fields + narrative',
+      how: 'The helper extracts vendor, date, position, measurements and recommendations into a table; the full text is chunked and embedded; the PDF is kept.' },
+    { id: 'ref',    s: 'src', name: 'Drawings and reference charts', d: 'Machine drawings, clothing specs, setting charts.', k: 'files + description',
+      how: 'Original kept in storage with tags (section, position, drawing no.). A short written description is embedded. Tabular charts are typed into a table once.' },
+    { id: 'mm',     s: 'src', name: 'Machine Manager', d: 'My Machine, outages, task library, consumables, Daily.', k: 'already structured', live: true,
+      how: 'Already stored as synced records. No parsing needed: the orchestrator reads them directly.' },
+
+    // Ingest
+    { id: 'imp',    s: 'ing', name: 'Structured import', d: 'Maps sheet and export columns to tables.', k: 'Excel · CSV · API',
+      how: 'One saved column mapping per source, so a daily sheet or WO export can be dropped in and loaded without the LLM. Re-imports update rows instead of duplicating them.' },
+    { id: 'parse',  s: 'ing', name: 'Document parse', d: 'PDF and Word to text, tables and key fields.', k: 'text · tables · chunks',
+      how: 'Text and tables are pulled from each page, split into chunks with page numbers, and passed to the helper for field extraction.' },
+    { id: 'piconn', s: 'ing', name: 'Pi connector', d: 'Reads trends for a tag and window.', k: 'PI Web API · mill network',
+      how: 'Runs where it can reach the historian (the mill network). Returns summarised trends, not raw points, to keep answers small.' },
+    { id: 'tag',    s: 'ing', name: 'Position tagger', d: 'Links every row and chunk to a PM1 position.', k: 'rules, then helper',
+      how: 'Exact matches first (JDE number, Pi tag, roll id), then the helper suggests a position for free text. Uncertain matches are left for a person to confirm.' },
+
+    // Storage
+    { id: 'equip',  s: 'store', name: 'Equipment register', d: 'PM1 positions: the key every table joins on.', k: 'table',
+      how: 'Built from My Machine (sections, fabrics, rolls, refiners) plus JDE numbers and Pi tags for each position.' },
+    { id: 'events', s: 'store', name: 'Event tables', d: 'BUS items, Envoy exceptions, RCFAs, actions, WOs, vendor findings.', k: 'Postgres tables',
+      how: 'One table per source with shared columns: date, position, status, source link. Answers come from queries, so counts and dates are exact.' },
+    { id: 'records',s: 'store', name: 'MM records', d: 'Synced records from every Machine Manager tool.', k: 'mm_records', live: true,
+      how: 'The existing table. Already scoped to your organization with row-level security.' },
+    { id: 'docs',   s: 'store', name: 'Document index', d: 'Chunks with embeddings and full-text search.', k: 'pgvector + full text',
+      how: 'Each chunk keeps its source file, page, position and the embedding model used. Search combines meaning and keywords.' },
+    { id: 'files',  s: 'store', name: 'File storage', d: 'Original PDFs, drawings and sheets.', k: 'Supabase Storage',
+      how: 'Kept as uploaded so every answer can link to the page it came from, and so drawings can be shown to a vision-capable model when needed.' },
+
+    // LLM layer
+    { id: 'orch',   s: 'llm', name: 'Orchestrator', d: 'Plans the answer, calls tools, cites sources.', k: 'Supabase Edge Function',
+      how: 'Holds the prompts for each output, decides which tools to call, and returns an answer with links. Runs server-side so keys and data never sit in the browser.' },
+    { id: 'tools',  s: 'llm', name: 'Tools', d: 'The only way the model reaches data.', k: 'query · search · trend · history',
+      how: 'Read-only, organization-scoped: query_events, search_docs, get_trend, position_history, upcoming_outage, plus add_to_outage which needs your confirmation.' },
+    { id: 'adapt',  s: 'llm', name: 'Model adapter', d: 'One request format, any provider.', k: 'Claude · OpenAI · Gemini · local',
+      how: 'Translates messages and tool calls to each provider. Switching model is a setting; the tools and prompts stay the same.' },
+    { id: 'helper', s: 'llm', name: 'Helper model', d: 'Small, cheap model for ingest jobs.', k: 'extract · tag · summarise',
+      how: 'Runs on every upload: pulls fields from vendor reports, suggests positions, writes chunk summaries. Can be a local model if data must stay on site.' },
+
+    // Outputs
+    { id: 'outage', s: 'out', name: 'Outage brief', d: 'What to work on at the next outage, and why.', k: 'per outage',
+      how: 'Fabrics and rolls due, open WOs, Envoy exceptions, vendor recommendations and open RCFA actions, grouped by section, with "add to outage" on each item.' },
+    { id: 'trbl',   s: 'out', name: 'Troubleshooting', d: 'Help on an active problem from the BUS sheet.', k: 'per issue',
+      how: 'Finds similar past issues and RCFAs, pulls recent trends and WOs for the position, and shows the relevant drawing or chart.' },
+    { id: 'ask',    s: 'out', name: 'Ask MM', d: 'Plain questions across everything, with links.', k: 'chat',
+      how: 'Free questions, e.g. "how long did the last three base ply wires run?", answered from tables first and documents second.' },
+    { id: 'watch',  s: 'out', name: 'Morning watch', d: 'New exceptions, overdue actions, items due.', k: 'daily, suggested',
+      how: 'A short summary before the BUS meeting: what changed since yesterday and what needs an owner.' },
+    { id: 'rcfad',  s: 'out', name: 'RCFA draft', d: 'Timeline and evidence for a new RCFA.', k: 'suggested',
+      how: 'Pre-fills the timeline from trends, WOs and BUS entries around the event, ready to edit.' },
+  ];
+
+  // from → to. dash: on demand / supporting link.
+  const LINKS = [
+    ['bus','imp'],['envoy','imp'],['rcfa','imp'],['rcfa','parse'],['teams','imp'],['jde','imp'],
+    ['vendor','parse'],['ref','parse'],['pi','piconn',1],['mm','records'],['ref','files'],
+    ['imp','tag'],['parse','tag'],['parse','files'],
+    ['tag','events'],['tag','docs'],['equip','tag',1],['records','equip'],
+    ['equip','tools'],['events','tools'],['records','tools'],['docs','tools'],['files','tools',1],['piconn','tools',1],
+    ['tools','orch'],['orch','adapt'],['helper','adapt'],['helper','parse',1],['helper','tag',1],
+    ['orch','outage'],['orch','trbl'],['orch','ask'],['orch','watch'],['orch','rcfad'],
+  ];
+
+  const flow = document.getElementById('flow'), wires = document.getElementById('wires'), detail = document.getElementById('detail');
+  const byId = Object.fromEntries(BLOCKS.map(b => [b.id, b]));
+  const el = {}, colIx = Object.fromEntries(STAGES.map((s, i) => [s.id, i]));
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+  STAGES.forEach((s, i) => {
+    const col = mk('section', 'col'); const h = mk('h3'); h.append(mk('span', 'n', String(i + 1).padStart(2, '0')), s.name);
+    const list = mk('div', 'blks');
+    col.append(h, mk('p', 'cs', s.sub), list);
+    BLOCKS.filter(b => b.s === s.id).forEach(b => {
+      const btn = mk('button', 'blk'); btn.type = 'button'; btn.dataset.id = b.id;
+      const t = mk('span', 't', b.name); if (b.live) t.appendChild(mk('span', 'mm-chip', 'In use'));
+      btn.append(t, mk('span', 'd', b.d), mk('span', 'k', b.k));
+      btn.addEventListener('click', () => select(sel === b.id ? null : b.id));
+      list.appendChild(btn); el[b.id] = btn;
+    });
+    flow.appendChild(col);
+  });
+  // stacked layout (phones, narrow windows) hides the wires
+  const mq = matchMedia('(max-width:980px)');
+  mq.addEventListener('change', () => { if (sel) select(sel); draw(); });
+
+  // ---------- Wires ----------
+  const NS = 'http://www.w3.org/2000/svg'; let paths = [];
+  function draw(){
+    wires.textContent = ''; paths = [];
+    if (mq.matches) return;
+    const box = flow.getBoundingClientRect();
+    LINKS.forEach(([a, b, dash]) => {
+      let A = el[a], B = el[b]; if (!A || !B) return;
+      let ia = colIx[byId[a].s], ib = colIx[byId[b].s];
+      if (ia === ib){   // same column: a short loop on the right edge
+        const ra = A.getBoundingClientRect(), rb = B.getBoundingClientRect();
+        const x = ra.right - box.left, y1 = ra.top + ra.height / 2 - box.top, y2 = rb.top + rb.height / 2 - box.top;
+        return add(`M${x} ${y1} C${x + 16} ${y1}, ${x + 16} ${y2}, ${x} ${y2}`, a, b, dash);
+      }
+      if (ia > ib){ [A, B] = [B, A]; }
+      const ra = A.getBoundingClientRect(), rb = B.getBoundingClientRect();
+      const x1 = ra.right - box.left, y1 = ra.top + ra.height / 2 - box.top, x2 = rb.left - box.left, y2 = rb.top + rb.height / 2 - box.top;
+      const dx = Math.max(18, (x2 - x1) / 2);
+      add(`M${x1} ${y1} C${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`, a, b, dash);
+    });
+    if (sel) mark();
+  }
+  function add(d, a, b, dash){
+    const p = document.createElementNS(NS, 'path'); p.setAttribute('d', d); if (dash) p.classList.add('dash');
+    p.dataset.a = a; p.dataset.b = b; wires.appendChild(p); paths.push(p);
+  }
+
+  // ---------- Selection: the block, everything it links to, and the detail panel ----------
+  let sel = null;
+  const neighbours = id => LINKS.filter(l => l[0] === id || l[1] === id).map(l => l[0] === id ? l[1] : l[0]);
+  function mark(){
+    const rel = new Set(neighbours(sel));
+    Object.entries(el).forEach(([id, b]) => { b.classList.toggle('cur', id === sel); b.classList.toggle('rel', rel.has(id)); });
+    paths.forEach(p => p.classList.toggle('on', p.dataset.a === sel || p.dataset.b === sel));
+  }
+  function select(id){
+    sel = id; flow.classList.toggle('sel', !!id);
+    Object.values(el).forEach(b => { b.classList.remove('cur', 'rel'); b.setAttribute('aria-pressed', 'false'); });
+    paths.forEach(p => p.classList.remove('on'));
+    detail.textContent = '';
+    if (!id){ flow.after(detail); detail.appendChild(mk('p', 'hint', 'Select a block to see what it holds, how it is parsed and stored, and what it feeds.')); return; }
+    el[id].setAttribute('aria-pressed', 'true'); mark();
+    const b = byId[id], from = LINKS.filter(l => l[1] === id).map(l => byId[l[0]].name), to = LINKS.filter(l => l[0] === id).map(l => byId[l[1]].name);
+    detail.append(mk('h4', '', b.name), mk('p', '', b.d));
+    const dl = mk('dl');
+    const row = (k, v) => { if (v) dl.append(mk('dt', '', k), mk('dd', '', v)); };
+    row('Stage', STAGES[colIx[b.s]].name); row('Handled as', b.k); row('How', b.how);
+    row('Fed by', from.join(', ')); row('Feeds', to.join(', '));
+    detail.appendChild(dl);
+    // stacked layout: show the detail right under the block's stage instead of at the bottom of the page
+    (mq.matches ? el[id].closest('.col') : flow).after(detail);
+    if (mq.matches) detail.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+  addEventListener('keydown', e => { if (e.key === 'Escape' && sel) select(null); });
+  addEventListener('resize', () => requestAnimationFrame(draw));
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+  requestAnimationFrame(draw);
+</script>
+<script src="mm-nav.js?v=2026-11-08.1712"></script>
+</body>
+</html>
