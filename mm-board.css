@@ -38,7 +38,7 @@ a#mode[href]:hover{background:var(--hover-2)}
   #searchbar > label{align-items:center;justify-content:center;width:34px;height:34px;cursor:pointer}
   #search{flex:0 0 0;width:0}
   #searchCount{display:none}
-  #topright:has(#searchbar:focus-within),#topright:has(#search:not(:placeholder-shown)){left:8px;z-index:52;background:var(--surface)}
+  #topright:has(#searchbar:focus-within),#topright:has(#search:not(:placeholder-shown)){left:8px;z-index:52;background:var(--chrome)}
   #topright:has(#searchbar:focus-within) #searchbar,#topright:has(#search:not(:placeholder-shown)) #searchbar{flex:1;width:auto;justify-content:flex-start;padding:0 8px 0 0!important}
   #topright:has(#searchbar:focus-within) #search,#topright:has(#search:not(:placeholder-shown)) #search{flex:1;font-size:16px}
   #topright:has(#searchbar:focus-within) #searchCount,#topright:has(#search:not(:placeholder-shown)) #searchCount{display:inline}
@@ -177,7 +177,7 @@ body.is-dragging,body.is-dragging *{cursor:grabbing!important}
 #linkPop input:focus{border-color:var(--faint)}
 #linkPop .btn{padding:5px 9px;font-size:12px}
 /* ---------- Editor ---------- */
-  .backdrop{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:20px}
+  .backdrop{position:fixed;inset:0;z-index:100;background:var(--scrim);display:grid;place-items:center;padding:20px}
 .sheet{width:min(580px,100%);max-height:calc(100vh - 40px);display:flex;flex-direction:column;background:var(--overlay);border:1px solid var(--line-strong);border-radius:var(--r-lg);
     box-shadow:var(--shadow-pop);overflow:hidden}
 .sheet-head{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--c) var(--note-tint),var(--note-base))}
@@ -239,9 +239,9 @@ body.is-dragging,body.is-dragging *{cursor:grabbing!important}
     background:transparent;pointer-events:none;z-index:0}   /* coloured title and border only: a red fill read like an alarm */
 .frame .fh{position:absolute;left:0;right:0;top:0;height:36px;pointer-events:auto;cursor:grab;display:flex;align-items:center;padding:0 14px;border-radius:var(--r-lg) var(--r-lg) 0 0}
 .frame .fh:hover{background:color-mix(in srgb,var(--fc) 8%,transparent)}
-.frame{border-color:color-mix(in srgb,var(--fc) 45%,transparent)}
-.frame .fh{border-bottom:1px solid color-mix(in srgb,var(--fc) 18%,transparent)}
-.frame .ft{font-weight:600;font-size:15px;color:color-mix(in srgb,var(--fc) 62%,#fff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frame{border-color:var(--line-strong)}
+.frame .fh{border-bottom:1px solid var(--line)}
+.frame .ft{font-weight:600;font-size:15px;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .frame .fh input{font-weight:600;font-size:15px;border:1px solid var(--accent-line);border-radius:var(--r-sm);padding:2px 6px;outline:none;width:70%}
 .frame .frz{position:absolute;right:0;bottom:0;width:20px;height:20px;pointer-events:auto;cursor:nwse-resize;opacity:.5;
     background:linear-gradient(135deg,transparent 0 55%,color-mix(in srgb,var(--fc) 60%,transparent) 55% 62%,transparent 62% 74%,color-mix(in srgb,var(--fc) 60%,transparent) 74% 81%,transparent 81%)}
@@ -308,7 +308,7 @@ textarea.inline.mini-inline{min-height:54px;font-size:12px;padding:5px 7px;borde
 .ink .rep h2{background:none;border-bottom:1.5px solid var(--muted);border-radius:0;color:var(--ink)}
 .ink .rep .rn{border-left-color:var(--faint)}
 .rep{line-height:1.45;color:var(--ink)}
-.rep h2{font-size:1.1em;margin:14px 0 6px;padding:3px 8px;border-radius:var(--r-sm);background:color-mix(in srgb,var(--fc,var(--slate)) 12%,var(--surface));color:color-mix(in srgb,var(--fc,var(--muted)) 62%,#fff);break-after:avoid}
+.rep h2{font-size:1.1em;margin:14px 0 6px;padding:3px 8px;border-radius:var(--r-sm);background:color-mix(in srgb,var(--fc,var(--slate)) 12%,var(--surface));color:var(--ink-2);break-after:avoid}
 .rep .rn{border-left:3px solid var(--nc,var(--line-strong));padding:3px 0 3px 9px;margin:5px 0;break-inside:avoid}
 .rep .rn .rn{margin-left:14px}
 .rep .rt{font-weight:600;font-size:1.05em}
@@ -328,7 +328,7 @@ textarea.inline.mini-inline{min-height:54px;font-size:12px;padding:5px 7px;borde
 .note{border-color:var(--line-strong)}
 .mini{border-color:var(--line)}
 /* data colours (areas, statuses) are picked for white paper; lift them for text on dark */
-.pill,.sp.on{color:color-mix(in srgb,var(--sc) 65%,#fff)}
+.pill,.sp.on{color:color-mix(in srgb,var(--sc) 55%,var(--ink))}   /* pull data colours toward the text colour so they read in either mode */
 .ppage .pill,.rpage .pill{color:var(--sc)}
 /* plain white notes read as a neutral raised card on dark */
 .note[style*="#ffffff"],.mini[style*="#ffffff"],.note[style*="#fff;"],.mini[style*="#fff;"]{--note-tint:4%}

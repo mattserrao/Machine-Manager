@@ -9,66 +9,74 @@
      status     --ok  --warn  --flag  --bad   (each with -soft, -ink and, where used, -line)
      palette    --teal --orange --purple --slate (frames, sections, areas)
 
-   Print and the print preview use the light set (.mm-light), because paper is white. */
+   Two modes, picked in the app menu (mm-theme.js sets <html data-theme>): dark (default, warm charcoal like
+   Claude's chat) and light (off-white page, white boxes). Print and the print preview always use the light
+   set on white paper (.mm-light). */
 
 :root{
   color-scheme:dark;
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,Roboto,system-ui,sans-serif;
   --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --r-sm:6px; --r:6px; --r-lg:10px;   /* controls 6 · panels 10 · chips round; 2–4px only for small marks */
+  --top-h:52px;
 
-  --bg:#0f1113; --surface:#15171a; --surface-2:#1a1d21; --raised:#1d2025; --overlay:#202429;
+  /* ---- Dark: warm charcoal. Page and top bar share one shade; boxes sit a step lighter. ---- */
+  --bg:#262624; --chrome:#262624; --surface:#30302e; --surface-2:#2b2b29; --raised:#353533; --overlay:#30302e;
   --hover:rgba(255,255,255,.05); --hover-2:rgba(255,255,255,.09);
   --fg-rgb:255 255 255; --bg-rgb:0 0 0;
-  --line:#262a30; --line-strong:#353a42;
-  --ink:#e6e8eb; --ink-2:#c2c7ce; --muted:#8f969f; --ink-3:#858c95; --faint:#5d646d;   /* --faint is for borders and marks only, never text */
+  --line:#3d3d3a; --line-strong:#4a4a46;
+  --ink:#ece9e1; --ink-2:#c2c0b6; --muted:#a8a69d; --ink-3:#a19f96; --faint:#62615c;   /* --faint is for borders and marks only, never text */
 
-  --accent:#6ea2ff; --accent-soft:rgba(110,162,255,.13); --accent-line:rgba(110,162,255,.5); --accent-ink:#a8c6ff;
-  --primary:#e6e8eb; --primary-hover:#ffffff; --on-primary:#111316;
+  --accent:#7aa9f5; --accent-soft:rgba(122,169,245,.14); --accent-line:rgba(122,169,245,.5); --accent-ink:#aecbfa;
+  --primary:#faf9f5; --primary-hover:#ffffff; --on-primary:#262624;
 
   /* Two colours beyond the greys, and nothing else:
        accent    (blue)  — interaction: links, selection, focus, "next", in progress
        attention (amber) — something needs doing: due soon (soft), overdue (solid), flagged (outlined)
      ok / good / done are grey: things that are fine don't need colour. */
   --attn:#d9a441;
-  --ok:#9aa1a9;   --ok-soft:rgba(255,255,255,.06);   --ok-ink:var(--ink-2);
-  --warn:var(--attn); --warn-soft:rgba(217,164,65,.12); --warn-ink:#e3b35c; --warn-line:rgba(217,164,65,.45);
-  --flag:var(--attn); --flag-soft:transparent;        --flag-ink:#e3b35c; --flag-line:rgba(217,164,65,.6);
-  --bad:var(--attn);  --bad-soft:rgba(217,164,65,.22); --bad-ink:#efc56f; --bad-line:rgba(217,164,65,.7);
+  --ok:#a8a69d;   --ok-soft:rgba(255,255,255,.06);   --ok-ink:var(--ink-2);
+  --warn:var(--attn); --warn-soft:rgba(217,164,65,.13); --warn-ink:#e6b862; --warn-line:rgba(217,164,65,.45);
+  --flag:var(--attn); --flag-soft:transparent;        --flag-ink:#e6b862; --flag-line:rgba(217,164,65,.6);
+  --bad:var(--attn);  --bad-soft:rgba(217,164,65,.22); --bad-ink:#f0c672; --bad-line:rgba(217,164,65,.7);
 
   /* former palette names: all grey now, so older page styles and stored colours render neutral */
-  --teal:#8f969f; --orange:#8f969f; --purple:#8f969f; --slate:#8f969f;
+  --teal:#a19f96; --orange:#a19f96; --purple:#a19f96; --slate:#a19f96;
   /* machine sections (My Machine, Outage Planning): fabrics light grey, rolls and refiners darker */
-  --c-forming:#a3a9b0; --c-press:#a3a9b0; --c-dryer:#a3a9b0; --c-roll:#6f767e; --c-refiner:#6f767e;
+  --c-forming:#b4b2a9; --c-press:#b4b2a9; --c-dryer:#b4b2a9; --c-roll:#7a7973; --c-refiner:#7a7973;
 
   /* older names, kept so page styles read the same */
-  --board:var(--bg); --dot:#22262b; --annual:var(--ink-2);
+  --board:var(--bg); --dot:#353532; --annual:var(--ink-2);
 
   /* notes are neutral cards (stored pastel colours are kept in the data but not shown) */
   --note-base:var(--raised); --note-tint:4%;
-
-  --r-sm:6px; --r:6px; --r-lg:10px;   /* controls 6 · panels 10 · chips round; 2–4px only for small marks */
-  --shadow-pop:0 12px 32px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.03);
-  --top-h:52px;
+  --shadow-pop:0 12px 32px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.03);
+  --scrim:rgba(0,0,0,.6);   /* behind dialogs */
 }
 
-/* Light set — paper. Used by the print preview pages, and on <html> while printing (mm-nav.js adds the class). */
-.mm-light,.ppage,.rpage,.pwrap{
+/* ---- Light: off-white page, white boxes, near-black text. Also paper (print + print preview). ---- */
+:root[data-theme="light"],.mm-light,.ppage,.rpage,.pwrap{
   color-scheme:light;
-  --bg:#fafaf9; --surface:#fff; --surface-2:#fafaf9; --raised:#fff; --overlay:#fff;
-  --hover:#f5f5f4; --hover-2:#e7e5e4;
-  --line:#e5e7eb; --line-strong:#d6d3d1;
-  --ink:#1f2328; --ink-2:#44403c; --muted:#6b7280; --ink-3:#6b7280; --faint:#a8a29e;
-  --accent:#2563eb; --accent-soft:#eff6ff; --accent-line:#bfdbfe; --accent-ink:#1e40af;
-  --primary:#1f2328; --primary-hover:#000; --on-primary:#fff;
+  --bg:#f8f8f7; --chrome:#f8f8f7; --surface:#ffffff; --surface-2:#fbfbfa; --raised:#ffffff; --overlay:#ffffff;
+  --hover:rgba(0,0,0,.04); --hover-2:rgba(0,0,0,.07);
+  --fg-rgb:0 0 0; --bg-rgb:255 255 255;
+  --line:#e8e8e5; --line-strong:#d8d8d4;
+  --ink:#292929; --ink-2:#3f3f3d; --muted:#6c6c69; --ink-3:#6f6f6c; --faint:#c3c3bf;
+  --accent:#2563eb; --accent-soft:rgba(37,99,235,.08); --accent-line:rgba(37,99,235,.35); --accent-ink:#1d4ed8;
+  --primary:#292929; --primary-hover:#000; --on-primary:#fff;
   --attn:#b7791f;
-  --ok:#6b7280; --ok-soft:#f5f5f4; --ok-ink:#44403c;
-  --warn:#b7791f; --warn-soft:#fdf3dc; --warn-ink:#8a5a12; --warn-line:#e9c27a;
-  --flag:#b7791f; --flag-soft:transparent; --flag-ink:#8a5a12; --flag-line:#d9a441;
-  --bad:#b7791f; --bad-soft:#f6dfb0; --bad-ink:#6e470c; --bad-line:#b7791f;
-  --teal:#6b7280; --orange:#6b7280; --purple:#6b7280; --slate:#6b7280;
-  --c-forming:#6b7280; --c-press:#6b7280; --c-dryer:#6b7280; --c-roll:#44403c; --c-refiner:#44403c; --annual:#44403c;
-  --dot:#d6d3d1; --note-base:#fff; --note-tint:100%; --fg-rgb:0 0 0; --bg-rgb:255 255 255;
+  --ok:#6c6c69; --ok-soft:rgba(0,0,0,.04); --ok-ink:#3f3f3d;
+  --warn:#b7791f; --warn-soft:#fbf1dc; --warn-ink:#875a12; --warn-line:#e4c07c;
+  --flag:#b7791f; --flag-soft:transparent; --flag-ink:#875a12; --flag-line:#d9a441;
+  --bad:#96600f; --bad-soft:#f4dfb3; --bad-ink:#6e470c; --bad-line:#b7791f;   /* solid overdue: darker so white text reads */
+  --teal:#6c6c69; --orange:#6c6c69; --purple:#6c6c69; --slate:#6c6c69;
+  --c-forming:#8a8a86; --c-press:#8a8a86; --c-dryer:#8a8a86; --c-roll:#4a4a47; --c-refiner:#4a4a47; --annual:#3f3f3d;
+  --dot:#e0e0dc; --note-base:#ffffff; --note-tint:4%;
+  --shadow-pop:0 10px 28px rgba(0,0,0,.09),0 0 0 1px rgba(0,0,0,.03);
+  --scrim:rgba(0,0,0,.22);
 }
+/* paper is white, not off-white */
+.mm-light,.ppage,.rpage,.pwrap{--bg:#fff; --chrome:#fff}
 
 /* ---------- Base ---------- */
 *{box-sizing:border-box}
@@ -91,11 +99,11 @@ a{color:inherit}
    [menu · App / context]  [tool actions]  ……  [search]  [account]
    In-flow pages use <header class="mm-top">; canvas pages keep #topleft / #topright over a fixed strip. */
 .mm-top{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:8px;height:var(--top-h);padding:0 12px;
-  background:var(--surface);border-bottom:1px solid var(--line)}
+  background:var(--chrome);border-bottom:1px solid var(--line)}
 .mm-top > #acct,.mm-top > .mm-right{margin-left:auto}
 .mm-top .topleft{display:flex;align-items:center;gap:8px;min-width:0}
 body.mm-canvas::before{content:"";position:fixed;left:0;right:0;top:0;height:var(--top-h);z-index:49;
-  background:var(--surface);border-bottom:1px solid var(--line);pointer-events:none}
+  background:var(--chrome);border-bottom:1px solid var(--line);pointer-events:none}
 body.mm-canvas #topleft{position:fixed;top:0;left:12px;height:var(--top-h);z-index:50;display:flex;align-items:center;gap:8px;flex-wrap:nowrap;max-width:calc(100vw - 480px)}
 body.mm-canvas #topright{position:fixed;top:0;right:12px;height:var(--top-h);z-index:50;display:flex;align-items:center;gap:8px}
 
@@ -130,7 +138,7 @@ button.mmnav:hover{background:var(--hover-2);color:var(--ink)}
 .ib.on{background:var(--accent-soft);color:var(--accent-ink)}
 .ib .tl{display:none;font-size:12.5px;font-weight:500}
 /* icon-only toolbar buttons get a word next to the icon when there's room */
-@media (min-width:1280px){ .bar .ib .tl{display:inline} .bar .ib:has(.tl){padding:0 8px} }
+@media (min-width:1480px){ .bar .ib .tl{display:inline} .bar .ib:has(.tl){padding:0 8px} }
 .sep{width:1px;height:18px;background:var(--line);margin:0 4px;flex:none}
 #saveState{font-size:12px;color:var(--muted);padding:0 4px;white-space:nowrap}
 #saveState:empty{display:none}
