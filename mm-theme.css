@@ -1,0 +1,195 @@
+/* Machine Manager — the one theme every tool loads first.
+   Colours are named by role, not by value. Pages use these tokens instead of hex values so every
+   app stays consistent and the palette can change in one place.
+
+     surfaces   --bg  --surface  --surface-2  --raised  --overlay  --hover  --hover-2
+     lines      --line  --line-strong
+     text       --ink  --ink-2  --muted  --faint
+     accent     --accent  --accent-soft  --accent-line  --accent-ink  --primary  --on-primary
+     status     --ok  --warn  --flag  --bad   (each with -soft, -ink and, where used, -line)
+     palette    --teal --orange --purple --slate (frames, sections, areas)
+
+   Print and the print preview use the light set (.mm-light), because paper is white. */
+
+:root{
+  color-scheme:dark;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,Roboto,system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+
+  --bg:#0f1113; --surface:#15171a; --surface-2:#1a1d21; --raised:#1d2025; --overlay:#202429;
+  --hover:rgba(255,255,255,.05); --hover-2:rgba(255,255,255,.09);
+  --fg-rgb:255 255 255; --bg-rgb:0 0 0;
+  --line:#262a30; --line-strong:#353a42;
+  --ink:#e6e8eb; --ink-2:#c2c7ce; --muted:#8f969f; --ink-3:#858c95; --faint:#5d646d;   /* --faint is for borders and marks only, never text */
+
+  --accent:#6ea2ff; --accent-soft:rgba(110,162,255,.13); --accent-line:rgba(110,162,255,.5); --accent-ink:#a8c6ff;
+  --primary:#e6e8eb; --primary-hover:#ffffff; --on-primary:#111316;
+
+  /* Two colours beyond the greys, and nothing else:
+       accent    (blue)  — interaction: links, selection, focus, "next", in progress
+       attention (amber) — something needs doing: due soon (soft), overdue (solid), flagged (outlined)
+     ok / good / done are grey: things that are fine don't need colour. */
+  --attn:#d9a441;
+  --ok:#9aa1a9;   --ok-soft:rgba(255,255,255,.06);   --ok-ink:var(--ink-2);
+  --warn:var(--attn); --warn-soft:rgba(217,164,65,.12); --warn-ink:#e3b35c; --warn-line:rgba(217,164,65,.45);
+  --flag:var(--attn); --flag-soft:transparent;        --flag-ink:#e3b35c; --flag-line:rgba(217,164,65,.6);
+  --bad:var(--attn);  --bad-soft:rgba(217,164,65,.22); --bad-ink:#efc56f; --bad-line:rgba(217,164,65,.7);
+
+  /* former palette names: all grey now, so older page styles and stored colours render neutral */
+  --teal:#8f969f; --orange:#8f969f; --purple:#8f969f; --slate:#8f969f;
+  /* machine sections (My Machine, Outage Planning): fabrics light grey, rolls and refiners darker */
+  --c-forming:#a3a9b0; --c-press:#a3a9b0; --c-dryer:#a3a9b0; --c-roll:#6f767e; --c-refiner:#6f767e;
+
+  /* older names, kept so page styles read the same */
+  --board:var(--bg); --dot:#22262b; --annual:var(--ink-2);
+
+  /* notes are neutral cards (stored pastel colours are kept in the data but not shown) */
+  --note-base:var(--raised); --note-tint:4%;
+
+  --r-sm:6px; --r:6px; --r-lg:10px;   /* controls 6 · panels 10 · chips round; 2–4px only for small marks */
+  --shadow-pop:0 12px 32px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.03);
+  --top-h:52px;
+}
+
+/* Light set — paper. Used by the print preview pages, and on <html> while printing (mm-nav.js adds the class). */
+.mm-light,.ppage,.rpage,.pwrap{
+  color-scheme:light;
+  --bg:#fafaf9; --surface:#fff; --surface-2:#fafaf9; --raised:#fff; --overlay:#fff;
+  --hover:#f5f5f4; --hover-2:#e7e5e4;
+  --line:#e5e7eb; --line-strong:#d6d3d1;
+  --ink:#1f2328; --ink-2:#44403c; --muted:#6b7280; --ink-3:#6b7280; --faint:#a8a29e;
+  --accent:#2563eb; --accent-soft:#eff6ff; --accent-line:#bfdbfe; --accent-ink:#1e40af;
+  --primary:#1f2328; --primary-hover:#000; --on-primary:#fff;
+  --attn:#b7791f;
+  --ok:#6b7280; --ok-soft:#f5f5f4; --ok-ink:#44403c;
+  --warn:#b7791f; --warn-soft:#fdf3dc; --warn-ink:#8a5a12; --warn-line:#e9c27a;
+  --flag:#b7791f; --flag-soft:transparent; --flag-ink:#8a5a12; --flag-line:#d9a441;
+  --bad:#b7791f; --bad-soft:#f6dfb0; --bad-ink:#6e470c; --bad-line:#b7791f;
+  --teal:#6b7280; --orange:#6b7280; --purple:#6b7280; --slate:#6b7280;
+  --c-forming:#6b7280; --c-press:#6b7280; --c-dryer:#6b7280; --c-roll:#44403c; --c-refiner:#44403c; --annual:#44403c;
+  --dot:#d6d3d1; --note-base:#fff; --note-tint:100%; --fg-rgb:0 0 0; --bg-rgb:255 255 255;
+}
+
+/* ---------- Base ---------- */
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;color:var(--ink);background:var(--bg);
+  font-family:var(--font);font-size:13px;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+button{font:inherit;color:inherit;cursor:pointer;background-color:transparent}
+input,select,textarea{font:inherit;color:var(--ink);background-color:var(--surface-2)}
+input::placeholder,textarea::placeholder{color:var(--ink-3)}
+[hidden]{display:none!important}
+a{color:inherit}
+::selection{background:rgba(110,162,255,.35)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+*{scrollbar-width:thin;scrollbar-color:var(--line-strong) transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--line-strong);border-radius:var(--r-lg);border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-track{background:transparent}
+.num,time{font-variant-numeric:tabular-nums}
+
+/* ---------- Top bar: the same on every app ----------
+   [menu · App / context]  [tool actions]  ……  [search]  [account]
+   In-flow pages use <header class="mm-top">; canvas pages keep #topleft / #topright over a fixed strip. */
+.mm-top{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:8px;height:var(--top-h);padding:0 12px;
+  background:var(--surface);border-bottom:1px solid var(--line)}
+.mm-top > #acct,.mm-top > .mm-right{margin-left:auto}
+.mm-top .topleft{display:flex;align-items:center;gap:8px;min-width:0}
+body.mm-canvas::before{content:"";position:fixed;left:0;right:0;top:0;height:var(--top-h);z-index:49;
+  background:var(--surface);border-bottom:1px solid var(--line);pointer-events:none}
+body.mm-canvas #topleft{position:fixed;top:0;left:12px;height:var(--top-h);z-index:50;display:flex;align-items:center;gap:8px;flex-wrap:nowrap;max-width:calc(100vw - 480px)}
+body.mm-canvas #topright{position:fixed;top:0;right:12px;height:var(--top-h);z-index:50;display:flex;align-items:center;gap:8px}
+
+/* bars inside the top bar are just groups, not floating boxes */
+.bar{display:flex;align-items:center;gap:4px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:4px}
+.mm-top .bar,#topleft .bar,#topright .bar{position:static;background:transparent;border:0;border-radius:0;padding:0;box-shadow:none}
+.mm-top .bar + .bar,#topleft .bar + .bar{border-left:1px solid var(--line);padding-left:8px;margin-left:2px}
+
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;padding:0 6px 0 0!important;min-width:0}
+.brand h1{margin:0;font-size:13px;font-weight:600;line-height:1.2;white-space:nowrap;letter-spacing:-.005em}
+.brand p{margin:1px 0 0;font-size:12px;color:var(--muted);max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logo{width:30px;height:30px;border-radius:var(--r);background:transparent;color:var(--ink-2);display:grid;place-items:center;flex:none;
+  border:1px solid var(--line)!important}
+button.mmnav:hover{background:var(--hover-2);color:var(--ink)}
+
+/* ---------- Buttons ---------- */
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:transparent;color:var(--ink);
+  border-radius:var(--r-sm);padding:0 10px;height:30px;font-size:13px;font-weight:500;white-space:nowrap;line-height:1}
+.btn:hover{background:var(--hover);border-color:var(--line-strong)}
+.btn:disabled{opacity:.4;cursor:default;background:transparent}
+.btn.primary{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}
+.btn.primary:hover{background:var(--primary-hover);border-color:var(--primary-hover)}
+.btn.danger{color:var(--bad-ink);border-color:var(--bad-line);background:transparent}
+.btn.danger:hover{background:var(--bad-soft)}
+.btn.danger.armed{background:var(--bad);color:#fff;border-color:var(--bad)}
+.btn.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink)}
+.btn.sm{height:26px;padding:0 8px;font-size:12px}
+.ib{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;background:transparent;border-radius:var(--r-sm);min-width:30px;height:30px;padding:0 6px;
+  font-size:14px;line-height:1;color:var(--ink-2)}
+.ib:hover{background:var(--hover);color:var(--ink)}
+.ib:disabled{opacity:.3;cursor:default;background:transparent}
+.ib.on{background:var(--accent-soft);color:var(--accent-ink)}
+.ib .tl{display:none;font-size:12.5px;font-weight:500}
+/* icon-only toolbar buttons get a word next to the icon when there's room */
+@media (min-width:1280px){ .bar .ib .tl{display:inline} .bar .ib:has(.tl){padding:0 8px} }
+.sep{width:1px;height:18px;background:var(--line);margin:0 4px;flex:none}
+#saveState{font-size:12px;color:var(--muted);padding:0 4px;white-space:nowrap}
+#saveState:empty{display:none}
+
+/* ---------- Icons (mm-icons.js) ---------- */
+.mi-ic{display:inline-block;width:16px;height:16px;flex:none;vertical-align:-3px;stroke:currentColor;fill:none;stroke-width:1.6;
+  stroke-linecap:round;stroke-linejoin:round}
+.mi-ic.sm{width:14px;height:14px;vertical-align:-2px}
+.mi-ic.xs{width:12px;height:12px;vertical-align:-1px;stroke-width:1.8}
+.mi-ic.lg{width:20px;height:20px}
+
+/* ---------- Stored colours render neutral ----------
+   Older notes, frames, task stickies and areas carry their own colour in the data (set inline). It stays
+   saved, but the screen shows them grey so colour only ever means "accent" or "attention". */
+.note,.mini,.trow,.task,.sheet-head{--c:#ffffff!important}
+.frame,.pkg-ph,.rep h2{--fc:var(--slate)!important}
+.rep .rn{--nc:var(--line-strong)!important}
+.due{--cc:var(--line-strong)!important}
+.ph-t i{--pc:var(--faint)!important}
+
+/* chip meaning: soft = due soon · solid = overdue · outline = flagged */
+.mm-chip.bad,.chip.bad,.chip.over,.days.over{background:var(--bad);color:var(--on-primary)}
+.mm-chip.flag,.chip.flag,.cond.wear,.cond.worn,.cond.damaged{background:transparent;color:var(--flag-ink);box-shadow:inset 0 0 0 1px var(--flag-line)}
+
+/* ---------- Text roles ----------
+   page title 18/600 ink · section title 13/600 ink · label 12/500 muted · body 13 · small 12 · minimum 11 (on screen) */
+.mm-page-title{margin:0;font-size:18px;font-weight:600;letter-spacing:-.01em}
+.mm-section-title{margin:0;font-size:13px;font-weight:600;color:var(--ink)}
+.mm-label{font-size:12px;font-weight:500;color:var(--muted)}
+
+/* ---------- Chips: one shape everywhere ----------
+   Pages keep only colours on their own chip classes. Colour carries meaning: neutral, ok, warn (due soon),
+   flag (change next outage), bad (overdue / damaged). Area and status colours come from data (--sc). */
+.mm-chip,.chip,.pill,.cond,.reason,.days,.sh .n,.hcard .age{display:inline-flex;align-items:center;gap:4px;height:20px;padding:0 7px;
+  border-radius:999px;font-size:12px;font-weight:500;line-height:1;white-space:nowrap;font-variant-numeric:tabular-nums;vertical-align:middle}
+.mm-chip{background:var(--hover);color:var(--ink-2)}
+.mm-chip.ok{background:var(--ok-soft);color:var(--ok-ink)}
+.mm-chip.warn{background:var(--warn-soft);color:var(--warn-ink)}
+
+/* ---------- Empty / placeholder state ---------- */
+.mm-empty{padding:56px 24px;text-align:left;max-width:520px;margin:0 auto}
+.mm-empty h2{margin:0 0 6px;font-size:15px;font-weight:600}
+.mm-empty p{margin:0 0 14px;font-size:13px;color:var(--muted);line-height:1.55}
+.mm-empty ul{margin:0;padding-left:18px;color:var(--ink-2);font-size:13px;line-height:1.7}
+
+/* ---------- Toast: just under the top bar, centred, so it never sits on table rows or the drawer ---------- */
+#toast{position:fixed;left:50%;top:calc(var(--top-h) + 8px);transform:translate(-50%,-6px);opacity:0;z-index:500;display:flex;align-items:center;gap:12px;
+  background:var(--overlay);color:var(--ink);border:1px solid var(--line-strong);font-size:13px;padding:8px 12px;border-radius:var(--r);
+  transition:opacity .18s,transform .18s;pointer-events:none;max-width:min(560px,calc(100vw - 32px));box-shadow:var(--shadow-pop)}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast.act{pointer-events:auto}
+#toast button{margin-left:0;border:1px solid var(--line-strong);background:transparent;color:var(--accent-ink);border-radius:var(--r-sm);padding:3px 9px;font-weight:600;font-size:12px}
+#toast button:hover{background:var(--hover)}
+
+/* ---------- Version footer ---------- */
+#ver{position:fixed;right:10px;bottom:6px;z-index:40;font-size:11px;color:var(--ink-3);pointer-events:none;letter-spacing:.02em}
+
+@media (max-width:760px){
+  .mmc-pill,.brand p{display:none}
+  .mm-top{gap:6px;padding:0 8px}
+  .mm-top .bar + .bar,#topleft .bar + .bar{padding-left:4px}
+}

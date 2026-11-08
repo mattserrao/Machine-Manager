@@ -5,246 +5,220 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Operations Outage Planning</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0205">
+<script src="mm-icons.js?v=2026-11-08.0205"></script>
 <style>
-  :root{
-    --ink:#1f2328; --muted:#6b7280; --line:#e5e7eb; --accent:#2563eb;
-    --ok:#16a34a; --bad:#dc2626; --warn:#d97706; --annual:#7c3aed; --board:#fafaf9; --dot:#d6d3d1;
-    --c-forming:#0891b2; --c-press:#d97706; --c-dryer:#9333ea; --c-roll:#44403c; --c-refiner:#475569;
-    color-scheme:light only;
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;min-height:100%;color:var(--ink);
-    font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-font-smoothing:antialiased;
-    background-color:var(--board);background-image:radial-gradient(var(--dot) 1px,transparent 1.2px);background-size:24px 24px}
-  button{font:inherit;color:inherit;cursor:pointer;background-color:#fff}
-  input,select,textarea{font:inherit;color:var(--ink);background-color:#fff}
-  [hidden]{display:none!important}
-  a{color:inherit}
-
-  /* ---------- Chrome (same as the Whiteboard) ---------- */
-  .bar{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--line);
-    border-radius:12px;padding:6px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
-  .top{position:relative;z-index:50;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap;
-    padding:14px 14px 10px;pointer-events:none}
-  .top > *{pointer-events:auto}
-  .topleft{display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
-  .brand{padding:6px 12px 6px 6px;gap:10px;text-decoration:none;color:inherit}
-  .logo{width:28px;height:28px;border-radius:8px;background:var(--ink);color:#fff;display:grid;place-items:center;font-weight:600;font-size:13px;flex:none}
-  .brand h1{margin:0;font-size:15px;font-weight:600;line-height:1.2}
-  .brand p{margin:0;font-size:11.5px;color:var(--muted);max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 11px;font-size:13px;font-weight:500;white-space:nowrap}
-  .btn:hover{background:#f5f5f4}
-  .btn:disabled{opacity:.4;cursor:default;background:#fff}
-  .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .btn.primary:hover{background:#000}
-  .btn.sm{padding:3px 9px;font-size:12px;border-radius:7px}
-  .btn.on{background:#eff6ff;border-color:#bfdbfe;color:var(--accent)}
-  .sep{width:1px;height:20px;background:var(--line);margin:0 2px}
-  #saveState{font-size:11px;color:var(--muted);padding:0 6px;min-width:44px}
-  #toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);opacity:0;z-index:500;
-    background:var(--ink);color:#fff;font-size:13px;padding:9px 14px;border-radius:9px;transition:.2s;pointer-events:none;max-width:90vw}
-  #toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  #toast.act{pointer-events:auto}
-  #toast button{margin-left:12px;border:0;background:rgba(255,255,255,.18);color:#fff;border-radius:6px;padding:3px 9px;font-weight:600;font-size:12px}
-  #ver{position:fixed;right:12px;bottom:8px;font-size:10.5px;color:rgba(0,0,0,.28);letter-spacing:.02em}
-
-  main{padding:6px 14px 60px}
+  /* shared look: mm-theme.css */
+  main{padding:16px 16px 60px}
+  body.focus #ver{display:none}
 
   /* ---------- Gate / empty states ---------- */
-  .gate{display:grid;place-items:center;min-height:70vh}
-  .gate .box{background:#fff;border:1px solid rgba(0,0,0,.07);border-radius:14px;padding:26px 28px;max-width:420px;text-align:center;
-    box-shadow:0 1px 2px rgba(0,0,0,.06),0 10px 28px rgba(0,0,0,.08)}
-  .gate .icon{width:44px;height:44px;border-radius:12px;background:#f5f5f4;display:grid;place-items:center;font-size:20px;margin:0 auto 12px}
-  .gate h2{margin:0 0 6px;font-size:17px}
-  .gate p{margin:0 0 16px;font-size:13.5px;color:var(--muted);line-height:1.5}
+  .gate{display:grid;place-items:center;min-height:60vh}
+  .gate .box{border:1px solid var(--line);background:var(--surface);border-radius:var(--r-lg);padding:22px 24px;max-width:440px;width:100%}
+  .gate .icon{color:var(--muted);margin-bottom:12px;display:flex}
+  .gate h2{margin:0 0 6px;font-size:15px;font-weight:600}
+  .gate p{margin:0 0 16px;font-size:13px;color:var(--muted);line-height:1.55}
 
   /* ---------- Outage cards ---------- */
-  .lane{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:22px;align-items:start}
-  .lane-h{display:flex;align-items:center;gap:10px;margin:22px 2px 12px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+  /* outages read left to right along a timeline */
+  .lane{display:flex;gap:14px;align-items:flex-start;overflow-x:auto;padding:18px 2px 6px;
+    background:linear-gradient(var(--line-strong),var(--line-strong)) 0 6px/100% 1px no-repeat}
+  .lane > .card{flex:0 0 320px;position:relative}
+  .lane > .card.small{overflow:visible}
+  .lane > .card.small::before{content:"";position:absolute;left:18px;top:-16px;width:9px;height:9px;border-radius:50%;
+    background:var(--bg);border:2px solid var(--line-strong)}
+  .lane > .card.next::before{background:var(--accent);border-color:var(--accent)}
+  .lane-h{display:flex;align-items:center;gap:10px;margin:26px 2px 8px;font-size:13px;font-weight:600;color:var(--ink)}
   .lane-h:first-child{margin-top:4px}
-  .card{background:#fff;border-radius:14px;border:1px solid rgba(0,0,0,.07);overflow:hidden;
-    box-shadow:0 1px 2px rgba(0,0,0,.06),0 8px 22px rgba(0,0,0,.08)}
-  .card.annual{border-top:4px solid var(--annual)}
-  .card.past{opacity:.8}
-  .card.next{outline:2px solid var(--ink);outline-offset:3px}
+  .card{background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--line);overflow:hidden}
+  .card.annual{box-shadow:inset 0 2px 0 var(--annual)}
+  .card.past{opacity:.7}
+  .card.ghost{background:transparent;border-style:dashed}
+  .card.ghost .wd,.card.ghost .rel{color:var(--muted)}
+  .card.ghost .date{font-size:18px;color:var(--ink-2)}
+  .card.ghost .ch{padding-bottom:14px}
+  .card.ghost:hover{background:var(--surface)}
+  .lane > .card.ghost.small::before{border-style:dashed}
+  @media print{ .card.ghost{display:none} }
+  .card.next{border-color:var(--accent-line)}
   .ch{padding:16px 18px 12px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--line)}
   /* compact (default) vs expanded cards */
-  .card.small{cursor:pointer;transition:box-shadow .15s,transform .15s}
-  .card.small:hover{box-shadow:0 1px 2px rgba(0,0,0,.08),0 14px 30px rgba(0,0,0,.12);transform:translateY(-2px)}
+  .card.small{cursor:pointer;transition:border-color .12s,background-color .12s}
+  .card.small:hover{border-color:var(--line-strong);background:var(--surface-2)}
+  .card.next.small:hover{border-color:var(--accent)}
   .card.small:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
   .card.small .ch{border-bottom:0;padding-bottom:6px}
   .sum{padding:0 18px 16px}
   .chips{display:flex;flex-wrap:wrap;gap:6px}
-  .chip{font-size:11.5px;font-weight:600;color:#44403c;background:#f5f5f4;border-radius:999px;padding:3px 9px}
-  .chip.warn{color:#b45309;background:#fef3c7}
-  .chip.bad{color:#b91c1c;background:#fee2e2}
+  .chip{color:var(--ink-2);background:var(--hover)}
+  .chip.warn{color:var(--warn-ink);background:var(--warn-soft)}
+  .chip.bad{color:var(--on-primary);background:var(--bad)}
   .sum .peek{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .sum .open{font-size:12px;font-weight:500;color:var(--accent);margin-top:8px}
+  .sum .open{font-size:12px;font-weight:500;color:var(--accent);margin-top:10px;display:inline-flex;align-items:center;gap:4px}
   /* opened card: fills the screen below the top bar; page behind stops scrolling */
   body.focus{overflow:hidden}
   body.focus .card:not(.big),body.focus .lane-h,body.focus .foot{visibility:hidden}
-  .card.big{position:fixed;z-index:45;left:14px;right:14px;top:var(--topH,72px);bottom:14px;display:flex;flex-direction:column;cursor:default;
-    outline:none;box-shadow:0 2px 6px rgba(0,0,0,.08),0 24px 60px rgba(0,0,0,.18)}
+  .card.big{position:fixed;z-index:45;left:12px;right:12px;top:calc(var(--topH,52px) + 12px);bottom:12px;display:flex;flex-direction:column;cursor:default;
+    outline:none;border-color:var(--line-strong)}
   body.panel-open .card.big{right:328px}
   .card.big .ch{flex:none}
   .card.big .body{flex:1;min-height:0;overflow:auto}
-  .card.big .body > .sec + .sec{border-top:1px dashed rgba(0,0,0,.12)}
+  .card.big .body > .sec + .sec{border-top:1px solid var(--line)}
   @media (min-width:900px){
-    .card.big .body{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:100%;overflow:hidden}
-    .card.big .body > .sec{overflow:auto;min-height:0;border-left:1px dashed rgba(0,0,0,.12)}
+    /* fabrics due is a short list; tasks and manning are the outage-day work, so they get the room */
+    .card.big .body{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1fr) minmax(0,1.3fr);grid-template-rows:100%;overflow:hidden}
+    .card.big .body > .sec{overflow:auto;min-height:0;border-left:1px solid var(--line)}
     .card.big .body > .sec + .sec{border-top:0}
     .card.big .body > .sec:first-child{border-left:0}
   }
-  .card.big .ch .date{font-size:28px}
-  .shrink{border:1px solid var(--line);background:#fff;border-radius:8px;width:30px;height:30px;display:grid;place-items:center;color:#57534e;flex:none}
-  .shrink:hover{background:#f5f5f4;color:var(--ink)}
+  .card.big .ch .date{font-size:22px}
+  .shrink{border:1px solid var(--line);background:transparent;border-radius:var(--r-sm);width:30px;height:30px;display:grid;place-items:center;color:var(--ink-2);flex:none}
+  .shrink:hover{background:var(--hover);color:var(--ink)}
   .ch .d{flex:1;min-width:0}
-  .ch .wd{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-  .ch .date{font-size:24px;font-weight:600;line-height:1.15;margin-top:1px}
-  .ch .rel{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .ch .wd{font-size:12px;font-weight:500;color:var(--muted)}
+  .ch .date{font-size:22px;font-weight:600;line-height:1.15;margin-top:1px;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
+  .ch .rel{font-size:13px;color:var(--muted);margin-top:3px}
   .ch .rel b{color:var(--ink);font-weight:600}
   .badges{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
-  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap;
-    color:var(--sc,#57534e);background:color-mix(in srgb,var(--sc,#57534e) 12%,#fff)}
+  .pill{
+    color:var(--sc,var(--ink-2));background:color-mix(in srgb,var(--sc,var(--ink-2)) 12%,var(--surface))}
   .sec{padding:12px 18px 14px}
-  .sec + .sec{border-top:1px dashed rgba(0,0,0,.12)}
+  .sec + .sec{border-top:1px solid var(--line)}
   .sh{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-  .sh h3{margin:0;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
-  .sh .n{font-size:11px;font-weight:600;color:var(--muted);background:#f5f5f4;border-radius:999px;padding:1px 7px}
+  .sh h3{margin:0;font-size:13px;font-weight:600;color:var(--ink)}
+  .sh .n{color:var(--muted);background:var(--hover)}
   .sh .sp{flex:1}
-  .none{font-size:13px;color:#a8a29e;padding:4px 0}
+  .none{font-size:13px;color:var(--ink-3);padding:4px 0}
 
   /* due items: like tucked mini-notes on the whiteboard */
-  .due{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid rgba(0,0,0,.09);border-radius:9px;padding:7px 8px 7px 12px;
-    position:relative;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .due{display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:7px 8px 7px 12px;position:relative}
   .due + .due{margin-top:6px}
-  .due::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:4px;border-radius:2px;background:var(--cc)}
+  .due::before{content:"";position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:2px;background:var(--cc)}
   .due .nm{flex:1;min-width:0}
   .due .nm a{font-size:13px;font-weight:600;text-decoration:none}
   .due .nm a:hover{text-decoration:underline}
-  .due .sub{font-size:11.5px;color:var(--muted);margin-top:1px}
-  .due .cnote{margin-top:2px;color:#9a3412;font-style:italic}
-  .due.done{background:#f0fdf4;border-color:#bbf7d0}
-  .due.done .nm a{color:#166534}
-  .chg{font-size:11.5px;font-weight:600;color:#166534;white-space:nowrap}
-  .lnk{border:0;background:none;padding:0;font-size:11.5px;color:var(--muted);text-decoration:underline;cursor:pointer}
+  .due .sub{font-size:12px;color:var(--muted);margin-top:1px}
+  .due .cnote{margin-top:2px;color:var(--flag-ink);font-style:italic}
+  .due.done{background:var(--ok-soft);border-color:transparent}
+  .due.done .nm a{color:var(--ok-ink)}
+  .chg{font-size:12px;font-weight:600;color:var(--ok-ink);white-space:nowrap}
+  .lnk{border:0;background:none;padding:0;font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer}
 
   /* tasks: sticky notes */
   .tasks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-  .task{position:relative;background:var(--c,#fff4b8);border-radius:9px;border:1px solid rgba(0,0,0,.08);padding:9px 10px 9px 9px;
-    box-shadow:0 1px 2px rgba(0,0,0,.06),0 4px 10px rgba(0,0,0,.06);display:flex;gap:7px;align-items:flex-start;min-height:56px}
-  .task input[type=checkbox]{margin:2px 0 0;accent-color:var(--ink);flex:none}
+  .task{position:relative;background:color-mix(in srgb,var(--c,#fff4b8) var(--note-tint),var(--note-base));border-radius:var(--r);
+    border:1px solid color-mix(in srgb,var(--c,#fff4b8) 20%,var(--line));padding:9px 10px 9px 9px;display:flex;gap:7px;align-items:flex-start;min-height:56px}
+  .task input[type=checkbox]{margin:2px 0 0;accent-color:var(--accent);flex:none}
   .task .tx{flex:1;min-width:0;font-size:13px;line-height:1.35;word-break:break-word;outline:none;white-space:pre-wrap;border-radius:4px}
-  .task .tx[contenteditable=true]:focus{background:rgba(255,255,255,.6)}
-  .task.done .tx{text-decoration:line-through;color:#78716c}
-  .task .x{position:absolute;top:3px;right:3px;border:0;background:transparent;border-radius:5px;font-size:12px;color:#78716c;padding:1px 5px;opacity:0}
+  .task .tx[contenteditable=true]:focus{background:rgb(var(--bg-rgb) / .3)}
+  .task.done .tx{text-decoration:line-through;color:var(--muted)}
+  .task .x{position:absolute;top:3px;right:3px;border:0;background:transparent;border-radius:var(--r-sm);font-size:12px;color:var(--muted);padding:1px 5px;opacity:0}
   .task:hover .x,.task .x:focus{opacity:1}
-  .task .x:hover{background:rgba(0,0,0,.08)}
+  .task .x:hover{background:rgb(var(--fg-rgb) / .08)}
   .addtask{display:flex;gap:6px;margin-top:8px}
-  .addtask input{flex:1;border:1px dashed #d6d3d1;border-radius:9px;padding:8px 10px;font-size:13px;background:rgba(255,255,255,.7)}
-  .addtask input:focus{outline:none;border:1px solid #a8a29e;background:#fff}
+  .addtask input{flex:1;border:1px dashed var(--line-strong);border-radius:var(--r);padding:0 10px;height:34px;font-size:13px;background:transparent}
+  .addtask input:focus{outline:none;border:1px solid var(--accent-line);background:var(--surface-2)}
 
   /* task packages (copied from the Task Package Library) */
-  .pk{border:1px solid rgba(0,0,0,.09);border-radius:9px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .pk{border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2)}
   .pk + .pk{margin-top:6px}
-  .pk-h{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 10px;cursor:pointer;user-select:none;border-radius:9px}
-  .pk-h:hover{background:#fafaf9}
-  .pk-h .tw{width:14px;color:#78716c;font-size:11px;flex:none;transition:transform .15s}
+  .pk-h{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 10px;cursor:pointer;user-select:none;border-radius:var(--r-sm)}
+  .pk-h:hover{background:var(--hover)}
+  .pk-h .tw{width:14px;color:var(--muted);flex:none;display:flex;transition:transform .15s}
   .pk.open .pk-h .tw{transform:rotate(90deg)}
   .pk-h .nm{flex:1;min-width:0;font-size:13px;font-weight:600}
-  .pk-h .nm small{display:block;font-size:11.5px;font-weight:400;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .pk-h .x{border:0;background:transparent;border-radius:6px;padding:2px 6px;color:#a8a29e;font-size:12px}
-  .pk-h .x:hover{background:#f5f5f4;color:var(--bad)}
-  .pk-b{padding:2px 12px 10px 12px;border-top:1px dashed rgba(0,0,0,.12)}
+  .pk-h .nm small{display:block;font-size:12px;font-weight:400;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pk-h .x{border:0;background:transparent;border-radius:var(--r-sm);padding:2px 6px;color:var(--ink-3);font-size:12px}
+  .pk-h .x:hover{background:var(--hover);color:var(--bad)}
+  .pk-b{padding:2px 12px 10px 12px;border-top:1px dashed rgb(var(--fg-rgb) / .12)}
   .pk-desc{font-size:12px;color:var(--muted);margin:8px 0 2px;line-height:1.45}
   .ph{margin-top:10px}
-  .ph-t{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#57534e;margin-bottom:5px}
-  .ph-t i{width:8px;height:8px;border-radius:2px;background:var(--pc,#a8a29e)}
-  .st{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:8px;background:#fafaf9;border:1px solid #f0efed}
+  .ph-t{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:5px}
+  .ph-t i{width:8px;height:8px;border-radius:2px;background:var(--pc,var(--faint))}
+  .st{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--line)}
   .st + .st{margin-top:5px}
-  .st input{margin:2px 0 0;accent-color:var(--ink);flex:none}
+  .st input{margin:2px 0 0;accent-color:var(--accent);flex:none}
   .st .bd{flex:1;min-width:0}
-  .st .tt{font-size:12.5px;font-weight:600;line-height:1.35}
-  .st.done .tt{text-decoration:line-through;color:#78716c}
+  .st .tt{font-size:13px;font-weight:600;line-height:1.35}
+  .st.done .tt{text-decoration:line-through;color:var(--muted)}
   .st .mt{font-size:11px;color:var(--muted);margin-top:1px}
-  .st .ln{font-size:12px;color:#44403c;line-height:1.45}
-  .st .sb{font-size:11.5px;color:#57534e;background:#fff;border:1px solid #e7e5e4;border-radius:6px;padding:4px 7px;margin-top:4px;white-space:pre-wrap}
+  .st .ln{font-size:12px;color:var(--ink-2);line-height:1.45}
+  .st .sb{font-size:12px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 7px;margin-top:4px;white-space:pre-wrap}
   .card.drop{outline:2px dashed var(--accent);outline-offset:3px}
-  .card.drop .sec.pks{background:#eff6ff}
+  .card.drop .sec.pks{background:var(--accent-soft)}
   /* package panel + picker */
-  #panel{position:fixed;z-index:60;top:76px;right:14px;bottom:14px;width:300px;background:#fff;border:1px solid var(--line);border-radius:14px;
-    box-shadow:0 8px 30px rgba(0,0,0,.12);display:flex;flex-direction:column;overflow:hidden}
+  #panel{position:fixed;z-index:60;top:calc(var(--top-h) + 12px);right:12px;bottom:12px;width:300px;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--r-lg);
+    display:flex;flex-direction:column;overflow:hidden}
   body.panel-open main{margin-right:320px}
   #panel .ph2{padding:12px 14px 8px;border-bottom:1px solid var(--line)}
   #panel h2{margin:0;font-size:14px;display:flex;align-items:center;gap:8px}
   #panel h2 .sp{flex:1}
   #panel p{margin:4px 0 8px;font-size:12px;color:var(--muted);line-height:1.45}
-  #panel input{width:100%;border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:13px}
+  #panel input{width:100%;border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:0 9px;height:32px;font-size:13px;background:var(--surface-2)}
   #pkgList{overflow:auto;padding:8px;flex:1}
-  .lib{display:block;width:100%;text-align:left;border:1px solid rgba(0,0,0,.09);background:#fff;border-radius:9px;padding:8px 10px;margin-bottom:6px;cursor:grab;
-    box-shadow:0 1px 3px rgba(0,0,0,.06);font-size:13px;font-weight:600}
-  .lib:hover{border-color:#d6d3d1;box-shadow:0 2px 8px rgba(0,0,0,.08)}
-  .lib small{display:block;font-size:11.5px;font-weight:400;color:var(--muted);margin-top:1px}
+  .lib{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface-2);border-radius:var(--r);padding:8px 10px;margin-bottom:6px;cursor:grab;font-size:13px;font-weight:600}
+  .lib:hover{border-color:var(--line-strong);background:var(--hover)}
+  .lib small{display:block;font-size:12px;font-weight:400;color:var(--muted);margin-top:1px}
   .lib.dragging{opacity:.5}
   #panel .foot2{padding:8px 14px 12px;border-top:1px solid var(--line);font-size:12px}
   #panel .foot2 a{color:var(--accent)}
-  #picker{position:fixed;z-index:400;min-width:260px;max-height:340px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:12px;
-    box-shadow:0 12px 32px rgba(0,0,0,.16);padding:6px}
-  #picker .ml{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:6px 8px 4px}
-  #picker button{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:8px;padding:7px 8px;font-size:13px;font-weight:500}
-  #picker button:hover,#picker button:focus-visible{background:#f5f5f4;outline:none}
+  #picker{position:fixed;z-index:400;min-width:260px;max-height:340px;overflow:auto;background:var(--overlay);border:1px solid var(--line-strong);border-radius:var(--r-lg);
+    box-shadow:var(--shadow-pop);padding:4px}
+  #picker .ml{font-size:12px;font-weight:500;color:var(--muted);padding:6px 8px 4px}
+  #picker button{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:var(--r-sm);padding:7px 8px;font-size:13px;font-weight:500}
+  #picker button:hover,#picker button:focus-visible{background:var(--hover-2);outline:none}
   #picker button small{display:block;font-size:11px;font-weight:400;color:var(--muted)}
-  #picker button:disabled{color:#a8a29e;cursor:default;background:transparent}
+  #picker button:disabled{color:var(--ink-3);cursor:default;background:transparent}
   /* manning */
   .mh{cursor:pointer;user-select:none}
-  .mh .tw{width:14px;color:#78716c;font-size:11px;transition:transform .15s}
+  .mh .tw{width:14px;color:var(--muted);display:flex;transition:transform .15s}
   .sec.man.open .mh .tw{transform:rotate(90deg)}
   .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:2px 0 10px}
-  .tab{border:1px solid var(--line);background:#fff;border-radius:8px;padding:5px 4px;font-size:11.5px;font-weight:600;line-height:1.2;text-align:center;color:#57534e}
-  .tab small{display:block;font-size:10px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-  .tab .c{display:block;font-size:10.5px;font-weight:500;color:#a8a29e;margin-top:1px}
-  .tab.on{background:var(--ink);border-color:var(--ink);color:#fff}
-  .tab.on small,.tab.on .c{color:rgba(255,255,255,.7)}
+  .tab{border:1px solid var(--line);background:transparent;border-radius:var(--r-sm);padding:5px 4px;font-size:12px;font-weight:600;line-height:1.2;text-align:center;color:var(--ink-2)}
+  .tab small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+  .tab .c{display:block;font-size:11px;font-weight:500;color:var(--ink-3);margin-top:1px}
+  .tab.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink)}
+  .tab.on small,.tab.on .c{color:var(--accent-ink);opacity:.75}
   .mgrid{display:grid;grid-template-columns:62px 1fr;gap:5px 8px;align-items:center}
-  .mgrid label{font-size:11.5px;font-weight:600;color:#57534e;letter-spacing:.03em}
-  .mgrid input{border:1px solid var(--line);border-radius:7px;padding:5px 8px;font-size:13px;width:100%}
-  .mgrid input:focus{outline:none;border-color:#a8a29e}
-  .mgrid input.inh{background:#fafaf9;color:#78716c}
-  .mgrid input[readonly]{background:#fafaf9;border-color:transparent}
-  .mnote{font-size:11.5px;color:var(--muted);margin-top:8px}
+  .mgrid label{font-size:12px;font-weight:600;color:var(--ink-2);letter-spacing:.03em}
+  .mgrid input{border:1px solid var(--line);border-radius:var(--r-sm);padding:0 8px;height:30px;font-size:13px;width:100%;background:var(--surface-2)}
+  .mgrid input:focus{outline:none;border-color:var(--accent-line)}
+  .mgrid input.inh{background:transparent;color:var(--muted);border-style:dashed}
+  .mgrid input[readonly]{background:transparent;border-color:transparent}
+  .mnote{font-size:12px;color:var(--muted);margin-top:8px}
 
   .foot{font-size:12px;color:var(--muted);margin:26px 2px 0;line-height:1.6}
   .foot a{color:var(--accent)}
 
   /* ---------- Schedule editor (styles) ---------- */
-  .backdrop{position:fixed;inset:0;z-index:300;background:rgba(28,25,23,.35);display:grid;place-items:center;padding:16px}
-  .sheet{background:#fff;border-radius:14px;width:min(520px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;
-    box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  .backdrop{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:16px}
+  .sheet{background:var(--overlay);border:1px solid var(--line-strong);border-radius:var(--r-lg);width:min(520px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+    box-shadow:var(--shadow-pop)}
   .sheet-h{padding:18px 20px 10px}
-  .sheet-h h2{margin:0;font-size:17px}
+  .sheet-h h2{margin:0;font-size:18px}
   .sheet-h p{margin:5px 0 0;font-size:13px;color:var(--muted);line-height:1.5}
   .rows{padding:6px 20px;overflow:auto}
   .row{display:grid;grid-template-columns:1fr 130px auto;gap:8px;align-items:center;padding:5px 0}
-  .row input,.row select{border:1px solid var(--line);border-radius:8px;padding:6px 9px;font-size:13px}
-  .row .ib{border:0;background:transparent;border-radius:7px;padding:5px 8px;color:#78716c}
-  .row .ib:hover{background:#f5f5f4;color:var(--bad)}
+  .row input,.row select{border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:0 9px;height:32px;font-size:13px;background:var(--surface-2)}
+  .row .ib{color:var(--muted)}
+  .row .ib:hover{background:var(--hover);color:var(--bad)}
   .row .wd{grid-column:1 / -1;font-size:11px;color:var(--muted);margin:-3px 0 0 2px}
   .sheet-f{display:flex;gap:8px;align-items:center;padding:12px 20px 18px;border-top:1px solid var(--line)}
   .sheet-f .sp{flex:1}
-  .err{color:var(--bad);font-size:12.5px}
+  .err{color:var(--bad);font-size:13px}
 
   @media print{
     .top,.addtask,.task .x,.btn,#toast,#panel,.pk-h .x{display:none!important}
+    .lane{display:grid;grid-template-columns:repeat(2,1fr);background:none;padding:0}
+    .lane > .card.small::before{display:none}
     body.panel-open main{margin-right:0}
-    html,body{background:#fff}
-    .card{box-shadow:none;break-inside:avoid;border:1px solid #d6d3d1}
+    html,body{background:var(--surface)}
+    .card{box-shadow:none;break-inside:avoid;border:1px solid var(--line-strong)}
   }
 </style>
 </head>
 <body>
-<div class="top">
+<header class="top mm-top">
   <div class="topleft">
     <div class="bar brand">
       <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
@@ -259,7 +233,7 @@
     </div>
   </div>
   <div id="acct"></div>
-</div>
+</header>
 
 <main id="main"></main>
 
@@ -271,7 +245,7 @@
     </div>
     <div class="rows" id="edRows"></div>
     <div class="sheet-f">
-      <button class="btn" id="edAdd">+ Add outage</button>
+      <button class="btn" id="edAdd" data-ic="plus" data-ic-size="sm">Add outage</button>
       <span class="err" id="edErr"></span>
       <span class="sp"></span>
       <button class="btn" id="edCancel">Cancel</button>
@@ -282,8 +256,8 @@
 
 <aside id="panel" hidden aria-label="Task packages">
   <div class="ph2">
-    <h2>Task packages <span class="sp"></span><button class="btn sm" id="panelClose" aria-label="Close">✕</button></h2>
-    <p>Drag a package onto an outage card, or use <b>+ Package</b> on the card.</p>
+    <h2>Task packages <span class="sp"></span><button class="ib" id="panelClose" aria-label="Close" data-ic="x" data-ic-size="sm"></button></h2>
+    <p>Drag a package onto an outage card, or use <b>Add package</b> on the card.</p>
     <input id="pkgSearch" type="search" placeholder="Search packages" autocomplete="off">
   </div>
   <div id="pkgList"></div>
@@ -294,12 +268,12 @@
 <div id="toast"></div>
 <div id="ver"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0053"></script>
-<script src="mm-config.js?v=2026-11-08.0053"></script>
-<script src="mm-cloud.js?v=2026-11-08.0053"></script>
-<script src="mm-ui.js?v=2026-11-08.0053"></script>
-<script src="mm-records.js?v=2026-11-08.0053"></script>
-<script src="mm-machine.js?v=2026-11-08.0053"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0205"></script>
+<script src="mm-config.js?v=2026-11-08.0205"></script>
+<script src="mm-cloud.js?v=2026-11-08.0205"></script>
+<script src="mm-ui.js?v=2026-11-08.0205"></script>
+<script src="mm-records.js?v=2026-11-08.0205"></script>
+<script src="mm-machine.js?v=2026-11-08.0205"></script>
 <script>
 (() => {
   'use strict';
@@ -319,7 +293,7 @@
   let machineRaw = null, machine = null, items = {};             // from My Machine (shared)
   let O = { settings: null, outages: {}, tasks: {}, pkgs: {}, pdone: {}, man: {} };   // this tool's records
   let tpStore = null, tp = {};                                   // Task Package Library records (read only here)
-  const openPk = new Set(), openMan = new Set(), manTab = {};    // what's expanded (this browser only)
+  const openPk = new Set(), manClosed = new Set(), manTab = {};    // what's expanded / collapsed (this browser only; manning starts open)
   let showPast = false;
   const canEdit = () => !!(oStore && oStore.edit);
 
@@ -429,7 +403,8 @@
   function gate(icon, title, text, btn){
     const main = $('main'); main.textContent = ''; document.body.classList.remove('focus');
     const g = el('div', 'gate'), b = el('div', 'box');
-    b.append(el('div', 'icon', icon), el('h2', '', title), el('p', '', text));
+    const ic = el('div', 'icon'); ic.appendChild(MMIcons.el(icon, 'lg'));
+    b.append(ic, el('h2', '', title), el('p', '', text));
     if (btn){ const x = btn.href ? Object.assign(el('a', 'btn primary', btn.label), { href: btn.href }) : el('button', 'btn primary', btn.label);
       x.style.textDecoration = 'none'; if (btn.fn) x.addEventListener('click', btn.fn); b.appendChild(x); }
     g.appendChild(b); main.appendChild(g);
@@ -440,8 +415,8 @@
     if (!session || !machine) return;
     const list = outages(), today = todayStr();
     if (!list.length){
-      if (canEdit()) gate('🗓', 'No outages scheduled', 'Add your upcoming outage dates to start planning.', { label: 'Set up schedule', fn: () => openEditor() });
-      else gate('🗓', 'No outages scheduled yet', `An editor in ${session.org.name} needs to set up the outage schedule.`);
+      if (canEdit()) gate('calendar', 'No outages scheduled', 'Add your upcoming outage dates to start planning.', { label: 'Set up schedule', fn: () => openEditor() });
+      else gate('calendar', 'No outages scheduled yet', `An editor in ${session.org.name} needs to set up the outage schedule.`);
       return;
     }
     $('toolbar').hidden = false;
@@ -464,6 +439,13 @@
       main.appendChild(l);
     };
     lane('Upcoming', up);
+    // Keep the timeline readable as a schedule: show the next cycles on the 6-week grid even before they're
+    // added, dimmed. Clicking one opens the schedule editor (editors only).
+    const upLane = main.querySelector('.lane');
+    if (upLane && up.length < TIMELINE_CYCLES){
+      let d = up.length ? addDays(up[up.length - 1].date, CADENCE_DAYS) : cadenceFrom();
+      for (let i = up.length; i < TIMELINE_CYCLES; i++, d = addDays(d, CADENCE_DAYS)) upLane.appendChild(ghostCard(d));
+    }
     lane('Recently finished', recent, 'past');
     if (showPast) lane('Earlier', older.slice().reverse(), 'past');
     if (!up.length) main.insertBefore(el('div', 'foot', 'No upcoming outages. Use Edit schedule to add the next ones.'), main.firstChild);
@@ -474,6 +456,21 @@
     if (unset.length) bits.push(`${unset.length} position${unset.length === 1 ? ' has' : 's have'} no install date or target life, so ${unset.length === 1 ? 'it isn’t' : 'they aren’t'} planned yet.`);
     if (bits.length){ f.append(bits.join(' ') + ' '); const a = el('a', '', 'Open My Machine'); a.href = 'MyMachine.html'; f.appendChild(a); main.appendChild(f); }
     fitOpenCard();
+  }
+
+  const TIMELINE_CYCLES = 6;
+  function ghostCard(date){
+    const c = el('section', 'card small ghost');
+    const h = el('div', 'ch'), d = el('div', 'd');
+    d.append(el('div', 'wd', fmt(date, { weekday: 'long' })), el('div', 'date', fmtLong(date)), el('div', 'rel', relDay(date) + ' · not scheduled'));
+    h.appendChild(d); c.appendChild(h);
+    if (canEdit()){
+      c.tabIndex = 0; c.setAttribute('role', 'button'); c.setAttribute('aria-label', `Add the ${fmtLong(date)} outage to the schedule`);
+      c.title = 'Add to the schedule';
+      c.addEventListener('click', () => openEditor());
+      c.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openEditor(); } });
+    } else c.style.cursor = 'default';
+    return c;
   }
 
   function card(o, due, cls, isNext){
@@ -494,9 +491,8 @@
     if (big) rel.append(` · ${open} due · ${tdone}/${tasks.length} tasks done`);
     d.appendChild(rel);
     const bd = el('div', 'badges');
-    const ty = el('span', 'pill', o.type === 'annual' ? 'Annual outage' : 'Outage'); if (o.type === 'annual') ty.style.setProperty('--sc', 'var(--annual)');
-    bd.appendChild(ty);
-    if (isNext){ const n = el('span', 'pill', 'Next'); n.style.setProperty('--sc', 'var(--ink)'); bd.appendChild(n); }
+    if (o.type === 'annual'){ const ty = el('span', 'pill', 'Annual'); ty.style.setProperty('--sc', 'var(--annual)'); bd.appendChild(ty); }   // every card is an outage; only annual needs saying
+    if (isNext){ const n = el('span', 'pill', 'Next'); n.style.setProperty('--sc', 'var(--accent)'); bd.appendChild(n); }
     h.append(d, bd);
     if (big){
       const x = el('button', 'shrink'); x.title = 'Make smaller'; x.setAttribute('aria-label', 'Make ' + fmtLong(o.date) + ' card smaller');
@@ -521,7 +517,7 @@
       sm.appendChild(chips);
       const names = [...due.filter(x => !x.changed).map(x => x.p.name + (x.flag ? ` (${MM.condLabel(x.flag).toLowerCase()})` : '')), ...pk.map(([, k]) => k.name)];
       if (names.length) sm.appendChild(el('div', 'peek', names.join(' · ')));
-      sm.appendChild(el('div', 'open', 'Open outage →'));
+      const op = el('div', 'open', 'Open outage'); op.appendChild(MMIcons.el('arrow', 'xs')); sm.appendChild(op);
       c.appendChild(sm);
       c.tabIndex = 0; c.setAttribute('role', 'button'); c.setAttribute('aria-label', `Open the ${fmtLong(o.date)} outage`);
       c.addEventListener('click', () => setBig(o.id, true, true));
@@ -621,7 +617,7 @@
     if (!canEdit()) return r;
     if (x.changed){
       const last = (x.it.history || [])[x.it.history.length - 1];
-      r.appendChild(el('span', 'chg', '✓ Changed'));
+      { const cg = el('span', 'chg', 'Changed'); cg.prepend(MMIcons.el('check', 'xs')); r.appendChild(cg); }
       if (last && last.removed === o.date){
         const u = el('button', 'lnk', 'Undo'); u.title = 'Restore the previous install date in My Machine';
         u.addEventListener('click', () => undoChange(x.p, o));
@@ -676,7 +672,7 @@
         if (!v){ delete O.tasks[t.id]; saveO(); setTimeout(render, 0); return; }
         if (v !== O.tasks[t.id].text){ O.tasks[t.id] = { ...O.tasks[t.id], text: v }; saveO(); }
       });
-      const x = el('button', 'x', '✕'); x.title = 'Delete task'; x.setAttribute('aria-label', 'Delete task');
+      const x = el('button', 'x'); x.appendChild(MMIcons.el('x', 'xs')); x.title = 'Delete task'; x.setAttribute('aria-label', 'Delete task');
       x.addEventListener('click', () => {
         const was = O.tasks[t.id]; delete O.tasks[t.id]; saveO(); render();
         toast('Task deleted', { label: 'Undo', fn: () => { O.tasks[t.id] = was; saveO(); render(); } });
@@ -746,21 +742,21 @@
     const list = Object.entries(O.pkgs).filter(([, k]) => k.outage === o.id).sort((a, b) => (a[1].at || 0) - (b[1].at || 0));
     sh.append(el('h3', '', 'Task packages'), el('span', 'n', String(list.length)), el('span', 'sp'));
     if (canEdit()){
-      const b = el('button', 'btn sm', '+ Package'); b.title = 'Add a package from the Task Package Library';
+      const b = el('button', 'btn sm', 'Add package'); b.prepend(MMIcons.el('plus', 'sm')); b.title = 'Add a package from the Task Package Library';
       b.addEventListener('click', e => { e.stopPropagation(); openPicker(b, o); });
       sh.appendChild(b);
     }
     sec.appendChild(sh);
-    if (!list.length) sec.appendChild(el('div', 'none', canEdit() ? 'Drag a package here from the Packages panel, or use + Package.' : 'No packages yet.'));
+    if (!list.length) sec.appendChild(el('div', 'none', canEdit() ? 'Drag a package here from the Packages panel, or use Add package.' : 'No packages yet.'));
     for (const [id, k] of list){
       const box = el('div', 'pk' + (openPk.has(id) ? ' open' : '')), h = el('div', 'pk-h');
       h.setAttribute('role', 'button'); h.tabIndex = 0; h.setAttribute('aria-expanded', String(openPk.has(id)));
       const total = pkgSteps(k), done = pkgDone(id, k);
       const nm = el('div', 'nm', k.name);
       nm.appendChild(el('small', '', [k.area, `${done}/${total} steps done`, k.hours && `${k.hours} h window`, k.crew && `${k.crew} crew`].filter(Boolean).join(' · ')));
-      h.append(el('span', 'tw', '▶'), nm);
+      const tw = el('span', 'tw'); tw.appendChild(MMIcons.el('right', 'sm')); h.append(tw, nm);
       if (canEdit()){
-        const x = el('button', 'x', '✕'); x.title = 'Remove from this outage'; x.setAttribute('aria-label', 'Remove ' + k.name);
+        const x = el('button', 'x'); x.appendChild(MMIcons.el('x', 'xs')); x.title = 'Remove from this outage'; x.setAttribute('aria-label', 'Remove ' + k.name);
         x.addEventListener('click', e => { e.stopPropagation(); removePackage(id); });
         h.appendChild(x);
       }
@@ -782,11 +778,11 @@
             cb.addEventListener('change', () => { if (cb.checked) O.pdone[key] = { done: true, at: Date.now() }; else delete O.pdone[key]; saveO(); requestAnimationFrame(render); });
             const bd = el('div', 'bd');
             bd.appendChild(el('div', 'tt', st.title));
-            const mt = [st.who && '👤 ' + st.who, st.hrs && '⏱ ' + st.hrs + ' h'].filter(Boolean);
+            const mt = [st.who, st.hrs && st.hrs + ' h'].filter(Boolean);
             if (mt.length) bd.appendChild(el('div', 'mt', mt.join('  ·  ')));
             for (const l of st.lines){
               const m = /^\s*[-*] \[( |x|X)\] ?(.*)$/.exec(l), b = /^\s*[-*] (.*)$/.exec(l);
-              bd.appendChild(el('div', 'ln', m ? '☐ ' + m[2] : b ? '• ' + b[1] : l.trim()));
+              { const ln = el('div', 'ln', m ? m[2] : b ? '• ' + b[1] : l.trim()); if (m) ln.prepend(MMIcons.el('square', 'xs'), ' '); bd.appendChild(ln); }
             }
             st.subs.forEach(t => bd.appendChild(el('div', 'sb', t)));
             row.append(cb, bd); pw.appendChild(row);
@@ -875,11 +871,11 @@
     saveO(); pending = true;          // refresh the counts once focus leaves the manning list
   }
   function manSection(o){
-    const open = openMan.has(o.id), sec = el('div', 'sec man' + (open ? ' open' : ''));
+    const open = !manClosed.has(o.id), sec = el('div', 'sec man' + (open ? ' open' : ''));
     const total = SHIFTS.reduce((t, s) => t + filled(o, s.k), 0);
     const sh = el('div', 'sh mh'); sh.setAttribute('role', 'button'); sh.tabIndex = 0; sh.setAttribute('aria-expanded', String(open));
-    sh.append(el('span', 'tw', '▶'), el('h3', '', 'Manning'), el('span', 'n', `${total}/${POS.length * SHIFTS.length}`));
-    const toggle = () => { open ? openMan.delete(o.id) : openMan.add(o.id); render(); };
+    const mtw = el('span', 'tw'); mtw.appendChild(MMIcons.el('right', 'sm')); sh.append(mtw, el('h3', '', 'Manning'), el('span', 'n', `${total}/${POS.length * SHIFTS.length}`));
+    const toggle = () => { open ? manClosed.add(o.id) : manClosed.delete(o.id); render(); };
     sh.addEventListener('click', toggle);
     sh.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); } });
     sec.appendChild(sh);
@@ -935,7 +931,7 @@
       const t = el('select'); t.setAttribute('aria-label', 'Outage type');
       [['normal', 'Normal'], ['annual', 'Annual']].forEach(([v, l]) => { const op = el('option', '', l); op.value = v; op.selected = r.type === v; t.appendChild(op); });
       t.addEventListener('change', () => { r.type = t.value; });
-      const x = el('button', 'ib', '✕'); x.title = 'Remove'; x.setAttribute('aria-label', 'Remove outage');
+      const x = el('button', 'ib'); x.appendChild(MMIcons.el('x', 'sm')); x.title = 'Remove'; x.setAttribute('aria-label', 'Remove outage');
       x.addEventListener('click', () => { rows.splice(i, 1); drawRows(); });
       const wd = el('div', 'wd', r.date ? fmt(r.date, { weekday: 'long' }) + (r.id ? '' : ' · new') : '');
       row.append(d, t, x, wd); box.appendChild(row);
@@ -986,28 +982,28 @@
   /* ---------- Start: signed-in users with My Machine set up ---------- */
   (async () => {
     if (!window.MMCloud || !MMCloud.enabled)
-      return gate('🔒', 'Sign-in isn’t available', 'Outage Planning shares data through your organization’s account, which isn’t set up on this site.');
+      return gate('lock', 'Sign-in isn’t available', 'Outage Planning shares data through your organization’s account, which isn’t set up on this site.');
     MMCloud.mountAccount($('acct'), { compact: true });
     try { session = await MMCloud.session(); }
-    catch (e) { return gate('⚠️', 'Can’t reach the server', 'Check your connection and reload the page.', { label: 'Reload', fn: () => location.reload() }); }
+    catch (e) { return gate('alert', 'Can’t reach the server', 'Check your connection and reload the page.', { label: 'Reload', fn: () => location.reload() }); }
     if (!session)
-      return gate('🔒', 'Sign in to plan outages', 'Outage Planning is shared with your team, so it needs an account. The other tools can still be tried in demo mode.', { label: 'Sign in', fn: () => MMCloud.openSignIn() });
+      return gate('lock', 'Sign in to plan outages', 'Outage Planning is shared with your team, so it needs an account. The other tools can still be tried in demo mode.', { label: 'Sign in', fn: () => MMCloud.openSignIn() });
     if (!session.org)
-      return gate('🔒', 'No organization yet', 'Your account isn’t in an organization yet. Ask your administrator to add you.');
+      return gate('lock', 'No organization yet', 'Your account isn’t in an organization yet. Ask your administrator to add you.');
     $('brandSub').textContent = `${session.org.name} · outages`;
-    gate('⏳', 'Loading…', 'Getting your outages and machine.');
+    gate('loader', 'Loading…', 'Getting your outages and machine.');
     oStore = MMCloud.openStore('outages', { snapshot: oRecords, onChange: onO, onStatus: status });
     mStore = MMCloud.openStore('mymachine', { snapshot: mRecords, onChange: onM, onStatus: status });
     // Read only here: snapshot hands back exactly what was loaded, and save() is never called on it.
     tpStore = MMCloud.openStore('task-packages', { snapshot: () => tp, onChange: onTP });
     let od, md, td;
     try { [od, md, td] = await Promise.all([oStore.ready, mStore.ready, tpStore.ready]); }
-    catch (e) { return gate('⚠️', 'Couldn’t load', (e && e.message ? e.message + ' — ' : '') + 'reload to try again.', { label: 'Reload', fn: () => location.reload() }); }
+    catch (e) { return gate('alert', 'Couldn’t load', (e && e.message ? e.message + ' — ' : '') + 'reload to try again.', { label: 'Reload', fn: () => location.reload() }); }
     for (const [k, v] of Object.entries(md || {})) onM(k, v);
     for (const [k, v] of Object.entries(od || {})) onO(k, v);
     tp = Object.assign({}, td || {});
     if (!machine)
-      return gate('⚙', 'Set up My Machine first', `Outage Planning uses ${session.org.name}’s machine layout and fabric and roll dates from My Machine to show what’s due at each outage.`, { label: 'Open My Machine', href: 'MyMachine.html' });
+      return gate('settings', 'Set up My Machine first', `Outage Planning uses ${session.org.name}’s machine layout and fabric and roll dates from My Machine to show what’s due at each outage.`, { label: 'Open My Machine', href: 'MyMachine.html' });
     render();
     $('pkgBtn').hidden = !canEdit();
     let wantPanel = false; try { wantPanel = !!localStorage.getItem('mm-op-panel'); } catch (e) {}
@@ -1016,6 +1012,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.0053"></script>
+<script src="mm-nav.js?v=2026-11-08.0205"></script>
 </body>
 </html>

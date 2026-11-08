@@ -24,11 +24,15 @@ window.MMBoard = { start(cfg){
   const GRID = 24;
   const COLORS = ['#ffffff','#fff4b8','#ffd8e1','#d4ecff','#d9f3d3','#e9e0ff','#ffe2c4'];
   const FRAME_COLORS = ['#2563eb','#16a34a','#d97706','#9333ea','#dc2626','#0891b2','#64748b'];
+  // Colour is kept for what needs attention: in progress uses the accent, blocked the attention colour;
+  // the rest are grey (mm-theme.css). Note and frame colours chosen in older versions stay in the data
+  // but show neutral, and the pickers are off (SHOW_COLORS).
+  const SHOW_COLORS = false;
   const STATUSES = {
-    planned:  { label:'Planned',     c:'#64748b' },
-    progress: { label:'In progress', c:'#2563eb' },
-    done:     { label:'Done',        c:'#16a34a' },
-    blocked:  { label:'Blocked',     c:'#dc2626' },
+    planned:  { label:'Planned',     c:'var(--muted)' },
+    progress: { label:'In progress', c:'var(--accent)' },
+    done:     { label:'Done',        c:'var(--muted)' },
+    blocked:  { label:'Blocked',     c:'var(--warn)' },
   };
 
   const $ = id => document.getElementById(id);
@@ -334,6 +338,9 @@ window.MMBoard = { start(cfg){
 
   /* ================= Helpers ================= */
   const { el, esc } = MMUI;                     // mm-ui.js
+  // line icons (mm-icons.js); a chip is an icon plus text
+  const I = (name, cls) => window.MMIcons ? MMIcons.el(name, cls || 'xs') : document.createTextNode('');
+  const chipI = (cls, ic, txt) => { const c = el('span', cls); c.append(I(ic), document.createTextNode(txt)); return c; };
   const urlCache = new Map();
   function urlFor(att){
     if (!urlCache.has(att.id)) { try { urlCache.set(att.id, URL.createObjectURL(att.blob)); } catch(e){ return ''; } }
@@ -392,7 +399,7 @@ window.MMBoard = { start(cfg){
         const on = m[2] !== ' ';
         const row = el('div', 'ln ck' + (on ? ' on' : ''));
         row.style.paddingLeft = (lineIndent(m[1]) * 16) + 'px';
-        const cb = el('span', 'cb' + (on ? ' on' : ''), on ? '✓' : '');
+        const cb = el('span', 'cb' + (on ? ' on' : '')); if (on) cb.appendChild(I('check', 'xs'));
         cb.dataset.line = i; cb.dataset.id = n.id;
         const tx = el('span'); tx.innerHTML = inline(m[3]);
         row.append(cb, tx); wrap.appendChild(row);
@@ -477,10 +484,10 @@ window.MMBoard = { start(cfg){
     const meta = el('div', 'meta');
     if (P.noteMeta) P.noteMeta(n, meta);
     const pill = statusPill(n.status); if (pill) meta.appendChild(pill);
-    if (n.due) meta.appendChild(el('span', 'chip' + (isLate(n) ? ' late' : ''), '📅 ' + fmtDue(n.due)));
-    if (fmtHrs(n.hrs)) meta.appendChild(el('span', 'chip', '⏱ ' + fmtHrs(n.hrs)));
-    if (n.owner) meta.appendChild(el('span', 'chip', '👤 ' + n.owner));
-    const ck = checklist(n.text); if (ck.total) meta.appendChild(el('span', 'chip', `☑ ${ck.done}/${ck.total}`));
+    if (n.due) meta.appendChild(chipI('chip due' + (isLate(n) ? ' late' : ''), 'calendar', fmtDue(n.due)));
+    if (fmtHrs(n.hrs)) meta.appendChild(chipI('chip', 'clock', fmtHrs(n.hrs)));
+    if (n.owner) meta.appendChild(chipI('chip', 'user', n.owner));
+    const ck = checklist(n.text); if (ck.total) meta.appendChild(chipI('chip', 'checks', `${ck.done}/${ck.total}`));
     body.appendChild(meta);
 
     const { title } = parseText(n.text);
@@ -506,7 +513,7 @@ window.MMBoard = { start(cfg){
     const row = el('div', 'atts');
     const imgs = atts.filter(isImg), files = atts.filter(a => !isImg(a));
     imgs.slice(0, 4).forEach(a => { const i = el('img'); i.src = urlFor(a); i.alt = a.name; row.appendChild(i); });
-    files.slice(0, 2).forEach(a => row.appendChild(el('span', 'chip', '📎 ' + a.name)));
+    files.slice(0, 2).forEach(a => row.appendChild(chipI('chip', 'paperclip', a.name)));
     const more = Math.max(0, imgs.length - 4) + Math.max(0, files.length - 2);
     if (more) row.appendChild(el('span', 'chip', '+' + more));
     return row;
@@ -519,9 +526,9 @@ window.MMBoard = { start(cfg){
     t.dataset.parent = n.id;
     if (level === 2){
       const bar = el('div', 'tbar');
-      bar.appendChild(el('span', '', (n.collapsed ? '▸ ' : '▾ ') + `${n.children.length} ${n.children.length > 1 ? W.subs : W.sub}`));
+      bar.appendChild(chipI('', n.collapsed ? 'right' : 'down', `${n.children.length} ${n.children.length > 1 ? W.subs : W.sub}`));
       const d = doneCount(n);
-      if (d) bar.appendChild(el('span', 'dn', `✓ ${d}/${n.children.length} done`));
+      if (d) bar.appendChild(chipI('dn', 'check', `${d}/${n.children.length} done`));
       bar.title = n.collapsed ? 'Expand' : 'Collapse';
       bar.addEventListener('pointerdown', ev => ev.stopPropagation());
       bar.addEventListener('click', () => toggleCollapse(n.id));
@@ -544,11 +551,11 @@ window.MMBoard = { start(cfg){
     if (c.due) row.appendChild(el('span', 'ma', fmtDue(c.due)));
     if (fmtHrs(c.hrs)) row.appendChild(el('span', 'ma', fmtHrs(c.hrs)));
     if (P.miniMeta) P.miniMeta(c, row);
-    const ck = checklist(c.text); if (ck.total) row.appendChild(el('span', 'ma', `☑${ck.done}/${ck.total}`));
-    if (c.attachments.length) row.appendChild(el('span', 'ma', '📎' + c.attachments.length));
+    const ck = checklist(c.text); if (ck.total) row.appendChild(chipI('ma', 'checks', `${ck.done}/${ck.total}`));
+    if (c.attachments.length) row.appendChild(chipI('ma', 'paperclip', String(c.attachments.length)));
     if (c.children.length){
       const d = doneCount(c);
-      const cr = el('button', 'caret', (c.collapsed ? '▸ ' : '▾ ') + c.children.length + (d ? ` ✓${d}` : ''));
+      const cr = el('button', 'caret'); cr.append(I(c.collapsed ? 'right' : 'down'), document.createTextNode(c.children.length + (d ? ` · ${d} done` : '')));
       cr.title = c.collapsed ? 'Expand' : 'Collapse';
       cr.addEventListener('pointerdown', ev => ev.stopPropagation());
       cr.addEventListener('click', ev => { ev.stopPropagation(); toggleCollapse(c.id); });
@@ -1213,15 +1220,26 @@ window.MMBoard = { start(cfg){
     for (const e of els){ const r = worldRect(e); x1 = Math.min(x1, r.x); y1 = Math.min(y1, r.y); x2 = Math.max(x2, r.x + r.w); y2 = Math.max(y2, r.y + r.h); }
     return { x:x1, y:y1, w:x2 - x1, h:y2 - y1 };
   }
-  function fitAll(){
+  // Fit every card on screen. minZoom: when a board first opens, don't shrink cards past the point where
+  // their text stops being readable; if it still doesn't fit, start at the top-left of the content instead.
+  const OPEN_MIN_ZOOM = 0.85;
+  function fitAll(minZoom){
     const bb = contentBox(), r = board.getBoundingClientRect();
     if (!bb){ B.zoom = 1; B.pan = { x:0, y:0 }; applyView(); return; }
-    const z = Math.max(0.2, Math.min(1.25, (r.width - 120) / bb.w, (r.height - 170) / bb.h));
+    const want = Math.min(1.25, (r.width - 120) / bb.w, (r.height - 170) / bb.h);
+    const floor = typeof minZoom === 'number' ? minZoom : 0.2;
+    const z = Math.max(floor, want);
     B.zoom = z;
-    B.pan.x = Math.round(r.width/2 - (bb.x + bb.w/2) * z);
-    B.pan.y = Math.round(r.height/2 + 10 - (bb.y + bb.h/2) * z);
+    if (want >= floor){
+      B.pan.x = Math.round(r.width/2 - (bb.x + bb.w/2) * z);
+      B.pan.y = Math.round(r.height/2 + 10 - (bb.y + bb.h/2) * z);
+    } else {
+      B.pan.x = Math.round(40 - bb.x * z);
+      B.pan.y = Math.round(84 - bb.y * z);       // just under the top bar
+    }
     applyView(); viewChanged();
   }
+  const fitOnOpen = () => fitAll(OPEN_MIN_ZOOM);
   function centerOn(id){
     const e = visibleElFor(id); if (!e) return;
     const r = worldRect(e), br = board.getBoundingClientRect();
@@ -1417,8 +1435,8 @@ window.MMBoard = { start(cfg){
     edLabel.textContent = parts.join(' · ');
     edDetach.hidden = !n.parent;
 
-    edSwatches.textContent = '';
-    COLORS.forEach(c => {
+    edSwatches.textContent = ''; edSwatches.hidden = !SHOW_COLORS;
+    if (SHOW_COLORS) COLORS.forEach(c => {
       const b = el('button', 'sw' + (c === n.color ? ' on' : ''));
       b.style.background = c; b.title = 'Note color'; b.setAttribute('aria-label', 'Color ' + c);
       b.addEventListener('click', () => { n.color = c; paintEditor(); render(); save(); });
@@ -1450,7 +1468,7 @@ window.MMBoard = { start(cfg){
       if (!isImg(a)){ const l = el('a', '', 'Open'); l.href = urlFor(a); l.target = '_blank'; l.rel = 'noopener'; sz.appendChild(l); }
       meta.appendChild(sz);
       box.appendChild(meta);
-      const rm = el('button', 'rm', '✕'); rm.title = 'Remove attachment';
+      const rm = el('button', 'rm'); rm.appendChild(I('x', 'sm')); rm.title = 'Remove attachment';
       rm.addEventListener('click', () => { n.attachments = n.attachments.filter(x => x.id !== a.id); paintEditor(); render(); save(); });
       box.appendChild(rm);
       edAtts.appendChild(box);
@@ -1566,6 +1584,7 @@ window.MMBoard = { start(cfg){
   }
   const ms = () => menu.appendChild(el('div', 'ms'));
   function colorRow(ids){
+    if (!SHOW_COLORS) return;
     menu.appendChild(el('div', 'ml', 'Color'));
     const row = el('div', 'mrow');
     COLORS.forEach(c => {
@@ -1642,7 +1661,7 @@ window.MMBoard = { start(cfg){
     if (clip) mi('Paste here', () => unpack(clip, { x:w.x, y:w.y }, 0), '⌘/Ctrl+V');
     mi('Select all', selectAll, '⌘/Ctrl+A');
     ms();
-    mi(`Fit all ${W.cards}`, fitAll, 'Shift+1');
+    mi(`Fit all ${W.cards}`, () => fitAll(), 'Shift+1');
     mi(app.snap ? 'Turn off snap to grid' : 'Snap to grid', toggleSnap, 'G');
     showMenu(x, y);
   }
@@ -1715,7 +1734,7 @@ window.MMBoard = { start(cfg){
   let libDirty = true, libQueued = false;
   const AREAS = cfg.areas || [];
   const AREA_COLORS = cfg.areaColors || {};
-  const areaColor = a => AREA_COLORS[(a || '').trim().toLowerCase()] || cfg.areaDefault || '#78716c';
+  const areaColor = a => SHOW_COLORS ? (AREA_COLORS[(a || '').trim().toLowerCase()] || cfg.areaDefault || '#78716c') : 'var(--muted)';   // areas are named, not coloured
   const fmtHrs = h => { const v = Number(h); return isFinite(v) && v > 0 ? (Math.round(v * 100) / 100) + ' h' : ''; };
 
   function libChanged(){
@@ -1745,7 +1764,7 @@ window.MMBoard = { start(cfg){
     if (!app.boards[id]) return;
     switchBoard(id);
     closeLibrary();
-    if (!B.seen){ B.seen = true; requestAnimationFrame(fitAll); save(true); }
+    if (!B.seen){ B.seen = true; requestAnimationFrame(fitOnOpen); save(true); }
   }
   function renderChrome(){
     if (!LIB) return renderTabs();
@@ -1807,7 +1826,7 @@ function pkgSummary(b){
     section(T.yours, mine, q ? el('div', 'lib-none', 'No matches.') : null);
     if (!q){
       const make = el('button', 'pkg pkg-new');
-      make.innerHTML = `<span class="pn-plus">+</span><b>Create your own</b><span>${esc(T.makeOwn)}</span>`;
+      make.innerHTML = `<span class="pn-plus">${MMIcons.svg('plus', 'sm')}</span><b>Create your own</b><span>${esc(T.makeOwn)}</span>`;
       make.addEventListener('click', e => { e.stopPropagation(); openNewMenu(e.currentTarget); });
       libGrid.lastChild.querySelector('.lib-grid').appendChild(make);
     }
@@ -1827,7 +1846,7 @@ function pkgSummary(b){
     c.dataset.id = b.id;
     const top = el('div', 'pkg-top');
     if (m.area){ const a = el('span', 'pill', m.area); a.style.setProperty('--sc', areaColor(m.area)); top.appendChild(a); }
-    if (m.example) top.appendChild(el('span', 'chip', 'Example'));
+    // examples already sit under their own "Examples" heading, so the card doesn't repeat it
     const more = el('button', 'pkg-more', '⋯'); more.title = 'More'; more.setAttribute('aria-label', 'More actions');
     more.addEventListener('click', ev => { ev.stopPropagation(); openPkgMenu(more, b.id); });
     top.appendChild(more);
@@ -1838,9 +1857,9 @@ function pkgSummary(b){
     if (P.cardChips) P.cardChips(b, st, meta);
     else {
       meta.appendChild(el('span', 'chip', `${st.steps} ${st.steps === 1 ? W.card : W.cards}`));
-      if (m.hours) meta.appendChild(el('span', 'chip', '⏱ ' + fmtHrs(m.hours) + ' window'));
-      if (m.crew) meta.appendChild(el('span', 'chip', '👥 ' + m.crew));
-      if (st.checks) meta.appendChild(el('span', 'chip', `☑ ${st.checks}`));
+      if (m.hours) meta.appendChild(chipI('chip', 'clock', fmtHrs(m.hours) + ' window'));
+      if (m.crew) meta.appendChild(chipI('chip', 'users', String(m.crew)));
+      if (st.checks) meta.appendChild(chipI('chip', 'checks', String(st.checks)));
     }
     c.appendChild(meta);
     if (st.phases.length){
@@ -1996,7 +2015,7 @@ function pkgSummary(b){
     $('brandSub').textContent = B.name;
     const t = $('tabs'); t.textContent = '';
     if (app.order.length > 1){
-      const all = el('button', 'ib', '▾'); all.title = 'All boards';
+      const all = el('button', 'ib'); all.appendChild(I('down', 'sm')); all.title = 'All boards';
       all.addEventListener('click', ev => {
         ev.stopPropagation(); closeMenu();
         menu.appendChild(el('div', 'ml', 'Boards'));
@@ -2014,17 +2033,17 @@ function pkgSummary(b){
       tab.addEventListener('click', () => switchBoard(b.id));
       tab.addEventListener('dblclick', () => renameTab(tab, b));
       if (b.id === B.id && app.order.length > 1){
-        const x = el('button', 'tx', '✕'); x.title = 'Delete board';
+        const x = el('button', 'tx'); x.appendChild(I('x')); x.title = 'Delete board';
         x.addEventListener('click', ev => {
           ev.stopPropagation();
-          if (!x.classList.contains('armed')){ x.classList.add('armed'); x.textContent = 'Delete?'; setTimeout(() => { x.classList.remove('armed'); x.textContent = '✕'; }, 2500); return; }
+          if (!x.classList.contains('armed')){ x.classList.add('armed'); x.textContent = 'Delete?'; setTimeout(() => { x.classList.remove('armed'); x.textContent = ''; x.appendChild(I('x')); }, 2500); return; }
           deleteBoard(b.id);
         });
         tab.appendChild(x);
       }
       t.appendChild(tab);
     }
-    const add = el('button', 'ib', '+'); add.title = 'New board';
+    const add = el('button', 'ib'); add.appendChild(I('plus', 'sm')); add.title = 'New board'; add.setAttribute('aria-label', 'New board');
     add.addEventListener('click', ev => {
       ev.stopPropagation(); closeMenu();
       menu.appendChild(el('div', 'ml', 'New board'));
@@ -2055,7 +2074,7 @@ function pkgSummary(b){
     const nb = newBoard(name);
     if (t) t.build(nb, api);
     switchBoard(nb.id);
-    if (t) requestAnimationFrame(fitAll);
+    if (t) requestAnimationFrame(fitOnOpen);
   }
   // First time signed in to an empty organization: offer to bring over boards made in demo mode.
     async function offerLocalCopy(){
@@ -2148,7 +2167,7 @@ function pkgSummary(b){
     const bb = contentBox(); if (!bb) throw new Error('board is empty');
     const pad = 40, W = Math.ceil(bb.w + pad*2), Hh = Math.ceil(bb.h + pad*2);
     return window.htmlToImage.toPng(world, {
-      width:W, height:Hh, pixelRatio:Math.min(2, 4000 / Math.max(W, Hh)) || 1, backgroundColor:'#fafaf9', skipFonts:true,
+      width:W, height:Hh, pixelRatio:Math.min(2, 4000 / Math.max(W, Hh)) || 1, backgroundColor:getComputedStyle(document.body).getPropertyValue('--bg').trim() || '#0f1113', skipFonts:true,
       style:{ transform:`translate(${-bb.x + pad}px,${-bb.y + pad}px)`, transformOrigin:'0 0' },
     });
   }
@@ -2386,7 +2405,7 @@ function pkgSummary(b){
       return h + '</div>';
     };
     const keep = n => o.rDone || n.status !== 'done';
-    let out = `<div class="rep sz-${o.rSize || 'm'}${o.rCols == 2 ? ' cols2' : ''}"><div class="sum">${LIB ? pkgSummary(B) : `${all.length} notes · ${done} done${late ? ` · <b style="color:#b91c1c">${late} overdue</b>` : ''}${B.links.length ? ` · ${B.links.length} connections` : ''}`}</div>${B.meta && B.meta.desc ? `<div class="rm" style="margin-bottom:8px">${esc(B.meta.desc)}</div>` : ''}`;
+    let out = `<div class="rep sz-${o.rSize || 'm'}${o.rCols == 2 ? ' cols2' : ''}"><div class="sum">${LIB ? pkgSummary(B) : `${all.length} notes · ${done} done${late ? ` · <b style="color:var(--bad-ink)">${late} overdue</b>` : ''}${B.links.length ? ` · ${B.links.length} connections` : ''}`}</div>${B.meta && B.meta.desc ? `<div class="rm" style="margin-bottom:8px">${esc(B.meta.desc)}</div>` : ''}`;
     const frames = o.rGroup ? [...B.frames].sort((a, b) => (a.y - b.y) || (a.x - b.x)) : [];
     for (const f of frames){
       const ns = tops().filter(n => !used.has(n.id) && inFrame(f, n.id)).sort(byPos);
@@ -2508,15 +2527,17 @@ function pkgSummary(b){
       render(); save();
     });
     ms();
-    menu.appendChild(el('div', 'ml', 'Color'));
-    const row = el('div', 'mrow');
-    FRAME_COLORS.forEach(c => {
-      const b = el('button', 'sw' + (f.color === c ? ' on' : '')); b.style.background = c;
-      b.addEventListener('click', () => { checkpoint(); f.color = c; closeMenu(); render(); save(); });
-      row.appendChild(b);
-    });
-    menu.appendChild(row);
-    ms();
+    if (SHOW_COLORS){
+      menu.appendChild(el('div', 'ml', 'Color'));
+      const row = el('div', 'mrow');
+      FRAME_COLORS.forEach(c => {
+        const b = el('button', 'sw' + (f.color === c ? ' on' : '')); b.style.background = c;
+        b.addEventListener('click', () => { checkpoint(); f.color = c; closeMenu(); render(); save(); });
+        row.appendChild(b);
+      });
+      menu.appendChild(row);
+      ms();
+    }
     mi('Delete frame (keep notes)', () => deleteFrame(id, false), '', true);
     mi('Delete frame and its notes', () => deleteFrame(id, true), '', true);
     showMenu(x, y);
@@ -2551,7 +2572,7 @@ function pkgSummary(b){
   $('zoomIn').addEventListener('click', () => zoomCenter(z => z * 1.2));
   $('zoomOut').addEventListener('click', () => zoomCenter(z => z / 1.2));
   $('zoomPct').addEventListener('click', () => zoomCenter(() => 1));
-  $('fitBtn').addEventListener('click', fitAll);
+  $('fitBtn').addEventListener('click', () => fitAll());
 
   /* ================= Keyboard ================= */
   let pendingPaste = null;

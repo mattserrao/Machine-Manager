@@ -55,7 +55,7 @@ with sync_playwright() as p:
     pg.keyboard.press("Escape"); pg.wait_for_timeout(300)
     n = pg.locator("#world > .note").first
     check("WB: note shows its title and checklist", "Hello outage" in n.inner_text() and "0/2" in n.inner_text(), n.inner_text()[:80])
-    check("WB: due date chip", "📅" in n.inner_text())
+    check("WB: due date chip", n.locator(".chip.due").count() == 1)
     pg.locator("#world > .note .cb").first.click(); pg.wait_for_timeout(200)
     check("WB: ticking a checkbox", "1/2" in pg.locator("#world > .note").first.inner_text())
     pg.keyboard.press("Control+z"); pg.wait_for_timeout(200)
