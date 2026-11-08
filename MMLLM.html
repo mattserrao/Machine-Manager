@@ -12,7 +12,6 @@
   /* shared look: mm-theme.css */
   main{max-width:1320px;margin:0 auto;padding:24px 20px 72px}
   .intro{max-width:720px;margin:0 0 20px}
-  .intro h2{margin:0 0 6px;font-size:15px;font-weight:600}
   .intro p{margin:0;font-size:13px;color:var(--muted);line-height:1.55}
 
   /* ---- Flow: five columns, left to right ---- */
@@ -57,7 +56,20 @@
   .rule span{font-size:12px;color:var(--muted);line-height:1.5}
   .rules-h{margin:32px 0 0;font-size:13px;font-weight:600}
 
-  #ver{position:static;text-align:right;margin-top:28px;display:block}
+  .foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:32px}
+  .foot #ver{position:static;margin:0;display:block}
+
+  /* ---- About the model: the information flow, in a wide sheet ---- */
+  .backdrop{position:fixed;inset:0;z-index:300;background:var(--scrim);display:grid;place-items:center;padding:16px}
+  .backdrop[hidden]{display:none}
+  .sheet{background:var(--overlay,var(--surface));border:1px solid var(--line-strong);border-radius:var(--r-lg);display:flex;flex-direction:column;overflow:hidden}
+  .sheet.about{width:min(1320px,100%);max-height:calc(100vh - 32px)}
+  .sheet-h{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 20px 12px;border-bottom:1px solid var(--line)}
+  .sheet-h h2{margin:0;font-size:18px}
+  .sheet-h p{margin:5px 0 0;font-size:13px;color:var(--muted);line-height:1.5}
+  .sheet-h .live:empty{display:none}
+  .sheet-b{overflow:auto;padding:16px 20px 24px}
+  .sub-h{margin:0 0 6px;font-size:15px;font-weight:600}
 
   /* ---- Narrower screens: columns stack, wires hide, a down-arrow joins each stage ---- */
   @media (max-width:980px){
@@ -68,7 +80,7 @@
     .col .blks{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
   }
   /* ---- Demo data: what the assistant can see ---- */
-  .demo{margin:40px 0 0}
+  .demo{margin:8px 0 0}
   .demo-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin:0 0 4px}
   .demo-h h2{margin:0;font-size:15px;font-weight:600}
   .demo-sub{margin:0 0 16px;font-size:13px;color:var(--muted);line-height:1.55;max-width:760px}
@@ -122,24 +134,11 @@
 <header class="mm-top">
   <div class="bar brand">
     <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
-    <div><h1>MM LLM</h1><p>How mill data reaches the assistant</p></div>
+    <div><h1>MM LLM</h1><p>Questions answered from mill data</p></div>
   </div>
   <div id="acct"></div>
 </header>
 <main>
-  <section class="intro">
-    <h2>Information flow</h2>
-    <p>Mill sources are imported, tagged to a PM1 position and stored in Supabase. The orchestrator answers through a small set of tools, so any model can sit behind it. Select a block to see what it connects to.</p>
-  </section>
-
-  <div class="flow" id="flow">
-    <svg class="wires" id="wires" aria-hidden="true"></svg>
-  </div>
-
-  <div class="detail" id="detail" aria-live="polite">
-    <p class="hint">Select a block to see what it holds, how it is parsed and stored, and what it feeds.</p>
-  </div>
-
   <section class="demo" id="demo" aria-live="polite">
     <div class="demo-h"><h2 id="demoTitle">Demo data</h2><span class="mm-chip" id="demoChip">Loading…</span></div>
     <p class="demo-sub" id="demoSub">Loading what the assistant can see…</p>
@@ -151,22 +150,48 @@
     </div>
   </section>
 
-  <h3 class="rules-h">Ground rules</h3>
-  <div class="rules">
-    <div class="rule"><b>Every row has a position</b><span>BUS items, WOs, RCFAs, vendor findings and document chunks all carry a PM1 position id from My Machine. That key is what lets an outage brief pull everything for "2nd press felt".</span></div>
-    <div class="rule"><b>Tables first, search second</b><span>Anything with rows and columns goes in a table and is answered with a query. Only narrative text (report findings, RCFA write-ups, manuals) is chunked and embedded for search.</span></div>
-    <div class="rule"><b>Pi stays in Pi</b><span>Trends are read on demand from the historian. Only Envoy exceptions are stored, as dated events.</span></div>
-    <div class="rule"><b>Models are swappable</b><span>Prompts and tools live in this app, not in a vendor's features. The adapter maps one request format to each provider; embeddings record which model made them.</span></div>
-    <div class="rule"><b>Answers cite records</b><span>Every statement links back to the row, page or trend it came from, so it can be checked before it goes on an outage plan.</span></div>
-  </div>
-
-  <div id="ver"></div>
+  <div class="foot"><button class="btn" type="button" id="aboutBtn" aria-haspopup="dialog">About the model</button><span id="ver"></span></div>
 </main>
+
+<div class="backdrop" id="about" hidden>
+  <div class="sheet about" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
+    <div class="sheet-h">
+      <div><h2 id="aboutTitle">About the model</h2>
+        <p>How mill data reaches the assistant: sources, storage, the tools the model can call, and the model connectors.</p>
+        <p class="live" id="aboutLive"></p></div>
+      <button class="btn icon" type="button" id="aboutClose" aria-label="Close" data-ic="x" data-ic-size="sm"></button>
+    </div>
+    <div class="sheet-b">
+  <section class="intro">
+        <h3 class="sub-h">Information flow</h3>
+        <p>Mill sources are imported, tagged to a PM1 position and stored in Supabase. The orchestrator answers through a small set of tools, so any model can sit behind it. Select a block to see what it connects to.</p>
+      </section>
+
+      <div class="flow" id="flow">
+        <svg class="wires" id="wires" aria-hidden="true"></svg>
+      </div>
+
+      <div class="detail" id="detail" aria-live="polite">
+        <p class="hint">Select a block to see what it holds, how it is parsed and stored, and what it feeds.</p>
+      </div>
+
+  <h3 class="rules-h">Ground rules</h3>
+      <div class="rules">
+        <div class="rule"><b>Every row has a position</b><span>BUS items, WOs, RCFAs, vendor findings and document chunks all carry a PM1 position id from My Machine. That key is what lets an outage brief pull everything for "2nd press felt".</span></div>
+        <div class="rule"><b>Tables first, search second</b><span>Anything with rows and columns goes in a table and is answered with a query. Only narrative text (report findings, RCFA write-ups, manuals) is chunked and embedded for search.</span></div>
+        <div class="rule"><b>Pi stays in Pi</b><span>Trends are read on demand from the historian. Only Envoy exceptions are stored, as dated events.</span></div>
+        <div class="rule"><b>Models are swappable</b><span>Prompts and tools live in this app, not in a vendor's features. The adapter maps one request format to each provider; embeddings record which model made them.</span></div>
+        <div class="rule"><b>Answers cite records</b><span>Every statement links back to the row, page or trend it came from, so it can be checked before it goes on an outage plan.</span></div>
+      </div>
+
+    </div>
+  </div>
+</div>
 <script src="vendor/supabase-2.119.0.js?v=2026-11-08.1905"></script>
 <script src="mm-config.js?v=2026-11-08.1905"></script>
 <script src="mm-cloud.js?v=2026-11-08.1905"></script>
 <script>
-  const VERSION = 'v0.4.0';
+  const VERSION = 'v0.5.0';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true });
 
@@ -376,6 +401,8 @@
       access = (b.data || []).find(r => r.org_id === org.id) || null;
     }
     if (access) mountAsk();
+    const anyAns = Object.values(saved)[0];
+    if (anyAns) $('aboutLive').textContent = `Answering now: ${anyAns.model} (${anyAns.provider}), through the model adapter. Swapping models is a setting, not a rewrite.`;
 
     let key;
     try { key = await (await fetch('demo-data/answers/answer_key.json', { cache: 'no-cache' })).json(); }
@@ -500,7 +527,17 @@
       ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) ask(); });
     }
   })();
-  addEventListener('keydown', e => { if (e.key === 'Escape' && sel) select(null); });
+  // ---------- About the model sheet ----------
+  const about = document.getElementById('about'), aboutBtn = document.getElementById('aboutBtn');
+  function openAbout(){ about.hidden = false; document.body.style.overflow = 'hidden'; requestAnimationFrame(draw); document.getElementById('aboutClose').focus(); }
+  function closeAbout(){ about.hidden = true; document.body.style.overflow = ''; aboutBtn.focus(); }
+  aboutBtn.addEventListener('click', openAbout);
+  document.getElementById('aboutClose').addEventListener('click', closeAbout);
+  about.addEventListener('click', e => { if (e.target === about) closeAbout(); });
+  addEventListener('keydown', e => {
+    if (e.key !== 'Escape' || about.hidden) return;
+    if (sel) select(null); else closeAbout();
+  });
   addEventListener('resize', () => requestAnimationFrame(draw));
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   requestAnimationFrame(draw);
