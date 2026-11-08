@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Daily</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.2036"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2036">
-<link rel="stylesheet" href="mm-data.css?v=2026-11-08.2036">
-<script src="mm-icons.js?v=2026-11-08.2036"></script>
+<script src="mm-theme.js?v=2026-11-08.2042"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2042">
+<link rel="stylesheet" href="mm-data.css?v=2026-11-08.2042">
+<script src="mm-icons.js?v=2026-11-08.2042"></script>
 <style>
   .dbar button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--r-sm);padding:5px 10px;cursor:pointer}
   .dbar button:hover{border-color:var(--line-strong)}
@@ -39,10 +39,10 @@
   <div id="body"><div class="dmsg">Loading…</div></div>
   <div id="ver"></div>
 </main>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2036"></script>
-<script src="mm-config.js?v=2026-11-08.2036"></script>
-<script src="mm-cloud.js?v=2026-11-08.2036"></script>
-<script src="mm-llm-org.js?v=2026-11-08.2036"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2042"></script>
+<script src="mm-config.js?v=2026-11-08.2042"></script>
+<script src="mm-cloud.js?v=2026-11-08.2042"></script>
+<script src="mm-llm-org.js?v=2026-11-08.2042"></script>
 <script>
   const VERSION = 'v0.2.0';
   document.getElementById('ver').textContent = 'Daily ' + VERSION;
@@ -50,6 +50,8 @@
   const $ = id => document.getElementById(id), O = MMLLMOrg, esc = O.esc;
   let st, today, outages = [];
   const addDays = (d, n) => { const t = new Date(d + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+  const NY = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' });
+  const millHour = ts => { const p = Object.fromEntries(NY.formatToParts(new Date(ts)).map(x => [x.type, x.value])); return `${p.year}-${p.month}-${p.day}T${p.hour}`; };
   const KIND = { planned: 'Planned', unplanned: 'Unplanned', break: 'Sheet break', slowdown: 'Slowdown' };
 
   function tile(v, label, warn){ return `<div class="tile${warn ? ' warn' : ''}"><b>${v}</b><span>${esc(label)}</span></div>`; }
@@ -62,11 +64,14 @@
     let prod, dt, bus, env, od;
     try {
       [prod, dt, bus, env, od] = await Promise.all([
-        O.rpc(st, 'mm_llm_production', { p_from: day, p_to: day, p_by: 'day' }), O.rpc(st, 'mm_llm_downtime', { p_from: day, p_to: day }),
+        O.rpc(st, 'mm_llm_production', { p_from: day, p_to: day, p_by: 'day' }), O.rpc(st, 'mm_llm_downtime', { p_from: day, p_to: addDays(day, 1) }),
         O.rpc(st, 'mm_llm_bus_day', { p_day: day }), O.rpc(st, 'mm_llm_envoy', { p_term: null, p_from: day, p_to: day }),
         O.rpc(st, 'mm_llm_overdue_actions', { p_as_of: day })]);
     } catch (e) { body.innerHTML = `<div class="dmsg">${esc(e.message || e)}</div>`; return; }
     body.textContent = '';
+    // the mill day runs 6 AM to 6 AM, mill time (same as the production row)
+    const lo = day + 'T06', hi = addDays(day, 1) + 'T06';
+    dt = dt.filter(x => { const k = millHour(x.starts_at); return k >= lo && k < hi; });
     const p = prod[0], nx = outages.find(o => o.starts >= day);
     const head = document.createElement('div'); head.className = 'dayh';
     head.innerHTML = `<h2>${new Date(day + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h2>
@@ -114,6 +119,6 @@
     start();
   })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.2036"></script>
+<script src="mm-nav.js?v=2026-11-08.2042"></script>
 </body>
 </html>

@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vendor Reports</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.2036"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2036">
-<link rel="stylesheet" href="mm-data.css?v=2026-11-08.2036">
-<script src="mm-icons.js?v=2026-11-08.2036"></script>
+<script src="mm-theme.js?v=2026-11-08.2042"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2042">
+<link rel="stylesheet" href="mm-data.css?v=2026-11-08.2042">
+<script src="mm-icons.js?v=2026-11-08.2042"></script>
 <style>
   .runs{display:flex;flex-direction:column;gap:6px}
   .run{display:grid;grid-template-columns:200px 1fr;gap:10px;align-items:start;padding:8px 0;border-top:1px solid var(--line)}
@@ -44,10 +44,10 @@
   <div id="body"><div class="dmsg">Loading…</div></div>
   <div id="ver"></div>
 </main>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2036"></script>
-<script src="mm-config.js?v=2026-11-08.2036"></script>
-<script src="mm-cloud.js?v=2026-11-08.2036"></script>
-<script src="mm-llm-org.js?v=2026-11-08.2036"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2042"></script>
+<script src="mm-config.js?v=2026-11-08.2042"></script>
+<script src="mm-cloud.js?v=2026-11-08.2042"></script>
+<script src="mm-llm-org.js?v=2026-11-08.2042"></script>
 <script>
   const VERSION = 'v0.2.0';
   document.getElementById('ver').textContent = 'Vendor Reports ' + VERSION;
@@ -99,7 +99,9 @@
       runs.filter(r => r.position_id === p).forEach(r => {
         const end = r.removed || today, days = r.days != null ? r.days : daysBetween(r.installed, end);
         const pct = r.target_days ? Math.min(130, 100 * days / r.target_days) : 0;
-        const ds = list.filter(x => x.doc_date >= r.installed && x.doc_date <= (r.removed ? r.removed : '9999') );
+        // a report on a change day belongs to the run that came out (the survey of the old piece)
+        const changedOn = d => runs.some(o => o.position_id === p && o.removed === d);
+        const ds = list.filter(x => x.doc_date <= (r.removed || '9999') && (x.doc_date > r.installed || (x.doc_date === r.installed && !changedOn(x.doc_date))));
         const el = document.createElement('div'); el.className = 'run';
         el.innerHTML = `<div class="h"><b>${O.day(r.installed)} – ${r.removed ? O.day(r.removed) : 'running'}</b>${esc(r.vendor || '')} · ${esc(r.style || '')}
             <div class="life" title="${days} of ${r.target_days} target days"><i class="${pct > 100 ? 'over' : ''}" style="width:${Math.min(100, pct).toFixed(0)}%"></i></div>
@@ -134,6 +136,6 @@
     if (q){ $('fPos').value = q; render(); }
   })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.2036"></script>
+<script src="mm-nav.js?v=2026-11-08.2042"></script>
 </body>
 </html>

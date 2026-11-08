@@ -272,7 +272,7 @@ def documents(docs_root, tagger, rel_root):
             if not title:
                 title = next((l.strip() for l in full.splitlines() if len(l.strip()) > 12 and doc_id not in l), doc_id)
             dates = DATE_RE.findall(full)
-            pos, assets = tagger.in_text(full)
+            pos, assets = tagger.in_text(re.sub(r'\s+', ' ', full))   # names wrap across lines in PDF table cells
             docs.append(dict(doc_id=doc_id, kind=kind, vendor=vendor, doc_date=mdy(dates[0]) if dates else None, title=title,
                              file_path=rel.replace(os.sep, '/'), mime='application/pdf' if ext == '.pdf' else
                              'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -280,7 +280,7 @@ def documents(docs_root, tagger, rel_root):
             n = 0
             for pg, text in enumerate(pages, 1):
                 for c in chunks_of(text):
-                    cp, _ = tagger.in_text(c)
+                    cp, _ = tagger.in_text(re.sub(r'\s+', ' ', c))
                     chunks.append(dict(doc_id=doc_id, chunk_no=n, page=pg, content=f'{title}\n{c}' if n else c, positions=cp)); n += 1
     return docs, chunks
 

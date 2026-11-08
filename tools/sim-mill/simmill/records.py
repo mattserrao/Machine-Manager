@@ -63,8 +63,10 @@ class Issue:   # one BUS line, carried day to day until it closes
         self.owner = owner; self.wo = wo; self.story = story; self.status = status; self.key = ''
     def open_on(self, d): return self.start <= d and (self.end is None or d <= self.end)
     def action_on(self, d):
-        k = min(len(self.actions) - 1, (d - self.start).days * len(self.actions) // max(1, ((self.end or TODAY) - self.start).days + 1))
-        return self.actions[k]
+        n = len(self.actions)
+        if n == 1 or (self.end and d >= self.end): return self.actions[-1]   # the last step is what closed it
+        span = max(1, ((self.end or TODAY + DAY) - self.start).days)
+        return self.actions[min(n - 2 if self.end else n - 1, (d - self.start).days * (n - 1 if self.end else n) // span)]
 
 
 # Routine issues for the background of the BUS sheet: (asset, issue, [actions], craft, owner)
