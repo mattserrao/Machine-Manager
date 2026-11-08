@@ -5,7 +5,7 @@ export with different headers is a mapping change, not a code change. Every row 
 by the Tagger (exact matches against the equipment register first; free text in documents by name matching).
 Nothing here reads the demo answer key (_truth/).
 """
-import csv, datetime as dt, hashlib, os, re, subprocess, tempfile
+import csv, datetime as dt, hashlib, json, os, re, subprocess, tempfile
 from zoneinfo import ZoneInfo
 
 MILL_TZ = ZoneInfo('America/New_York')
@@ -68,7 +68,8 @@ def backbone(folder):
     equipment = [dict(asset_no=e['asset_no'], name=e['name'], section=e['section'], kind=e['kind'],
                       position_id=e['position_id'] or None, parent_asset=e['parent_asset'] or None) for e in eq]
     tags = [dict(tag=t['tag'], description=t['description'], units=t['units'], asset_no=t['asset_no'],
-                 position_id=t['position_id'] or None, section=t['section']) for t in rd('pi_tags.csv')]
+                 position_id=t['position_id'] or None, section=t['section'], **({'source': t['source'] or None} if 'source' in t else {}))
+            for t in rd('pi_tags.csv')]
     loc = lambda s: dt.datetime.fromisoformat(s).replace(tzinfo=MILL_TZ).isoformat()
     outages = [dict(outage_id=o['id'], kind=o['type'], starts_at=loc(o['start']), ends_at=loc(o['end']), note=o['note']) for o in rd('outages.csv')]
     return equipment, tags, outages
@@ -169,8 +170,8 @@ def rcfa_log(path, tagger):
     return out
 
 
-# ═════════════════════════ Envoy (.csv) ═════════════════════════
-def envoy_reports(paths, tagger):
+# ═════════════════════════ Bonvoy (.csv) ═════════════════════════
+def bonvoy_exceptions(paths, tagger):
     out = []
     for path in sorted(paths):
         for r in csv.DictReader(open(path)):
@@ -272,7 +273,7 @@ def documents(docs_root, tagger, rel_root):
             if not title:
                 title = next((l.strip() for l in full.splitlines() if len(l.strip()) > 12 and doc_id not in l), doc_id)
             dates = DATE_RE.findall(full)
-            pos, assets = tagger.in_text(full)
+            pos, assets = tagger.in_text(re.sub(r'\s+', ' ', full))   # names wrap across lines in PDF table cells
             docs.append(dict(doc_id=doc_id, kind=kind, vendor=vendor, doc_date=mdy(dates[0]) if dates else None, title=title,
                              file_path=rel.replace(os.sep, '/'), mime='application/pdf' if ext == '.pdf' else
                              'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
@@ -280,6 +281,71 @@ def documents(docs_root, tagger, rel_root):
             n = 0
             for pg, text in enumerate(pages, 1):
                 for c in chunks_of(text):
-                    cp, _ = tagger.in_text(c)
+                    cp, _ = tagger.in_text(re.sub(r'\s+', ' ', c))
                     chunks.append(dict(doc_id=doc_id, chunk_no=n, page=pg, content=f'{title}\n{c}' if n else c, positions=cp)); n += 1
     return docs, chunks
+
+
+# ═════════════════════════ Downtime events, daily production, position runs (.csv; step 05) ═════════════════════════
+DOWNTIME_KIND = {'Planned': 'planned', 'Unplanned': 'unplanned', 'Sheet break': 'break', 'Slowdown': 'slowdown'}
+
+def local_ts(s):
+    return dt.datetime.fromisoformat(s).replace(tzinfo=MILL_TZ).isoformat()
+
+def bonvoy_report_files(paths):
+    """The daily Bonvoy Reports (.json, one per day): summary, ranked flagged trends and the alarm watch list."""
+    out = []
+    for path in sorted(paths):
+        r = json.load(open(path))
+        out.append(dict(day=r['day'], report_date=r.get('report_date'), headline=r.get('headline'), summary=r.get('summary'),
+                        flagged=r.get('flagged'), items=r.get('items') or [], watch=r.get('watch') or [],
+                        generated_by=r.get('generated_by'), model=r.get('model'), source_file=os.path.basename(path)))
+    return out
+
+def downtime_files(paths, tagger):
+    out = []
+    for path in sorted(paths):
+        for r in csv.DictReader(open(path)):
+            asset_no, pos, _ = tagger.asset(name=r['Equipment'], asset_no=r['Asset Number'])
+            out.append(dict(event_id=r['Event ID'], starts_at=local_ts(r['Start']), ends_at=local_ts(r['End']), minutes=num(r['Minutes']),
+                            kind=DOWNTIME_KIND.get(r['Kind'], r['Kind'].lower()), area=r['Area'] or None, equipment=r['Equipment'] or None,
+                            asset_no=asset_no or (r['Asset Number'] or None), position_id=r['Position'] or pos, cause=r['Cause'] or None,
+                            grade=r['Grade'] or None, crew=r['Crew'] or None, wo_no=r['WO #'] or None, rcfa_id=r['RCFA ID'] or None,
+                            comment=r['Comment'] or None, source_file=os.path.basename(path)))
+    return out
+
+def production_files(paths):
+    out = []
+    for path in sorted(paths):
+        for r in csv.DictReader(open(path)):
+            out.append(dict(day=r['Mill Day'], tons=num(r['Tons']), uptime_pct=num(r['Uptime %']), breaks=int(r['Sheet Breaks'] or 0),
+                            break_min=num(r['Break Minutes']), unplanned_min=num(r['Unplanned Minutes']), planned_min=num(r['Planned Minutes']),
+                            slowdown_min=num(r['Slowdown Minutes']), avg_speed=num(r['Avg Speed (fpm)']), grade_hours=r['Grade Hours'] or None,
+                            steam_per_t=num(r['Steam (t/t)']), kwh_per_t=num(r['Refining (kWh/t)']), reel_moist=num(r['Reel Moisture %']),
+                            crew_day=r['Crew Day'] or None, crew_night=r['Crew Night'] or None, source_file=os.path.basename(path)))
+    return out
+
+def position_run_files(paths):
+    """Latest export wins for each (position, installed)."""
+    latest = {}
+    for path in sorted(paths):
+        for r in csv.DictReader(open(path)):
+            latest[(r['Position'], r['Installed'])] = dict(
+                position_id=r['Position'], installed=r['Installed'], position_name=r['Position Name'], removed=r['Removed'] or None,
+                days=int(r['Days']) if r['Days'] else None, target_days=int(r['Target Days']) if r['Target Days'] else None,
+                reason=r['Reason'] or None, condition=r['Condition'] or None, vendor=r['Vendor'] or None, style=r['Style'] or None,
+                serial=r['Serial'] or None, comment=r['Comment'] or None, source_file=os.path.basename(path))
+    return list(latest.values())
+
+
+# ═════════════════════════ Machine Manager records (.json; step 05) ═════════════════════════
+RECORD_TOOLS = ('mymachine', 'outages', 'consumables', 'task-packages')
+
+def record_files(folder):
+    """records/<tool>.json = { record id: data } -> { tool: [{ id, data }] } for the tools the ingest accepts."""
+    import json
+    out = {}
+    for tool in RECORD_TOOLS:
+        p = os.path.join(folder, f'{tool}.json')
+        if os.path.exists(p): out[tool] = [dict(id=k, data=v) for k, v in json.load(open(p)).items()]
+    return out

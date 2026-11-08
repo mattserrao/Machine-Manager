@@ -31,6 +31,16 @@ const evil = M.normalize({ refiners: [{ id: 'x"><img src=x>', name: 'A' }, { id:
 check('normalize drops unsafe refiner ids and splits duplicates', evil.refiners.every(r => /^[a-z0-9-]+$/.test(r.id)) && new Set(evil.refiners.map(r => r.id)).size === 3);
 check('normalize keeps press nips and dryer types in range', evil.press.nips === 2 && evil.dryers[0].type === 'double' && evil.former.type === 'twin');
 
+// felt rolls (Sim Mill): optional per dryer section, kept only when 1-12, each a roll position
+const sim = M.normalize({ name: 'PM1', former: { type: 'fourdrinier', lumpbreaker: false }, press: { nips: 2, tandem: false },
+  dryers: [{ type: 'uno', feltRolls: 5 }, { type: 'uno', feltRolls: 5 }, { type: 'uno', feltRolls: 5 }, { type: 'uno', feltRolls: 5 }],
+  calender: false, refiners: [{ id: 'refa', name: 'REF 1' }, { id: 'refb', name: 'REF 2' }] });
+const sp = M.positions(sim);
+check('felt rolls become roll positions', sp.filter(p => /^d\d-froll-\d+$/.test(p.id) && p.kind === 'roll').length === 20 && sp.length === 35,
+  sp.length + ' positions');
+check('felt-roll names read like the rest', sp.some(p => p.id === 'd3-froll-2' && p.name === '3rd section felt roll 2'));
+check('feltRolls out of range is dropped', M.normalize({ dryers: [{ type: 'uno', feltRolls: 40 }, { type: 'uno', feltRolls: -1 }] }).dryers.every(d => !('feltRolls' in d)));
+
 // cleanItem: valid data passes through byte-for-byte, bad values are fixed or dropped
 const demo = D.build();
 const changed = Object.entries(demo.items).filter(([k, v]) => canon(M.cleanItem(v)) !== canon(v)).map(([k]) => k);

@@ -5,48 +5,137 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vendor Reports</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1905"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1905">
-<script src="mm-icons.js?v=2026-11-08.1905"></script>
+<script src="mm-theme.js?v=2026-11-08.2256"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2256">
+<link rel="stylesheet" href="mm-data.css?v=2026-11-08.2256">
+<script src="mm-icons.js?v=2026-11-08.2256"></script>
 <style>
-  /* shared look: mm-theme.css */
-  main{max-width:1080px;margin:0 auto;padding:28px 20px 72px}
-  .mm-empty{margin:40px 0 0;padding:24px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);max-width:560px}
-  .mm-empty .ic{color:var(--muted);display:flex;margin-bottom:12px}
-  .mm-empty h3{margin:14px 0 6px;font-size:13px;font-weight:500;color:var(--muted)}
-  #ver{position:static;text-align:right;margin-top:28px;display:block}
+  .runs{display:flex;flex-direction:column;gap:6px}
+  .run{display:grid;grid-template-columns:200px 1fr;gap:10px;align-items:start;padding:8px 0;border-top:1px solid var(--line)}
+  .run:first-child{border-top:0}
+  .run .h{font-size:12px;color:var(--ink-2)}
+  .run .h b{display:block;font-size:13px;color:var(--ink);font-weight:600}
+  .run .life{height:6px;border-radius:3px;background:var(--surface-2);margin:6px 0 2px;overflow:hidden}
+  .run .life i{display:block;height:100%;background:var(--accent);border-radius:0 3px 3px 0}
+  .run .life i.over{background:var(--bad)}
+  .run .docs{display:flex;flex-direction:column;gap:3px;font-size:12px}
+  .run .docs .none{color:var(--muted)}
+  .chip2{display:inline-block;font-size:11px;padding:2px 6px;margin:1px 3px 1px 0;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2);white-space:nowrap}
 </style>
 </head>
 <body>
 <header class="mm-top">
   <div class="bar brand">
     <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
-    <div><h1>Vendor Reports</h1><p>Supplier reports</p></div>
+    <div><h1>Vendor Reports</h1><p>Supplier reports, filed by machine position</p></div>
   </div>
   <div id="acct"></div>
 </header>
-<main>
-  <section class="mm-empty">
-    <div class="ic" data-ic="file" data-ic-size="lg"></div>
-    <h2>Vendor Reports is planned</h2>
-    <p>A place to drop supplier reports (felt and wire analyses, roll grind sheets, nozzle surveys) and file each one against its machine position.</p>
-    <h3>What it will do</h3>
-    <ul>
-      <li>Upload a PDF or spreadsheet and pick the position it covers</li>
-      <li>See every report for a fabric run next to its days on the machine</li>
-      <li>Find a report by vendor, position or date</li>
-    </ul>
-  </section>
+<main class="data">
+  <div class="dbar">
+    <span class="org" id="org"></span>
+    <label>Vendor <select id="fVendor"><option value="">All</option></select></label>
+    <label>Position <select id="fPos"><option value="">All</option></select></label>
+    <label>Find <input id="fText" type="search" placeholder="e.g. felt analysis, outer race"></label>
+    <span class="grow"></span>
+    <span id="count" class="pill"></span>
+  </div>
+  <p class="dsub" id="sub"></p>
+  <div id="body"><div class="dmsg">Loading…</div></div>
   <div id="ver"></div>
 </main>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1905"></script>
-<script src="mm-config.js?v=2026-11-08.1905"></script>
-<script src="mm-cloud.js?v=2026-11-08.1905"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2256"></script>
+<script src="mm-config.js?v=2026-11-08.2256"></script>
+<script src="mm-cloud.js?v=2026-11-08.2256"></script>
+<script src="mm-llm-org.js?v=2026-11-08.2256"></script>
 <script>
-  const VERSION = 'v0.1.2';
+  const VERSION = 'v0.2.0';
   document.getElementById('ver').textContent = 'Vendor Reports ' + VERSION;
-  MMCloud.mountAccount(document.getElementById('acct'), { compact: true });
+  MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
+  const $ = id => document.getElementById(id), O = MMLLMOrg, esc = O.esc;
+  let st, docs = [], runs = [], names = {}, today = null;
+
+  const daysBetween = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 864e5);
+  // the run that was on a position on a day
+  const runOn = (pos, d) => runs.find(r => r.position_id === pos && r.installed <= d && (!r.removed || r.removed >= d));
+
+  async function load(){
+    $('body').innerHTML = '<div class="dmsg">Loading…</div>';
+    try {
+      const [d, r, ctx] = await Promise.all([O.rpc(st, 'mm_llm_documents', { p_kind: 'vendor_report' }), O.rpc(st, 'mm_llm_position_life', {}),
+                                            st.db.rpc('mm_llm_context', { p_org: st.org.id })]);
+      docs = d; runs = r; today = await O.today(st);
+      names = {}; ((ctx.data && ctx.data.positions) || []).forEach(p => { names[p.id] = p.name; });
+      runs.forEach(x => { if (x.position_name) names[x.position_id] = x.position_name; });
+    } catch (e) { $('body').innerHTML = `<div class="dmsg">${esc(e.message || e)}</div>`; return; }
+    $('sub').textContent = `${docs.length} vendor reports for ${st.org.name}` + (st.info ? ` — ${st.info.about}. “Today” is ${O.day(st.info.today)}.` : '.') +
+      (runs.length ? ' Pick a position to see each run with the reports filed during it.' : ' This organization has no position-run feed yet, so reports are listed without run ages.');
+    const vend = [...new Set(docs.map(x => x.vendor).filter(Boolean))].sort();
+    $('fVendor').innerHTML = '<option value="">All</option>' + vend.map(v => `<option>${esc(v)}</option>`).join('');
+    const pos = [...new Set(docs.flatMap(x => x.positions || []))].sort((a, b) => (names[a] || a).localeCompare(names[b] || b, undefined, { numeric: true }));
+    $('fPos').innerHTML = '<option value="">All</option>' + pos.map(p => `<option value="${esc(p)}">${esc(names[p] || p)}</option>`).join('');
+    render();
+  }
+
+  function posChips(x){
+    return (x.positions || []).map(p => {
+      const r = runOn(p, x.doc_date);
+      const age = r ? ` · day ${daysBetween(r.installed, x.doc_date)}/${r.target_days || '?'}` : '';
+      return `<span class="chip2" title="${esc(names[p] || p)}${r ? `: ${r.vendor || ''} ${r.style || ''}, installed ${O.day(r.installed)}` : ''}">${esc(names[p] || p)}${age}</span>`;
+    }).join('') || '<span class="dt-empty">—</span>';
+  }
+  const link = x => `<a class="doc" href="#" data-path="${esc(x.file_path)}" title="Open the original (${esc(x.doc_id)})">${esc(x.title)}</a>`;
+
+  function render(){
+    const v = $('fVendor').value, p = $('fPos').value, q = $('fText').value.trim().toLowerCase();
+    const list = docs.filter(x => (!v || x.vendor === v) && (!p || (x.positions || []).includes(p)) &&
+                                  (!q || (x.title + ' ' + x.doc_id + ' ' + (x.vendor || '')).toLowerCase().includes(q)));
+    $('count').textContent = `${list.length} report${list.length === 1 ? '' : 's'}`;
+    const body = $('body'); body.textContent = '';
+    if (p && runs.some(r => r.position_id === p)){
+      const panel = document.createElement('section'); panel.className = 'panel';
+      panel.innerHTML = `<h2>${esc(names[p] || p)}: runs and their reports</h2><p class="ps">Each run with its days on the machine against target, and every report filed while it ran.</p>`;
+      const box = document.createElement('div'); box.className = 'runs';
+      runs.filter(r => r.position_id === p).forEach(r => {
+        const end = r.removed || today, days = r.days != null ? r.days : daysBetween(r.installed, end);
+        const pct = r.target_days ? Math.min(130, 100 * days / r.target_days) : 0;
+        // a report on a change day belongs to the run that came out (the survey of the old piece)
+        const changedOn = d => runs.some(o => o.position_id === p && o.removed === d);
+        const ds = list.filter(x => x.doc_date <= (r.removed || '9999') && (x.doc_date > r.installed || (x.doc_date === r.installed && !changedOn(x.doc_date))));
+        const el = document.createElement('div'); el.className = 'run';
+        el.innerHTML = `<div class="h"><b>${O.day(r.installed)} – ${r.removed ? O.day(r.removed) : 'running'}</b>${esc(r.vendor || '')} · ${esc(r.style || '')}
+            <div class="life" title="${days} of ${r.target_days} target days"><i class="${pct > 100 ? 'over' : ''}" style="width:${Math.min(100, pct).toFixed(0)}%"></i></div>
+            ${days} / ${r.target_days || '?'} days ${r.early ? '<span class="pill bad">early</span>' : ''} ${r.removed ? `<span class="pill">${esc(r.reason || '')}</span>` : '<span class="pill ok">on the machine</span>'}</div>
+          <div class="docs">${ds.length ? ds.map(x => `<div>${O.day(x.doc_date)} · ${link(x)} <span class="dt-empty">(${esc(x.vendor || '')}, day ${daysBetween(r.installed, x.doc_date)})</span></div>`).join('') : '<span class="none">No reports filed during this run.</span>'}
+            ${r.comment ? `<div class="dt-empty">${esc(r.comment)}</div>` : ''}</div>`;
+        box.appendChild(el);
+      });
+      panel.appendChild(box); body.appendChild(panel);
+    }
+    const panel = document.createElement('section'); panel.className = 'panel';
+    panel.innerHTML = '<h2>Reports</h2><p class="ps">Newest first. A position chip shows the run’s age on the report date (day / target). Click a title to open the original.</p>';
+    panel.appendChild(O.table(list, [['doc_date', 'Date', 'd'], ['vendor', 'Vendor'], ['title', 'Report', link], ['positions', 'Positions', posChips], ['doc_id', 'Report no.']],
+      'No reports match.'));
+    body.appendChild(panel);
+  }
+
+  document.addEventListener('click', async e => {
+    const a = e.target.closest('a.doc[data-path]'); if (!a) return;
+    e.preventDefault();
+    try { window.open(await O.fileUrl(st, a.dataset.path), '_blank', 'noopener'); }
+    catch (err) { alert('Couldn’t open the original: ' + (err.message || err)); }
+  });
+  ['fVendor', 'fPos'].forEach(id => $(id).addEventListener('change', render));
+  $('fText').addEventListener('input', render);
+  (async () => {
+    st = await O.resolve();
+    if (st.error){ $('body').innerHTML = `<div class="dmsg">${esc(st.error)}</div>`; return; }
+    O.picker($('org'), st, load);
+    const q = new URLSearchParams(location.search).get('pos');
+    await load();
+    if (q){ $('fPos').value = q; render(); }
+  })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.1905"></script>
+<script src="mm-nav.js?v=2026-11-08.2256"></script>
 </body>
 </html>

@@ -52,13 +52,19 @@ jobs:
       - run: sudo apt-get update -q && sudo apt-get install -y -q tesseract-ocr poppler-utils
       - run: pip install "psycopg[binary]" pyyaml openpyxl numpy reportlab pypdf python-docx pillow
       - name: Generate the demo year
-        run: python3 tools/demo-data/structured.py && python3 tools/demo-data/pi_envoy.py && python3 tools/demo-data/docs.py
+        run: python3 tools/demo-data/structured.py && python3 tools/demo-data/pi_bonvoy.py && python3 tools/demo-data/docs.py && python3 tools/demo-data/downtime_feed.py
       - name: Load and verify
         run: |
           psql -h localhost -U postgres -d mm_demo -v ON_ERROR_STOP=1 -q -f tests/db/supabase-shim.sql -f supabase/schema.sql -f supabase/llm.sql
           TOKEN=$(psql -h localhost -U postgres -d mm_demo -Atc "select public.mm_llm_new_ingest_token('Demo Mill', 1)")
           python3 tools/ingest/load.py --source demo-data/out --backbone demo-data/backbone --dsn "$DSN" --token "$TOKEN"
           python3 tools/ingest/verify_answers.py --dsn "$DSN" --org "Demo Mill"
+      - name: Sim Mill (the model's year) — load and verify
+        run: |
+          python3 tools/sim-mill/run.py
+          TOKEN=$(psql -h localhost -U postgres -d mm_demo -Atc "select public.mm_llm_new_ingest_token('Sim Mill', 1)")
+          python3 tools/ingest/load.py --source demo-data/sim-mill/out --backbone demo-data/sim-mill/backbone --dsn "$DSN" --token "$TOKEN"
+          python3 tools/ingest/verify_answers.py --dsn "$DSN" --org "Sim Mill"
 
   scripts:
     runs-on: ubuntu-latest
@@ -73,10 +79,12 @@ jobs:
       - run: pip install pyyaml openpyxl numpy reportlab pypdf python-docx pillow
       - run: python3 tools/demo-data/backbone.py --check
       - run: python3 tools/demo-data/structured.py --check
-      - name: Pi + Envoy (needs phase 2's _truth, so generate it first)
-        run: python3 tools/demo-data/structured.py && python3 tools/demo-data/pi_envoy.py --check
+      - name: Pi + Bonvoy (needs phase 2's _truth, so generate it first)
+        run: python3 tools/demo-data/structured.py && python3 tools/demo-data/pi_bonvoy.py --check
       - name: Documents (needs phases 2–3 output)
-        run: python3 tools/demo-data/pi_envoy.py && python3 tools/demo-data/docs.py --check
+        run: python3 tools/demo-data/pi_bonvoy.py && python3 tools/demo-data/docs.py --check
+      - run: python3 tools/sim-mill/run.py --check
+      - run: python3 tools/sim-mill/validate_ref.py
 
   browser:
     runs-on: ubuntu-latest
@@ -93,6 +101,7 @@ jobs:
       - run: python tests/browser/theme.py http://localhost:8000/
       - run: python tests/browser/outages_demo.py http://localhost:8000/
       - run: python tests/browser/consumables_organizer.py http://localhost:8000/
+      - run: python tests/browser/demo_sim_mill.py http://localhost:8000/
 
   version-stamps:
     runs-on: ubuntu-latest

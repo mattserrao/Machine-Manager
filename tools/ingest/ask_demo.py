@@ -1,9 +1,9 @@
-"""Run the demo questions (demo-data/answers/answer_key.json) through the live mm-llm-ask function.
+"""Run the demo questions (an answer key) through the live mm-llm-ask function, for the token's org.
 
 The answers are saved in llm.answers under each question id, and signed-in users see them on the MM LLM page.
 Needs a short-lived ingest token for the org (see supabase/SETUP.md). Delete the token afterwards.
 
-    python3 tools/ingest/ask_demo.py --token <token> [--only S01-Q1 S04-Q1] [--out /tmp/answers]
+    python3 tools/ingest/ask_demo.py --token <token> [--key demo-data/sim-mill/answers/answer_key.json] [--only F2-Q1] [--out /tmp/answers]
 """
 import argparse, concurrent.futures as cf, json, os, sys, urllib.error, urllib.request
 from pathlib import Path
@@ -21,12 +21,13 @@ def config():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--token', required=True)
+    ap.add_argument('--key', default='demo-data/sim-mill/answers/answer_key.json', help='answer key with the questions (Sim Mill by default)')
     ap.add_argument('--only', nargs='*', default=[])
     ap.add_argument('--out', default=None, help='also write each response as JSON here')
     ap.add_argument('--workers', type=int, default=3)
     a = ap.parse_args()
     url, key = config()
-    qs = json.loads((ROOT / 'demo-data/answers/answer_key.json').read_text())['questions']
+    qs = json.loads((ROOT / a.key).read_text())['questions']
     qs = [q for q in qs if not a.only or q['id'] in a.only]
     if a.out: os.makedirs(a.out, exist_ok=True)
 

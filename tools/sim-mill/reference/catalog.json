@@ -1,0 +1,651 @@
+{
+ "source": "the-paper-mill sim-headless",
+ "events": [
+  {
+   "id": "refclash",
+   "g": "stock",
+   "name": "Refiner plates clash",
+   "head": "Refiner plates clashed! The refiners tripped: no stock is going forward to the machine chest.",
+   "dur": [
+    180,
+    300
+   ],
+   "mtbf_h": 420,
+   "mods": [
+    "refOut"
+   ]
+  },
+  {
+   "id": "shaft",
+   "g": "machine",
+   "name": "Driveshaft snaps",
+   "head": "Dryer driveshaft snaps. Millwrights called in.",
+   "dur": [
+    240,
+    480
+   ],
+   "mtbf_h": 160,
+   "mods": [
+    "pmDown"
+   ]
+  },
+  {
+   "id": "dryerfire",
+   "g": "machine",
+   "name": "Fire in the dryers",
+   "head": "Fire in the dryer hood! Deluge on, sheet off.",
+   "dur": [
+    180,
+    360
+   ],
+   "mtbf_h": 260,
+   "mods": [
+    "pmDown"
+   ]
+  },
+  {
+   "id": "fabric",
+   "g": "machine",
+   "name": "Fabric runs off",
+   "head": "Forming fabric tracked off the rolls and folded up.",
+   "dur": [
+    150,
+    300
+   ],
+   "mtbf_h": 180,
+   "mods": [
+    "pmDown"
+   ]
+  },
+  {
+   "id": "felt",
+   "g": "machine",
+   "name": "Press felt blows",
+   "head": "Press felt blown. Crew pulling a new felt.",
+   "dur": [
+    90,
+    180
+   ],
+   "mtbf_h": 140,
+   "mods": [
+    "pmDown"
+   ]
+  },
+  {
+   "id": "slime",
+   "g": "machine",
+   "name": "Slime build-up",
+   "head": "Slime build-up in the sheet! Speed cut to 70% and the winder is hayout city.",
+   "dur": [
+    300,
+    600
+   ],
+   "mtbf_h": 150,
+   "mods": [
+    "speedCap",
+    "breakMul",
+    "hayMul"
+   ]
+  },
+  {
+   "id": "ragger",
+   "g": "stock",
+   "name": "Ragger tail break",
+   "head": "The ragger tail broke off at the wheel. Pulper stopped until an operator restarts the tail with fresh ragger rope.",
+   "dur": [
+    90,
+    180
+   ],
+   "mtbf_h": 140,
+   "mods": [
+    "pulperDown"
+   ]
+  },
+  {
+   "id": "overflow",
+   "g": "stock",
+   "name": "Pulper overflows",
+   "head": "Pulper overflows and floods the bale yard!",
+   "dur": [
+    240,
+    360
+   ],
+   "mtbf_h": 220,
+   "mods": [
+    "pulperDown",
+    "recvMul"
+   ]
+  },
+  {
+   "id": "winderdown",
+   "g": "machine",
+   "name": "Winder breakdown",
+   "head": "Winder down: a slitter drive failed. Reels are stacking up at the dry end.",
+   "dur": [
+    90,
+    180
+   ],
+   "mtbf_h": 200,
+   "mods": [
+    "winderDown"
+   ]
+  },
+  {
+   "id": "wrap",
+   "g": "machine",
+   "name": "Dryer can wrap",
+   "head": "The sheet wrapped a dryer can! Machine down while the crew spears it free.",
+   "dur": [
+    60,
+    120
+   ],
+   "mtbf_h": 200,
+   "mods": [
+    "pmDown"
+   ]
+  },
+  {
+   "id": "dye",
+   "g": "stock",
+   "name": "Dye trouble",
+   "head": "Dye pump hiccup! The sheet is coming out in every color. It's all beater until it's sorted.",
+   "dur": [
+    60,
+    120
+   ],
+   "mtbf_h": 260,
+   "mods": [
+    "offSpec"
+   ]
+  },
+  {
+   "id": "hdblow",
+   "g": "stock",
+   "name": "HD cleaner blowout",
+   "head": "The HD cleaner blew out! Stock is everywhere. Pulping stopped, and the chest is draining.",
+   "dur": [
+    150,
+    270
+   ],
+   "mtbf_h": 300,
+   "mods": [
+    "pulperDown"
+   ]
+  },
+  {
+   "id": "lwplug",
+   "g": "stock",
+   "name": "Lightweight cleaners plugged",
+   "head": "Plastic and wax plugged the lightweight cleaners. Stock prep is stopped; the chest is draining.",
+   "dur": [
+    90,
+    180
+   ],
+   "mtbf_h": 320,
+   "mods": [
+    "pulperDown"
+   ]
+  },
+  {
+   "id": "cscreen",
+   "g": "stock",
+   "name": "Coarse screen down",
+   "head": "The coarse screen rotor seized. Stock prep is stopped; the chest is draining.",
+   "dur": [
+    120,
+    240
+   ],
+   "mtbf_h": 300,
+   "mods": [
+    "pulperDown"
+   ]
+  },
+  {
+   "id": "fscreen",
+   "g": "stock",
+   "name": "Fine screen basket failure",
+   "head": "A fine screen basket cracked. Stock prep is stopped until it's replaced.",
+   "dur": [
+    150,
+    270
+   ],
+   "mtbf_h": 320,
+   "mods": [
+    "pulperDown"
+   ]
+  },
+  {
+   "id": "lcplug",
+   "g": "stock",
+   "name": "LC cleaners plugged",
+   "head": "Sand plugged the LC cleaner rejects. Stock prep is stopped; the chest is draining.",
+   "dur": [
+    90,
+    180
+   ],
+   "mtbf_h": 300,
+   "mods": [
+    "pulperDown"
+   ]
+  },
+  {
+   "id": "fogfan",
+   "g": "machine",
+   "name": "Fog fan down",
+   "head": "The fog remediation fan tripped! The machine keeps running, but the machine room is filling with wet-end fog.",
+   "dur": [
+    150,
+    300
+   ],
+   "mtbf_h": 300,
+   "mods": []
+  },
+  {
+   "id": "thkblow",
+   "g": "stock",
+   "name": "Thickener blowout",
+   "head": "The disk thickener blew out! Stock is spraying all over stock prep. Nothing reaches the chest until it's fixed.",
+   "dur": [
+    120,
+    240
+   ],
+   "mtbf_h": 280,
+   "mods": [
+    "pulperDown"
+   ]
+  },
+  {
+   "id": "tiedrolls",
+   "g": "machine",
+   "name": "Rolls tied together",
+   "head": "The set came off the winder with both rolls tied together! Two operators are on their way with a band saw. Both rolls go to the beater.",
+   "dur": [
+    20,
+    35
+   ],
+   "mtbf_h": 300,
+   "mods": [
+    "winderDown"
+   ]
+  },
+  {
+   "id": "syphon",
+   "g": "machine",
+   "name": "Broken syphon",
+   "head": "A dryer can's syphon broke: the can is filling with condensate and running cold. The sheet comes off wetter and the dryer drive is working harder.",
+   "dur": [
+    210,
+    270
+   ],
+   "mtbf_h": 260,
+   "mods": []
+  },
+  {
+   "id": "steamjoint",
+   "g": "machine",
+   "name": "Steam joint leak",
+   "head": "A dryer steam joint blew out on the drive side! Sheet off back to the wet end until maintenance repacks it.",
+   "dur": [
+    150,
+    270
+   ],
+   "mtbf_h": 320,
+   "mods": [
+    "pmDown"
+   ]
+  },
+  {
+   "id": "boiler",
+   "g": "machine",
+   "name": "Boiler trip",
+   "head": "The boiler tripped! No steam for the dryers. Machine down.",
+   "dur": [
+    90,
+    180
+   ],
+   "mtbf_h": 260,
+   "mods": [
+    "pmDown"
+   ]
+  },
+  {
+   "id": "chestover",
+   "g": "stock",
+   "name": "Stock chest overflows",
+   "head": "Stock chest overflows! A brown river runs across the floor.",
+   "dur": [
+    120,
+    240
+   ],
+   "mtbf_h": 260,
+   "mods": [
+    "pulperDown"
+   ]
+  }
+ ],
+ "assets": [
+  {
+   "id": "pulp",
+   "n": "Pulper rotor",
+   "ln": "SP",
+   "kw": 1100,
+   "ta": "pulp",
+   "k": 1,
+   "mods": {
+    "pulperDown": 1
+   },
+   "stop": "The pulper is stopped; the stock chest is draining.",
+   "bb": 45000,
+   "mb": 120000
+  },
+  {
+   "id": "refA",
+   "n": "Refiner A",
+   "ln": "SP",
+   "kw": 2000,
+   "ta": "scr",
+   "k": 2,
+   "mods": {
+    "speedCap": 0.75
+   },
+   "stop": "One refiner left: the machine slows to 75%.",
+   "bb": 40000,
+   "mb": 135000
+  },
+  {
+   "id": "refB",
+   "n": "Refiner B",
+   "ln": "SP",
+   "kw": 2000,
+   "ta": "scr",
+   "k": 3,
+   "mods": {
+    "speedCap": 0.75
+   },
+   "stop": "One refiner left: the machine slows to 75%.",
+   "bb": 40000,
+   "mb": 135000
+  },
+  {
+   "id": "fan",
+   "n": "Fan pump",
+   "ln": "SP",
+   "kw": 900,
+   "ta": "scr",
+   "k": 4,
+   "mods": {
+    "pmDown": "fan pump down"
+   },
+   "stop": "No stock to the headbox: the machine is down.",
+   "bb": 35000,
+   "mb": 105000
+  },
+  {
+   "id": "couch",
+   "n": "Couch roll",
+   "ln": "PM",
+   "kw": 400,
+   "ta": "wet",
+   "k": 5,
+   "mods": {
+    "pmDown": "couch drive down"
+   },
+   "stop": "The machine is down.",
+   "bb": 50000,
+   "mb": 90000
+  },
+  {
+   "id": "pr1",
+   "n": "1st press",
+   "ln": "PM",
+   "kw": 450,
+   "ta": "wet",
+   "k": 6,
+   "mods": {
+    "pmDown": "1st press drive down"
+   },
+   "stop": "The machine is down.",
+   "bb": 50000,
+   "mb": 100000
+  },
+  {
+   "id": "pr2",
+   "n": "2nd press",
+   "ln": "PM",
+   "kw": 450,
+   "ta": "wet",
+   "k": 7,
+   "mods": {
+    "pmDown": "2nd press drive down"
+   },
+   "stop": "The machine is down.",
+   "bb": 50000,
+   "mb": 100000
+  },
+  {
+   "id": "dry",
+   "n": "Dryer section",
+   "ln": "PM",
+   "kw": 1500,
+   "ta": "dry",
+   "k": 8,
+   "mods": {
+    "pmDown": "dryer drive down"
+   },
+   "stop": "The machine is down.",
+   "bb": 55000,
+   "mb": 110000
+  },
+  {
+   "id": "reel",
+   "n": "Reel drum",
+   "ln": "PM",
+   "kw": 200,
+   "ta": "dry",
+   "k": 9,
+   "mods": {
+    "pmDown": "reel drive down"
+   },
+   "stop": "The machine is down.",
+   "bb": 35000,
+   "mb": 75000
+  },
+  {
+   "id": "wind",
+   "n": "Winder drum",
+   "ln": "WD",
+   "kw": 750,
+   "ta": "dry",
+   "k": 10,
+   "mods": {
+    "winderDown": 1
+   },
+   "stop": "The winder is down; reels are stacking up.",
+   "bb": 35000,
+   "mb": 80000
+  }
+ ],
+ "rly": {
+  "tick": 15,
+  "leadB": 2160,
+  "leadM": 4320,
+  "baseB": 0.016,
+  "baseM": 0.009,
+  "baseD": 0.0033333333333333335,
+  "stale": 1440,
+  "unknown": 4320,
+  "vib": {
+   "at": 60,
+   "len": 120,
+   "n": 1,
+   "stag": 12
+  },
+  "adx": {
+   "at": 90,
+   "len": 150,
+   "n": 2
+  },
+  "plan": {
+   "b": {
+    "cost": 15000,
+    "min": 15,
+    "n": "Bearings"
+   },
+   "m": {
+    "cost": 60000,
+    "min": 30,
+    "n": "Motor"
+   },
+   "d": {
+    "cost": 25000,
+    "min": 10,
+    "n": "Drive"
+   }
+  },
+  "planCap": 90,
+  "fix": 0.2,
+  "fixMin": [
+   20,
+   40
+  ],
+  "rstWin": 1440,
+  "rstFail": 20,
+  "elecResp": 10,
+  "ppe": 3,
+  "rectBase": 0.004,
+  "rectBill": 40000,
+  "drvCall": 0.1,
+  "rep": [
+   0.08,
+   0.8
+  ],
+  "inv": [
+   45,
+   90
+  ],
+  "repl": [
+   60,
+   90
+  ],
+  "patch": 3,
+  "dur": {
+   "vib": [
+    150,
+    270
+   ],
+   "adx": [
+    240,
+    420
+   ],
+   "drv": [
+    60,
+    120
+   ]
+  },
+  "drvBill": 35000
+ },
+ "grades": {
+  "24": {
+   "sp": 2632,
+   "bw": 25.52
+  },
+  "28": {
+   "sp": 2262,
+   "bw": 28.03
+  },
+  "31": {
+   "sp": 2147,
+   "bw": 31.1
+  },
+  "34Super": {
+   "sp": 2027,
+   "bw": 34.01
+  }
+ },
+ "gcost": {
+  "24": {
+   "dlk": 0,
+   "steam": 1,
+   "chem": 0,
+   "brk": 1.15,
+   "mix": [
+    2600,
+    3600
+   ]
+  },
+  "28": {
+   "dlk": 0.1,
+   "steam": 1.02,
+   "chem": 0,
+   "brk": 1.25,
+   "mix": [
+    80,
+    160
+   ]
+  },
+  "31": {
+   "dlk": 0.25,
+   "steam": 1.14,
+   "chem": 10,
+   "brk": 0.75,
+   "mix": [
+    150,
+    350
+   ]
+  },
+  "34Super": {
+   "dlk": 0.55,
+   "steam": 1.11,
+   "chem": 75,
+   "brk": 0.55,
+   "mix": [
+    800,
+    1300
+   ]
+  }
+ },
+ "wheel": [
+  "24",
+  "28",
+  "31",
+  "34Super",
+  "31"
+ ],
+ "outage_jobs": [
+  "1st press roll change",
+  "Forming fabric (wire) change",
+  "Pulper rotor and extraction plate change",
+  "Refiner plate change"
+ ],
+ "outage_areas": {
+  "stock": [
+   "refclash",
+   "ragger",
+   "overflow",
+   "dye",
+   "hdblow",
+   "lwplug",
+   "cscreen",
+   "fscreen",
+   "lcplug",
+   "thkblow",
+   "chestover"
+  ],
+  "wet": [
+   "fabric",
+   "felt",
+   "slime",
+   "fogfan"
+  ],
+  "dry": [
+   "shaft",
+   "dryerfire",
+   "wrap",
+   "steamjoint",
+   "winderdown",
+   "tiedrolls",
+   "boiler"
+  ]
+ },
+ "k_tph": 0.0005180989223542414
+}

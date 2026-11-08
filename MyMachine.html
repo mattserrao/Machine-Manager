@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>My Machine</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1905"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1905">
-<script src="mm-icons.js?v=2026-11-08.1905"></script>
+<script src="mm-theme.js?v=2026-11-08.2256"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2256">
+<script src="mm-icons.js?v=2026-11-08.2256"></script>
 <style>
   /* shared look: mm-theme.css */
   .wrap{padding:14px 14px 60px;transition:margin-right .18s}
@@ -150,6 +150,8 @@
   .dsec{display:flex;align-items:center;gap:8px}
   .dsec .n{font-size:12px;font-weight:600;color:var(--ink-2);width:62px}
   .dsec select{flex:1;border:1px solid var(--line);border-radius:var(--r-sm);padding:5px 7px;font-size:13px}
+  .dsec .fr{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);white-space:nowrap}
+  .dsec .fr input{width:46px;border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 5px;font-size:13px}
   .slist{display:flex;flex-direction:column;gap:6px}
   .srow{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 9px 7px 11px;text-align:left;font-size:13px}
   .srow:hover{background:var(--surface-2)}
@@ -182,6 +184,12 @@
   .chform{border:1px solid var(--line-strong);background:var(--surface-2);border-radius:var(--r-lg);padding:12px;display:flex;flex-direction:column;gap:10px}
   .chform h4,.hedit h4{margin:0;font-size:13px;font-weight:600;color:var(--ink)}
   .hstats{display:flex;gap:6px;flex-wrap:wrap}
+  .pit{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r-sm)}
+  .pir{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:6px 9px;font-size:12.5px}
+  .pir + .pir{border-top:1px solid var(--line)}
+  .pir b{display:block;font-weight:500;color:var(--ink)} .pir span{font-size:11px;color:var(--muted)}
+  .pir .v{font-variant-numeric:tabular-nums;color:var(--ink-2);white-space:nowrap} .pir .v small{color:var(--muted)}
+  .pir a.chip{text-decoration:none}
   .hcard{border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 8px 8px 11px;font-size:13px;display:flex;flex-direction:column;gap:4px}
   .hcard .top{display:flex;align-items:center;gap:6px}
   .hcard .when{flex:1;color:var(--ink-2);font-variant-numeric:tabular-nums}
@@ -291,13 +299,13 @@
 <aside id="drawer" class="drawer" hidden></aside>
 <div id="toast"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1905"></script>
-<script src="mm-config.js?v=2026-11-08.1905"></script>
-<script src="mm-cloud.js?v=2026-11-08.1905"></script>
-<script src="mm-ui.js?v=2026-11-08.1905"></script>
-<script src="mm-records.js?v=2026-11-08.1905"></script>
-<script src="mm-machine.js?v=2026-11-08.1905"></script>
-<script src="mm-demo.js?v=2026-11-08.1905"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2256"></script>
+<script src="mm-config.js?v=2026-11-08.2256"></script>
+<script src="mm-cloud.js?v=2026-11-08.2256"></script>
+<script src="mm-ui.js?v=2026-11-08.2256"></script>
+<script src="mm-records.js?v=2026-11-08.2256"></script>
+<script src="mm-machine.js?v=2026-11-08.2256"></script>
+<script src="mm-demo.js?v=2026-11-08.2256"></script>
 <script>
 (() => {
   'use strict';
@@ -357,7 +365,7 @@
       if (!warned){ warned = true; toast('Can’t reach the server — keep this page open, it will keep retrying.'); }
     } else if (x === 'viewonly'){
       el.textContent = 'View only';
-      if (!viewWarned){ viewWarned = true; toast('You have view-only access — changes you make here aren’t saved.'); }
+      if (!viewWarned){ viewWarned = true; toast(cloud && cloud.demo ? `This is the ${cloud.org.name} demo, view only: changes aren’t saved. Sign in to work on your own machine.` : 'You have view-only access — changes you make here aren’t saved.'); }
     }
   }
   let remoteFrame = 0;
@@ -728,6 +736,26 @@
     </div>`;
   }
 
+  // Pi tags on this position (from the org's MM LLM data, e.g. Sim Mill): latest daily average and Bonvoy flags.
+  // Hidden when the org has no Pi data linked to the position.
+  const piCache = {};
+  async function piTags(id){
+    const box = $('piTags'); if (!box || !cloud || !cloud.org || !window.MMCloud) return;
+    let rows = piCache[id];
+    if (!rows){
+      try { const { data, error } = await MMCloud.client.rpc('mm_llm_position_tags', { p_org: cloud.org.id, p_position: id }); if (error) throw error; rows = piCache[id] = data || []; }
+      catch (e) { return; }
+    }
+    if (!rows.length || $('piTags') !== box || drawer.dataset.id !== id) return;
+    const fmt = v => v == null ? '—' : (+v).toLocaleString(undefined, { maximumFractionDigits: Math.abs(v) < 10 ? 3 : 1 });
+    box.innerHTML = `<span class="lbl">Pi tags</span><div class="pit">${rows.map(r => `<div class="pir">
+        <div><b>${esc(r.description)}</b><span>${esc(r.tag)}${r.source ? ' · ' + esc(r.source) : ''}</span></div>
+        <div class="v">${fmt(r.last_avg)} <small>${esc(r.units)}</small></div>
+        <div class="f">${r.flags_14d ? `<a class="chip over" href="BonvoyReport.html${r.last_report ? '?day=' + r.last_report : ''}" title="Bonvoy flagged it on ${r.flags_14d} of the last 14 days (last ${fmtDate(r.last_flag)})">${r.flags_14d} Bonvoy flag${r.flags_14d === 1 ? '' : 's'}</a>` : '<span class="chip">No flags</span>'}</div>
+      </div>`).join('')}</div><span class="hint">Daily average on ${fmtDate(rows[0].last_day)}; Bonvoy flags in the 14 days to then.</span>`;
+    box.hidden = false;
+  }
+
   function openItem(id){
     if (draft) return; // Setup is open
     const p = positions(S.machine).find(q => q.id === id);
@@ -810,6 +838,7 @@
           <span class="hint">Turns yellow within 6 weeks of the target, red once it’s past.${tg && tg.dflt ? ' Default for refiner plates is 12 weeks.' : ''}</span>
         </div>
         ${dueBox}
+        <div class="fld pitags" id="piTags" hidden></div>
         <div class="grid2">
           <div class="fld"><label for="curVendor">Vendor</label><input id="curVendor" type="text" value="${esc(it.vendor)}"></div>
           <div class="fld"><label for="curStyle">Style</label><input id="curStyle" type="text" value="${esc(it.style)}"></div>
@@ -832,6 +861,7 @@
       </div>`);
     drawer.dataset.mode = 'item';
     drawer.dataset.id = id;
+    piTags(id);
   }
 
   function openSection(secId){
@@ -965,6 +995,7 @@
     const nipsOpt = [1, 2, 3].map(n => `<option value="${n}"${m.press.nips === n ? ' selected' : ''}>${n} nip${n > 1 ? 's' : ''}</option>`).join('');
     const dry = m.dryers.map((d, i) => `<div class="dsec"><span class="n">Section ${i + 1}</span>
       <select data-dry="${i}"><option value="uno"${d.type === 'uno' ? ' selected' : ''}>Unorun — single felt</option><option value="double"${d.type === 'double' ? ' selected' : ''}>Top &amp; bottom felts</option></select>
+      <label class="fr" title="Felt rolls in this section to track as roll positions (0 = none)">Felt rolls <input type="number" min="0" max="12" step="1" data-fr="${i}" value="${d.feltRolls || 0}"></label>
       <button class="ib" data-act="deldry" data-i="${i}" title="Remove section"${m.dryers.length < 2 ? ' disabled' : ''}>${MMIcons.svg('x', 'sm')}</button></div>`).join('');
     openDrawer(`
       <div class="d-head"><div><div class="kind" style="color:var(--ink)">Machine setup</div><div class="where">Headbox on the right, reel on the left</div></div>
@@ -1019,6 +1050,7 @@
     else if (t.id === 'pTandem') m.press.tandem = t.checked;
     else if (t.id === 'cal') m.calender = t.checked;
     else if (t.dataset.dry != null) m.dryers[+t.dataset.dry].type = t.value;
+    else if (t.dataset.fr != null) { const n = Math.max(0, Math.min(12, Math.round(+t.value) || 0)); if (n) m.dryers[+t.dataset.fr].feltRolls = n; else delete m.dryers[+t.dataset.fr].feltRolls; }
     drawSetup(); renderAll();
   }
   function setupAction(act, b){
@@ -1076,13 +1108,15 @@
     const raw = d.items && typeof d.items === 'object' ? Object.keys(d.items) : [];
     for (const k of Object.keys(items)) if (!known.has(k)) delete items[k];
     const skipped = raw.length - Object.keys(items).length;
-    if (cloud && !confirm(`Importing replaces ${cloud.org ? cloud.org.name + '’s' : 'the shared'} My Machine for everyone in the organization` +
+    const viewOnly = !!(cloud && !cloud.edit);       // a viewer (or the read-only demo): show the file here, save nothing
+    if (cloud && !viewOnly && !confirm(`Importing replaces ${cloud.org ? cloud.org.name + '’s' : 'the shared'} My Machine for everyone in the organization` +
       ` (${Object.keys(items).length} positions${skipped ? `, ${skipped} skipped as unreadable or unknown` : ''}).\n\nImport anyway?`)) return;
     const prev = clone(S);
     S = { machine, items };
     if (draft) { draft = null; }
     drawer.hidden = true; document.body.classList.remove('drawer-open'); selected = null;
     save(); renderAll();
+    if (viewOnly) return toast(`Showing ${S.machine.name || 'the machine'} from the file. View only, so it isn’t saved; reload to go back.`);
     toast(`Imported ${S.machine.name || 'machine'}${skipped ? ` · ${skipped} position${skipped === 1 ? '' : 's'} skipped` : ''}`, 'Undo', () => { S = prev; save(); renderAll(); });
   }
 
@@ -1123,7 +1157,7 @@
   /* ---------- Start ---------- */
   (async () => {
     if (window.MMCloud && MMCloud.enabled){
-      MMCloud.mountAccount($('acct'), { compact: true });
+      MMCloud.mountAccount($('acct'), { compact: true, tool: 'mymachine' });
       cloud = MMCloud.openStore('mymachine', { snapshot: toRecords, onChange: onRemote, onStatus: cloudStatus });
       let data = null;
       try { data = await cloud.ready; }
@@ -1158,6 +1192,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.1905"></script>
+<script src="mm-nav.js?v=2026-11-08.2256"></script>
 </body>
 </html>

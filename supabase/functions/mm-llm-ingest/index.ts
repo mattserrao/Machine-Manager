@@ -7,6 +7,8 @@
 //   POST { action: 'upload', path: 'docs/vendor/x/y.pdf', contentType, data: <base64> }   -> <org>/llm/<path>
 //   POST { action: 'embed', limit: 6 }        embeds chunks that have no embedding yet (gte-small, 384 dims;
 //                                             keep batches small, larger ones hit the function's compute limit)
+//   POST { action: 'prune', keep: [paths] }   removes the org's stored files under <org>/llm/ that aren't in keep
+//                                             (paths as uploaded): after a reload, the files the new load didn't send
 //
 // Deployed with verify_jwt off: the ingest token is the credential.
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -38,6 +40,30 @@ Deno.serve(async (req) => {
     const { error } = await sb.storage.from('mm-files').upload(`${org}/llm/${path}`, bytes,
       { contentType: String(body.contentType ?? 'application/octet-stream'), upsert: true });
     return error ? json({ error: error.message }, 500) : json({ ok: true, path: `${org}/llm/${path}` });
+  }
+
+  if (body.action === 'prune') {
+    if (!Array.isArray(body.keep) || !body.keep.length) return json({ error: 'keep must list the files to keep' }, 400);
+    const keep = new Set(body.keep.map((p: unknown) => `${org}/llm/${String(p)}`));
+    const all: string[] = [];
+    const walk = async (prefix: string): Promise<void> => {
+      for (let offset = 0; ; offset += 1000) {
+        const { data, error } = await sb.storage.from('mm-files').list(prefix, { limit: 1000, offset });
+        if (error) throw error;
+        for (const o of data ?? []) {
+          const p = `${prefix}/${o.name}`;
+          if (o.id == null) await walk(p); else all.push(p);
+        }
+        if (!data || data.length < 1000) return;
+      }
+    };
+    try { await walk(`${org}/llm`); } catch (e) { return json({ error: (e as Error).message }, 500); }
+    const gone = all.filter((p) => !keep.has(p));
+    for (let i = 0; i < gone.length; i += 100) {
+      const { error } = await sb.storage.from('mm-files').remove(gone.slice(i, i + 100));
+      if (error) return json({ error: error.message, removed: i }, 500);
+    }
+    return json({ removed: gone.length, kept: all.length - gone.length });
   }
 
   if (body.action === 'embed') {

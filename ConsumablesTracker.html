@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><!-- boards zoom themselves; stops iOS zooming the page when typing on a card -->
 <title>Consumables Tracker</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1905"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1905">
-<script src="mm-icons.js?v=2026-11-08.1905"></script>
-<link rel="stylesheet" href="mm-board.css?v=2026-11-08.1905">
-<link rel="stylesheet" href="mm-board-library.css?v=2026-11-08.1905">
+<script src="mm-theme.js?v=2026-11-08.2256"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2256">
+<script src="mm-icons.js?v=2026-11-08.2256"></script>
+<link rel="stylesheet" href="mm-board.css?v=2026-11-08.2256">
+<link rel="stylesheet" href="mm-board-library.css?v=2026-11-08.2256">
 <style>
   /* this page only (shared styles: mm-board.css, mm-board-library.css) */
   /* consumable cards */
@@ -26,6 +26,7 @@
   .qb:hover{background:var(--hover)}
   .inv-foot{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);margin-top:4px;padding-top:6px;border-top:1px solid rgb(var(--fg-rgb) / .08)}
   .inv-foot b{color:var(--ink);font-weight:600}
+  .inv-foot .low{color:var(--bad-ink);font-weight:600}
   .pos{margin-top:6px;font-size:13px;font-weight:500;line-height:1.4}
   .pos span{display:block;font-size:13px;font-weight:400;color:var(--muted)}
   .kv{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:13px}
@@ -307,13 +308,13 @@
   </div>
 </div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1905"></script>
-<script src="mm-config.js?v=2026-11-08.1905"></script>
-<script src="mm-cloud.js?v=2026-11-08.1905"></script>
-<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.1905"></script>
-<script src="mm-ui.js?v=2026-11-08.1905"></script>
-<script src="mm-records.js?v=2026-11-08.1905"></script>
-<script src="mm-board.js?v=2026-11-08.1905"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2256"></script>
+<script src="mm-config.js?v=2026-11-08.2256"></script>
+<script src="mm-cloud.js?v=2026-11-08.2256"></script>
+<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.2256"></script>
+<script src="mm-ui.js?v=2026-11-08.2256"></script>
+<script src="mm-records.js?v=2026-11-08.2256"></script>
+<script src="mm-board.js?v=2026-11-08.2256"></script>
 <script>
 MMBoard.start({
     version:'v0.4.0',
@@ -329,7 +330,8 @@ MMBoard.start({
       notesInFrame, worldRect, noteEl, centerOn, newBoard } = api;
     /* ================= Consumable cards ================= */
     // A note with n.cons is a consumable card. Its title is the first line of n.text; the rest is notes.
-    //   kind 'inv'  — inventory: rows of { a: what (vendor / colour / size), b: part or inventory #, q: count on hand }
+    //   kind 'inv'  — inventory: rows of { a: what (vendor / colour / size), b: part or inventory #, q: count on hand },
+    //                 and an optional reorder point min (the card's total): below it the card says so
     //   kind 'info' — reference: a position note plus label/value fields (what goes where)
     // Refiner plates also carry fits: { mode:'all' } or { mode:'some', list:'BP 1, BP 2' }.
     const CTYPES = {
@@ -358,6 +360,7 @@ MMBoard.start({
       return { text:t.blank ? '' : t.label, color:t.color, w:CONS_W, cons:c };
     }
     const invTotal = c => (c.rows || []).reduce((t, r) => t + (Number(r.q) || 0), 0);
+    const invLow = c => c && c.kind === 'inv' && Number(c.min) > 0 && invTotal(c) < Number(c.min);
     const fitsLabel = c => !c.fits ? '' : c.fits.mode === 'some' && (c.fits.list || '').trim() ? 'Fits ' + c.fits.list.trim() : 'Fits all refiners';
     // Plain text of a card's consumable details, for search and the written report.
     function consText(n){
@@ -383,6 +386,7 @@ MMBoard.start({
         frag.appendChild(box);
         const foot = el('div', 'inv-foot');
         const tot = el('span'); tot.append('Total ', el('b', '', String(invTotal(c))), ' ' + (c.unit || ''));
+        if (Number(c.min) > 0) tot.append(invLow(c) ? el('span', 'low', ` · below min ${c.min}`) : ` · min ${c.min}`);
         foot.append(tot, el('span', '', c.counted ? 'Counted ' + fmtDue(c.counted) : 'Not counted yet'));
         frag.appendChild(foot);
       } else {
@@ -491,6 +495,9 @@ MMBoard.start({
         const r2 = el('div', 'ce-row');
         r2.appendChild(addBtn('Add row', () => c.rows.push({ id:uid(), a:'', b:'', q:0 })));
         r2.appendChild(el('span', 'spacer'));
+        r2.appendChild(el('span', 'kbd-hint', 'Reorder at'));
+        const mi = inp(c.min || '', '—', v => { const q = parseInt(v, 10); if (isFinite(q) && q > 0) c.min = q; else delete c.min; }, 'number');
+        mi.style.width = '64px'; mi.title = 'Reorder point: the card shows “below min” when the total on hand is under it'; r2.appendChild(mi);
         r2.appendChild(el('span', 'kbd-hint', 'Last counted'));
         r2.appendChild(inp(c.counted, '', v => { c.counted = v || null; }, 'date'));
         edCons.appendChild(r2);
@@ -579,6 +586,7 @@ MMBoard.start({
       noteMeta(n, meta){
         if (!n.cons) return;
         if (n.cons.fits) meta.appendChild(el('span', 'chip', fitsLabel(n.cons)));
+        if (invLow(n.cons)) meta.appendChild(el('span', 'chip bad', 'Below min'));
       },
       noteBody: n => n.cons ? buildCons(n) : null,
       emptyTitle: n => n.cons ? 'Untitled — click to edit' : '',
@@ -605,7 +613,7 @@ MMBoard.start({
             if (c.kind === 'inv'){
               if (c.fits) h += `<div class="rm">${esc(fitsLabel(c))}</div>`;
               h += (c.rows || []).map(r => `<div class="rl">${esc(r.a || '—')}${r.b ? ` · <i>${esc(r.b)}</i>` : ''} — <b>${Number(r.q) || 0}</b> ${esc(c.unit || '')}</div>`).join('');
-              h += `<div class="rm">Total ${invTotal(c)} ${esc(c.unit || '')}${c.counted ? ' · counted ' + esc(fmtDue(c.counted)) : ''}</div>`;
+              h += `<div class="rm">Total ${invTotal(c)} ${esc(c.unit || '')}${Number(c.min) > 0 ? ` · min ${Number(c.min)}${invLow(c) ? ' (below)' : ''}` : ''}${c.counted ? ' · counted ' + esc(fmtDue(c.counted)) : ''}</div>`;
             } else {
               if (c.pos) h += `<div class="rl"><b>Position:</b> ${esc(c.pos)}</div>`;
               h += (c.fields || []).filter(f => (f.v || '').trim()).map(f => `<div class="rl">${esc(f.k)}: ${esc(f.v)}</div>`).join('');
@@ -618,10 +626,11 @@ MMBoard.start({
         const notes = Object.values(b.notes), cards = notes.filter(n => !n.parent);
         const inv = notes.filter(n => n.cons && n.cons.kind === 'inv'), info = notes.filter(n => n.cons && n.cons.kind === 'info');
         const empty = inv.filter(n => (n.cons.rows || []).some(r => !(Number(r.q) > 0))).length;
+        const low = inv.filter(n => invLow(n.cons)).length;
         const phases = [...b.frames].sort((x, y) => (x.y - y.y) || (x.x - y.x));
-        return { steps:cards.length, cards:cards.length, subs:notes.length - cards.length, inv:inv.length, info:info.length, empty, hrs:0, checks:0, phases };
+        return { steps:cards.length, cards:cards.length, subs:notes.length - cards.length, inv:inv.length, info:info.length, empty, low, hrs:0, checks:0, phases };
       },
-      summaryParts: (b, st, m) => [m.area, `${st.cards} card${st.cards === 1 ? '' : 's'}`, st.inv && `${st.inv} inventory`, st.info && `${st.info} info`, st.empty && `${st.empty} with none on hand`],
+      summaryParts: (b, st, m) => [m.area, `${st.cards} card${st.cards === 1 ? '' : 's'}`, st.inv && `${st.inv} inventory`, st.info && `${st.info} info`, st.empty && `${st.empty} with none on hand`, st.low && `${st.low} below reorder point`],
       cardChips(b, st, meta){
         meta.appendChild(el('span', 'chip', `${st.cards} card${st.cards === 1 ? '' : 's'}`));
         if (st.inv) meta.appendChild(el('span', 'chip', `${st.inv} inventory`));
@@ -637,10 +646,10 @@ MMBoard.start({
         b.meta = { area:'PM1' }; addCategoryFrames(b);
       },
     };
-    function summaryText(b, st){ const m = b.meta || {}; return ([m.area, `${st.cards} card${st.cards === 1 ? '' : 's'}`, st.inv && `${st.inv} inventory`, st.info && `${st.info} info`, st.empty && `${st.empty} with none on hand`]).filter(Boolean).join(' · '); }
+    function summaryText(b, st){ const m = b.meta || {}; return ([m.area, `${st.cards} card${st.cards === 1 ? '' : 's'}`, st.inv && `${st.inv} inventory`, st.info && `${st.info} info`, st.empty && `${st.empty} with none on hand`, st.low && `${st.low} below reorder point`]).filter(Boolean).join(' · '); }
   },
 });
 </script>
-<script src="mm-nav.js?v=2026-11-08.1905"></script>
+<script src="mm-nav.js?v=2026-11-08.2256"></script>
 </body>
 </html>

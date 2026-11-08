@@ -21,11 +21,11 @@ timeline:
     sources: [vendor]
     what: Annual outage inspection by Ridgeway shows edge rounding beyond normal for 7 weeks. Recommends changing at the next opportunity and checking the stock for grit.
   - date: 2026-10-13
-    sources: [pi, envoy]
-    what: BP 2 specific energy outside its Envoy limit for the first time.
+    sources: [pi, bonvoy]
+    what: BP 2 specific energy outside its Bonvoy limit for the first time.
   - date: 2026-10-14
-    sources: [envoy, bus]
-    what: Envoy report for Oct 13 arrives; BUS line "BP2 SE high — plates due Nov 11".
+    sources: [bonvoy, bus]
+    what: Bonvoy report for Oct 13 arrives; BUS line "BP2 SE high — plates due Nov 11".
   - date: 2026-10-23
     sources: [mm, teams]
     what: Consumables show 1 Ridgeway set on hand. Action is open to order 2 more sets, with no PO yet.

@@ -8,6 +8,7 @@
     python3 tools/ingest/load.py --source demo-data/out --backbone demo-data/backbone --dsn "host=... dbname=..." --token <token>
 
     --dry-run   parse everything and print row counts, send nothing
+    --only t,u  replace just these tables (e.g. --only downtime,production_daily); everything else is left alone
 
 The token comes from an admin running  select public.mm_llm_new_ingest_token('<org name>', <hours>);  in the SQL
 editor. It decides the organization; rows never carry an org id. A load replaces the organization's MM LLM rows.
@@ -16,8 +17,8 @@ import argparse, base64, glob, json, os, sys, time, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import importers as I
 
-ORDER = ['equipment', 'pi_tags', 'outages', 'bus_items', 'work_orders', 'actions', 'rcfa', 'envoy', 'pi_series',
-         'documents', 'doc_chunks', 'ingest_files']
+ORDER = ['equipment', 'pi_tags', 'outages', 'bus_items', 'work_orders', 'actions', 'rcfa', 'bonvoy', 'pi_series',
+         'documents', 'doc_chunks', 'downtime', 'production_daily', 'position_runs', 'bonvoy_reports', 'ingest_files']
 BATCH = {'pi_series': 1000, 'doc_chunks': 300, 'documents': 200}
 
 def collect(source, backbone_dir, log=print):
@@ -29,8 +30,9 @@ def collect(source, backbone_dir, log=print):
     bus = g('bus/*.xlsx'); t['bus_items'] = I.bus_sheets(bus, tg); files.update({p: 'bus' for p in bus})
     jde = g('jde/*.csv'); t['work_orders'] = I.jde_exports(jde, tg); files.update({p: 'jde' for p in jde})
     pl = g('teams/*.csv'); t['actions'] = I.planner_exports(pl, tg); files.update({p: 'planner' for p in pl})
-    rl = os.path.join(source, 'rcfa', 'RCFA_log_PM1.csv'); t['rcfa'] = I.rcfa_log(rl, tg); files[rl] = 'rcfa_log'
-    ev = g('envoy/*.csv'); t['envoy'] = I.envoy_reports(ev, tg); files.update({p: 'envoy' for p in ev})
+    rl = (g('rcfa/RCFA_log_*.csv') or [os.path.join(source, 'rcfa', 'RCFA_log_PM1.csv')])[0]; t['rcfa'] = I.rcfa_log(rl, tg); files[rl] = 'rcfa_log'
+    ev = g('bonvoy/*.csv'); t['bonvoy'] = I.bonvoy_exceptions(ev, tg); files.update({p: 'bonvoy' for p in ev})
+    br = g('bonvoy/reports/*.json'); t['bonvoy_reports'] = I.bonvoy_report_files(br); files.update({p: 'bonvoy_report' for p in br})
     # actions inherit the asset of the RCFA they belong to, or of the WO named in their description
     rc = {aid: r for r in t['rcfa'] for aid in r['action_ids']}
     wo = {w['wo_no']: w for w in t['work_orders']}
@@ -40,12 +42,18 @@ def collect(source, backbone_dir, log=print):
             m = __import__('re').search(r'WO (\d+)', a['description']); src = wo.get(m.group(1)) if m else None
         if src and not a['asset_no']: a['asset_no'], a['position_id'] = src['asset_no'], src['position_id']
     t['pi_series'] = I.pi_series(os.path.join(source, 'pi'))
+    # step 05: downtime events, daily production and position runs (Demo Mill has downtime only, from tools/demo-data/downtime_feed.py)
+    dtp = g('downtime/*.csv'); t['downtime'] = I.downtime_files(dtp, tg); files.update({p: 'downtime' for p in dtp})
+    prp = g('production/*.csv'); t['production_daily'] = I.production_files(prp); files.update({p: 'production' for p in prp})
+    psp = g('positions/*.csv'); t['position_runs'] = I.position_run_files(psp); files.update({p: 'position_runs' for p in psp})
+    t['records'] = I.record_files(os.path.join(source, 'records'))
     log('parsing documents (OCR for scanned ones)…')
     t['documents'], t['doc_chunks'] = I.documents(os.path.join(source, 'docs'), tg, source)
     for d in t['documents']: files[os.path.join(source, d['file_path'])] = 'document'
     for p in g('docs/reference/tables/*.csv'): files[p] = 'reference_table'
     counts = {}
-    for name, rows in (('bus_items', t['bus_items']), ('work_orders', t['work_orders']), ('actions', t['actions']), ('envoy', t['envoy'])):
+    for name, rows in (('bus_items', t['bus_items']), ('work_orders', t['work_orders']), ('actions', t['actions']), ('bonvoy', t['bonvoy']),
+                       ('downtime', t['downtime']), ('production_daily', t['production_daily']), ('position_runs', t['position_runs'])):
         for r in rows: counts[r['source_file']] = counts.get(r['source_file'], 0) + 1
     t['ingest_files'] = [dict(source_file=os.path.relpath(p, source).replace(os.sep, '/'), kind=k, rows=counts.get(os.path.basename(p)))
                          for p, k in sorted(files.items())]
@@ -80,23 +88,39 @@ class Local:
     def ingest(self, table, rows, mode='upsert'):
         return self.c.execute('select public.mm_llm_ingest(%s, %s, %s::jsonb, %s)', (self.token, table, json.dumps(rows), mode)).fetchone()[0]
 
-def push(target, tables, log=print):
-    for name in reversed(ORDER): target.ingest(name, [], 'reset')
-    for name in ORDER:
+def push(target, tables, log=print, only=None):
+    names = [n for n in ORDER if not only or n in only]
+    for name in reversed(names): target.ingest(name, [], 'reset')
+    for name in names:
         rows = tables[name]; b = BATCH.get(name, 2000); n = 0
         for i in range(0, len(rows), b):
             n += target.ingest(name, rows[i:i + b]) or 0
         log(f'  {name:12s} {n:>8,} rows')
+    if only: return
+    # Machine Manager records (My Machine, Outage Planning, Consumables): only the tools the source has, each replaced whole
+    for tool, rows in (tables.get('records') or {}).items():
+        n = target.ingest(f'records:{tool}', [], 'reset') or 0
+        for i in range(0, len(rows), 500): n += target.ingest(f'records:{tool}', rows[i:i + 500]) or 0
+        log(f'  records:{tool:12s} {len(rows):>5,} records')
 
 def upload_files(target, source, paths, log=print):
     for i, p in enumerate(paths):
         rel = os.path.relpath(p, source).replace(os.sep, '/')
-        mime = ('application/pdf' if p.endswith('.pdf') else 'text/csv' if p.endswith('.csv') else
+        mime = ('application/pdf' if p.endswith('.pdf') else 'text/csv' if p.endswith('.csv') else 'application/json' if p.endswith('.json') else
                 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' if p.endswith('.xlsx') else
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
         target.fn(dict(action='upload', path=rel, contentType=mime, data=base64.b64encode(open(p, 'rb').read()).decode()))
         if (i + 1) % 100 == 0: log(f'  uploaded {i + 1}/{len(paths)}')
     log(f'  uploaded {len(paths)} files')
+
+def prune(target, source, paths, log=print):
+    """After uploading: remove the org's stored files the new load didn't send (a rolled year has new file names)."""
+    keep = [os.path.relpath(p, source).replace(os.sep, '/') for p in paths]
+    try: r = target.fn(dict(action='prune', keep=keep))
+    except RuntimeError as e:
+        if 'unknown action' not in str(e): raise
+        return log('  prune skipped: the deployed mm-llm-ingest has no prune action yet (old files stay)')
+    log(f"  pruned {r.get('removed', 0)} old files ({r.get('kept', 0)} kept)")
 
 def embed(target, log=print):
     """Embeds in small batches; the edge function occasionally runs out of compute, so back off and shrink."""
@@ -117,12 +141,17 @@ if __name__ == '__main__':
     ap.add_argument('--source', required=True); ap.add_argument('--backbone', required=True)
     ap.add_argument('--url'); ap.add_argument('--key'); ap.add_argument('--dsn'); ap.add_argument('--token')
     ap.add_argument('--files', action='store_true'); ap.add_argument('--embed', action='store_true'); ap.add_argument('--dry-run', action='store_true')
+    ap.add_argument('--only', help='comma-separated tables to replace; the rest are left alone')
     a = ap.parse_args()
+    only = set(a.only.split(',')) if a.only else None
+    if only and only - set(ORDER): sys.exit('unknown table(s): ' + ', '.join(sorted(only - set(ORDER))))
+    if only and (a.files or a.embed): sys.exit('--only replaces rows only; leave out --files and --embed')
     tables, paths = collect(a.source, a.backbone)
     for k in ORDER: print(f'  {k:12s} {len(tables[k]):>8,} rows parsed')
+    for k, v in tables['records'].items(): print(f'  records:{k:12s} {len(v):>5,} records parsed')
     if a.dry_run: sys.exit(0)
     token = a.token or os.environ.get('MM_INGEST_TOKEN') or sys.exit('need --token or MM_INGEST_TOKEN')
     target = Local(a.dsn, token) if a.dsn else Supabase(a.url, a.key, token)
-    print('loading rows…'); push(target, tables)
-    if a.files and not a.dsn: print('uploading originals…'); upload_files(target, a.source, paths)
+    print('loading rows…'); push(target, tables, only=only)
+    if a.files and not a.dsn: print('uploading originals…'); upload_files(target, a.source, paths); prune(target, a.source, paths)
     if a.embed and not a.dsn: print('embedding chunks…'); embed(target)

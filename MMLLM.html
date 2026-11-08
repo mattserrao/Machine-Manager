@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MM LLM</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1905"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1905">
-<script src="mm-icons.js?v=2026-11-08.1905"></script>
+<script src="mm-theme.js?v=2026-11-08.2256"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2256">
+<script src="mm-icons.js?v=2026-11-08.2256"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1320px;margin:0 auto;padding:24px 20px 72px}
@@ -70,6 +70,32 @@
   .sheet-h .live:empty{display:none}
   .sheet-b{overflow:auto;padding:16px 20px 24px}
   .sub-h{margin:0 0 6px;font-size:15px;font-weight:600}
+  /* ---- About tabs ---- */
+  .atabs{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--line)}
+  .atabs button{font:inherit;font-size:13px;color:var(--muted);background:none;border:0;border-bottom:2px solid transparent;padding:9px 12px 8px;margin-bottom:-1px;cursor:pointer}
+  .atabs button:hover{color:var(--ink)}
+  .atabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent);font-weight:500}
+  /* ---- Sim Mill data model: flowchart ---- */
+  .sm-wrap{overflow-x:auto;margin:14px 0 0;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface)}
+  svg.smflow{display:block;min-width:1240px;width:100%;height:auto;font-family:inherit}
+  .smflow .colh{font-size:12px;font-weight:600;fill:var(--ink)}
+  .smflow .colsub{font-size:10.5px;fill:var(--muted)}
+  .smflow .lane{fill:var(--surface-2);stroke:none}
+  .smflow .bx{fill:var(--surface);stroke:var(--line-strong);stroke-width:1}
+  .smflow .bx.new{stroke:var(--accent);stroke-width:1.5}
+  .smflow .bx.chk{stroke:var(--warn-line);stroke-dasharray:4 3}
+  .smflow .t{font-size:12px;font-weight:600;fill:var(--ink)}
+  .smflow .s{font-size:10.5px;fill:var(--muted)}
+  .smflow .w{fill:none;stroke:var(--line-strong);stroke-width:1.4}
+  .smflow .w.dash{stroke-dasharray:4 4}
+  .smflow .w.acc{stroke:var(--accent)}
+  .smflow .ah{fill:var(--line-strong)} .smflow .ah.acc{fill:var(--accent)}
+  .smflow g.n{cursor:default} .smflow g.n:hover .bx{stroke:var(--accent)}
+  .sm-key{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 0 0;font-size:12px;color:var(--muted)}
+  .sm-key i{display:inline-block;width:22px;height:12px;border-radius:3px;border:1px solid var(--line-strong);vertical-align:-2px;margin-right:6px;background:var(--surface)}
+  .sm-key i.new{border:1.5px solid var(--accent)} .sm-key i.chk{border:1px dashed var(--warn-line)}
+  .sm-steps{margin:18px 0 0;padding:0 0 0 18px;font-size:13px;line-height:1.55;color:var(--ink-2)}
+  .sm-steps li{margin:0 0 6px} .sm-steps code{font:12px var(--mono)}
 
   /* ---- Narrower screens: columns stack, wires hide, a down-arrow joins each stage ---- */
   @media (max-width:980px){
@@ -83,6 +109,7 @@
   .demo{margin:8px 0 0}
   .demo-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin:0 0 4px}
   .demo-h h2{margin:0;font-size:15px;font-weight:600}
+  .mm-orgpick{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 8px}
   .demo-sub{margin:0 0 16px;font-size:13px;color:var(--muted);line-height:1.55;max-width:760px}
   .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:0 0 20px}
   .tile{padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface)}
@@ -114,6 +141,16 @@
   .ev mark{background:var(--warn-soft);color:var(--ink);border-radius:2px;padding:0 1px}
   .demo-msg{font-size:13px;color:var(--muted)}
   .model{margin:0;font-size:13px;line-height:1.6;color:var(--ink);white-space:pre-wrap}
+  .mchart{margin:14px 0 4px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-md,8px);background:var(--surface)}
+  .mchart h4{margin:0 0 2px;font-size:13px;font-weight:600}
+  .mchart .src{margin:0 0 8px;font-size:12px;color:var(--muted)}
+  .mchart svg{display:block;width:100%;height:auto}
+  .mchart svg .bar:hover,.mchart svg .dot:hover{opacity:.75}
+  .mchart .cbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .mchart .key{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink-2)}
+  .mchart .key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+  .mchart details{margin-top:6px;font-size:12px} .mchart table{border-collapse:collapse;margin-top:6px}
+  .mchart td,.mchart th{padding:2px 10px 2px 0;text-align:left;font-variant-numeric:tabular-nums} .mchart td+td,.mchart th+th{text-align:right}
   .model .cite{font:500 11px var(--mono);color:var(--ink-3);background:var(--surface-2);border-radius:3px;padding:0 3px;white-space:nowrap}
   .meta{margin:6px 0 0;font-size:12px;color:var(--muted)}
   .meta code{font:500 11px var(--mono);color:var(--ink-3)}
@@ -164,7 +201,7 @@
 </header>
 <main>
   <section class="demo" id="demo" aria-live="polite">
-    <div class="demo-h"><h2 id="demoTitle">Demo data</h2><span class="mm-chip" id="demoChip">Loading…</span></div>
+    <div class="demo-h"><h2 id="demoTitle">Demo data</h2><span class="mm-chip" id="demoChip">Loading…</span><span id="orgPick"></span></div>
     <p class="demo-sub" id="demoSub">Loading what the assistant can see…</p>
     <div class="tiles" id="tiles"></div>
     <div id="askSlot"></div>
@@ -185,7 +222,12 @@
         <p class="live" id="aboutLive"></p></div>
       <button class="btn icon" type="button" id="aboutClose" aria-label="Close" data-ic="x" data-ic-size="sm"></button>
     </div>
+    <div class="atabs" role="tablist" aria-label="About the model">
+      <button type="button" role="tab" id="tabFlowBtn" aria-controls="tabFlow" aria-selected="true">Information flow</button>
+      <button type="button" role="tab" id="tabSimBtn" aria-controls="tabSim" aria-selected="false" tabindex="-1">Sim Mill: data from The Paper Mill</button>
+    </div>
     <div class="sheet-b">
+    <div id="tabFlow" role="tabpanel" aria-labelledby="tabFlowBtn">
   <section class="intro">
         <h3 class="sub-h">Information flow</h3>
         <p>Mill sources are imported, tagged to a PM1 position and stored in Supabase. The orchestrator answers through a small set of tools, so any model can sit behind it. Select a block to see what it connects to.</p>
@@ -203,21 +245,40 @@
       <div class="rules">
         <div class="rule"><b>Every row has a position</b><span>BUS items, WOs, RCFAs, vendor findings and document chunks all carry a PM1 position id from My Machine. That key is what lets an outage brief pull everything for "2nd press felt".</span></div>
         <div class="rule"><b>Tables first, search second</b><span>Anything with rows and columns goes in a table and is answered with a query. Only narrative text (report findings, RCFA write-ups, manuals) is chunked and embedded for search.</span></div>
-        <div class="rule"><b>Pi stays in Pi</b><span>Trends are read on demand from the historian. Only Envoy exceptions are stored, as dated events.</span></div>
+        <div class="rule"><b>Pi stays in Pi</b><span>Trends are read on demand from the historian. Only Bonvoy exceptions are stored, as dated events.</span></div>
         <div class="rule"><b>Models are swappable</b><span>Prompts and tools live in this app, not in a vendor's features. The adapter maps one request format to each provider; embeddings record which model made them.</span></div>
         <div class="rule"><b>Answers cite records</b><span>Every statement links back to the row, page or trend it came from, so it can be checked before it goes on an outage plan.</span></div>
       </div>
+    </div>
+
+    <div id="tabSim" role="tabpanel" aria-labelledby="tabSimBtn" hidden>
+      <section class="intro">
+        <h3 class="sub-h">How The Paper Mill generates Sim Mill’s data</h3>
+        <p>The game’s simulation is stripped to a headless engine that runs the mill year as its historian (grades, breaks, upsets, failures and the process tags); the Python model adds what the game doesn’t have and writes the year out as the files a mill would send. They go in through the same importers and ingest as real data, so everything the assistant and the data pages read about Sim Mill came this way.</p>
+      </section>
+      <div class="sm-wrap"><svg class="smflow" id="smflow" role="img" aria-labelledby="smflowT smflowD"><title id="smflowT">Sim Mill data flow</title><desc id="smflowD">From The Paper Mill game, through the headless engine's historian run and the Sim Mill model, to mill files, the import path, Supabase and the pages that read it.</desc></svg></div>
+      <div class="sm-key"><span><i></i>Existing path (same as real mill data)</span><span><i class="new"></i>Added for Sim Mill</span><span><i class="chk"></i>Check that holds it to the step before</span></div>
+      <ol class="sm-steps">
+        <li><b>Strip the game.</b> On the-paper-mill’s <code>sim-headless</code> branch the 3D view, sound, panels and game systems (seasons, survival, leaders, civics, event cards, joke upsets) are left out; 34 of 116 source files run in Node. The full headless build replays 3 sim days to exactly the browser’s numbers.</li>
+        <li><b>Run the engine as the historian.</b> <code>headless/historian.js</code> runs 426 days (Sep 1 warm-up to Oct 31) on Sim Mill’s calendar (20 h outages every 6 weeks at 6 AM), with the game’s season-tuned failure rates stretched to a year. It writes the hourly running value of every DCS tag and the event log (grades, sheet breaks, upsets, failures, outages) to <code>tools/sim-mill/engine/</code>.</li>
+        <li><b>Build on it.</b> <code>tools/sim-mill</code> (Python) takes the engine’s grades and stops, and drives 27 of the 47 PM1 tags from the engine (<code>config/tags.yaml</code>). It adds what the game doesn’t have: instrument noise, bearing vibration and Uhle vacuum, the life of every fabric, felt, plate and roll, and five planted faults. <code>validate_ref.py</code> holds it to the engine’s reference year.</li>
+        <li><b>Write the mill’s files.</b> Daily BUS sheets, JDE and Planner exports, the RCFA log and write-ups, Pi and Bonvoy, vendor PDFs; three new feeds: downtime events, daily production and position runs; and the last week of Bonvoy Reports. Plus My Machine, Outage Planning, Consumables and task-package records.</li>
+        <li><b>Load it like real data.</b> <code>load.py</code> and the importers send everything through the token-guarded <code>mm-llm-ingest</code> into the org’s tables, files and embeddings.</li>
+        <li><b>Read it.</b> The assistant’s tools, the 11 Sim Mill demo questions (31 checks), and the Daily, Downtime / RCFA, Vendor Reports and Bonvoy Report pages. Every 6 weeks the year rolls forward a cycle.</li>
+      </ol>
+    </div>
 
     </div>
   </div>
 </div>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1905"></script>
-<script src="mm-config.js?v=2026-11-08.1905"></script>
-<script src="mm-cloud.js?v=2026-11-08.1905"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2256"></script>
+<script src="mm-config.js?v=2026-11-08.2256"></script>
+<script src="mm-cloud.js?v=2026-11-08.2256"></script>
+<script src="mm-llm-org.js?v=2026-11-08.2256"></script>
 <script>
-  const VERSION = 'v0.5.2';
+  const VERSION = 'v0.7.0';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
-  MMCloud.mountAccount(document.getElementById('acct'), { compact: true });
+  MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
 
   // ---------- The diagram: stages (columns), blocks, and the links between them ----------
   const STAGES = [
@@ -233,8 +294,8 @@
     // Sources
     { id: 'bus',    s: 'src', name: 'BUS daily sheet', d: 'Daily issues, actions and owners from the morning meeting.', k: 'rows + free text',
       how: 'One row per issue: date, area, position, issue, action, owner, status. The issue text is also embedded so similar past problems can be found.' },
-    { id: 'envoy',  s: 'src', name: 'Envoy reports', d: 'Pi trends outside their standard-deviation thresholds.', k: 'exception events',
-      how: 'Each flagged tag becomes an event: tag, position, value, limit, sigma, time. Envoy has already done the screening, so these are kept in full.' },
+    { id: 'bonvoy',  s: 'src', name: 'Bonvoy reports', d: 'Pi trends outside their standard-deviation thresholds.', k: 'exception events',
+      how: 'Each flagged tag becomes an event: tag, position, value, limit, sigma, time. Bonvoy has already done the screening, so these are kept in full.' },
     { id: 'pi',     s: 'src', name: 'Pi historian', d: 'Live process and equipment tags.', k: 'read on demand',
       how: 'Not copied. A connector reads trends for a tag and time window when a question needs them, and a tag map links Pi tags to PM1 positions.' },
     { id: 'rcfa',   s: 'src', name: 'RCFA log', d: 'Failures, root causes and corrective actions.', k: 'rows + narrative',
@@ -263,7 +324,7 @@
     // Storage
     { id: 'equip',  s: 'store', name: 'Equipment register', d: 'PM1 positions: the key every table joins on.', k: 'table',
       how: 'Built from My Machine (sections, fabrics, rolls, refiners) plus JDE numbers and Pi tags for each position.' },
-    { id: 'events', s: 'store', name: 'Event tables', d: 'BUS items, Envoy exceptions, RCFAs, actions, WOs, vendor findings.', k: 'Postgres tables',
+    { id: 'events', s: 'store', name: 'Event tables', d: 'BUS items, Bonvoy exceptions, RCFAs, actions, WOs, vendor findings.', k: 'Postgres tables',
       how: 'One table per source with shared columns: date, position, status, source link. Answers come from queries, so counts and dates are exact.' },
     { id: 'records',s: 'store', name: 'MM records', d: 'Synced records from every Machine Manager tool.', k: 'mm_records', live: true,
       how: 'The existing table. Already scoped to your organization with row-level security.' },
@@ -284,7 +345,7 @@
 
     // Outputs
     { id: 'outage', s: 'out', name: 'Outage brief', d: 'What to work on at the next outage, and why.', k: 'per outage',
-      how: 'Fabrics and rolls due, open WOs, Envoy exceptions, vendor recommendations and open RCFA actions, grouped by section, with "add to outage" on each item.' },
+      how: 'Fabrics and rolls due, open WOs, Bonvoy exceptions, vendor recommendations and open RCFA actions, grouped by section, with "add to outage" on each item.' },
     { id: 'trbl',   s: 'out', name: 'Troubleshooting', d: 'Help on an active problem from the BUS sheet.', k: 'per issue',
       how: 'Finds similar past issues and RCFAs, pulls recent trends and WOs for the position, and shows the relevant drawing or chart.' },
     { id: 'ask',    s: 'out', name: 'Ask MM', d: 'Plain questions across everything, with links.', k: 'chat',
@@ -297,7 +358,7 @@
 
   // from → to. dash: on demand / supporting link.
   const LINKS = [
-    ['bus','imp'],['envoy','imp'],['rcfa','imp'],['rcfa','parse'],['teams','imp'],['jde','imp'],
+    ['bus','imp'],['bonvoy','imp'],['rcfa','imp'],['rcfa','parse'],['teams','imp'],['jde','imp'],
     ['vendor','parse'],['ref','parse'],['pi','piconn',1],['mm','records'],['ref','files'],
     ['imp','tag'],['parse','tag'],['parse','files'],
     ['tag','events'],['tag','docs'],['equip','tag',1],['records','equip'],
@@ -399,22 +460,34 @@
         const { data } = await db.rpc('mm_llm_summary', { p_org: s.org.id });
         if (data && data.some(r => r.n > 0)) {
           org = { id: s.org.id, name: s.org.name };
-          isDemo = (pubs || []).some(p => p.id === org.id);   // e.g. the demo account, a member of the Demo Mill
+          isDemo = (pubs || []).some(p => p.id === org.id);   // e.g. the demo account, a viewer of Sim Mill
         }
       }
-      if (!org && pubs && pubs[0]) org = pubs[0];
+      if (!org && pubs && pubs[0]){
+        // public demo orgs (Sim Mill): ?org=<name> or the last one picked in this browser, else the first
+        let want = new URLSearchParams(location.search).get('org'); try { want = want || localStorage.getItem('mm-llm-org'); } catch (e) {}
+        org = pubs.find(p => p.name === want) || pubs[0];
+        if (pubs.length > 1){
+          const sel = mk('select', 'mm-orgpick'); sel.setAttribute('aria-label', 'Demo organization');
+          pubs.forEach(p => { const o = mk('option', '', p.name); o.value = p.name; o.selected = p.id === org.id; sel.appendChild(o); });
+          sel.addEventListener('change', () => { try { localStorage.setItem('mm-llm-org', sel.value); } catch (e) {}
+            const u = new URL(location.href); u.searchParams.set('org', sel.value); location.href = u.toString(); });
+          $('orgPick').appendChild(sel);
+        }
+      }
     } catch (e) { return fail('Couldn’t reach the server: ' + (e.message || e)); }
     if (!org) return fail('No demo organization is published yet.');
 
     $('demoTitle').textContent = org.name;
     chip.textContent = isDemo ? 'Public demo · fictional data' : 'Your organization';
-    sub.textContent = isDemo
-      ? 'One fictional year of PM1 data (Nov 2025 – Oct 2026), loaded the same way real mill files will be. “Today” in the demo is Oct 31, 2026, eleven days before the Nov 11 outage. Anyone can read the data and the prepared answers; signed-in users also see the model’s own answers.'
-      : 'Your organization’s MM LLM data.';
+    sub.textContent = !isDemo ? 'Your organization’s MM LLM data.'
+      : org.name === 'Sim Mill'
+      ? 'One modelled year of The Paper Mill’s own recycled-board machine: the game’s engine runs the year and the Sim Mill model adds five planted faults, loaded the same way real mill files will be. It also has downtime events, daily production and position runs (see Daily, Downtime / RCFA and Vendor Reports). “Today” is the last day of the loaded year; the year moves forward one 6-week outage cycle at a time.'
+      : 'One fictional year of PM1 data (Nov 2025 – Oct 2026), loaded the same way real mill files will be. “Today” in the demo is Oct 31, 2026, eleven days before the Nov 11 outage. Anyone can read the data and the prepared answers; signed-in users also see the model’s own answers.';
 
     const { data: summary } = await db.rpc('mm_llm_summary', { p_org: org.id });
     const tiles = $('tiles'); tiles.textContent = '';
-    (summary || []).forEach(r => {
+    (summary || []).filter(r => Number(r.n) > 0).forEach(r => {
       const t = mk('div', 'tile'); t.append(mk('b', '', Number(r.n).toLocaleString()), mk('span', '', r.source));
       tiles.appendChild(t);
     });
@@ -431,9 +504,10 @@
     if (anyAns) $('aboutLive').textContent = `Answering now: ${anyAns.model} (${anyAns.provider}), through the model adapter. Swapping models is a setting, not a rewrite.`;
 
     let key;
-    try { key = await (await fetch('demo-data/answers/answer_key.json', { cache: 'no-cache' })).json(); }
+    const KEYS = { 'Demo Mill': 'demo-data/answers/answer_key.json', 'Sim Mill': 'demo-data/sim-mill/answers/answer_key.json' };
+    try { key = await (await fetch(KEYS[org.name] || KEYS['Demo Mill'], { cache: 'no-cache' })).json(); }
     catch (e) { $('qlist').appendChild(mk('p', 'demo-msg', 'The demo questions couldn’t be loaded.')); return; }
-    if (!isDemo) { $('qlist').appendChild(mk('p', 'demo-msg', 'Demo questions are written for the Demo Mill.')); return; }
+    if (!isDemo || !KEYS[org.name]) { $('qlist').appendChild(mk('p', 'demo-msg', 'Demo questions are written for the demo organizations (Demo Mill, Sim Mill).')); return; }
 
     key.questions.forEach(q => {
       const b = mk('button', 'q'); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
@@ -455,7 +529,7 @@
       if (narrow.matches) ans.classList.add('open'), ans.scrollIntoView({ behavior: 'smooth', block: 'start' });
       const m = saved[q.id];
       if (m) {
-        ans.append(mk('div', 'lbl', 'Model answer'), modelText(m.answer), meta(m));
+        ans.append(mk('div', 'lbl', 'Model answer'), modelText(m.answer), ...chartsOf(m).map(chartBox), meta(m));
         const d = mk('details', 'key'); d.append(mk('summary', '', 'Answer key (written by hand to check the model)'), mk('p', 'prep', q.expect));
         ans.appendChild(d);
       } else {
@@ -508,6 +582,80 @@
                     : /^\*\*.*\*\*$/.test(part) ? mk('b', '', part.slice(2, -2)) : document.createTextNode(part)));
       return p;
     }
+    // Charts the model asked for (make_chart). One hue for one series; up to four series in a fixed order.
+    // Hover gives each exact value, the numbers sit in a table below, and Download PNG rasterises the SVG.
+    const SER = ['var(--accent)', '#C2410C', '#0F766E', '#7C3AED'];
+    function chartsOf(r) {
+      if (Array.isArray(r.charts) && r.charts.length) return r.charts;
+      return (r.tool_trace || r.trace || []).filter(t => t.tool === 'make_chart' && t.args && Array.isArray(t.args.labels)).map(t => t.args);
+    }
+    // Smallest round top (four gridlines of round steps) at or above the largest value.
+    function niceMax(v) { if (v <= 0) return 1; const e = Math.pow(10, Math.floor(Math.log10(v))), f = v / e;
+      return [1, 1.2, 1.6, 2, 2.4, 3, 4, 5, 6, 8, 10].find(x => x >= f - 1e-9) * e; }
+    function chartBox(c) {
+      const NS = 'http://www.w3.org/2000/svg', el = (n, a, t) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (t != null) e.textContent = t; return e; };
+      const box = mk('div', 'mchart'); box.append(mk('h4', '', c.title || 'Chart'));
+      if (c.source) box.append(mk('p', 'src', 'Source: ' + c.source));
+      const n = c.labels.length, k = c.series.length, rot = (720 - 76) / n < 46;
+      const W = 720, H = rot ? 330 : 300, L = 64, R = 12, T = 12, B = rot ? 64 : 34;
+      const all = c.series.flatMap(x => x.values), max = niceMax(Math.max(0, ...all)), y = v => T + (H - T - B) * (1 - Math.max(0, v) / max);
+      const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': c.title || 'Chart', 'font-family': 'system-ui, sans-serif', 'font-size': '11' });
+      const fmtN = v => Number(v).toLocaleString(undefined, { maximumFractionDigits: 1 }) + (c.unit ? ' ' + c.unit : '');
+      for (let i = 0; i <= 4; i++) { const v = max * i / 4, yy = y(v);
+        svg.append(el('line', { x1: L, x2: W - R, y1: yy, y2: yy, stroke: 'var(--line)', 'stroke-width': 1 }));
+        svg.append(el('text', { x: L - 6, y: yy + 4, 'text-anchor': 'end', fill: 'var(--muted)' }, Number(v).toLocaleString())); }
+      if (c.unit) svg.append(el('text', { x: 12, y: T + (H - T - B) / 2, transform: `rotate(-90 12 ${T + (H - T - B) / 2})`, 'text-anchor': 'middle', fill: 'var(--muted)' }, c.unit));
+      const slot = (W - L - R) / n;
+      c.labels.forEach((lab, i) => { const x = L + slot * (i + .5);
+        svg.append(el('text', rot ? { x, y: H - B + 14, transform: `rotate(-40 ${x} ${H - B + 14})`, 'text-anchor': 'end', fill: 'var(--ink-2)' } : { x, y: H - B + 16, 'text-anchor': 'middle', fill: 'var(--ink-2)' }, lab)); });
+      c.series.forEach((s, j) => {
+        const col = SER[j % SER.length];
+        if (c.type === 'line') {
+          const pts = s.values.map((v, i) => [L + slot * (i + .5), y(v)]);
+          svg.append(el('polyline', { points: pts.map(p => p.join(',')).join(' '), fill: 'none', stroke: col, 'stroke-width': 2 }));
+          pts.forEach((p, i) => { const d = el('circle', { class: 'dot', cx: p[0], cy: p[1], r: 4, fill: col, stroke: 'var(--surface)', 'stroke-width': 2 });
+            d.append(el('title', {}, `${c.labels[i]}${k > 1 ? ' · ' + s.name : ''}: ${fmtN(s.values[i])}`)); svg.append(d); });
+        } else {
+          const bw = Math.max(2, (slot * .7) / k - 2);
+          s.values.forEach((v, i) => { const x = L + slot * i + slot * .15 + j * (bw + 2), top = y(v), h = Math.max(0, y(0) - top), rr = Math.min(4, bw / 2, h);
+            const d = el('path', { class: 'bar', fill: col, d: `M${x},${y(0)}V${top + rr}Q${x},${top} ${x + rr},${top}H${x + bw - rr}Q${x + bw},${top} ${x + bw},${top + rr}V${y(0)}Z` });
+            d.append(el('title', {}, `${c.labels[i]}${k > 1 ? ' · ' + s.name : ''}: ${fmtN(v)}`)); svg.append(d); });
+        }
+      });
+      svg.append(el('line', { x1: L, x2: W - R, y1: y(0), y2: y(0), stroke: 'var(--line-strong)', 'stroke-width': 1 }));
+      box.append(svg);
+      const bar = mk('div', 'cbar');
+      if (k > 1) { const key = mk('div', 'key'); c.series.forEach((s, j) => { const sp = mk('span'), i = mk('i'); i.style.background = SER[j % SER.length]; sp.append(i, s.name); key.append(sp); }); bar.append(key); }
+      const dl = mk('button', 'btn', 'Download PNG'); dl.type = 'button'; dl.addEventListener('click', () => savePng(svg, c.title, c.source)); bar.prepend(dl);
+      box.append(bar);
+      const det = mk('details'), sum = mk('summary', '', 'Show the numbers'), tbl = mk('table'), hr = mk('tr');
+      hr.append(mk('th', '', ''), ...c.series.map(s => mk('th', '', (s.name || 'Value') + (c.unit ? ` (${c.unit})` : ''))));
+      tbl.append(hr); c.labels.forEach((lab, i) => { const tr = mk('tr'); tr.append(mk('td', '', lab), ...c.series.map(s => mk('td', '', Number(s.values[i]).toLocaleString()))); tbl.append(tr); });
+      det.append(sum, tbl); box.append(det);
+      return box;
+    }
+    // CSS variables don't survive into an <img>, so resolve every var(--x) before rasterising.
+    function savePng(svg, title, src) {
+      const cs = getComputedStyle(document.documentElement), clone = svg.cloneNode(true), vb = svg.viewBox.baseVal;
+      clone.querySelectorAll('*').forEach(e => ['fill', 'stroke'].forEach(a => { const v = e.getAttribute(a); if (v && v.startsWith('var(')) e.setAttribute(a, cs.getPropertyValue(v.slice(4, -1)).trim() || '#888'); }));
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); clone.setAttribute('width', vb.width); clone.setAttribute('height', vb.height);
+      // the PNG travels without the page, so it carries its own title and source line
+      const NS = 'http://www.w3.org/2000/svg', head = 46, ink = cs.getPropertyValue('--ink').trim() || '#111', mut = cs.getPropertyValue('--muted').trim() || '#666';
+      const g = document.createElementNS(NS, 'g'); g.setAttribute('transform', `translate(0 ${head})`); while (clone.firstChild) g.append(clone.firstChild);
+      const txt = (y, size, fill, weight, t) => { const e = document.createElementNS(NS, 'text'); e.setAttribute('x', 12); e.setAttribute('y', y);
+        e.setAttribute('font-size', size); e.setAttribute('fill', fill); e.setAttribute('font-weight', weight); e.textContent = t; return e; };
+      const bg = document.createElementNS(NS, 'rect'); bg.setAttribute('width', '100%'); bg.setAttribute('height', '100%');
+      bg.setAttribute('fill', cs.getPropertyValue('--surface').trim() || '#fff');
+      clone.append(bg, txt(20, 15, ink, 600, title || 'Chart'), txt(38, 11, mut, 400, src ? 'Source: ' + src : ''), g);
+      clone.setAttribute('viewBox', `0 0 ${vb.width} ${vb.height + head}`); clone.setAttribute('height', vb.height + head);
+      const img = new Image(), sc = 2;
+      img.onload = () => { const cv = document.createElement('canvas'); cv.width = vb.width * sc; cv.height = (vb.height + head) * sc;
+        const g = cv.getContext('2d'); g.scale(sc, sc); g.drawImage(img, 0, 0);
+        cv.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+          a.download = (String(title || 'chart').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'chart') + '.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }, 'image/png'); };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(clone));
+    }
+
     function meta(r) {
       const p = mk('p', 'meta'), tools = (r.tool_trace || r.trace || []).map(t => t.tool);
       const when = r.created_at ? new Date(r.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'just now';
@@ -528,7 +676,7 @@
       row.append(go, left); box.append(lab, ta, row, mine); $('askSlot').appendChild(box);
       const showMine = (r, q) => {
         cur = 'ask'; qlist.querySelectorAll('.q').forEach(x => x.setAttribute('aria-pressed', 'false'));
-        ans.textContent = ''; ans.append(mk('h3', '', q), mk('div', 'lbl', r.status === 'error' ? 'Error' : 'Model answer'), modelText(r.answer), meta(r));
+        ans.textContent = ''; ans.append(mk('h3', '', q), mk('div', 'lbl', r.status === 'error' ? 'Error' : 'Model answer'), modelText(r.answer), ...chartsOf(r).map(chartBox), meta(r));
       };
       const addMine = r => {
         const b = mk('button', '', r.question); b.type = 'button'; b.title = r.question;
@@ -542,7 +690,7 @@
         try {
           cur = 'ask'; ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', 'Searching the demo data… this usually takes 15–60 seconds.'));
           if (narrow.matches) ans.classList.add('open'), ans.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          const { data, error } = await db.functions.invoke('mm-llm-ask', { body: { question: q } });
+          const { data, error } = await db.functions.invoke('mm-llm-ask', { body: { question: q, org_id: org.id } });
           let r = data;
           if (error) { try { r = await error.context.json(); } catch { r = { error: error.message }; } }
           if (!r || r.error) { ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', (r && r.error) || 'No answer came back.')); return; }
@@ -556,6 +704,95 @@
       ta.addEventListener('keydown', e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) ask(); });
     }
   })();
+  // ---------- About: tabs ----------
+  const tabBtns = [document.getElementById('tabFlowBtn'), document.getElementById('tabSimBtn')];
+  function showTab(i, focus){
+    tabBtns.forEach((b, k) => { b.setAttribute('aria-selected', String(k === i)); b.tabIndex = k === i ? 0 : -1;
+      document.getElementById(b.getAttribute('aria-controls')).hidden = k !== i; });
+    if (focus) tabBtns[i].focus();
+    if (i === 0) requestAnimationFrame(draw); else drawSim();
+  }
+  tabBtns.forEach((b, i) => {
+    b.addEventListener('click', () => showTab(i));
+    b.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft'){ e.preventDefault(); showTab((i + 1) % 2, true); } });
+  });
+
+  // ---------- About: Sim Mill flowchart (fixed layout, SVG; scrolls sideways on small screens) ----------
+  let simDrawn = false;
+  function drawSim(){
+    if (simDrawn) return; simDrawn = true;
+    const svg = document.getElementById('smflow'), NS = 'http://www.w3.org/2000/svg';
+    const COLS = [['The Paper Mill', 'the game, mattserrao/the-paper-mill'], ['Headless engine', 'branch sim-headless (Node)'],
+                  ['Sim Mill model', 'tools/sim-mill (Python)'], ['Mill files', 'as a mill would send them'],
+                  ['Same import path', 'importers + ingest'], ['Where it’s read', 'tools and pages']];
+    const CW = 196, GAP = 24, X0 = 16, Y0 = 56, BH = 54, RG = 14, W = X0 * 2 + COLS.length * CW + (COLS.length - 1) * GAP;
+    const N = [   // id, column, row, title, sub, kind ('' | 'new' | 'chk')
+      ['game', 0, 0, 'Browser game', 'three.js 3D, seasons, survival', ''],
+      ['src', 0, 1, 'The simulation', 'src/js: step(), seeded dice', ''],
+      ['parts', 0, 2, 'What it already models', 'wet end, steam, breaks, 10 assets', ''],
+      ['strip', 1, 0, 'Strip the game', '34 of 116 files + DOM shim', 'new'],
+      ['parity', 1, 1, 'Parity check', '3 days = browser, exactly', 'chk'],
+      ['year', 1, 2, 'Historian run', '426 days, 20 h outages / 6 wk', 'new'],
+      ['ref', 1, 3, 'engine/ + reference/', 'hourly tags, events, catalogue', 'new'],
+      ['cfg', 2, 0, 'mill.yaml + plants.yaml', 'machine, calendar, F1–F5', 'new'],
+      ['model', 2, 1, 'model.py', 'grades, position life, stops', 'new'],
+      ['proc', 2, 2, 'process.py + tags.yaml', '27 tags from the engine, Bonvoy', 'new'],
+      ['rec', 2, 3, 'records.py + docs.py', 'WOs, actions, BUS, RCFAs, PDFs', 'new'],
+      ['val', 2, 4, 'validate_ref + run --check', 'vs the engine; targets', 'chk'],
+      ['f1', 3, 0, 'BUS · JDE · Planner · RCFA', 'xlsx, CSV exports, log + docx', ''],
+      ['f2', 3, 1, 'Pi hourly + Bonvoy', 'CSV, Bonvoy Reports (7 days)', ''],
+      ['f3', 3, 2, 'Vendor reports, drawings', '84 PDFs and write-ups', ''],
+      ['f4', 3, 3, 'Downtime · production · runs', 'three new feeds', 'new'],
+      ['f5', 3, 4, 'Machine Manager records', 'My Machine, outages, stores', 'new'],
+      ['imp', 4, 1, 'load.py + importers', 'map columns, tag positions', ''],
+      ['ing', 4, 2, 'mm-llm-ingest', 'token decides the org', ''],
+      ['db', 4, 3, 'Supabase: Sim Mill', 'llm tables, files, vectors, records', ''],
+      ['tools', 5, 0, 'Assistant tools', 'outage scope, Bonvoy, docs…', ''],
+      ['qs', 5, 1, 'Demo questions', '11 questions, 31 checks', 'new'],
+      ['pages', 5, 2, 'Daily, Downtime, Vendors', 'and the Bonvoy Report', 'new'],
+      ['mm', 5, 3, 'My Machine · Outage Planning', 'members of Sim Mill', ''],
+    ];
+    const E = [['game', 'src'], ['src', 'parts'], ['src', 'strip', 'acc'], ['strip', 'parity', 'dash'], ['strip', 'year'], ['year', 'ref'],
+               ['ref', 'model', 'acc'], ['ref', 'proc', 'acc'], ['ref', 'val', 'dash'], ['cfg', 'model'], ['model', 'proc'], ['proc', 'rec'], ['rec', 'val', 'dash'],
+               ['rec', 'f1', 'acc'], ['proc', 'f2', 'acc'], ['rec', 'f3', 'acc'], ['model', 'f4', 'acc'], ['model', 'f5', 'acc'],
+               ['f1', 'imp'], ['f2', 'imp'], ['f3', 'imp'], ['f4', 'imp'], ['f5', 'ing'], ['imp', 'ing'], ['ing', 'db'],
+               ['db', 'tools', 'acc'], ['db', 'qs', 'acc'], ['db', 'pages', 'acc'], ['db', 'mm', 'acc']];
+    const pos = {}, H = Y0 + 5 * (BH + RG) + 10;
+    const mk = (t, a, txt) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, a[k]); if (txt != null) e.textContent = txt; return e; };
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    const defs = mk('defs', {});
+    [['ah', 'ah'], ['ahA', 'ah acc']].forEach(([id, cls]) => { const m = mk('marker', { id, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 7, markerHeight: 7, orient: 'auto-start-reverse' });
+      m.appendChild(mk('path', { d: 'M0,0 L10,5 L0,10 z', class: cls })); defs.appendChild(m); });
+    svg.appendChild(defs);
+    COLS.forEach(([h, sub], c) => {
+      const x = X0 + c * (CW + GAP);
+      svg.appendChild(mk('rect', { x: x - 6, y: 8, width: CW + 12, height: H - 14, rx: 10, class: 'lane' }));
+      svg.appendChild(mk('text', { x, y: 27, class: 'colh' }, `${c + 1}  ${h}`));
+      svg.appendChild(mk('text', { x, y: 42, class: 'colsub' }, sub));
+    });
+    const wires = mk('g', {}); svg.appendChild(wires);
+    N.forEach(([id, c, r, t, sub, kind]) => {
+      const x = X0 + c * (CW + GAP), y = Y0 + r * (BH + RG); pos[id] = { x, y, c };
+      const g = mk('g', { class: 'n' });
+      g.appendChild(mk('title', {}, `${t}: ${sub}`));
+      g.appendChild(mk('rect', { x, y, width: CW, height: BH, rx: 8, class: 'bx' + (kind ? ' ' + kind : '') }));
+      g.appendChild(mk('text', { x: x + 10, y: y + 22, class: 't' }, t));
+      g.appendChild(mk('text', { x: x + 10, y: y + 40, class: 's' }, sub));
+      svg.appendChild(g);
+    });
+    E.forEach(([a, b, k]) => {
+      const A = pos[a], B = pos[b]; let d;
+      if (A.c === B.c){
+        if (B.y === A.y + BH + RG) d = `M${A.x + CW / 2} ${A.y + BH} V${B.y}`;
+        else { const x = A.x + CW; d = `M${x} ${A.y + BH / 2} C${x + 14} ${A.y + BH / 2}, ${x + 14} ${B.y + BH / 2}, ${x} ${B.y + BH / 2}`; }
+      } else {
+        const x1 = A.x + CW, y1 = A.y + BH / 2, x2 = B.x, y2 = B.y + BH / 2, mx = x1 + (x2 - x1) / 2;
+        d = `M${x1} ${y1} C${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+      }
+      wires.appendChild(mk('path', { d, class: 'w' + (k === 'acc' ? ' acc' : k === 'dash' ? ' dash' : ''), 'marker-end': `url(#${k === 'acc' ? 'ahA' : 'ah'})` }));
+    });
+  }
+
   // ---------- About the model sheet ----------
   const about = document.getElementById('about'), aboutBtn = document.getElementById('aboutBtn');
   function openAbout(){ about.hidden = false; document.body.style.overflow = 'hidden'; requestAnimationFrame(draw); document.getElementById('aboutClose').focus(); }
@@ -571,6 +808,6 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   requestAnimationFrame(draw);
 </script>
-<script src="mm-nav.js?v=2026-11-08.1905"></script>
+<script src="mm-nav.js?v=2026-11-08.2256"></script>
 </body>
 </html>

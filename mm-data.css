@@ -1,0 +1,45 @@
+/* Machine Manager — the data pages (Vendor Reports, Daily, Downtime / RCFA): toolbar, stat tiles, tables, bars.
+   Colours come from mm-theme.css tokens, so light and dark both work. */
+main.data{max-width:1240px;margin:0 auto;padding:22px 20px 72px}
+.dbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:0 0 16px}
+.dbar .grow{flex:1}
+.dbar label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.dbar input,.dbar select,.mm-orgpick{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:5px 8px}
+.dbar .org{font-size:13px;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.dsub{margin:-8px 0 16px;font-size:12px;color:var(--muted);line-height:1.5;max-width:860px}
+.dmsg{padding:18px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);color:var(--muted);font-size:13px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:0 0 18px}
+.tile{padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface)}
+.tile b{display:block;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink)}
+.tile span{font-size:12px;color:var(--muted)}
+.tile.warn b{color:var(--bad-ink)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:start}
+.panel{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);padding:12px 14px 14px;min-width:0}
+.panel > h2{margin:0 0 2px;font-size:14px;font-weight:600;color:var(--ink)}
+.panel > .ps{margin:0 0 10px;font-size:12px;color:var(--muted);line-height:1.45}
+.panel + .panel,.grid2 + .panel,.panel + .grid2,.grid2 + .grid2{margin-top:18px}
+.grid2 > .panel{margin-top:0}
+.dt-wrap{overflow-x:auto}
+table.dt{border-collapse:collapse;width:100%;font-size:12px}
+.dt th{text-align:left;font-weight:500;color:var(--muted);padding:5px 8px;border-bottom:1px solid var(--line);white-space:nowrap;background:var(--surface-2)}
+.dt th.n,.dt td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dt td{padding:5px 8px;border-bottom:1px solid var(--line);color:var(--ink-2);vertical-align:top}
+.dt tr:last-child td{border-bottom:0}
+.dt-empty{font-size:12px;color:var(--muted);margin:4px 0}
+.pill{display:inline-block;font-size:11px;line-height:1;padding:3px 6px;border-radius:999px;background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line);white-space:nowrap}
+.pill.bad{background:var(--bad);color:var(--on-primary);border-color:transparent}
+.pill.warn{background:var(--warn-soft);color:var(--ink);border-color:transparent}
+.pill.ok{background:var(--surface-2);color:var(--ink-2)}
+/* one-hue horizontal bars: thin, rounded data end, value printed at the end */
+.hb{display:flex;flex-direction:column;gap:5px}
+.hb-r{display:grid;grid-template-columns:minmax(110px,32%) 1fr 56px;align-items:center;gap:8px;font-size:12px;padding:1px 0;border-radius:4px}
+.hb-r:hover{background:var(--surface-2)}
+.hb-l{color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb-t{height:12px;display:block}
+.hb-b{display:block;height:100%;min-width:2px;background:var(--accent);border-radius:0 4px 4px 0}
+.hb-v{text-align:right;color:var(--ink-2);font-variant-numeric:tabular-nums}
+a.doc{color:var(--accent);text-decoration:none}
+a.doc:hover{text-decoration:underline}
+#ver{position:static;text-align:right;margin-top:28px;display:block}
+@media (max-width:860px){ .grid2{grid-template-columns:1fr} .tiles{grid-template-columns:repeat(2,minmax(0,1fr))} }
+@media print{ .dbar select,.dbar input{border:0} }

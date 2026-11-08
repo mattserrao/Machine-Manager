@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Operations Outage Planning</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1905"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1905">
-<script src="mm-icons.js?v=2026-11-08.1905"></script>
+<script src="mm-theme.js?v=2026-11-08.2256"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2256">
+<script src="mm-icons.js?v=2026-11-08.2256"></script>
 <style>
   /* shared look: mm-theme.css */
   main{padding:16px 16px 60px}
@@ -320,15 +320,15 @@
 <div id="toast"></div>
 <div id="ver"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1905"></script>
-<script src="mm-config.js?v=2026-11-08.1905"></script>
-<script src="mm-cloud.js?v=2026-11-08.1905"></script>
-<script src="mm-ui.js?v=2026-11-08.1905"></script>
-<script src="mm-records.js?v=2026-11-08.1905"></script>
-<script src="mm-machine.js?v=2026-11-08.1905"></script>
-<script src="mm-demo.js?v=2026-11-08.1905"></script>
-<script src="mm-task-examples.js?v=2026-11-08.1905"></script>
-<script src="mm-demo-outages.js?v=2026-11-08.1905"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2256"></script>
+<script src="mm-config.js?v=2026-11-08.2256"></script>
+<script src="mm-cloud.js?v=2026-11-08.2256"></script>
+<script src="mm-ui.js?v=2026-11-08.2256"></script>
+<script src="mm-records.js?v=2026-11-08.2256"></script>
+<script src="mm-machine.js?v=2026-11-08.2256"></script>
+<script src="mm-demo.js?v=2026-11-08.2256"></script>
+<script src="mm-task-examples.js?v=2026-11-08.2256"></script>
+<script src="mm-demo-outages.js?v=2026-11-08.2256"></script>
 <script>
 (() => {
   'use strict';
@@ -440,7 +440,7 @@
       s.textContent = 'Saved'; warned = false; clearTimeout(stT); stT = setTimeout(() => s.textContent = '', 1600);
       if ((oStore && oStore.conflicts) || (mStore && mStore.conflicts)) toast('Someone else changed that at the same moment — showing their version.');
     } else if (x === 'error'){ s.textContent = 'Not saved'; if (!warned){ warned = true; toast('Can’t reach the server — keep this page open, it will keep retrying.'); } }
-    else if (x === 'viewonly'){ s.textContent = 'View only'; if (!viewWarned){ viewWarned = true; toast('You have view-only access — changes you make here aren’t saved.'); } }
+    else if (x === 'viewonly'){ s.textContent = 'View only'; if (!viewWarned){ viewWarned = true; toast(session && session.demo ? `This is the ${session.org.name} demo, view only: changes aren’t saved. Sign in to plan your own outages.` : 'You have view-only access — changes you make here aren’t saved.'); } }
   }
   const saveO = () => { oStore.save(); };
   const saveM = () => { mStore.save(); };
@@ -1203,12 +1203,12 @@
   /* ---------- Start: signed in with My Machine set up, or the demo ---------- */
   (async () => {
     if (!window.MMCloud || !MMCloud.enabled) return startDemo();
-    MMCloud.mountAccount($('acct'), { compact: true });
-    try { session = await MMCloud.session(); }
+    MMCloud.mountAccount($('acct'), { compact: true, tool: 'outages' });
+    try { session = await MMCloud.session() || await MMCloud.demoSession('outages'); }
     catch (e) { return startDemo('Can’t reach the server — showing the demo in this browser.'); }
     if (!session) return startDemo('Showing demo outages for PM1. Sign in to plan your team’s.');
     if (!session.org) return startDemo('Your account isn’t in an organization yet — showing the demo.');
-    $('brandSub').textContent = `${session.org.name} · outages`;
+    $('brandSub').textContent = session.demo ? `Demo · ${session.org.name} · view only` : `${session.org.name} · outages`;
     gate('loader', 'Loading…', 'Getting your outages and machine.');
     oStore = MMCloud.openStore('outages', { snapshot: oRecords, onChange: onO, onStatus: status });
     mStore = MMCloud.openStore('mymachine', { snapshot: mRecords, onChange: onM, onStatus: status });
@@ -1230,6 +1230,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.1905"></script>
+<script src="mm-nav.js?v=2026-11-08.2256"></script>
 </body>
 </html>

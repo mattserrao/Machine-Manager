@@ -1,0 +1,48 @@
+tag,description,units,asset_no,section,position_id,source
+PM1:SPEED,Reel speed,fpm,00072763,sec-reel,,engine
+PM1:PROD,Production rate,t/h,00072763,sec-reel,,engine
+PM1:BREAKS,Sheet break counter (since Nov 1),count,00072763,sec-reel,,model
+PM1:REEL_MOIST,Reel moisture,%,00072763,sec-reel,,engine
+PM1:REEL_BW,Reel basis weight,lb/1000 ft2,00072763,sec-reel,,engine
+PM1:PULPER_AMPS,Pulper rotor current,A,00072084,sec-stockprep,,engine
+PM1:PULPER_CONS,Pulper consistency,%,00072077,sec-stockprep,,engine
+PM1:STOCK_CHEST_LVL,Stock chest level,%,00072133,sec-stockprep,,engine
+PM1:REF_A_KW,REF 1 refiner motor load,kW,00072161,sec-refiners,ref-refa,derived
+PM1:REF_B_KW,REF 2 refiner motor load,kW,00072175,sec-refiners,ref-refb,derived
+PM1:REF_A_SE,REF 1 specific energy,kWh/t,00072161,sec-refiners,ref-refa,engine
+PM1:REF_B_SE,REF 2 specific energy,kWh/t,00072175,sec-refiners,ref-refb,derived
+PM1:FREENESS,Machine chest freeness,mL CSF,00072140,sec-stockprep,,engine
+PM1:HB_CONS,Headbox consistency,%,00072189,sec-forming,,engine
+PM1:HB_P,Headbox pressure,psi,00072189,sec-forming,,model
+PM1:FAN_PUMP_FLOW,Fan pump flow,gpm,00072196,sec-forming,,engine
+PM1:FLATBOX_VAC,Flat box vacuum,inHg,00072217,sec-forming,form-bottom,engine
+PM1:COUCH_VAC,Couch vacuum,inHg,00072210,sec-forming,form-bottom,model
+PM1:COUCH_SOLIDS,Couch solids,%,00072210,sec-forming,form-bottom,engine
+PM1:UHLE_P1T_VAC,1st press top felt Uhle box vacuum,inHg,00072259,sec-press,p1-felt-top,condition
+PM1:UHLE_P1B_VAC,1st press bottom felt Uhle box vacuum,inHg,00072280,sec-press,p1-felt-bottom,condition
+PM1:UHLE_P2T_VAC,2nd press top felt Uhle box vacuum,inHg,00072322,sec-press,p2-felt-top,condition
+PM1:UHLE_P2B_VAC,2nd press bottom felt Uhle box vacuum,inHg,00072343,sec-press,p2-felt-bottom,condition
+PM1:PRESS1_LOAD,1st press nip load,pli,00072308,sec-press,,model
+PM1:PRESS2_LOAD,2nd press nip load,pli,00072371,sec-press,,model
+PM1:PRESS_SOLIDS,Press exit solids,%,00072364,sec-press,p2-roll-bottom,engine
+PM1:DRY1_STEAM_P,1st section steam pressure,psig,00072455,sec-dryer-1,,engine
+PM1:DRY2_STEAM_P,2nd section steam pressure,psig,00072546,sec-dryer-2,,derived
+PM1:DRY3_STEAM_P,3rd section steam pressure,psig,00072637,sec-dryer-3,,derived
+PM1:DRY4_STEAM_P,4th section steam pressure,psig,00072728,sec-dryer-4,,engine
+PM1:DRY1_DP,1st section syphon differential,psi,00072455,sec-dryer-1,,engine
+PM1:DRY2_DP,2nd section syphon differential,psi,00072546,sec-dryer-2,,engine
+PM1:DRY3_DP,3rd section syphon differential,psi,00072637,sec-dryer-3,,derived
+PM1:DRY4_DP,4th section syphon differential,psi,00072728,sec-dryer-4,,engine
+PM1:STEAM_FLOW,Dryer steam flow,t/h,00072154,sec-stockprep,,engine
+PM1:HOOD_EXH_TEMP,Hood exhaust temperature,degF,00072756,sec-dryer-4,,engine
+PM1:PULPER_VIB,Pulper rotor bearing vibration,in/s,00072084,sec-stockprep,,condition
+PM1:REF_A_VIB,REF 1 refiner bearing vibration,in/s,00072168,sec-refiners,ref-refa,condition
+PM1:REF_B_VIB,REF 2 refiner bearing vibration,in/s,00072182,sec-refiners,ref-refb,condition
+PM1:FAN_PUMP_VIB,Fan pump bearing vibration,in/s,00072196,sec-forming,,condition
+PM1:COUCH_DS_VIB,Couch roll DS bearing vibration,in/s,00072210,sec-forming,,condition
+PM1:PRESS1_DS_VIB,1st press drive bearing vibration,in/s,00072308,sec-press,,condition
+PM1:PRESS2_DS_VIB,2nd press drive bearing vibration,in/s,00072371,sec-press,,condition
+PM1:DRYER_DRIVE_VIB,Dryer drive lineup bearing vibration,in/s,00072742,sec-dryer-2,,condition
+PM1:REEL_DRUM_DS_VIB,Reel drum DS bearing vibration,in/s,00072770,sec-reel,,condition
+PM1:REEL_DRUM_DS_TEMP,Reel drum DS bearing temperature,degF,00072770,sec-reel,,condition
+PM1:WINDER_DRUM_VIB,Winder drum bearing vibration,in/s,00072784,sec-winder,,condition

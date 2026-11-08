@@ -181,7 +181,7 @@ def equipment():
 
 # ───────────────────────── Pi tags ─────────────────────────
 # tag, description, units, asset name (resolved to asset_no), mean, sigma (hourly noise in the mock Pi series).
-# Envoy flags beyond ±3σ of its own trailing baseline (see pi_envoy.py).
+# Bonvoy flags beyond ±3σ of its own trailing baseline (see pi_bonvoy.py).
 TAGS = [
     *[(f'PM1:REF_{r}_KW', f'{r} refiner motor load', 'kW', f'{n} refiner', 1150, 40) for r, n in [('BP1', 'BP 1'), ('BP2', 'BP 2'), ('TP1', 'TP 1'), ('TP2', 'TP 2')]],
     *[(f'PM1:REF_{r}_SE', f'{r} refiner specific energy', 'kWh/t', f'{n} refiner', 95, 1.0) for r, n in [('BP1', 'BP 1'), ('BP2', 'BP 2'), ('TP1', 'TP 1'), ('TP2', 'TP 2')]],
@@ -224,7 +224,7 @@ def pi_tags(equip):
     for tag, desc, units, asset, mean, sigma in TAGS:
         e = by_name[asset]
         rows.append(dict(tag=tag, description=desc, units=units, asset_no=e['asset_no'], section=e['section'],
-                         position_id=e['position_id'], mean=mean if mean else 'by grade', sigma=sigma, envoy_sigma=3))
+                         position_id=e['position_id'], mean=mean if mean else 'by grade', sigma=sigma, bonvoy_sigma=3))
     return rows
 
 
@@ -270,7 +270,7 @@ def validate(data):
     out_ids = {o['id'] for o in data['outages.csv']}
     people = {r['id'] for r in data['roster.csv']}
     vendors = {v['id'] for v in data['vendors.csv']}
-    SOURCES = {'pi', 'envoy', 'bus', 'rcfa', 'teams', 'jde', 'vendor', 'drawing', 'mm'}
+    SOURCES = {'pi', 'bonvoy', 'bus', 'rcfa', 'teams', 'jde', 'vendor', 'drawing', 'mm'}
     files = sorted(f for f in os.listdir(STORIES) if f.endswith('.yaml'))
     if not files: errs.append('no storylines')
     for fn in files:

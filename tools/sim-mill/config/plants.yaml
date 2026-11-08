@@ -1,0 +1,51 @@
+# The five planted faults (agreed Nov 8). Everything else in the Sim Mill year is emergent: whatever the seeded model
+# produces from the game's upset catalogue, break hazard and asset wear. Each fault is written into every source it
+# would really show up in; the answer key (demo-data/sim-mill/answers/answer_key.json) checks it through the tools.
+
+F1:
+  title: 2nd press top felt filling early
+  position: p2-felt-top
+  installed: 2026-04-15         # went on at the Apr 15 outage (6-week target)
+  fill_from: 2026-04-29         # Uhle vacuum starts climbing two weeks in (normal felts start at ~4 weeks)
+  uhle_per_day: 0.16            # inHg a day
+  shower_plugged_pct: 22        # the 2nd press top HP shower: nozzles found plugged at the audit
+  audit: 2026-05-13             # Spraywell quarterly audit (pulled forward)
+  slow_from: 2026-05-08         # steam in the 4th section at its limit on 34 Super: speed held back
+  change: 2026-05-19T06:00      # unplanned felt change (34 days, target 42): 7.5 h down
+  change_hours: 7.5
+  rcfa: true
+
+F2:
+  title: Reel drum DS bearing found on rounds but missed at the outage
+  asset: Reel drum DS bearing
+  start: 2026-07-20             # defect starts (vibration from the 0.06 in/s baseline)
+  route_found: 2026-08-12       # Keel monthly route: 0.17 in/s, outer race defect, Alert
+  outage_missed: 2026-08-19     # WO scheduled for Aug 19 but the bearing wasn't in stores: deferred
+  # Bonvoy flags it from early August (the run decides the first day; the answer key reads it from the data)
+  at_today: 0.43                # in/s on Oct 31 (Danger above 0.40)
+  next_outage: 2026-11-11       # rescheduled; parts on order
+
+F3:
+  title: REF 2 refiner plates wearing fast, one set on hand
+  position: ref-refb
+  installed: 2026-09-30         # this set went on at the Sep 30 outage
+  rise_from: 2026-10-07         # specific energy climbs ~1.4%/day (normal wear is ~0.1%/day)
+  per_day: 0.014
+  previous_removed_worn: 2026-09-30   # the Jul 8 set came out at 12 weeks with 85% bar wear (normal ~60%)
+  sets_on_hand: 1               # REF 1 and REF 2 both due Nov 11: two sets needed
+
+F4:
+  title: Forming fabric damaged by a wad
+  position: form-bottom
+  event: 2026-02-09T14:20       # wad off the headbox approach: 5-inch hole at the TS
+  hours: 9.5
+  rcfa: true
+  overdue_action: Install a wad detector camera at the breast roll   # due Apr 30, still open on Oct 31
+
+F5:
+  title: 3rd section rotary joint leak that keeps coming back, with no RCFA
+  asset: 3rd section rotary joint (DS)
+  events:                       # each a short unplanned stop to change the seal; none over the RCFA threshold, > 60 days apart
+    - { start: 2026-01-06T09:40, hours: 2.7 }
+    - { start: 2026-06-23T15:10, hours: 2.9 }
+    - { start: 2026-10-02T03:25, hours: 2.4 }

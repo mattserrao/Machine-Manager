@@ -1,0 +1,19 @@
+id,name,role,crew
+P01,Rosalind Achebe,PM1 superintendent,
+P02,Curtis Lindahl,Maintenance planner,
+P03,Mei Fairbanks,Reliability engineer,
+P04,Tobias Renner,Process engineer,
+P05,Gloria Nakamura,Maintenance supervisor (mechanical),
+P06,Desmond Pike,Maintenance supervisor (electrical),
+P07,Ingrid Solberg,Stock prep supervisor,
+P08,Harlan Mbeki,Shift lead (crew A),A
+P09,Lucille Brandt,Shift lead (crew B),B
+P10,Rafael Okonkwo,Shift lead (crew C),C
+P11,Wynn Castellano,Shift lead (crew D),D
+P12,Beatrix Hale,Millwright lead,
+P13,Omar Szabo,Electrical lead,
+P14,Fenna Gallagher,Instrument tech,
+P15,Quentin Adeyemi,Storeroom coordinator,
+P16,Sunniva Brooks,Clothing coordinator,
+P17,Eamon Takahashi,Steam and condensate engineer,
+P18,Dolores Vance,Production manager,

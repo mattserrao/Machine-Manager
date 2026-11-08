@@ -2,251 +2,123 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><!-- boards zoom themselves; stops iOS zooming the page when typing on a card -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Daily</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1905"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1905">
-<script src="mm-icons.js?v=2026-11-08.1905"></script>
-<link rel="stylesheet" href="mm-board.css?v=2026-11-08.1905">
+<script src="mm-theme.js?v=2026-11-08.2256"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2256">
+<link rel="stylesheet" href="mm-data.css?v=2026-11-08.2256">
+<script src="mm-icons.js?v=2026-11-08.2256"></script>
 <style>
-  /* this page only (shared styles: mm-board.css) */
-  #tabs{bottom:14px;left:14px;max-width:calc(100vw - 260px);overflow-x:auto}
-  #empty .soon{display:inline-block;margin-bottom:10px;font-size:11px;font-weight:500;letter-spacing:.02em;color:var(--ink-2);background:var(--hover);border-radius:999px;padding:3px 9px}
-  #empty p + p{margin-top:6px}
-  #empty > div{padding:0 24px;max-width:560px}
+  .dbar button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--r-sm);padding:5px 10px;cursor:pointer}
+  .dbar button:hover{border-color:var(--line-strong)}
+  .dayh{display:flex;align-items:baseline;gap:12px;margin:0 0 12px}
+  .dayh h2{margin:0;font-size:20px;font-weight:600}
+  .dayh span{font-size:13px;color:var(--muted)}
+  a.nb{font-size:12px;color:var(--accent);text-decoration:none}
 </style>
 </head>
-<body class="mm-canvas">
-<div id="board">
-  <div id="world">
-    <svg id="links" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker>
-        <marker id="arrowSel" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker>
-      </defs>
-      <g id="lg"></g>
-      <path id="tmpLink" class="tmp" d="" marker-end="url(#arrowSel)"/>
-    </svg>
+<body>
+<header class="mm-top">
+  <div class="bar brand">
+    <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
+    <div><h1>Daily</h1><p>The mill day: production, downtime, the BUS sheet and Bonvoy</p></div>
   </div>
-  <div id="empty"><div><span class="soon">Placeholder</span><h1>Daily journal is planned</h1><p>A formatted daily journal for machine managers will live here.</p><p>For now it’s a blank board: <span class="t-mouse">double-click</span><span class="t-touch">double-tap</span> anywhere or press <b>New entry</b> to jot something down.</p></div></div>
-  <div id="marquee" hidden></div>
-</div>
-
-<div id="topleft">
-<div class="bar brand">
-  <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
-  <div><h1>Daily</h1><p id="brandSub">Machine manager journal</p></div>
-</div>
-<div id="toolbar" class="bar">
-  <button id="newBtn" class="btn primary" data-ic="plus" data-ic-size="sm">New entry</button>
-  <span class="sep"></span>
-  <button id="undoBtn" class="ib" title="Undo (Ctrl/⌘+Z)" aria-label="Undo" data-ic="undo"></button>
-  <button id="redoBtn" class="ib" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo" data-ic="redo"></button>
-  <span class="sep"></span>
-  <button id="frameBtn" class="ib" title="New frame (F)" aria-label="New frame" data-ic="frame"><span class="tl">Frame</span></button>
-  <button id="snapBtn" class="ib wide" title="Snap to grid (G)" aria-label="Snap to grid" data-ic="grid"><span class="tl">Snap</span></button>
-  <span class="sep"></span>
-  <button id="fileBtn" class="btn" title="Export, import, print">File<svg class="mi-ic xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-  <button id="helpBtn" class="ib wide" title="Shortcuts (?)" aria-label="Shortcuts" data-ic="help"><span class="tl">Shortcuts</span></button>
-  <span id="saveState"></span>
-  <a id="mode" hidden></a>
-</div>
-</div>
-
-<div id="topright">
-<div id="searchbar" class="bar">
-  <label for="search" style="color:var(--ink-3);display:flex" data-ic="search" data-ic-size="sm" title="Search"></label>
-  <input id="search" type="search" placeholder="Search entries  ( / )" autocomplete="off">
-  <span id="searchCount"></span>
-</div>
-<div id="acct"></div>
-</div>
-
-<div id="tabs" class="bar"></div>
-
-<div id="zoombar" class="bar">
-  <button class="ib" id="zoomOut" title="Zoom out (−)" aria-label="Zoom out" data-ic="minus" data-ic-size="sm"></button>
-  <button id="zoomPct" title="Reset to 100% (0)">100%</button>
-  <button class="ib" id="zoomIn" title="Zoom in (+)" aria-label="Zoom in" data-ic="plus" data-ic-size="sm"></button>
-  <button class="ib" id="fitBtn" title="Fit all (Shift+1)" aria-label="Fit all" data-ic="fit" data-ic-size="sm"></button>
-</div>
-
-<div id="ver"></div>
-
-<div id="menu" class="menu" hidden></div>
-
-<div id="linkPop" hidden>
-  <input id="linkLabel" placeholder="Label (optional)">
-  <button class="btn" id="linkRev" title="Reverse direction" data-ic="swap" data-ic-size="sm"></button>
-  <button class="btn danger" id="linkDel">Delete</button>
-</div>
-
-<div id="modal" class="backdrop" hidden>
-  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Edit entry">
-    <div class="sheet-head">
-      <div class="swatches" id="edSwatches"></div>
-      <span id="edLabel"></span>
-      <button class="x" id="edClose" aria-label="Close" data-ic="x"></button>
-    </div>
-    <div class="sheet-body">
-      <textarea id="edText" placeholder="Write something… (first line becomes the title)"></textarea>
-      <div class="fmt-hint"><code>- </code> bullet · <code>- [ ] </code> checkbox · <span class="t-mouse"><code>Tab</code> indent · </span><code>**bold**</code> · <code>*italic*</code> · <code>[text](https://…)</code></div>
-      <div class="frow" id="edStatus"></div>
-      <div class="frow">
-        <label>Due <input type="date" id="edDue"></label>
-        <label>Owner <input type="text" id="edOwner" placeholder="e.g. Maint crew"></label>
-      </div>
-      <div class="drop" id="edDrop">
-        <div id="edAtts"></div>
-        <div class="drop-row">
-          <label class="btn" data-ic="paperclip" data-ic-size="sm">Attach files<input type="file" id="edFile" multiple hidden></label>
-          <span>or drop / paste files here</span>
-        </div>
-      </div>
-      <div id="edTucked"></div>
-    </div>
-    <div class="sheet-foot">
-      <button id="edDelete" class="btn danger">Delete entry</button>
-      <button id="edDetach" class="btn">Pop out of stack</button>
-      <span class="spacer"></span>
-      <span class="kbd-hint t-mouse">Enter to close · Shift+Enter new line</span>
-      <button id="edDone" class="btn primary">Done</button>
-    </div>
+  <div id="acct"></div>
+</header>
+<main class="data">
+  <div class="dbar">
+    <span class="org" id="org"></span>
+    <button id="prev" type="button" title="Previous day">‹</button>
+    <input id="day" type="date" aria-label="Day">
+    <button id="next" type="button" title="Next day">›</button>
+    <button id="toToday" type="button">Today</button>
+    <span class="grow"></span>
+    <a class="nb" href="DailyNotes.html">Notes board</a>
   </div>
-</div>
-
-<div id="help" class="backdrop" hidden>
-  <div class="sheet" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts">
-    <div class="sheet-head" style="--c:var(--surface)"><b style="font-size:14px">Shortcuts</b><span class="spacer"></span><button class="x" id="helpClose" aria-label="Close" data-ic="x"></button></div>
-    <div class="sheet-body">
-      <div class="keys">
-        <h4>Notes</h4>
-        <kbd>N</kbd><span>New entry (or <span class="t-mouse">double-click</span><span class="t-touch">double-tap</span> the board)</span>
-        <kbd>Click</kbd><span>Open the entry editor</span>
-        <kbd>Double-click</kbd><span>Edit text right on the card</span>
-        <kbd>Enter</kbd><span>Open the selected entry · close the editor</span>
-        <kbd>Shift+Enter</kbd><span>New line (continues bullets and checkboxes)</span>
-        <kbd>Tab / Shift+Tab</kbd><span>Indent / outdent list lines</span>
-        <kbd>Ctrl/⌘+B · I</kbd><span>Bold · italic</span>
-        <kbd>Right-click</kbd><span>Note menu (long-press on touch)</span>
-        <h4>Selection</h4>
-        <kbd>Shift+Click</kbd><span>Add/remove from selection</span>
-        <kbd>Shift+Drag</kbd><span>Box-select on the board</span>
-        <kbd>Ctrl/⌘+A</kbd><span>Select all</span>
-        <kbd>Ctrl/⌘+C · X · V</kbd><span>Copy · cut · paste entries</span>
-        <kbd>Ctrl/⌘+D</kbd><span>Duplicate</span>
-        <kbd>Delete</kbd><span>Delete selected entries or arrow</span>
-        <kbd>Arrows</kbd><span>Nudge (Shift = bigger steps)</span>
-        <kbd>Ctrl/⌘+Z · Shift+Z</kbd><span>Undo · redo</span>
-        <h4>Board</h4>
-        <kbd>Drag empty space</kbd><span>Pan (or scroll / two-finger swipe)</span>
-        <kbd>Ctrl/⌘+Scroll</kbd><span>Zoom (pinch on touch)</span>
-        <kbd>+ · − · 0</kbd><span>Zoom in · out · 100%</span>
-        <kbd>Shift+1</kbd><span>Fit all entries</span>
-        <kbd>G</kbd><span>Snap to grid</span>
-        <kbd>F</kbd><span>New frame (drag its title bar to move it with its entries)</span>
-        <h4>Files</h4>
-        <kbd>Ctrl/⌘+S</kbd><span>Export this board to a file</span>
-        <kbd>Ctrl/⌘+O</kbd><span>Import a board file (or drag it onto the board)</span>
-        <kbd>Ctrl/⌘+P</kbd><span>Print / PDF preview</span>
-        <kbd>/ or Ctrl/⌘+F</kbd><span>Search</span>
-        <kbd>Drag the blue dot</kbd><span>Connect entries with an arrow</span>
-        <kbd>Esc</kbd><span>Clear selection / close</span>
-        <kbd>?</kbd><span>This sheet</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="lightbox" hidden><img alt=""></div>
-<div id="toast"></div>
-<input type="file" id="importFile" accept=".daily,.json,application/json" hidden>
-<div id="printArea"></div>
-<style id="pageStyle"></style>
-
-<div id="tips" class="bar" hidden>
-  <div>
-    <b>Getting started</b>
-    <ul>
-      <li><span class="t-mouse">Double-click</span><span class="t-touch">Double-tap</span> the board for a new entry · <span class="t-mouse">click</span><span class="t-touch">tap</span> an entry to edit, <span class="t-mouse">double-click</span><span class="t-touch">double-tap</span> to type on it</li>
-      <li>Drag an entry onto another’s bottom edge to stack it (up to 4 levels)</li>
-      <li>Drag the blue dot on <span class="t-mouse">an</span><span class="t-touch">a selected</span> entry’s edge to draw an arrow · the frame button makes a frame to group entries</li>
-      <li><span class="t-mouse">Right-click</span><span class="t-touch">Press and hold</span> anything for options · <b>File</b> to export, import or print<span class="t-mouse"> · <b>?</b> for shortcuts</span></li>
-    </ul>
-  </div>
-  <button class="btn" id="tipsOk">Got it</button>
-</div>
-
-<div id="printDlg" class="backdrop" hidden>
-  <div class="sheet" role="dialog" aria-modal="true" aria-label="Print or save as PDF">
-    <div class="sheet-head" style="--c:var(--surface)"><b style="font-size:14px">Print / PDF</b><span class="spacer"></span><button class="x" id="pdClose" aria-label="Close" data-ic="x"></button></div>
-    <div class="sheet-body">
-      <div class="pd-opts" id="pdOpts">
-        <div class="orow">Content<div class="seg" data-k="kind"><button data-v="picture">Board picture</button><button data-v="report">Written report</button></div></div>
-        <div class="orow">Paper<select data-k="paper">
-          <option value="letter">Letter (8.5 × 11 in)</option><option value="legal">Legal (8.5 × 14 in)</option>
-          <option value="tabloid">Tabloid (11 × 17 in)</option><option value="a4">A4</option><option value="a3">A3</option></select></div>
-        <div class="orow">Orientation<div class="seg" data-k="orient"><button data-v="auto">Auto</button><button data-v="portrait">Portrait</button><button data-v="landscape">Landscape</button></div></div>
-        <div class="orow">Margins<div class="seg" data-k="margin"><button data-v="narrow">Narrow</button><button data-v="normal">Normal</button><button data-v="wide">Wide</button></div></div>
-
-        <h5 data-only="picture">Picture</h5>
-        <div class="orow" data-only="picture">Print area<select data-k="area">
-          <option value="board">Whole board</option><option value="view">What’s on screen now</option>
-          <option value="frames">Each frame on its own page</option><option value="selection">Selected entries</option></select></div>
-        <div class="orow" data-only="picture" id="pdTilesRow">Size<select data-k="tiles">
-          <option value="1x1">Fit on 1 page</option><option value="2x1">Spread over 2 pages (side by side)</option>
-          <option value="1x2">Spread over 2 pages (top to bottom)</option><option value="2x2">Spread over 4 pages (2 × 2)</option>
-          <option value="3x2">Spread over 6 pages (3 × 2)</option></select></div>
-        <label class="ck" data-only="picture"><input type="checkbox" data-k="arrows"> Arrows and labels</label>
-        <label class="ck" data-only="picture"><input type="checkbox" data-k="grid"> Dot grid background</label>
-
-        <h5 data-only="report">Report</h5>
-        <label class="ck" data-only="report"><input type="checkbox" data-k="rGroup"> Group by frame</label>
-        <label class="ck" data-only="report"><input type="checkbox" data-k="rChecks"> Checklist items</label>
-        <label class="ck" data-only="report"><input type="checkbox" data-k="rDone"> Include entries marked Done</label>
-        <label class="ck" data-only="report"><input type="checkbox" data-k="rLinks"> Connections list</label>
-        <div class="orow" data-only="report">Text size<div class="seg" data-k="rSize"><button data-v="s">Small</button><button data-v="m">Medium</button><button data-v="l">Large</button></div></div>
-        <div class="orow" data-only="report">Columns<div class="seg" data-k="rCols"><button data-v="1">One</button><button data-v="2">Two</button></div></div>
-
-        <h5>Page</h5>
-        <label class="ck"><input type="checkbox" data-k="header"> Title and date</label>
-        <label class="ck"><input type="checkbox" data-k="pageNums"> Page numbers</label>
-        <label class="ck"><input type="checkbox" data-k="ink"> Ink saver (no fills or shadows)</label>
-      </div>
-      <div class="pd-right">
-        <div class="pd-info"><span id="pdCount"></span><span id="pdNote"></span></div>
-        <div class="pd-stage" id="pdStage"></div>
-      </div>
-    </div>
-    <div class="sheet-foot">
-      <span class="kbd-hint">In the print dialog choose the same paper size, keep Scale at 100%, and pick “Save as PDF” for a PDF.</span>
-      <span class="spacer"></span>
-      <button class="btn" id="pdCancel">Cancel</button>
-      <button class="btn primary" id="pdPrint">Print…</button>
-    </div>
-  </div>
-</div>
-
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1905"></script>
-<script src="mm-config.js?v=2026-11-08.1905"></script>
-<script src="mm-cloud.js?v=2026-11-08.1905"></script>
-<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.1905"></script>
-<script src="mm-ui.js?v=2026-11-08.1905"></script>
-<script src="mm-records.js?v=2026-11-08.1905"></script>
-<script src="mm-board.js?v=2026-11-08.1905"></script>
+  <div id="body"><div class="dmsg">Loading…</div></div>
+  <div id="ver"></div>
+</main>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2256"></script>
+<script src="mm-config.js?v=2026-11-08.2256"></script>
+<script src="mm-cloud.js?v=2026-11-08.2256"></script>
+<script src="mm-llm-org.js?v=2026-11-08.2256"></script>
 <script>
-MMBoard.start({
-    // Placeholder (v0.1.0): a plain board on the shared engine until the formatted journal is built.
-    version:'v0.1.1',
-    shell:'tabs', tool:'daily', title:'Daily', idb:'mm-daily', idPrefix:'dy-', viewKey:'mm-daily-view',
-    fileExt:'daily', appTag:'machine-manager-daily', urlParam:'day', statusMenu:true,
-    words:{ board:'page', Board:'Page', boards:'pages', card:'entry', Card:'Entry', cards:'entries', sub:'sub-entry', subs:'sub-entries', owner:'Owner' },
-    text:{ newBoard:'New page', newBoardName:'New page', printEmpty:'Nothing to print — this page is empty.', reportEmpty:'This page is empty.',
-      loadWhat:'your journal', demo:'the demo journal', fileLabel:'Daily page' },
-  plugin(){ return {}; },
-});
+  const VERSION = 'v0.2.0';
+  document.getElementById('ver').textContent = 'Daily ' + VERSION;
+  MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
+  const $ = id => document.getElementById(id), O = MMLLMOrg, esc = O.esc;
+  let st, today, outages = [];
+  const addDays = (d, n) => { const t = new Date(d + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+  const NY = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' });
+  const millHour = ts => { const p = Object.fromEntries(NY.formatToParts(new Date(ts)).map(x => [x.type, x.value])); return `${p.year}-${p.month}-${p.day}T${p.hour}`; };
+  const KIND = { planned: 'Planned', unplanned: 'Unplanned', break: 'Sheet break', slowdown: 'Slowdown' };
+
+  function tile(v, label, warn){ return `<div class="tile${warn ? ' warn' : ''}"><b>${v}</b><span>${esc(label)}</span></div>`; }
+  function panel(title, sub, el){ const p = document.createElement('section'); p.className = 'panel'; p.innerHTML = `<h2>${esc(title)}</h2>${sub ? `<p class="ps">${sub}</p>` : ''}`; p.appendChild(el); return p; }
+
+  async function show(day){
+    $('day').value = day;
+    const u = new URL(location.href); u.searchParams.set('day', day); history.replaceState(null, '', u);
+    const body = $('body'); body.innerHTML = '<div class="dmsg">Loading…</div>';
+    let prod, dt, bus, env, od;
+    try {
+      [prod, dt, bus, env, od] = await Promise.all([
+        O.rpc(st, 'mm_llm_production', { p_from: day, p_to: day, p_by: 'day' }), O.rpc(st, 'mm_llm_downtime', { p_from: day, p_to: addDays(day, 1) }),
+        O.rpc(st, 'mm_llm_bus_day', { p_day: day }), O.rpc(st, 'mm_llm_bonvoy', { p_term: null, p_from: day, p_to: day }),
+        O.rpc(st, 'mm_llm_overdue_actions', { p_as_of: day })]);
+    } catch (e) { body.innerHTML = `<div class="dmsg">${esc(e.message || e)}</div>`; return; }
+    body.textContent = '';
+    // the mill day runs 6 AM to 6 AM, mill time (same as the production row)
+    const lo = day + 'T06', hi = addDays(day, 1) + 'T06';
+    dt = dt.filter(x => { const k = millHour(x.starts_at); return k >= lo && k < hi; });
+    const p = prod[0], nx = outages.find(o => o.starts >= day);
+    const head = document.createElement('div'); head.className = 'dayh';
+    head.innerHTML = `<h2>${new Date(day + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h2>
+      <span>${st.org.name} · mill day 6 AM to 6 AM${nx ? ` · next outage ${O.day(nx.starts)} (${Math.round((Date.parse(nx.starts) - Date.parse(day)) / 864e5)} days)` : ''}</span>`;
+    body.appendChild(head);
+    const unpl = dt.filter(x => x.kind === 'unplanned'), brk = dt.filter(x => x.kind === 'break');
+    const tiles = document.createElement('div'); tiles.className = 'tiles';
+    tiles.innerHTML = p ? [tile(O.num(p.tons), 'tons'), tile(O.num(p.uptime_pct, 1) + '%', 'uptime', p.uptime_pct < 95),
+      tile(O.num(p.breaks), 'sheet breaks', p.breaks >= 4), tile(O.num(p.break_min), 'break minutes'),
+      tile(O.num(p.unplanned_min), 'unplanned minutes', p.unplanned_min > 0), tile(O.num(p.planned_min), 'planned minutes'),
+      tile(O.num(p.kwh_per_t, 1), 'refining kWh/t'), tile(O.num(p.steam_per_t, 2), 'steam t/t')].join('')
+      : [tile(O.num(bus.length), 'BUS lines'), tile(O.num(env.length), 'Bonvoy exceptions'), tile(O.num(od.length), 'overdue actions')].join('');
+    body.appendChild(tiles);
+    if (!p) body.appendChild(Object.assign(document.createElement('p'), { className: 'dsub', textContent: 'No production or downtime feed for this organization on this day.' }));
+    const g = document.createElement('div'); g.className = 'grid2';
+    g.appendChild(panel('Stops and slowdowns', `${unpl.length} unplanned, ${brk.length} sheet break${brk.length === 1 ? '' : 's'}, ${dt.length - unpl.length - brk.length} other`,
+      O.table(dt.filter(x => x.kind !== 'break').concat(brk.slice(0, 8)), [['starts_at', 'Start', 't'], ['minutes', 'Min', 'n'], ['kind', 'Kind', r => esc(KIND[r.kind] || r.kind)],
+        ['equipment', 'Equipment'], ['cause', 'Cause'], ['rcfa_id', 'RCFA', r => r.rcfa_id ? `<span class="pill warn">${esc(r.rcfa_id)}</span>` : '']], 'No stops: a clean day.')));
+    g.appendChild(panel('Bonvoy exceptions', 'Tags 3+ hours outside their 60-day ±3σ band during the day (the report arrives the next morning)',
+      O.table(env, [['tag', 'Tag'], ['asset', 'Asset'], ['direction', 'Dir'], ['max', 'Max', 'n2'], ['hours_outside', 'Hours', 'n']], 'Nothing outside its band.')));
+    body.appendChild(g);
+    body.appendChild(panel(`BUS sheet (${bus.length} line${bus.length === 1 ? '' : 's'})`, 'The morning meeting’s list, carried day to day until each line closes',
+      O.table(bus, [['area', 'Area'], ['equipment', 'Equipment'], ['issue', 'Issue'], ['action', 'Action / next step'], ['owner', 'Owner'],
+        ['status', 'Status', r => `<span class="pill${r.status === 'New' ? ' warn' : r.status === 'Waiting parts' ? ' bad' : ''}">${esc(r.status)}</span>`], ['days_open', 'Days', 'n'], ['wo_no', 'WO']],
+        'No BUS sheet for this day.')));
+    body.appendChild(panel(`Overdue actions (${od.length})`, 'Planner actions past due and not completed, as of this day',
+      O.table(od, [['task_id', 'ID'], ['title', 'Action'], ['assigned_to', 'Owner'], ['due', 'Due', 'd'], ['days_late', 'Days late', 'n']], 'Nothing overdue.')));
+  }
+
+  $('prev').onclick = () => show(addDays($('day').value, -1));
+  $('next').onclick = () => show(addDays($('day').value, 1));
+  $('toToday').onclick = () => show(today);
+  $('day').onchange = () => $('day').value && show($('day').value);
+  async function start(){
+    today = await O.today(st);
+    const ctx = await st.db.rpc('mm_llm_context', { p_org: st.org.id });
+    outages = ((ctx.data && ctx.data.outages) || []).map(o => ({ id: o.id, starts: o.starts }));
+    const want = new URLSearchParams(location.search).get('day');
+    show(want && /^\d{4}-\d{2}-\d{2}$/.test(want) ? want : today);
+  }
+  (async () => {
+    st = await O.resolve();
+    if (st.error){ $('body').innerHTML = `<div class="dmsg">${esc(st.error)}</div>`; return; }
+    O.picker($('org'), st, start);
+    start();
+  })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.1905"></script>
+<script src="mm-nav.js?v=2026-11-08.2256"></script>
 </body>
 </html>

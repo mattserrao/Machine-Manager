@@ -2856,8 +2856,8 @@ function pkgSummary(b){
   async function bootTabs(){
     let sess = null;
     if (window.MMCloud && MMCloud.enabled){
-      MMCloud.mountAccount($('acct'), { compact: true });
-      try { sess = await MMCloud.session(); }
+      MMCloud.mountAccount($('acct'), { compact: true, tool: TOOL });
+      try { sess = await MMCloud.session() || await MMCloud.demoSession(TOOL); }
       catch (e) { sess = null; toast(`Can’t reach the server — showing ${T.demo} in this browser.`); }
     }
     if (sess && sess.org){
@@ -2906,8 +2906,8 @@ function pkgSummary(b){
   if (!LIB) bootTabs(); else (async () => {
     let sess = null;
     if (window.MMCloud && MMCloud.enabled){
-      MMCloud.mountAccount($('acct'), { compact: true });
-      try { sess = await MMCloud.session(); }
+      MMCloud.mountAccount($('acct'), { compact: true, tool: TOOL });
+      try { sess = await MMCloud.session() || await MMCloud.demoSession(TOOL); }
       catch (e) { sess = null; toast(`Can’t reach the server — showing ${T.demo} in this browser.`); }
     }
     if (sess && sess.org){

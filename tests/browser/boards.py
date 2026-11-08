@@ -18,7 +18,7 @@ def check(name, ok, detail=""):
 
 
 def open_page(br, name):
-    ctx = br.new_context(viewport={"width": 1400, "height": 860}, accept_downloads=True)
+    ctx = br.new_context(viewport={"width": 1400, "height": 860}, accept_downloads=True); offline(ctx)
     pg = ctx.new_page()
     pg.errors = []
     pg.on("pageerror", lambda e: pg.errors.append(str(e)[:300]))
@@ -40,6 +40,10 @@ def empty_spot(pg):
     b = pg.locator("#board").bounding_box()
     return b["x"] + 220, b["y"] + b["height"] - 140
 
+
+# Signed out, the demo tools read Sim Mill read-only (tests/browser/demo_sim_mill.py). This test is about the
+# browser-only demo the pages fall back to when the server can't be reached, so it blocks the server.
+def offline(ctx): ctx.route("**/*.supabase.co/**", lambda r: r.abort())
 
 with sync_playwright() as p:
     br = p.chromium.launch(channel=os.environ.get("PW_CHANNEL") or None, headless=True)

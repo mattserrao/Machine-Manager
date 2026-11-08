@@ -1,7 +1,7 @@
 id: S01
 title: 2nd section dryer can 27 DS bearing degrading — open going into the Nov 11 outage
 summary: >
-  Vibration on the can 27 drive-side bearing starts climbing in early September. Envoy flags it two
+  Vibration on the can 27 drive-side bearing starts climbing in early September. Bonvoy flags it two
   weeks before the annual outage, but nobody connects it in time and it isn't added to the annual scope.
   After the annual it keeps rising; the October vibration route calls for replacement, a WO is raised for
   Nov 11, and it shows up daily on the BUS sheet. The outage brief should lead with it — and point out it
@@ -20,8 +20,8 @@ timeline:
     sources: [vendor]
     what: September vibration route — can 27 DS 0.07 in/s overall, but an early outer-race tone in the spectrum; "monitor".
   - date: 2026-09-22
-    sources: [pi, envoy]
-    what: First Envoy exception (> 3σ, highest on 33#; report arrives Sep 23). Flags most days after that.
+    sources: [pi, bonvoy]
+    what: First Bonvoy exception (> 3σ, highest on 33#; report arrives Sep 23). Flags most days after that.
   - date: 2026-09-28
     sources: [bus]
     what: One BUS line, "Can 27 vibration alarm — reliability to look at", closed next day as "within limits".
@@ -29,8 +29,8 @@ timeline:
     sources: [jde]
     what: Annual outage starts. No WO for can 27 in the annual scope.
   - date: 2026-10-12
-    sources: [pi, envoy]
-    what: After restart the rise continues, now with DS temperature +8 °F. Envoy flags daily.
+    sources: [pi, bonvoy]
+    what: After restart the rise continues, now with DS temperature +8 °F. Bonvoy flags daily.
   - date: 2026-10-19
     sources: [vendor]
     what: October vibration route — 0.24 in/s, outer-race defect confirmed, "replace at next opportunity".
@@ -46,7 +46,7 @@ demo_questions:
     expect: Can 27 DS bearing replacement near the top, with the vibration and temperature trend, the Oct 19 route report, the WO number and whether parts are confirmed.
   - q: When did we first see the can 27 problem?
     output: Ask MM
-    expect: Envoy first flagged it on Sep 22 (report Sep 23; spectrum tone on the Sep 14 route), before the annual outage, and it was not added to the annual scope.
+    expect: Bonvoy first flagged it on Sep 22 (report Sep 23; spectrum tone on the Sep 14 route), before the annual outage, and it was not added to the annual scope.
 records:
   wo:
     - key: S01-WO
@@ -65,7 +65,7 @@ records:
       asset: Dryer can 27
       start: 2026-09-28
       end: 2026-09-29
-      issue: Can 27 vibration alarm (Envoy)
+      issue: Can 27 vibration alarm (Bonvoy)
       action: Reliability to look at
       updates: {2026-09-29: 'Checked - within limits, closing'}
       owner: P03
