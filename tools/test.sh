@@ -7,6 +7,7 @@ export PGDSN
 python3 tools/stamp.py --check
 node tests/unit/machine.test.js
 node tests/sync/sync_sim.js
+python3 tools/demo-data/backbone.py --check
 psql "$PGDSN" -q -v ON_ERROR_STOP=1 -f tests/db/supabase-shim.sql -f supabase/schema.sql >/dev/null
 python3 tests/db/test_schema.py
 python3 -m http.server 8799 >/dev/null 2>&1 & SERVER=$!

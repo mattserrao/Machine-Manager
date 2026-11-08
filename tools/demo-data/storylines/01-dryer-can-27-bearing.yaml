@@ -1,0 +1,49 @@
+id: S01
+title: 2nd section dryer can 27 DS bearing degrading — open going into the Nov 11 outage
+summary: >
+  Vibration on the can 27 drive-side bearing starts climbing in early September. Envoy flags it two
+  weeks before the annual outage, but nobody connects it in time and it isn't added to the annual scope.
+  After the annual it keeps rising; the October vibration route calls for replacement, a WO is raised for
+  Nov 11, and it shows up daily on the BUS sheet. The outage brief should lead with it — and point out it
+  was flagged before the annual.
+positions: []
+assets: [Dryer can 27, 2nd section drive group]
+pi_tags: [PM1:DRY2_C27_DS_VIB, PM1:DRY2_C27_DS_TEMP, PM1:DRY2_C27_TS_VIB]
+outages: [OUT-2026-ANNUAL, OUT-2026-11-11]
+people: [P03, P02, P01]
+vendors: [V-KV]
+timeline:
+  - date: 2026-09-01
+    sources: [pi]
+    what: DS velocity starts a slow rise from 0.07 in/s; TS unchanged; bearing temperature flat.
+  - date: 2026-09-14
+    sources: [vendor]
+    what: September vibration route — can 27 DS 0.11 in/s, "monitor"; early outer-race tone in the spectrum.
+  - date: 2026-09-22
+    sources: [pi, envoy]
+    what: First Envoy exception (> 3σ). Repeats on 6 of the next 12 days, mostly on 33#.
+  - date: 2026-09-28
+    sources: [bus]
+    what: One BUS line, "Can 27 vibration alarm — reliability to look at", closed next day as "within limits".
+  - date: 2026-10-05
+    sources: [jde]
+    what: Annual outage starts. No WO for can 27 in the annual scope.
+  - date: 2026-10-12
+    sources: [pi, envoy]
+    what: After restart the rise continues, now with DS temperature +8 °F. Envoy flags daily.
+  - date: 2026-10-19
+    sources: [vendor]
+    what: October vibration route — 0.21 in/s, outer-race defect confirmed, "replace at next opportunity".
+  - date: 2026-10-20
+    sources: [jde, teams]
+    what: Corrective WO raised, priority 2, scheduled to OUT-2026-11-11; action for planner to confirm bearing and housing parts on site.
+  - date: 2026-10-21
+    sources: [bus]
+    what: Daily BUS carry-over "Can 27 DS bearing — WO for Nov 11, monitoring 2x per shift" through Oct 31.
+demo_questions:
+  - q: What should we prioritize for the Nov 11 outage?
+    output: Outage brief
+    expect: Can 27 DS bearing replacement near the top, with the vibration and temperature trend, the Oct 19 route report, the WO number and whether parts are confirmed.
+  - q: When did we first see the can 27 problem?
+    output: Ask MM
+    expect: Envoy first flagged it on Sep 22 (rise visible from ~Sep 1), before the annual outage, and it was not added to the annual scope.

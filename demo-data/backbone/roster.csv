@@ -1,0 +1,23 @@
+id,name,role,crew
+P01,Garrett Holloway,PM1 superintendent,
+P02,Denise Varga,Maintenance planner,
+P03,Owen Achterberg,Reliability engineer,
+P04,Priya Lunsford,Process engineer,
+P05,Curtis Mabry,Maintenance supervisor,
+P06,Lena Strahorn,Production manager,
+P07,Wade Kittredge,Shift lead,A
+P08,Marisol Pena-Hart,Shift lead,B
+P09,Russ Delacroix,Shift lead,C
+P10,Tammy Odegaard,Shift lead,D
+P11,Jonah Brisbin,Machine tender,A
+P12,Kelsey Farrand,Machine tender,B
+P13,Dwight Umbach,Machine tender,C
+P14,Rafael Quist,Machine tender,D
+P15,Bonnie Szalay,Back tender,A
+P16,Travis Hallock,Back tender,B
+P17,Nadine Corbett-Oyelaran,Back tender,C
+P18,Elijah Pumphrey,Back tender,D
+P19,Hank Vosburgh,Millwright lead,
+P20,Sierra Tolliver,E&I technician,
+P21,Lyle Brackenridge,Stock prep operator,
+P22,Corinne Ashdown,Quality / QCS engineer,

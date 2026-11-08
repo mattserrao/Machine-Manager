@@ -1,0 +1,29 @@
+id: S07
+title: Calender bottom roll regrind at the annual outage
+summary: >
+  The May Teague roll report shows the soft cover's hardness drifting and the crown at the edge of tolerance,
+  with a regrind recommended at the annual. The work is planned in August, done during the annual, and
+  covered by a post-grind report.
+positions: [cal-bottom]
+assets: [Calender bottom roll, Calender loading hydraulics]
+pi_tags: [PM1:CAL_BOT_DS_VIB, PM1:REEL_MOIST]
+outages: [OUT-2026-05-27, OUT-2026-ANNUAL]
+people: [P02, P19, P01]
+vendors: [V-TR]
+timeline:
+  - date: 2026-05-27
+    sources: [vendor]
+    what: Teague inspection report (hardness, crown, cover thickness); recommends regrind at the annual.
+  - date: 2026-08-12
+    sources: [jde, teams]
+    what: Annual scope WO for the calender roll change and regrind; action to book the Teague shop slot.
+  - date: 2026-10-06
+    sources: [jde, mm]
+    what: Roll changed during the annual; My Machine roll history updated.
+  - date: 2026-10-20
+    sources: [vendor]
+    what: Teague post-grind report with the new crown and cover thickness.
+demo_questions:
+  - q: When was the calender bottom roll last ground, and what did they find?
+    output: Ask MM
+    expect: It was reground during the 2026 annual outage after the May report showed hardness drift and the crown near its limit. Cites both Teague reports.

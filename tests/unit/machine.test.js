@@ -43,7 +43,7 @@ check('cleanItem fixes unknown condition, bad date, bad target, bad history', ba
 check('cleanItems drops unsafe position ids', Object.keys(M.cleanItems({ 'form-top': {}, 'bad"id': {}, '<x>': {} })).join() === 'form-top');
 
 // change-outs
-const it = { installed: '2026-01-01', target: 12, vendor: 'AJ', style: 'S', serial: '1', condition: 'worn', conditionNote: 'edge wear', conditionDate: '2026-02-01', note: 'n' };
+const it = { installed: '2026-01-01', target: 12, vendor: 'NB', style: 'S', serial: '1', condition: 'worn', conditionNote: 'edge wear', conditionDate: '2026-02-01', note: 'n' };
 const round = M.unreplaced(M.replaced(it, '2026-03-01', { serial: '2' }));
 const lost = ['installed', 'vendor', 'style', 'serial', 'condition', 'conditionNote', 'conditionDate', 'note'].filter(k => it[k] !== round[k]);
 check('undo of a change-out restores the run exactly', lost.length === 0, lost.join(','));

@@ -1,0 +1,32 @@
+id: S04
+title: BP 2 refiner plates wearing fast — order before Nov 11
+summary: >
+  The BP 2 plates installed Aug 19 are due at 12 weeks, on Nov 11. From late September, specific energy
+  creeps up at the same freeness. A Ridgeway inspection during the annual outage notes more edge rounding
+  than expected. Only one Ridgeway set is on hand, and BP 1 is due soon after.
+positions: [ref-bp2, ref-bp1]
+assets: [BP 2 refiner, BP 2 refiner motor]
+pi_tags: [PM1:REF_BP2_SE, PM1:REF_BP2_KW, PM1:REF_BP1_SE]
+outages: [OUT-2026-08-19, OUT-2026-ANNUAL, OUT-2026-11-11]
+people: [P21, P04, P02]
+vendors: [V-RR]
+timeline:
+  - date: 2026-08-19
+    sources: [mm, jde, vendor]
+    what: New BP 2 plates installed; Ridgeway plate report notes plate pattern and starting bar height.
+  - date: 2026-09-20
+    sources: [pi]
+    what: BP 2 specific energy starts rising ~0.3 kWh/t per day at constant freeness.
+  - date: 2026-10-07
+    sources: [vendor]
+    what: Annual outage inspection by Ridgeway shows edge rounding beyond normal for 7 weeks. Recommends changing at the next opportunity and checking the stock for grit.
+  - date: 2026-10-14
+    sources: [envoy, bus]
+    what: Envoy flags BP 2 specific energy; BUS line "BP2 SE high — plates due Nov 11".
+  - date: 2026-10-23
+    sources: [mm, teams]
+    what: Consumables show 1 Ridgeway set on hand. Action is open to order 2 more sets, with no PO yet.
+demo_questions:
+  - q: Do we have what we need for refiner plates at the Nov 11 outage?
+    output: Outage brief
+    expect: BP 2 due Nov 11 and wearing fast; 1 set on hand, open order action; BP 1 also due within the next cycle.

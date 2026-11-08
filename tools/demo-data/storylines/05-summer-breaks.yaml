@@ -1,0 +1,30 @@
+id: S05
+title: Summer breaks at the 3rd dryer section and calender — repeating, never closed
+summary: >
+  From June to August there are ~22 breaks at the 3rd section and calender, more on 26# and on hot,
+  humid days. Each is a one-line BUS entry, closed when the machine is back up. A pocket ventilation WO is
+  closed as "could not reproduce", and there is no RCFA. The pattern only shows across the year: 3rd section
+  pocket ventilation fan amps drop on the days the breaks cluster.
+positions: [d3-felt-top, cal-top]
+assets: [3rd section pocket ventilation, Calender top roll, 3rd section top felt]
+pi_tags: [PM1:BREAKS, PM1:DRY3_PV_FAN_AMPS, PM1:SPEED, PM1:REEL_MOIST]
+outages: [OUT-2026-07-08, OUT-2026-08-19]
+people: [P07, P10, P20, P01]
+vendors: []
+timeline:
+  - date: 2026-06-03
+    sources: [pi, bus]
+    what: First break at the 3rd section on 26#, "sheet flutter at pocket", no cause found.
+  - date: 2026-06-24
+    sources: [jde]
+    what: WO to check pocket ventilation fan PV-3 dampers — closed "could not reproduce".
+  - date: 2026-07-15
+    sources: [pi, bus, envoy]
+    what: Cluster of 6 breaks in 9 days during a heat wave. PV fan amps 10% low on those days, and Envoy flags them twice.
+  - date: 2026-08-28
+    sources: [bus]
+    what: The last of 22 summer breaks. Entries stop as the weather cools, and nothing stays open.
+demo_questions:
+  - q: Is there a pattern behind the breaks at the 3rd section this summer?
+    output: Troubleshooting
+    expect: About 22 breaks Jun–Aug, skewed to 26# and hot days, lining up with low PV-3 fan amps. Notes the closed WO and that there is no RCFA.

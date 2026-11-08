@@ -1,0 +1,35 @@
+id: S03
+title: Base ply wire hole from a lumpbreaker wad — 10-hour unplanned shut
+summary: >
+  A wad off the lumpbreaker tears a 4-inch hole in the base ply forming fabric. The machine is down 10 hours
+  to change the fabric. An RCFA finds a worn lumpbreaker doctor blade and no PM on it. Its actions create a
+  blade PM (done) and a doctor loading check (overdue at year end).
+positions: [form-bottom, lumpbreaker]
+assets: [Base ply forming fabric, Lumpbreaker roll, Lumpbreaker doctor]
+pi_tags: [PM1:SPEED, PM1:BREAKS, PM1:FORM_BASE_COUCH_VAC]
+outages: [OUT-2026-01-21, OUT-2026-03-04]
+people: [P01, P03, P19, P08]
+vendors: [V-NB, V-PR]
+timeline:
+  - date: 2026-02-18
+    sources: [pi, bus, jde, mm]
+    what: Hole found at TS at 02:40; emergency WO; fabric changed with the floor spare; 10 h down. My Machine history records it as damaged.
+  - date: 2026-02-19
+    sources: [bus]
+    what: BUS item "Base ply wire hole — lumpbreaker wad, RCFA to follow".
+  - date: 2026-02-24
+    sources: [rcfa, teams]
+    what: RCFA-2026-02 opened. Root cause is a worn lumpbreaker doctor blade with no PM. Actions are a blade PM every outage, a doctor loading check and adding a spare blade to stores.
+  - date: 2026-03-04
+    sources: [jde, mm]
+    what: Lumpbreaker doctor blade changed at the outage; new PM issued. Base ply fabric changed early to get back on the outage cycle.
+  - date: 2026-06-30
+    sources: [teams]
+    what: The doctor loading check action passes its due date and is still open on Oct 31.
+demo_questions:
+  - q: Draft the RCFA timeline for the Feb 18 base ply wire hole.
+    output: RCFA draft
+    expect: Timeline from Pi speed and breaks, the emergency WO, BUS entries and My Machine history, with the 10 h downtime.
+  - q: Which RCFA actions are overdue?
+    output: Morning watch
+    expect: Includes the RCFA-2026-02 doctor loading check (due Jun 30).

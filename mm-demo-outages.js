@@ -52,7 +52,7 @@
 
     // ---- Next outage: being planned ----
     const o1 = ids[1];
-    task(o1, 'Stage new press felt and tandem felt at the press — confirm sizes with Albany', true);
+    task(o1, 'Stage new press felt and tandem felt at the press — confirm sizes with Halden', true);
     task(o1, 'Order pintle wire and seam kit for 2nd section top felt', true);
     task(o1, 'Clean HP shower nozzles on both formers; replace any plugged', false);
     task(o1, 'Uhle box covers: swap the two worst (inventory UB-07, UB-11)', false);
@@ -65,7 +65,7 @@
 
     // ---- The one after: started ----
     const o2 = ids[2];
-    task(o2, 'Get the BP wire on site — check delivery date with AstenJohnson', false);
+    task(o2, 'Get the BP wire on site — check delivery date with Northbank', false);
     task(o2, 'Book an extra hand for the wire pull-in', false);
     pkg(o2, 'ex-bp-wire-change', () => false);
     man(o2, 'shutdown', CREW_B, 6);
