@@ -450,8 +450,9 @@
     // Model text: plain text, with [citations] set off so they're easy to check against the evidence.
     function modelText(text) {
       const p = mk('p', 'model');
-      String(text || '').split(/(\[[^\]\n]{2,80}\])/).forEach(part =>
-        p.appendChild(/^\[.*\]$/.test(part) ? mk('span', 'cite', part) : document.createTextNode(part)));
+      String(text || '').split(/(\[[^\]\n]{2,80}\]|\*\*[^*\n]+\*\*)/).forEach(part =>
+        p.appendChild(/^\[.*\]$/.test(part) ? mk('span', 'cite', part)
+                    : /^\*\*.*\*\*$/.test(part) ? mk('b', '', part.slice(2, -2)) : document.createTextNode(part)));
       return p;
     }
     function meta(r) {

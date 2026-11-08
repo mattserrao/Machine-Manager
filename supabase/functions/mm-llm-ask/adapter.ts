@@ -7,7 +7,7 @@ export type Turn = { text: string; calls: ToolCall[]; inTokens: number; outToken
 export interface Model {
   provider: string; model: string;
   start(system: string, question: string): void;
-  next(): Promise<Turn>;                           // one model step
+  next(final?: boolean): Promise<Turn>;            // one model step; final = answer now, no more tool calls
   results(r: { id: string; content: string }[]): void;  // tool results for the last step's calls
 }
 
@@ -39,12 +39,13 @@ class Anthropic implements Model {
     if (!this.key) throw new ModelError(`ANTHROPIC_API_KEY is saved but unusable: ${raw.length} characters, none of them key characters (first is U+${raw.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}). Paste the key again.`);
     if (!this.key.startsWith('sk-ant-')) throw new ModelError(`ANTHROPIC_API_KEY doesn't look like an Anthropic key (should start sk-ant-; saved value is ${this.key.length} characters).`); }
   start(system: string, question: string) { this.system = system; this.messages = [{ role: 'user', content: question }]; }
-  async next(): Promise<Turn> {
+  async next(final = false): Promise<Turn> {
     const r = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'x-api-key': this.key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({ model: this.model, max_tokens: 2000, system: this.system, messages: this.messages,
-        tools: TOOLS.map((t) => ({ name: t.name, description: t.description, input_schema: t.parameters })) }),
+        tools: TOOLS.map((t) => ({ name: t.name, description: t.description, input_schema: t.parameters })),
+        ...(final ? { tool_choice: { type: 'none' } } : {}) }),
     });
     const j = await r.json();
     if (!r.ok) throw new ModelError(`Anthropic ${r.status}: ${j?.error?.message ?? JSON.stringify(j).slice(0, 300)}`);
@@ -66,11 +67,12 @@ class OpenAI implements Model {
     if (!model) throw new ModelError('Set MM_LLM_MODEL to the OpenAI model to use.');
   }
   start(system: string, question: string) { this.messages = [{ role: 'system', content: system }, { role: 'user', content: question }]; }
-  async next(): Promise<Turn> {
+  async next(final = false): Promise<Turn> {
     const r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST', headers: { authorization: `Bearer ${this.key}`, 'content-type': 'application/json' },
       body: JSON.stringify({ model: this.model, messages: this.messages,
-        tools: TOOLS.map((t) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.parameters } })) }),
+        tools: TOOLS.map((t) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.parameters } })),
+        ...(final ? { tool_choice: 'none' } : {}) }),
     });
     const j = await r.json();
     if (!r.ok) throw new ModelError(`OpenAI ${r.status}: ${j?.error?.message ?? JSON.stringify(j).slice(0, 300)}`);

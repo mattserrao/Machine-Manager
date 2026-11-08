@@ -307,12 +307,20 @@ end $$;
 create or replace function public.mm_llm_search_docs(p_org uuid, p_query text, p_limit int default 8, p_positions text[] default null)
 returns table (doc_id text, title text, kind text, vendor text, doc_date date, page int, chunk_no int, snippet text, rank real)
 language sql stable security invoker set search_path = '' as $$
-  select d.doc_id, d.title, d.kind, d.vendor, d.doc_date, c.page, c.chunk_no,
-         pg_catalog.ts_headline('english', c.content, q, 'MaxWords=45, MinWords=20'), pg_catalog.ts_rank(c.fts, q)
-  from llm.doc_chunks c join llm.documents d using (org_id, doc_id),
-       pg_catalog.websearch_to_tsquery('english', p_query) q
-  where c.org_id = p_org and c.fts @@ q and (p_positions is null or c.positions && p_positions)
-  order by pg_catalog.ts_rank(c.fts, q) desc, d.doc_date desc limit least(p_limit, 50);
+  -- All words first; if nothing has all of them, any of them (best matches first), so long questions still find something.
+  with q as (select pg_catalog.websearch_to_tsquery('english', p_query) qa),
+  q2 as (select qa, coalesce(pg_catalog.to_tsquery('english', nullif(pg_catalog.replace(qa::text, ' & ', ' | '), '')), qa) qo from q),
+  hits as (
+    select c.org_id, c.doc_id, c.page, c.chunk_no, c.content, c.fts, q2.qa as q from llm.doc_chunks c, q2
+    where c.org_id = p_org and c.fts @@ q2.qa and (p_positions is null or c.positions && p_positions)),
+  anyhits as (
+    select c.org_id, c.doc_id, c.page, c.chunk_no, c.content, c.fts, q2.qo as q from llm.doc_chunks c, q2
+    where not exists (select 1 from hits) and c.org_id = p_org and c.fts @@ q2.qo and (p_positions is null or c.positions && p_positions)),
+  m as (select * from hits union all select * from anyhits)
+  select d.doc_id, d.title, d.kind, d.vendor, d.doc_date, m.page, m.chunk_no,
+         pg_catalog.ts_headline('english', m.content, m.q, 'MaxWords=45, MinWords=20'), pg_catalog.ts_rank(m.fts, m.q)
+  from m join llm.documents d on d.org_id = m.org_id and d.doc_id = m.doc_id
+  order by pg_catalog.ts_rank(m.fts, m.q) desc, d.doc_date desc limit least(p_limit, 50);
 $$;
 
 do $$ begin

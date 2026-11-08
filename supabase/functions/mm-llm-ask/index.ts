@@ -16,7 +16,7 @@ import { systemPrompt } from './prompt.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!, ANON = Deno.env.get('SUPABASE_ANON_KEY')!, SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const DAILY_CAP = Number(Deno.env.get('MM_LLM_DAILY_CAP') ?? 300);   // all askers together, protects the model bill
-const MAX_STEPS = 8;
+const MAX_STEPS = 10;
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info, x-mm-ingest-token',
                'Access-Control-Allow-Methods': 'POST, OPTIONS' };
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
@@ -63,8 +63,9 @@ Deno.serve(async (req) => {
     if (e) throw new Error(e.message);
     m.start(systemPrompt(orgName, ctx ?? {}), question);
     for (let step = 0; step < MAX_STEPS; step++) {
-      const turn = await m.next(); inT += turn.inTokens; outT += turn.outTokens;
-      if (!turn.calls.length) { answer = turn.text.trim(); break; }
+      const final = step === MAX_STEPS - 1;              // last step: answer from what the tools have returned so far
+      const turn = await m.next(final); inT += turn.inTokens; outT += turn.outTokens;
+      if (final || !turn.calls.length) { answer = turn.text.trim() || 'No answer came back. Try a narrower question.'; break; }
       const results = [];
       for (const c of turn.calls) {
         const r = await runTool(db, org, c.name, c.args);
@@ -72,7 +73,6 @@ Deno.serve(async (req) => {
         results.push({ id: c.id, content: forModel(r) });
       }
       m.results(results);
-      if (step === MAX_STEPS - 1) answer = turn.text.trim() || 'I ran out of steps before finishing. Try a narrower question.';
     }
   } catch (err) {
     status = 'error';
