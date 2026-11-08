@@ -1,6 +1,6 @@
 /* Machine Manager — library page styles shared by the Ops Task Library and Consumables Tracker (after mm-board.css). */
 /* ---------- Library ---------- */
-  #library{position:fixed;inset:0;z-index:45;overflow:auto;background:var(--bg);padding:84px 24px 60px}
+  #library{position:fixed;inset:0;z-index:45;overflow:auto;background-color:var(--bg);padding:84px 24px 60px}
 body.lib-open #toolbar,body.lib-open #searchbar,body.lib-open #zoombar,body.lib-open #tips{display:none!important}
 .lib-inner{max-width:1200px;margin:0 auto}
 .lib-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
