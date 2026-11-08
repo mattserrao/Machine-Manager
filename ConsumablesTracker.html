@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1"><!-- boards zoom themselves; stops iOS zooming the page when typing on a card -->
 <title>Consumables Tracker</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1546"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1546">
-<script src="mm-icons.js?v=2026-11-08.1546"></script>
-<link rel="stylesheet" href="mm-board.css?v=2026-11-08.1546">
-<link rel="stylesheet" href="mm-board-library.css?v=2026-11-08.1546">
+<script src="mm-theme.js?v=2026-11-08.1647"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1647">
+<script src="mm-icons.js?v=2026-11-08.1647"></script>
+<link rel="stylesheet" href="mm-board.css?v=2026-11-08.1647">
+<link rel="stylesheet" href="mm-board-library.css?v=2026-11-08.1647">
 <style>
   /* this page only (shared styles: mm-board.css, mm-board-library.css) */
   /* consumable cards */
@@ -72,7 +72,7 @@
       <path id="tmpLink" class="tmp" d="" marker-end="url(#arrowSel)"/>
     </svg>
   </div>
-  <div id="empty"><div><h1>No cards yet</h1><p>Press <b>New card</b> or <span class="t-mouse">double-click</span><span class="t-touch">double-tap</span> anywhere to add a consumable.<span class="t-mouse"> Press <b>?</b> for shortcuts.</span></p></div></div>
+  <div id="empty"><div><h1>No cards yet</h1><p>Press <b>New card</b> to add a consumable, or <b>Category</b> to add a section for them.</p></div></div>
   <div id="marquee" hidden></div>
 </div>
 
@@ -88,7 +88,7 @@
   <button id="undoBtn" class="ib" title="Undo (Ctrl/⌘+Z)" aria-label="Undo" data-ic="undo"></button>
   <button id="redoBtn" class="ib" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo" data-ic="redo"></button>
   <span class="sep"></span>
-  <button id="frameBtn" class="ib" title="New frame (F)" aria-label="New frame" data-ic="frame"><span class="tl">Frame</span></button>
+  <button id="frameBtn" class="btn" title="New category (F)" aria-label="New category" data-ic="frame" data-ic-size="sm">Category</button>
   <button id="snapBtn" class="ib wide" title="Snap to grid (G)" aria-label="Snap to grid" data-ic="grid"><span class="tl">Snap</span></button>
   <span class="sep"></span>
   <button id="infoBtn" class="btn" title="Board name, machine and description">Details</button>
@@ -250,8 +250,8 @@
     <ul>
       <li>Each consumable is a card · <b>New card</b> picks the type · <span class="t-mouse">click</span><span class="t-touch">tap</span> a card to edit it</li>
       <li>Inventory cards: tap − / + to change what’s on hand · info cards: what goes where</li>
-      <li>Frames group categories · drag a card onto another’s bottom edge to tuck in a note</li>
-      <li><span class="t-mouse">Right-click</span><span class="t-touch">Press and hold</span> anything for options · <b>File</b> to export, import or print<span class="t-mouse"> · <b>?</b> for shortcuts</span></li>
+      <li>Cards are grouped by category and sorted by name · <b>+</b> on a category adds a card there</li>
+      <li><span class="t-mouse">Right-click</span><span class="t-touch">Press and hold</span> a card to move it to another category or tuck it under another card · <b>File</b> to export, import or print</li>
     </ul>
   </div>
   <button class="btn" id="tipsOk">Got it</button>
@@ -307,18 +307,19 @@
   </div>
 </div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1546"></script>
-<script src="mm-config.js?v=2026-11-08.1546"></script>
-<script src="mm-cloud.js?v=2026-11-08.1546"></script>
-<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.1546"></script>
-<script src="mm-ui.js?v=2026-11-08.1546"></script>
-<script src="mm-records.js?v=2026-11-08.1546"></script>
-<script src="mm-board.js?v=2026-11-08.1546"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1647"></script>
+<script src="mm-config.js?v=2026-11-08.1647"></script>
+<script src="mm-cloud.js?v=2026-11-08.1647"></script>
+<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.1647"></script>
+<script src="mm-ui.js?v=2026-11-08.1647"></script>
+<script src="mm-records.js?v=2026-11-08.1647"></script>
+<script src="mm-board.js?v=2026-11-08.1647"></script>
 <script>
 MMBoard.start({
-    version:'v0.3.1',
+    version:'v0.4.0',
     shell:'library', tool:'consumables', title:'Consumables Tracker', idb:'mm-consumables', idPrefix:'cs-', viewKey:'mm-cs-view',
     fileExt:'consumables', appTag:'machine-manager-consumables', urlParam:'board', statusMenu:false, noDrag:'.qb',
+    organizer:true,                // a scrolling page of category sections, not a canvas (mm-board.js: ORG)
     text:{ newBoard:'New board', newBoardName:'New consumables board', libTitle:'Boards', yours:'Your boards', makeOwn:'Start with empty category frames, or copy a board',
       frame:'Frame', moreFrames:'more', printEmpty:'Nothing to print — this board has no cards.', reportEmpty:'This board has no cards yet.',
       loadWhat:'the consumables', demo:'the demo board', fileLabel:'consumables or whiteboard' },
@@ -408,19 +409,33 @@ MMBoard.start({
     }
 
 
-    // Pick what kind of card to add at world point `at`.
-    function openTypeMenu(x, y, at, here){
+    // Pick what kind of card to add at world point `at` (organizer: into category `cat`, or each type's own).
+    function openTypeMenu(x, y, at, here, cat){
       closeMenu();
-      menu.appendChild(el('div', 'ml', 'New card'));
-      ['plates', 'blade', 'nozzle', 'rope', 'uhle', 'deckle'].forEach(t => mi(CTYPES[t].label, () => addCard(t, at, here)));
+      menu.appendChild(el('div', 'ml', cat ? `New card in ${cat.title || 'this category'}` : 'New card'));
+      ['plates', 'blade', 'nozzle', 'rope', 'uhle', 'deckle'].forEach(t => mi(CTYPES[t].label, () => addCard(t, at, here, cat)));
       ms();
-      mi('Blank inventory card', () => addCard('inv', at, true));
-      mi('Blank info card', () => addCard('info', at, true));
-      mi('Plain note', () => { const n = createNote(at.x, at.y); openEditor(n.id, true); });
-      showMenu(Math.min(x, innerWidth - 240), Math.min(y, innerHeight - 380));
+      mi('Blank inventory card', () => addCard('inv', at, true, cat));
+      mi('Blank info card', () => addCard('info', at, true, cat));
+      mi('Plain note', () => {
+        const n = createNote(at.x, at.y);
+        if (api.ORG){ api.placeIn(n, cat || null); render(); save(); }
+        openEditor(n.id, true);
+      });
+      showMenu(Math.max(8, Math.min(x, innerWidth - 240)), Math.min(y, innerHeight - 380));
+    }
+    // Organizer: a card goes into the category asked for, else its type's category (by title), else Other.
+    function addCardOrg(type, cat){
+      const known = CATS.find(c => c.key === type);
+      const f = cat || (known && api.B.frames.find(fr => (fr.title || '').trim().toLowerCase() === known.title.toLowerCase())) || null;
+      const n = createNote(0, 0, makeCons(type));
+      api.placeIn(n, f); render(); save();
+      openEditor(n.id, true);
+      requestAnimationFrame(() => centerOn(n.id));
     }
     // A new card of a known type goes into its category frame (next free spot), otherwise where asked.
-    function addCard(type, at, here){
+    function addCard(type, at, here, catFrame){
+      if (api.ORG) return addCardOrg(type, catFrame || null);
       const cat = CATS.find(c => c.key === type);
       const f = !here && cat && api.B.frames.find(fr => (fr.title || '').trim().toLowerCase() === cat.title.toLowerCase());
       if (f){
@@ -574,6 +589,7 @@ MMBoard.start({
         bumpQty(qb.dataset.id, qb.dataset.row, +qb.dataset.d); return true;
       },
       newInView(r, c, j){ openTypeMenu(r.left, r.bottom + 6, { x:c.x - CONS_W/2 + j(), y:c.y - 90 + j() }); return true; },
+      newInCat(f, r){ openTypeMenu(r.right - 230, r.bottom + 6, { x:f.x + 24, y:f.y + 58 }, true, f); },
       newAt(cx, cy, w){ openTypeMenu(cx, cy, { x:w.x - CONS_W/2, y:w.y - 30 }, true); return true; },
       editorText(n, ed){
         ed.style.minHeight = n.cons ? '70px' : ''; ed.style.height = n.cons ? '70px' : '';
@@ -625,6 +641,6 @@ MMBoard.start({
   },
 });
 </script>
-<script src="mm-nav.js?v=2026-11-08.1546"></script>
+<script src="mm-nav.js?v=2026-11-08.1647"></script>
 </body>
 </html>

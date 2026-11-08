@@ -411,3 +411,40 @@ textarea.inline.mini-inline{min-height:54px;font-size:12px;padding:5px 7px;borde
   .menu .mi{min-height:42px}
   .tab .tx{padding:4px 6px}
 }
+
+/* ---------- Organizer (cfg.organizer — the Consumables Tracker) ----------
+   The board becomes a scrolling page: one section per category (frame), its cards in a grid sorted by name.
+   No zoom, pan, dragging or arrows; cards keep exactly the look and contents they have on a board. */
+body.mm-organizer #board{overflow-y:auto;overflow-x:hidden;touch-action:pan-y;cursor:default;overscroll-behavior:contain;
+  background-attachment:local;background-position:0 0!important;background-size:var(--grid) var(--grid)!important}
+body.mm-organizer #world{position:relative;transform:none!important;max-width:1280px;margin:0 auto;
+  padding:76px 20px calc(48px + env(safe-area-inset-bottom))}
+body.mm-organizer #links,body.mm-organizer #marquee,body.mm-organizer #zoombar,
+body.mm-organizer #snapBtn,body.mm-organizer #libBtn,body.mm-organizer #helpBtn{display:none!important}
+body.mm-organizer #empty{pointer-events:none}
+.org-sec{margin:0 0 28px}
+.org-h{display:flex;align-items:center;gap:8px;margin:0 2px 10px;min-height:32px}
+.org-h::before{content:"";width:10px;height:10px;border-radius:3px;background:var(--fc,var(--line-strong));flex:none}
+.org-h .ft{font-size:15px;font-weight:600;margin:0;color:var(--ink);line-height:1.2}
+.org-h .ft input{font:inherit;font-weight:600;border:1px solid var(--accent-line);border-radius:var(--r-sm);padding:3px 6px;background:var(--surface);color:var(--ink);outline:none;min-width:200px}
+.org-h .org-n{font-size:12px;color:var(--muted);background:var(--hover);border-radius:999px;padding:1px 8px}
+.org-h .spacer{flex:1}
+.org-h .org-more{font-size:16px;line-height:1;letter-spacing:1px}
+.org-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;align-items:start}
+.org-none{grid-column:1/-1;font-size:13px;color:var(--muted);padding:14px 16px;border:1px dashed var(--line-strong);border-radius:var(--r-lg)}
+body.mm-organizer .note{position:relative!important;left:auto!important;top:auto!important;width:auto!important;z-index:auto!important;
+  cursor:pointer;touch-action:pan-y}
+body.mm-organizer .note .note-body{height:auto!important}
+body.mm-organizer .note.sized .note-body{min-height:84px;overflow:visible}
+body.mm-organizer .note .rz,body.mm-organizer .note .lh{display:none!important}
+body.mm-organizer .mini{cursor:pointer;touch-action:pan-y}
+body.mm-organizer .note:not(.sized) .text{max-height:none}
+@media (max-width:760px){
+  body.mm-organizer{--bottom-h:0px}
+  body.mm-organizer::after{display:none}
+  body.mm-organizer #world{padding:calc(var(--top-full) + 12px) 12px calc(32px + env(safe-area-inset-bottom))}
+  .org-grid{grid-template-columns:1fr;gap:10px}
+  .org-sec{margin-bottom:22px}
+  body.mm-organizer #tips{bottom:calc(8px + env(safe-area-inset-bottom))!important}
+}
+@media print{ body.mm-organizer #board{overflow:visible} }

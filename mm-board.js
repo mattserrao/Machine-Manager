@@ -17,6 +17,10 @@ window.MMBoard = { start(cfg){
     frame:'Frame', moreFrames:'more', printEmpty:'Nothing to print — this board is empty.', reportEmpty:'This board is empty.', loadWhat:'your boards',
     demo:'the demo board', fileLabel:'board' }, cfg.text || {});
   const LIB = cfg.shell !== 'tabs';
+  // Organizer (cfg.organizer, the Consumables Tracker): one board per page, laid out as a scrolling page instead of a
+  // canvas. Each frame is a category section; its cards sit in a grid, sorted by name. No zoom or pan, no dragging,
+  // no arrows. Cards keep their x/y (inside their category's frame) and n.cat, so the data stays a normal board.
+  const ORG = !!cfg.organizer;
   let P = {};                       // page hooks, set from cfg.plugin(api) just before start-up
   const MAX_TUCK = 3;      // sub-cards per card, at every level (same rules as the Whiteboard)
   const MAX_DEPTH = 4;     // main note = level 1
@@ -38,6 +42,7 @@ window.MMBoard = { start(cfg){
 
   const $ = id => document.getElementById(id);
   const board = $('board'), world = $('world'), emptyEl = $('empty'), saveStateEl = $('saveState');
+  if (ORG) document.body.classList.add('mm-organizer');
   const lg = $('lg'), tmpLink = $('tmpLink');
   $('ver').textContent = cfg.title + ' ' + VERSION;
 
@@ -443,6 +448,7 @@ window.MMBoard = { start(cfg){
   let selLink = null;
 
   function applyView(){
+    if (ORG) return;
     world.style.transform = `translate(${B.pan.x}px,${B.pan.y}px) scale(${B.zoom})`;
     board.style.backgroundSize = `${24 * B.zoom}px ${24 * B.zoom}px`;
     board.style.backgroundPosition = `${B.pan.x}px ${B.pan.y}px`;
@@ -450,6 +456,7 @@ window.MMBoard = { start(cfg){
   }
 
   function render(){
+    if (ORG) return renderOrg();
     applyView();
     world.querySelectorAll(':scope > .note, :scope > .link-label, :scope > .frame').forEach(e => e.remove());
     const svgEl = $('links');
@@ -508,6 +515,65 @@ window.MMBoard = { start(cfg){
     if (n.children.length) e.appendChild(buildTucked(n, 2));
     e.addEventListener('pointerdown', ev => startPointer(ev, n.id, false));
     return e;
+  }
+
+  /* ================= Organizer layout ================= */
+  // Which category (frame) a card belongs to: the one it was put in (n.cat), else the frame its spot falls in.
+  const frameOrder = () => [...B.frames].sort((a, b) => (a.y - b.y) || (a.x - b.x));
+  function catOf(n){
+    if (n.cat){ const f = B.frames.find(x => x.id === n.cat); if (f) return f; }
+    const cx = (n.x || 0) + (n.w || DEFAULT_W) / 2, cy = (n.y || 0) + 40;
+    return frameOrder().find(f => cx >= f.x && cx <= f.x + f.w && cy >= f.y && cy <= f.y + f.h) || null;
+  }
+  const byName = (a, b) => {
+    const ta = parseText(a.text).title.trim(), tb = parseText(b.text).title.trim();
+    if (!ta !== !tb) return ta ? -1 : 1;                       // untitled cards last
+    return ta.localeCompare(tb, undefined, { numeric:true, sensitivity:'base' }) || a.id.localeCompare(b.id);
+  };
+  // Put a card in a category: n.cat, and a spot inside the frame so the board data agrees.
+  function placeIn(n, f){
+    if (f){ n.cat = f.id; n.x = f.x + 24; n.y = f.y + 58; }
+    else { delete n.cat; const fs = B.frames; const bottom = fs.length ? Math.max(...fs.map(x => x.y + x.h)) : 0; n.x = 0; n.y = bottom + 80; }
+  }
+  function moveToCat(id, f){
+    const n = N(id); if (!n || n.parent || catOf(n) === f) return;
+    checkpoint(); placeIn(n, f); render(); save();
+    toast(`Moved to ${f ? f.title || T.frame : 'Other'}`);
+    requestAnimationFrame(() => centerOn(id));
+  }
+  function renderOrg(){
+    world.querySelectorAll(':scope > .org-sec').forEach(e => e.remove());
+    const list = tops(), groups = new Map(frameOrder().map(f => [f, []])), other = [];
+    for (const n of list){ const f = catOf(n); (f ? groups.get(f) : other).push(n); }
+    const sec = (f, notes) => {
+      const s = el('section', 'org-sec'); if (f){ s.dataset.id = f.id; s.style.setProperty('--fc', f.color || 'var(--line-strong)'); }
+      const h = el('div', 'org-h');
+      const t = el('h2', 'ft', f ? (f.title || T.frame) : 'Other'); h.appendChild(t);
+      h.appendChild(el('span', 'org-n', String(notes.length)));
+      h.appendChild(el('span', 'spacer'));
+      if (f){
+        const add = el('button', 'ib'); add.appendChild(I('plus', 'sm')); add.title = `New ${W.card} in ${f.title || T.frame}`; add.setAttribute('aria-label', add.title);
+        add.addEventListener('click', e => { e.stopPropagation(); const r = add.getBoundingClientRect(); if (P.newInCat) P.newInCat(f, r); });
+        const more = el('button', 'ib org-more', '⋯'); more.title = 'Category options'; more.setAttribute('aria-label', 'Options for ' + (f.title || T.frame));
+        more.addEventListener('click', e => { e.stopPropagation(); const r = more.getBoundingClientRect(); openFrameMenu(r.right - 220, r.bottom + 6, f.id); });
+        h.append(add, more);
+        t.addEventListener('dblclick', ev => { ev.stopPropagation(); renameFrame(f.id); });
+      }
+      s.appendChild(h);
+      const g = el('div', 'org-grid');
+      notes.sort(byName).forEach(n => g.appendChild(buildNote(n)));
+      if (!notes.length) g.appendChild(el('div', 'org-none', `No ${W.cards} yet`));
+      s.appendChild(g);
+      return s;
+    };
+    const svgEl = $('links');
+    for (const [f, notes] of groups) world.insertBefore(sec(f, notes), svgEl);
+    if (other.length) world.insertBefore(sec(null, other), svgEl);
+    emptyEl.hidden = list.length > 0 || B.frames.length > 0;
+    for (const id of [...sel]) if (!N(id) || N(id).parent) sel.delete(id);
+    applySearch();
+    renderChrome();
+    updateUndo();
   }
 
   function buildAttRow(atts){
@@ -712,7 +778,7 @@ window.MMBoard = { start(cfg){
   }, true);
 
   /* ================= Selection ================= */
-  function syncSelClasses(){ world.querySelectorAll(':scope > .note').forEach(e => e.classList.toggle('selected', sel.has(e.dataset.id))); }
+  function syncSelClasses(){ world.querySelectorAll(ORG ? '.org-grid > .note' : ':scope > .note').forEach(e => e.classList.toggle('selected', sel.has(e.dataset.id))); }
   function clearSel(){ if (sel.size){ sel.clear(); syncSelClasses(); } }
   function selectOnly(id){ sel.clear(); sel.add(id); syncSelClasses(); }
   function toggleSel(id){ sel.has(id) ? sel.delete(id) : sel.add(id); syncSelClasses(); }
@@ -758,6 +824,7 @@ window.MMBoard = { start(cfg){
     const root = rootOf(n), p = N(n.parent), idx = p.children.indexOf(id);
     p.children.splice(idx, 1);
     n.parent = null; n.x = root.x + (root.w || DEFAULT_W) + 24; n.y = root.y + idx * 30; n.z = ++B.z;
+    if (ORG) placeIn(n, catOf(root));
     render(); save();
   }
   function zFront(ids){ checkpoint(); ids.forEach(id => { N(id).z = ++B.z; }); render(); save(); }
@@ -975,7 +1042,8 @@ window.MMBoard = { start(cfg){
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     if (pinch || linkMode) return;
     if (e.target.closest('a, textarea, input, .cb')) return;
-    e.preventDefault(); e.stopPropagation();
+    if (!ORG) e.preventDefault();
+    e.stopPropagation();
     closeMenu(); if (!linkPop.hidden) hideLinkPop();
     ptr = { id, isChild, sx:e.clientX, sy:e.clientY, mode:null, el:null, offX:0, offY:0, tgt:null, exp:null, hoverId:null, hoverT:0, shift:e.shiftKey, type:e.pointerType };
     if (e.pointerType === 'touch'){
@@ -1157,6 +1225,7 @@ window.MMBoard = { start(cfg){
 
   /* ================= Board: pan, marquee, pinch, wheel ================= */
   board.addEventListener('pointerdown', e => {
+    if (ORG) return;
     if (e.pointerType === 'touch'){
       touches.set(e.pointerId, { x:e.clientX, y:e.clientY });
       if (touches.size === 2){
@@ -1169,12 +1238,13 @@ window.MMBoard = { start(cfg){
     }
   }, true);
 
-  const isEmptyTarget = t => t === board || t === world || t.id === 'links' || emptyEl.contains(t);
+  const isEmptyTarget = t => t === board || t === world || t.id === 'links' || emptyEl.contains(t) || (ORG && !!t.closest && !!t.closest('.org-grid, .org-sec') && !t.closest('.note, .org-h'));
   board.addEventListener('pointerdown', e => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     if (!isEmptyTarget(e.target) || pinch) return;
     closeMenu(); hideLinkPop();
     if (document.activeElement && document.activeElement.blur && typing()) document.activeElement.blur();
+    if (ORG){ clearSel(); return; }
     if (e.shiftKey){
       const br = board.getBoundingClientRect();
       marq = { sx:e.clientX, sy:e.clientY, br, base:new Set(sel) };
@@ -1189,14 +1259,14 @@ window.MMBoard = { start(cfg){
     board.classList.add('panning');
   });
   board.addEventListener('dblclick', e => {
-    if (!isEmptyTarget(e.target)) return;
+    if (ORG || !isEmptyTarget(e.target)) return;
     const w = toWorld(e.clientX, e.clientY);
     if (P.newAt && P.newAt(e.clientX, e.clientY, w)) return;
     const n = createNote(w.x - DEFAULT_W/2, w.y - 30);
     openEditor(n.id, true);
   });
   board.addEventListener('wheel', e => {
-    if (e.target.closest('textarea')) return;
+    if (ORG || e.target.closest('textarea')) return;
     e.preventDefault();
     if (e.ctrlKey || e.metaKey) zoomAt(e.clientX, e.clientY, B.zoom * Math.exp(-e.deltaY * (e.deltaMode ? 0.05 : 0.0025) * (e.ctrlKey && !e.metaKey && Math.abs(e.deltaY) < 50 ? 4 : 1)));
     else { B.pan.x -= e.deltaX; B.pan.y -= e.deltaY; applyView(); }
@@ -1234,6 +1304,7 @@ window.MMBoard = { start(cfg){
     return { w:r.width, top, bot, side:narrow ? 16 : 60, pad:narrow ? 14 : 30 };
   }
   function fitAll(minZoom){
+    if (ORG) return;
     const bb = contentBox();
     if (!bb){ B.zoom = 1; B.pan = { x:0, y:0 }; applyView(); return; }
     const a = openArea(), h = a.bot - a.top;
@@ -1253,6 +1324,11 @@ window.MMBoard = { start(cfg){
   const fitOnOpen = () => fitAll(OPEN_MIN_ZOOM);
   function centerOn(id){
     const e = visibleElFor(id); if (!e) return;
+    if (ORG){
+      e.scrollIntoView({ block:'center', behavior:'smooth' });
+      if (e.animate) e.animate([{ boxShadow:'0 0 0 0 rgba(37,99,235,0)' }, { boxShadow:'0 0 0 8px rgba(37,99,235,.35)' }, { boxShadow:'0 0 0 0 rgba(37,99,235,0)' }], { duration:700, delay:250 });
+      return;
+    }
     const r = worldRect(e), a = openArea();
     B.pan.x = Math.round(a.w/2 - (r.x + r.w/2) * B.zoom);
     B.pan.y = Math.round((a.top + a.bot)/2 - (r.y + r.h/2) * B.zoom);
@@ -1303,6 +1379,7 @@ window.MMBoard = { start(cfg){
       if (Math.hypot(e.clientX - ptr.sx, e.clientY - ptr.sy) < 5) return;
       clearTimeout(ptr.lp);
       if (lastClick){ clearTimeout(lastClick.timer); lastClick = null; }
+      if (ORG){ ptr = null; return; }                       // organizer: cards don't move; the page scrolls
       if (ptr.isChild) beginMini(e); else beginDrag(e);
     }
     if (ptr.mode === 'mini') moveMini(e);
@@ -1629,13 +1706,14 @@ window.MMBoard = { start(cfg){
     if (isTop) selectOnly(id);
     mi('Open details', () => openEditor(id), 'Enter');
     mi('Edit text on card', () => inlineEdit(id), 'Dbl-click');
-    mi('Connect to…', () => beginLink(id, null, true));
+    if (ORG) orgNoteItems(n);
+    else mi('Connect to…', () => beginLink(id, null, true));
     if (n.children.length) mi(n.collapsed ? `Expand ${W.subs}` : `Collapse ${W.subs}`, () => toggleCollapse(id));
     if (n.parent) mi('Pop out of stack', () => detach(id));
     ms();
     mi('Copy', () => { sel.clear(); clip = packNotes([id]); clip.n = 0; toast('Copied 1 note'); }, '⌘/Ctrl+C');
     mi('Duplicate', () => duplicate([id]), '⌘/Ctrl+D');
-    if (isTop){ mi('Bring to front', () => zFront([id])); mi('Send to back', () => zBack([id])); }
+    if (isTop && !ORG){ mi('Bring to front', () => zFront([id])); mi('Send to back', () => zBack([id])); }
     ms();
     if (cfg.statusMenu) statusRow([id]);
     colorRow([id]);
@@ -1643,20 +1721,40 @@ window.MMBoard = { start(cfg){
     mi('Delete', () => deleteNotes([id]), 'Del', true);
     showMenu(x, y);
   }
+  // Organizer: what dragging does on a board — change category, tuck under another card — as menu items.
+  function orgNoteItems(n){
+    if (n.parent) return;
+    const here = catOf(n), cats = frameOrder().filter(f => f !== here);
+    if (cats.length || here){
+      menu.appendChild(el('div', 'ml', 'Move to'));
+      cats.forEach(f => mi(f.title || T.frame, () => moveToCat(n.id, f)));
+      if (here) mi('Other (no category)', () => moveToCat(n.id, null));
+    }
+    const peers = tops().filter(x => x.id !== n.id && catOf(x) === here && !dropBlock(n.id, x.id)).sort(byName);
+    if (peers.length){
+      menu.appendChild(el('div', 'ml', `Tuck under`));
+      peers.slice(0, 8).forEach(x => mi(parseText(x.text).title || 'Untitled', () => {
+        checkpoint(); const r = noteEl(n.id) && noteEl(n.id).getBoundingClientRect();
+        applyDrop(n.id, { kind:'into', parent:x.id, ok:true }, r);
+        requestAnimationFrame(() => centerOn(x.id));
+      }));
+    }
+  }
   function openSelMenu(x, y){
     closeMenu();
     const ids = [...sel];
     menu.appendChild(el('div', 'ml', `${ids.length} notes selected`));
-    mi('Align left edges', () => align('left', ids));
-    mi('Align top edges', () => align('top', ids));
-    mi('Distribute horizontally', () => align('h', ids));
-    mi('Distribute vertically', () => align('v', ids));
-    mi('Tidy into a grid', () => align('tidy', ids));
-    ms();
+    if (!ORG){
+      mi('Align left edges', () => align('left', ids));
+      mi('Align top edges', () => align('top', ids));
+      mi('Distribute horizontally', () => align('h', ids));
+      mi('Distribute vertically', () => align('v', ids));
+      mi('Tidy into a grid', () => align('tidy', ids));
+      ms();
+    }
     mi('Copy', () => copySel(), '⌘/Ctrl+C');
     mi('Duplicate', () => duplicate(ids), '⌘/Ctrl+D');
-    mi('Bring to front', () => zFront(ids));
-    mi('Send to back', () => zBack(ids));
+    if (!ORG){ mi('Bring to front', () => zFront(ids)); mi('Send to back', () => zBack(ids)); }
     ms();
     if (cfg.statusMenu) statusRow(ids);
     colorRow(ids);
@@ -1666,6 +1764,11 @@ window.MMBoard = { start(cfg){
   }
   function openBoardMenu(x, y){
     closeMenu(); hideLinkPop();
+    if (ORG){
+      if (P.newInView) mi(`New ${W.card}…`, () => setTimeout(() => P.newInView({ left:x, bottom:y }, { x:0, y:0 }, () => 0), 0), 'N');
+      mi('New category', newFrameInView, 'F');
+      return showMenu(x, y);
+    }
     const w = toWorld(x, y);
     if (P.newAt) mi(`New ${W.card} here…`, () => setTimeout(() => P.newAt(x, y, w), 0), 'Dbl-click');
     else mi(`New ${W.card} here`, () => { const n = createNote(w.x - DEFAULT_W/2, w.y - 30); openEditor(n.id, true); }, 'Dbl-click');
@@ -1680,7 +1783,8 @@ window.MMBoard = { start(cfg){
   board.addEventListener('contextmenu', e => {
     e.preventDefault();
     if (!menu.hidden && e.pointerType === 'touch') return;
-    const m = e.target.closest('.mini'), ne = e.target.closest('#world > .note'), fe = e.target.closest('.frame');
+    const m = e.target.closest('.mini'), ne = e.target.closest(ORG ? '.note' : '#world > .note'), fe = e.target.closest(ORG ? '.org-h' : '.frame');
+    if (ORG && fe && !m && !ne) return openFrameMenu(e.clientX, e.clientY, fe.parentElement.dataset.id);
     if (fe && !m && !ne) openFrameMenu(e.clientX, e.clientY, fe.dataset.id);
     else if (m) openNoteMenu(e.clientX, e.clientY, m.dataset.id);
     else if (ne) openNoteMenu(e.clientX, e.clientY, ne.dataset.id);
@@ -1700,7 +1804,7 @@ window.MMBoard = { start(cfg){
     mi('Import a package…', () => $('importFile').click(), '⌘/Ctrl+O');
     ms();
     mi('Print / PDF…', openPrint, '⌘/Ctrl+P');
-    mi('Export as image (PNG)', exportPNG);
+    if (!ORG) mi('Export as image (PNG)', exportPNG);
     showMenu(r.left, r.bottom + 6);
   });
 
@@ -1717,7 +1821,7 @@ window.MMBoard = { start(cfg){
     const any = n => hit(n) || n.children.some(c => N(c) && any(N(c)));
     const walk = n => { if (hit(n)) matches.push(n.id); n.children.forEach(c => N(c) && walk(N(c))); };
     tops().sort((a, b) => (a.y - b.y) || (a.x - b.x)).forEach(walk);
-    for (const ne of world.querySelectorAll(':scope > .note')){
+    for (const ne of world.querySelectorAll(ORG ? '.org-grid > .note' : ':scope > .note')){
       const n = N(ne.dataset.id);
       ne.classList.toggle('dim', !any(n));
       ne.classList.toggle('hit', hit(n));
@@ -1784,6 +1888,13 @@ window.MMBoard = { start(cfg){
     document.title = libEl.hidden && B ? `${B.name} · ${cfg.title}` : cfg.title;
   }
   function openLibrary(){
+    if (ORG){                                            // one organizer per page: open (or make) it instead
+      if (B) return;
+      const id = app.order.find(x => app.boards[x]);
+      if (id) return openPackage(id);
+      const b = newBoard(T.newBoardName); if (P.onNewBoard) P.onNewBoard(b); save();
+      return openPackage(b.id);
+    }
     cancelLink(); closeMenu(); hideLinkPop(); clearSel();
     libEl.hidden = false; document.body.classList.add('lib-open');
     $('tips').hidden = true;
@@ -2199,6 +2310,7 @@ function pkgSummary(b){
   function openPrint(){
     closeMenu(); hideLinkPop();
     po = { ...PO_DEFAULT, ...(app.printOpts || {}) };
+    if (ORG) po.kind = 'report';                         // the organizer is a list: print it as one
     if (po.area === 'selection' && !sel.size) po.area = 'board';
     if (po.area === 'frames' && !B.frames.length) po.area = 'board';
     $('printDlg').hidden = false;
@@ -2390,8 +2502,9 @@ function pkgSummary(b){
     const done = all.filter(n => n.status === 'done').length, late = all.filter(isLate).length;
     const rects = {};
     for (const n of tops()){ const e = noteEl(n.id); rects[n.id] = e ? worldRect(e) : { x:n.x, y:n.y, w:DEFAULT_W, h:100 }; }
-    const inFrame = (f, id) => { const r = rects[id]; const cx = r.x + r.w/2, cy = r.y + r.h/2; return cx >= f.x && cx <= f.x + f.w && cy >= f.y && cy <= f.y + f.h; };
-    const byPos = (a, b) => (rects[a.id].y - rects[b.id].y) || (rects[a.id].x - rects[b.id].x);
+    const inFrame = ORG ? (f, id) => catOf(N(id)) === f      // organizer: by category, A–Z, as on screen
+      : (f, id) => { const r = rects[id]; const cx = r.x + r.w/2, cy = r.y + r.h/2; return cx >= f.x && cx <= f.x + f.w && cy >= f.y && cy <= f.y + f.h; };
+    const byPos = ORG ? byName : (a, b) => (rects[a.id].y - rects[b.id].y) || (rects[a.id].x - rects[b.id].x);
     const used = new Set();
     const lineHTML = s => {
       let m;
@@ -2453,7 +2566,7 @@ function pkgSummary(b){
     return e;
   }
   const F = id => B.frames.find(f => f.id === id);
-  const frameEl = id => world.querySelector(`.frame[data-id="${id}"]`);
+  const frameEl = id => world.querySelector(ORG ? `.org-sec[data-id="${id}"]` : `.frame[data-id="${id}"]`);
   function createFrame(x, y, extra){
     checkpoint();
     const f = Object.assign({ id:uid(), x:snapV(x), y:snapV(y), w:528, h:360, title:'Frame', color:FRAME_COLORS[B.frames.length % FRAME_COLORS.length] }, extra || {});
@@ -2462,10 +2575,18 @@ function pkgSummary(b){
     renameFrame(f.id, true);
     return f;
   }
-  function newFrameInView(){ const c = viewCenter(); createFrame(c.x - 264, c.y - 180); }
+  function newFrameInView(){
+    if (ORG){                                                    // a new category goes at the end of the page
+      const bottom = B.frames.length ? Math.max(...B.frames.map(f => f.y + f.h)) : 0;
+      const f = createFrame(0, B.frames.length ? bottom + 56 : 0, { w:600, h:580, title:'New category' });
+      requestAnimationFrame(() => { const e = frameEl(f.id); if (e) e.scrollIntoView({ block:'center', behavior:'smooth' }); });
+      return;
+    }
+    const c = viewCenter(); createFrame(c.x - 264, c.y - 180);
+  }
   function renameFrame(id, fresh){
     const f = F(id), fe = frameEl(id); if (!f || !fe) return;
-    const fh = fe.querySelector('.fh'); fh.textContent = '';
+    const fh = fe.querySelector(ORG ? '.ft' : '.fh'); fh.textContent = '';
     const inp = el('input'); inp.value = f.title; fh.appendChild(inp); inp.focus(); inp.select();
     inp.addEventListener('pointerdown', e => e.stopPropagation());
     let fin = false;
@@ -2474,6 +2595,7 @@ function pkgSummary(b){
     inp.addEventListener('blur', done);
   }
   function notesInFrame(f){
+    if (ORG) return tops().filter(n => catOf(n) === f);
     return tops().filter(n => { const e = noteEl(n.id); if (!e) return false; const r = worldRect(e), cx = r.x + r.w/2, cy = r.y + r.h/2; return cx >= f.x && cx <= f.x + f.w && cy >= f.y && cy <= f.y + f.h; });
   }
   function startFrame(e, id){
@@ -2522,12 +2644,21 @@ function pkgSummary(b){
     const f = F(id); if (!f) return;
     checkpoint();
     if (withNotes) notesInFrame(f).forEach(n => removeNote(n.id));
+    else if (ORG) notesInFrame(f).forEach(n => placeIn(n, null));
     B.frames = B.frames.filter(x => x.id !== id);
     render(); save();
   }
   function openFrameMenu(x, y, id){
     closeMenu(); hideLinkPop();
     const f = F(id); if (!f) return;
+    if (ORG){
+      mi('Rename category', () => renameFrame(id));
+      if (P.newInCat) mi(`New ${W.card} here…`, () => setTimeout(() => P.newInCat(f, { left:x, bottom:y, right:x + 220 }), 0));
+      ms();
+      mi('Delete category (keep its cards)', () => { deleteFrame(id, false); toast(`Its ${W.cards} are under Other now.`); }, '', true);
+      mi(`Delete category and its ${W.cards}`, () => deleteFrame(id, true), '', true);
+      return showMenu(x, y);
+    }
     mi('Rename', () => renameFrame(id));
     mi('Select notes in frame', () => { sel.clear(); notesInFrame(f).forEach(n => sel.add(n.id)); syncSelClasses(); });
     mi('Fit frame to its notes', () => {
@@ -2631,6 +2762,7 @@ function pkgSummary(b){
       return;
     }
     if (k === 'Enter' && sel.size === 1){ e.preventDefault(); openEditor([...sel][0]); return; }
+    if (ORG && (k.startsWith('Arrow') || '+=-_0!gG'.includes(k) || (e.shiftKey && e.code === 'Digit1'))) return;
     if (k.startsWith('Arrow') && sel.size){
       e.preventDefault();
       const s = e.shiftKey ? GRID : (app.snap ? GRID : 2);
@@ -2679,6 +2811,7 @@ function pkgSummary(b){
     get B(){ return B; }, get app(){ return app; }, get cloud(){ return cloud; }, N,
     menu, mi, ms, showMenu, closeMenu, placeMenu, edText,
     createNote, openEditor, paintEditor, render, save, checkpoint, newBoard, fitAll, centerOn, notesInFrame, worldRect, noteEl,
+    ORG, catOf, placeIn,
   };
   P = (cfg.plugin && cfg.plugin(api)) || {};
 
