@@ -296,6 +296,8 @@
 <script src="vendor/supabase-2.119.0.js"></script>
 <script src="mm-config.js?v=2026-11-07"></script>
 <script src="mm-cloud.js?v=2026-11-07"></script>
+<script src="mm-ui.js?v=2026-11-08"></script>
+<script src="mm-records.js?v=2026-11-08"></script>
 <script src="mm-machine.js?v=2026-11-07"></script>
 <script>
 (() => {
@@ -321,8 +323,7 @@
   const canEdit = () => !!(oStore && oStore.edit);
 
   /* ---------- Helpers ---------- */
-  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
-  const uid = () => Math.random().toString(36).slice(2, 8) + Date.now().toString(36).slice(-4);
+  const { el, uid, toast } = MMUI;             // mm-ui.js
   const fmt = (s, o) => parseDay(s).toLocaleDateString(undefined, o);
   const fmtShort = s => fmt(s, { month: 'short', day: 'numeric' });
   const fmtLong = s => fmt(s, { month: 'short', day: 'numeric', year: 'numeric' });
@@ -330,12 +331,6 @@
   function relDay(d){
     const n = daysBetween(todayStr(), d);
     return n === 0 ? 'Today' : n === 1 ? 'Tomorrow' : n === -1 ? 'Yesterday' : n > 0 ? `in ${span(n)}` : `${span(n)} ago`;
-  }
-  let toastT;
-  function toast(msg, action){
-    const t = $('toast'); t.textContent = msg; t.classList.toggle('act', !!action);
-    if (action){ const b = el('button', '', action.label); b.addEventListener('click', () => { t.classList.remove('show'); action.fn(); }); t.appendChild(b); }
-    t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), action ? 7000 : 2800);
   }
   const outages = () => Object.entries(O.outages).map(([id, o]) => ({ ...o, id }))
     .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
@@ -378,34 +373,32 @@
   }
 
   /* ---------- Saving ---------- */
+  // Record ids (mm-records.js): this tool's own, and the two tools it reads.
+  const OR = MMRecords.outages, MR = MMRecords.mymachine, TR = MMRecords.boards;
+  const OBAGS = () => ({ outage: O.outages, task: O.tasks, pkg: O.pkgs, pkd: O.pdone, man: O.man });
   const oRecords = () => {
     const r = {};
-    if (O.settings) r.settings = O.settings;
-    for (const [id, o] of Object.entries(O.outages)) r['outage:' + id] = o;
-    for (const [id, t] of Object.entries(O.tasks)) r['task:' + id] = t;
-    for (const [id, k] of Object.entries(O.pkgs)) r['pkg:' + id] = k;
-    for (const [id, d] of Object.entries(O.pdone)) r['pkd:' + id] = d;
-    for (const [id, m] of Object.entries(O.man)) r['man:' + id] = m;
+    if (O.settings) r[OR.settings] = O.settings;
+    for (const [kind, bag] of Object.entries(OBAGS())) for (const [id, v] of Object.entries(bag)) r[OR.key(kind, id)] = v;
     return r;
   };
   const mRecords = () => {
     const r = {};
-    if (machineRaw) r.machine = machineRaw;
-    for (const [id, it] of Object.entries(items)) r['item:' + id] = it;
+    if (machineRaw) r[MR.machine] = machineRaw;
+    for (const [id, it] of Object.entries(items)) r[MR.item(id)] = it;
     return r;
   };
   function onO(id, data){
-    if (id === 'settings') O.settings = data;
-    else if (id.startsWith('outage:')){ const k = id.slice(7); if (data) O.outages[k] = data; else delete O.outages[k]; }
-    else if (id.startsWith('task:')){ const k = id.slice(5); if (data) O.tasks[k] = data; else delete O.tasks[k]; }
-    else for (const [pre, bag] of [['pkg:', O.pkgs], ['pkd:', O.pdone], ['man:', O.man]])
-      if (id.startsWith(pre)){ const k = id.slice(pre.length); if (data) bag[k] = data; else delete bag[k]; }
+    const r = OR.parse(id); if (!r) return;
+    if (r.kind === 'settings') O.settings = data;
+    else { const bag = OBAGS()[r.kind]; if (data) bag[r.id] = data; else delete bag[r.id]; }
     softRender();
   }
   function onTP(id, data){ if (data) tp[id] = data; else delete tp[id]; drawPanel(); }
   function onM(id, data){
-    if (id === 'machine'){ machineRaw = data; machine = data ? MM.normalize(JSON.parse(JSON.stringify(data))) : null; }
-    else if (id.startsWith('item:')){ const k = id.slice(5), it = data && MM.cleanItem(data); if (!/^[a-z0-9-]{1,60}$/.test(k)) return; if (it) items[k] = it; else delete items[k]; }
+    const r = MR.parse(id); if (!r) return;
+    if (r.kind === 'machine'){ machineRaw = data; machine = data ? MM.normalize(JSON.parse(JSON.stringify(data))) : null; }
+    else { const k = r.pos, it = data && MM.cleanItem(data); if (!/^[a-z0-9-]{1,60}$/.test(k)) return; if (it) items[k] = it; else delete items[k]; }
     softRender();
   }
   let warned = false, viewWarned = false, stT;
@@ -702,17 +695,14 @@
   const firstLine = t => { const ls = (t || '').split('\n'); const i = ls.findIndex(l => l.trim()); return { title: i < 0 ? '' : ls[i].replace(/^#+\s*/, '').trim(), rest: i < 0 ? [] : ls.slice(i + 1) }; };
   function libPackages(){
     const out = [];
-    for (const [k, d] of Object.entries(tp)) if (k.startsWith('p:')) out.push({ id: k.slice(2), name: d.name || 'Untitled package', meta: d.meta || {} });
-    for (const p of out) p.steps = Object.keys(tp).filter(k => k.startsWith(`n:${p.id}:`) && !tp[k].parent).length;
+    for (const b of Object.values(TR.collect(tp)))
+      out.push({ id: b.id, name: b.data.name || 'Untitled package', meta: b.data.meta || {}, steps: Object.values(b.notes).filter(n => !n.parent).length });
     return out.sort((a, b) => a.name.localeCompare(b.name));
   }
   // Steps in reading order: phases left to right, steps top to bottom (as the library prints them).
   function libPhases(pid){
-    const notes = {}, frames = [];
-    for (const [k, d] of Object.entries(tp)){
-      if (k.startsWith(`n:${pid}:`)) notes[k.slice(pid.length + 3)] = { ...d, id: k.slice(pid.length + 3) };
-      else if (k.startsWith(`f:${pid}:`)) frames.push(d);
-    }
+    const b = TR.collect(tp)[pid] || { notes: {}, frames: [] };
+    const notes = b.notes, frames = b.frames;
     const tops = Object.values(notes).filter(n => !n.parent || !notes[n.parent]);
     const cx = n => (n.x || 0) + (n.w || 236) / 2, cy = n => (n.y || 0) + 50;
     const byPos = (a, b) => ((a.y || 0) - (b.y || 0)) || ((a.x || 0) - (b.x || 0));

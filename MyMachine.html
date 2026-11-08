@@ -307,6 +307,8 @@
 <script src="vendor/supabase-2.119.0.js"></script>
 <script src="mm-config.js?v=2026-11-07"></script>
 <script src="mm-cloud.js?v=2026-11-07"></script>
+<script src="mm-ui.js?v=2026-11-08"></script>
+<script src="mm-records.js?v=2026-11-08"></script>
 <script src="mm-machine.js?v=2026-11-07"></script>
 <script src="mm-demo.js?v=2026-11-07"></script>
 <script>
@@ -318,6 +320,7 @@
   $('ver').textContent = 'My Machine ' + VERSION;
 
   const MM = window.MMMachine;                 // shared machine model (mm-machine.js)
+  const RID = MMRecords.mymachine;             // record ids (mm-records.js)
   const { DEFAULT_MACHINE, DEFAULT_REFINERS, DEFAULT_TARGET } = MM;
   const CAT_COLOR = { forming: 'var(--c-forming)', press: 'var(--c-press)', dryer: 'var(--c-dryer)', roll: 'var(--c-roll)', refiner: 'var(--c-refiner)' };
   const KIND_LABEL = { fabric: 'Fabric', roll: 'Roll', refiner: 'Refiner' };
@@ -342,14 +345,14 @@
   function load(){ const l = readLocal(); if (l) S = l; }
   const toRecords = () => {
     const o = {};
-    if (S.machine) o.machine = S.machine;
-    for (const [id, it] of Object.entries(S.items)) o['item:' + id] = it;
+    if (S.machine) o[RID.machine] = S.machine;
+    for (const [id, it] of Object.entries(S.items)) o[RID.item(id)] = it;
     return o;
   };
   function fromRecords(d){
     const items = {};
-    for (const [k, v] of Object.entries(d)) if (k.startsWith('item:')) items[k.slice(5)] = v;
-    return { machine: d.machine ? normalize(d.machine) : null, items: MM.cleanItems(items) };
+    for (const [k, v] of Object.entries(d)){ const r = RID.parse(k); if (r && r.kind === 'item') items[r.pos] = v; }
+    return { machine: d[RID.machine] ? normalize(d[RID.machine]) : null, items: MM.cleanItems(items) };
   }
   let saveTimer, warned = false, viewWarned = false;
   function cloudStatus(x, detail){
@@ -370,11 +373,12 @@
   }
   let remoteFrame = 0;
   function onRemote(id, data){
-    if (id === 'machine'){
+    const r = RID.parse(id); if (!r) return;
+    if (r.kind === 'machine'){
       S.machine = data ? normalize(data) : null;
       if (draft) toast('Someone else just changed the machine setup. Saving yours will replace it.');
-    } else if (id.startsWith('item:')){
-      const k = id.slice(5), it = data && MM.cleanItem(data);
+    } else {
+      const k = r.pos, it = data && MM.cleanItem(data);
       if (!/^[a-z0-9-]{1,60}$/.test(k)) return;
       if (it) S.items[k] = it; else delete S.items[k];
     }
@@ -382,7 +386,7 @@
     remoteFrame = requestAnimationFrame(() => {
       renderAll();
       // Refresh an open card for this position, unless someone is typing in it.
-      if (!drawer.hidden && drawer.dataset.mode === 'item' && 'item:' + drawer.dataset.id === id && !drawer.contains(document.activeElement)) openItem(drawer.dataset.id);
+      if (!drawer.hidden && drawer.dataset.mode === 'item' && RID.item(drawer.dataset.id) === id && !drawer.contains(document.activeElement)) openItem(drawer.dataset.id);
     });
   }
   function save(ids){
@@ -396,8 +400,7 @@
       toast('Could not save in this browser. Use Export to keep a copy.');
     }
   }
-  const clone = o => JSON.parse(JSON.stringify(o));
-  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  const { clone, esc } = MMUI;                 // mm-ui.js
 
   /* ---------- Dates ---------- */
   const { todayStr, parseDay, daysBetween, addDays, ord } = MM;
@@ -864,7 +867,7 @@
   function setItem(id, patch){
     const it = S.items[id] = Object.assign({ installed: '', note: '', history: [] }, S.items[id] || {}, patch);
     if (!it.installed && !it.note && !(it.target > 0) && !(it.history || []).length && !it.vendor && !it.style && !it.serial && !MM.flagged(it)) delete S.items[id];
-    save(['item:' + id]);
+    save([RID.item(id)]);
   }
 
   let armTimer;
@@ -1083,15 +1086,7 @@
   }
 
   /* ---------- Toast ---------- */
-  let toastTimer;
-  function toast(msg, actLabel, fn){
-    const t = $('toast');
-    t.innerHTML = esc(msg) + (actLabel ? `<button>${esc(actLabel)}</button>` : '');
-    t.classList.toggle('act', !!actLabel);
-    if (actLabel) t.querySelector('button').onclick = () => { fn(); t.classList.remove('show'); };
-    t.classList.add('show');
-    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), actLabel ? 6000 : 2600);
-  }
+  function toast(msg, actLabel, fn){ MMUI.toast(msg, actLabel ? { label: actLabel, fn } : null); }   // mm-ui.js
 
   /* ---------- Events ---------- */
   $('diagram').addEventListener('click', e => {
