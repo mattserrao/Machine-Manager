@@ -352,8 +352,9 @@
     return { machine: d.machine ? normalize(d.machine) : null, items: MM.cleanItems(items) };
   }
   let saveTimer, warned = false, viewWarned = false;
-  function cloudStatus(x){
+  function cloudStatus(x, detail){
     const el = $('saveState');
+    if (x === 'rejected') return toast('A change couldn’t be saved: ' + (detail || 'not allowed') + '.');
     if (x === 'saving') el.textContent = 'Saving…';
     else if (x === 'saved'){
       el.textContent = 'Saved'; warned = false;
@@ -384,8 +385,8 @@
       if (!drawer.hidden && drawer.dataset.mode === 'item' && 'item:' + drawer.dataset.id === id && !drawer.contains(document.activeElement)) openItem(drawer.dataset.id);
     });
   }
-  function save(){
-    if (cloud) return cloud.save();
+  function save(ids){
+    if (cloud) return cloud.save(ids);
     try {
       localStorage.setItem(KEY, JSON.stringify({ version: VERSION, saved: new Date().toISOString(), demo: !!S.demo, machine: S.machine, items: S.items }));
       $('saveState').textContent = 'Saved';
@@ -863,7 +864,7 @@
   function setItem(id, patch){
     const it = S.items[id] = Object.assign({ installed: '', note: '', history: [] }, S.items[id] || {}, patch);
     if (!it.installed && !it.note && !(it.target > 0) && !(it.history || []).length && !it.vendor && !it.style && !it.serial && !MM.flagged(it)) delete S.items[id];
-    save();
+    save(['item:' + id]);
   }
 
   let armTimer;

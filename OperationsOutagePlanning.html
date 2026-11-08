@@ -409,8 +409,9 @@
     softRender();
   }
   let warned = false, viewWarned = false, stT;
-  function status(x){
+  function status(x, detail){
     const s = $('saveState');
+    if (x === 'rejected') return toast('A change couldn’t be saved: ' + (detail || 'not allowed') + '.');
     if (x === 'saving') s.textContent = 'Saving…';
     else if (x === 'saved'){
       s.textContent = 'Saved'; warned = false; clearTimeout(stT); stT = setTimeout(() => s.textContent = '', 1600);

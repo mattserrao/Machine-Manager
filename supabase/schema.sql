@@ -5,11 +5,8 @@
 -- Model
 --   orgs          a mill / customer. Everything belongs to exactly one org.
 --   memberships   who is in which org, as viewer | editor | admin.
---   wb_boards     Whiteboard boards (one row per board).
---   wb_items      Whiteboard notes, links and frames (one row per item).
---   mm_records    every other tool's data (My Machine, ...), one row per record.
---   storage       private buckets "wb-files" (<org_id>/<board_id>/...) and
---                 "mm-files" (<org_id>/<tool>/...).
+--   mm_records    every tool's data (My Machine, Whiteboard, ...), one row per record.
+--   storage       private bucket "mm-files" (<org_id>/<tool>/...).
 --
 -- Security
 --   Row-level security on every table. A signed-in user only sees rows of orgs
@@ -17,11 +14,16 @@
 --   are managed from the dashboard (see SETUP.md), never from the web page.
 --
 -- Concurrency
---   Every board and item has a version number the database bumps on each write.
---   The page saves through wb_apply() / mm_apply(), which only updates a row if the version
---   it last saw is still current. If someone else changed it first, the save is
---   refused and the page shows their version instead (no silent overwrites).
---   Deletes are soft (deleted = true) so they sync live and can be undone.
+--   Every record has a version number the database bumps on each write.
+--   Pages save through mm_apply(), which only updates a row if the version it last saw
+--   is still current. If someone else changed it first, the save is refused and the
+--   page shows their version instead (no silent overwrites). Each change in a batch
+--   succeeds or fails on its own, and rows are always locked in id order (no deadlocks).
+--   Deletes are soft (deleted = true) so they sync live and can be undone; a nightly
+--   job removes rows deleted more than 90 days ago.
+--
+-- Migrations for an existing project are in supabase/migrations/ (this file is the
+-- end state and is safe to re-run).
 
 -- ───────────────────────── Orgs & memberships ─────────────────────────
 
@@ -78,148 +80,12 @@ drop policy if exists memberships_read on public.memberships;
 create policy memberships_read on public.memberships for select to authenticated
   using (user_id = (select auth.uid()) or private.has_org_role(org_id, 'admin'));
 
--- ───────────────────────── Whiteboard ─────────────────────────
-
-create table if not exists public.wb_boards (
-  id          text primary key,
-  org_id      uuid not null references public.orgs(id) on delete cascade,
-  name        text not null default 'Board',
-  sort        double precision not null default 0,
-  deleted     boolean not null default false,
-  version     integer not null default 1,
-  created_at  timestamptz not null default now(),
-  created_by  uuid default auth.uid(),
-  updated_at  timestamptz not null default now(),
-  updated_by  uuid default auth.uid()
-);
-create index if not exists wb_boards_org_idx on public.wb_boards(org_id);
-
-create table if not exists public.wb_items (
-  board_id    text not null references public.wb_boards(id) on delete cascade,
-  id          text not null,
-  org_id      uuid not null references public.orgs(id) on delete cascade,
-  kind        text not null check (kind in ('note', 'link', 'frame')),
-  data        jsonb not null,
-  deleted     boolean not null default false,
-  version     integer not null default 1,
-  updated_at  timestamptz not null default now(),
-  updated_by  uuid default auth.uid(),
-  primary key (board_id, id)
-);
-create index if not exists wb_items_org_idx on public.wb_items(org_id);
-
--- Versions, timestamps and authorship are set by the database, not the page.
-create or replace function public.wb_touch() returns trigger language plpgsql set search_path = '' as $$
-begin
-  if tg_op = 'INSERT' then
-    new.version := 1;
-  else
-    new.version := old.version + 1;
-    new.org_id  := old.org_id;                       -- rows can't be moved between orgs
-    if tg_table_name = 'wb_items' then
-      new.board_id := old.board_id; new.kind := old.kind;
-    end if;
-  end if;
-  new.updated_at := now();
-  new.updated_by := auth.uid();
-  return new;
-end $$;
-
--- An item always belongs to its board's org (taken from the board, not the page).
-create or replace function public.wb_item_org() returns trigger language plpgsql set search_path = '' as $$
-begin
-  select b.org_id into new.org_id from public.wb_boards b where b.id = new.board_id;
-  if new.org_id is null then raise exception 'board % not found', new.board_id using errcode = '23503'; end if;
-  return new;
-end $$;
-
-drop trigger if exists wb_boards_touch on public.wb_boards;
-create trigger wb_boards_touch before insert or update on public.wb_boards
-  for each row execute function public.wb_touch();
-drop trigger if exists wb_items_org on public.wb_items;
-create trigger wb_items_org before insert on public.wb_items
-  for each row execute function public.wb_item_org();
-drop trigger if exists wb_items_touch on public.wb_items;
-create trigger wb_items_touch before insert or update on public.wb_items
-  for each row execute function public.wb_touch();
-
-alter table public.wb_boards enable row level security;
-alter table public.wb_items  enable row level security;
-
-drop policy if exists wb_boards_read   on public.wb_boards;
-drop policy if exists wb_boards_insert on public.wb_boards;
-drop policy if exists wb_boards_update on public.wb_boards;
-create policy wb_boards_read   on public.wb_boards for select to authenticated using (private.has_org_role(org_id));
-create policy wb_boards_insert on public.wb_boards for insert to authenticated with check (private.has_org_role(org_id, 'editor'));
-create policy wb_boards_update on public.wb_boards for update to authenticated
-  using (private.has_org_role(org_id, 'editor')) with check (private.has_org_role(org_id, 'editor'));
-
-drop policy if exists wb_items_read   on public.wb_items;
-drop policy if exists wb_items_insert on public.wb_items;
-drop policy if exists wb_items_update on public.wb_items;
-create policy wb_items_read   on public.wb_items for select to authenticated using (private.has_org_role(org_id));
-create policy wb_items_insert on public.wb_items for insert to authenticated with check (private.has_org_role(org_id, 'editor'));
-create policy wb_items_update on public.wb_items for update to authenticated
-  using (private.has_org_role(org_id, 'editor')) with check (private.has_org_role(org_id, 'editor'));
--- No delete policies: the page soft-deletes. Hard deletes happen only from the dashboard.
-
--- Save a batch of changes with version checks. Runs as the caller, so RLS applies.
--- p_changes: [{ kind:'board'|'note'|'link'|'frame', id, board_id?, org_id?, data, deleted, base }]
---   base = version the page last saw, or null for a new row.
--- Returns one result per change: { kind, id, board_id, ok, version } or, on conflict,
--- { ..., ok:false, row: <current row or null if gone / no access> }.
-create or replace function public.wb_apply(p_changes jsonb)
-returns jsonb language plpgsql security invoker set search_path = '' as $$
-declare
-  c jsonb; res jsonb := '[]'::jsonb; v integer; cur jsonb; base integer; is_board boolean;
-begin
-  for c in select * from jsonb_array_elements(p_changes) loop
-    v := null; cur := null;
-    base := (c->>'base')::integer;
-    is_board := c->>'kind' = 'board';
-    if is_board then
-      if base is null then
-        insert into public.wb_boards (id, org_id, name, sort, deleted)
-        values (c->>'id', (c->>'org_id')::uuid, coalesce(c->'data'->>'name', 'Board'),
-                coalesce((c->'data'->>'sort')::double precision, 0), coalesce((c->>'deleted')::boolean, false))
-        on conflict (id) do nothing returning version into v;
-      else
-        update public.wb_boards set
-          name = coalesce(c->'data'->>'name', name),
-          sort = coalesce((c->'data'->>'sort')::double precision, sort),
-          deleted = coalesce((c->>'deleted')::boolean, deleted)
-        where id = c->>'id' and version = base returning version into v;
-      end if;
-      if v is null then select to_jsonb(b) into cur from public.wb_boards b where b.id = c->>'id'; end if;
-    else
-      if base is null then
-        insert into public.wb_items (board_id, id, kind, data, deleted)
-        values (c->>'board_id', c->>'id', c->>'kind', c->'data', coalesce((c->>'deleted')::boolean, false))
-        on conflict (board_id, id) do nothing returning version into v;
-      else
-        update public.wb_items set
-          data = coalesce(c->'data', data),
-          deleted = coalesce((c->>'deleted')::boolean, deleted)
-        where board_id = c->>'board_id' and id = c->>'id' and version = base returning version into v;
-      end if;
-      if v is null then select to_jsonb(i) into cur from public.wb_items i where i.board_id = c->>'board_id' and i.id = c->>'id'; end if;
-    end if;
-    res := res || jsonb_build_array(jsonb_build_object(
-      'kind', c->>'kind', 'id', c->>'id', 'board_id', c->>'board_id',
-      'ok', v is not null, 'version', v, 'row', cur));
-  end loop;
-  return res;
-end $$;
-
 -- ───────────────────────── API access ─────────────────────────
 -- Signed-out visitors (the demo) get nothing. Signed-in users go through RLS.
 
-revoke all on public.orgs, public.memberships, public.wb_boards, public.wb_items from anon;
+revoke all on public.orgs, public.memberships from anon;
 grant select on public.orgs, public.memberships to authenticated;
-grant select, insert, update on public.wb_boards, public.wb_items to authenticated;
 
-revoke execute on function public.wb_apply(jsonb) from public, anon;
-grant  execute on function public.wb_apply(jsonb) to authenticated;
 revoke execute on function private.has_org_role(uuid, public.org_role) from public, anon;
 grant  execute on function private.has_org_role(uuid, public.org_role) to authenticated;
 revoke execute on function private.has_org_role_path(text, public.org_role) from public, anon;
@@ -227,31 +93,6 @@ grant  execute on function private.has_org_role_path(text, public.org_role) to a
 -- Earlier versions kept these helpers in public; take them out of the API.
 drop function if exists public.has_org_role(uuid, public.org_role);
 drop function if exists public.has_org_role_path(text, public.org_role);
-
--- ───────────────────────── Live updates ─────────────────────────
-
-do $$ begin
-  alter publication supabase_realtime add table public.wb_boards;
-exception when duplicate_object then null; end $$;
-do $$ begin
-  alter publication supabase_realtime add table public.wb_items;
-exception when duplicate_object then null; end $$;
-
--- ───────────────────────── File attachments ─────────────────────────
-
-insert into storage.buckets (id, name, public, file_size_limit)
-values ('wb-files', 'wb-files', false, 26214400)          -- private, 25 MB per file
-on conflict (id) do update set public = false, file_size_limit = excluded.file_size_limit;
-
-drop policy if exists wb_files_read   on storage.objects;
-drop policy if exists wb_files_insert on storage.objects;
-drop policy if exists wb_files_update on storage.objects;
-create policy wb_files_read on storage.objects for select to authenticated
-  using (bucket_id = 'wb-files' and private.has_org_role_path((storage.foldername(name))[1]));
-create policy wb_files_insert on storage.objects for insert to authenticated
-  with check (bucket_id = 'wb-files' and private.has_org_role_path((storage.foldername(name))[1], 'editor'));
-create policy wb_files_update on storage.objects for update to authenticated
-  using (bucket_id = 'wb-files' and private.has_org_role_path((storage.foldername(name))[1], 'editor'));
 
 -- ───────────────────────── Records for every other tool ─────────────────────────
 -- One generic table so new tools need no schema change: each tool stores its own
@@ -270,6 +111,11 @@ create table if not exists public.mm_records (
   updated_by  uuid default auth.uid(),
   primary key (org_id, tool, id)
 );
+
+-- Added later: who created each record (kept when the Whiteboard moved here), and an
+-- index for "what changed since" refetches.
+alter table public.mm_records add column if not exists created_by uuid default auth.uid();
+create index if not exists mm_records_changed_idx on public.mm_records (org_id, tool, updated_at);
 
 create or replace function public.mm_touch() returns trigger language plpgsql set search_path = '' as $$
 begin
@@ -297,37 +143,76 @@ create policy mm_records_update on public.mm_records for update to authenticated
   using (private.has_org_role(org_id, 'editor')) with check (private.has_org_role(org_id, 'editor'));
 
 -- p_changes: [{ id, data, deleted, base }] — base = version last seen, null for new.
--- Returns [{ id, ok, version }] or, on conflict, [{ id, ok:false, row }].
+-- Returns one result per change, in the order sent:
+--   { id, ok:true, version }                 saved
+--   { id, ok:false, row }                    someone changed it first (row = theirs, or null if gone / no access)
+--   { id, ok:false, row:null, error }        this change is invalid or not allowed; the rest still go through
+-- Changes are applied in id order so two people saving overlapping batches never deadlock.
+-- A new record (base null) whose id belongs to a deleted record brings that record back.
 create or replace function public.mm_apply(p_org uuid, p_tool text, p_changes jsonb)
 returns jsonb language plpgsql security invoker set search_path = '' as $$
-declare c jsonb; res jsonb := '[]'::jsonb; v integer; cur jsonb; base integer;
+declare
+  c jsonb; pos bigint; res jsonb[]; v integer; cur jsonb; base integer; cid text; err text; n integer;
 begin
-  for c in select * from jsonb_array_elements(p_changes) loop
-    v := null; cur := null; base := (c->>'base')::integer;
-    if base is null then
-      insert into public.mm_records (org_id, tool, id, data, deleted)
-      values (p_org, p_tool, c->>'id', coalesce(c->'data', '{}'::jsonb), coalesce((c->>'deleted')::boolean, false))
-      on conflict (org_id, tool, id) do nothing returning version into v;
-    else
-      update public.mm_records set data = coalesce(c->'data', data), deleted = coalesce((c->>'deleted')::boolean, deleted)
-      where org_id = p_org and tool = p_tool and id = c->>'id' and version = base returning version into v;
-    end if;
-    if v is null then
-      select to_jsonb(r) into cur from public.mm_records r where r.org_id = p_org and r.tool = p_tool and r.id = c->>'id';
-    end if;
-    res := res || jsonb_build_array(jsonb_build_object('id', c->>'id', 'ok', v is not null, 'version', v, 'row', cur));
+  if p_changes is null or jsonb_typeof(p_changes) <> 'array' then
+    raise exception 'mm_apply: p_changes must be a JSON array' using errcode = '22023';
+  end if;
+  n := jsonb_array_length(p_changes);
+  if n > 500 then raise exception 'mm_apply: at most 500 changes per call (got %)', n using errcode = '22023'; end if;
+  res := array_fill(null::jsonb, array[n]);
+  for c, pos in select e.value, e.ord from jsonb_array_elements(p_changes) with ordinality e(value, ord)
+                order by e.value->>'id' nulls first, e.ord loop
+    v := null; cur := null; err := null; cid := c->>'id';
+    begin
+      if jsonb_typeof(c) <> 'object' or jsonb_typeof(c->'id') is distinct from 'string' then
+        raise exception 'each change needs a string id' using errcode = '22023';
+      end if;
+      if c ? 'base' and jsonb_typeof(c->'base') not in ('number', 'null') then
+        raise exception 'base must be a version number or null' using errcode = '22023';
+      end if;
+      if c ? 'deleted' and jsonb_typeof(c->'deleted') not in ('boolean', 'null') then
+        raise exception 'deleted must be true or false' using errcode = '22023';
+      end if;
+      base := (c->>'base')::integer;
+      if base is null then
+        insert into public.mm_records as r (org_id, tool, id, data, deleted)
+        values (p_org, p_tool, cid, coalesce(c->'data', '{}'::jsonb), coalesce((c->>'deleted')::boolean, false))
+        on conflict (org_id, tool, id) do update set data = excluded.data, deleted = excluded.deleted
+          where r.deleted                                    -- only revives a deleted record
+        returning version into v;
+      else
+        update public.mm_records set data = coalesce(c->'data', data), deleted = coalesce((c->>'deleted')::boolean, deleted)
+        where org_id = p_org and tool = p_tool and id = cid and version = base returning version into v;
+      end if;
+      if v is null then
+        select to_jsonb(r) into cur from public.mm_records r where r.org_id = p_org and r.tool = p_tool and r.id = cid;
+      end if;
+    exception
+      when data_exception or integrity_constraint_violation or insufficient_privilege then
+        err := sqlerrm;                                     -- this change only; deadlocks and outages still fail the call
+    end;
+    res[pos] := case when err is not null then jsonb_build_object('id', cid, 'ok', false, 'row', null, 'error', err)
+                     else jsonb_build_object('id', cid, 'ok', v is not null, 'version', v, 'row', cur) end;
   end loop;
-  return res;
+  return coalesce(to_jsonb(res), '[]'::jsonb);
 end $$;
+
+-- Paths of every file a tool's records point to (deleted records included, until they are purged).
+-- Pages use this to remove stored files nothing refers to any more.
+create or replace function public.mm_file_refs(p_org uuid, p_tool text)
+returns setof text language sql stable security invoker set search_path = '' as $$
+  select distinct p #>> '{}' from public.mm_records r,
+    lateral jsonb_path_query(r.data, 'strict $.**.path') p
+  where r.org_id = p_org and r.tool = p_tool and jsonb_typeof(p) = 'string';
+$$;
 
 revoke all on public.mm_records from anon;
 grant select, insert, update on public.mm_records to authenticated;
 revoke execute on function public.mm_apply(uuid, text, jsonb) from public, anon;
 grant  execute on function public.mm_apply(uuid, text, jsonb) to authenticated;
+revoke execute on function public.mm_file_refs(uuid, text) from public, anon;
+grant  execute on function public.mm_file_refs(uuid, text) to authenticated;
 
-do $$ begin
-  alter publication supabase_realtime add table public.mm_records;
-exception when duplicate_object then null; end $$;
 
 -- Files for every other tool: private bucket "mm-files", kept under <org_id>/<tool>/...
 insert into storage.buckets (id, name, public, file_size_limit)
@@ -346,6 +231,23 @@ create policy mm_files_update on storage.objects for update to authenticated
   using (bucket_id = 'mm-files' and private.has_org_role_path((storage.foldername(name))[1], 'editor'));
 create policy mm_files_delete on storage.objects for delete to authenticated
   using (bucket_id = 'mm-files' and private.has_org_role_path((storage.foldername(name))[1], 'editor'));
+
+-- ───────────────────────── Housekeeping ─────────────────────────
+-- Nightly: remove records deleted more than 90 days ago (soft deletes otherwise stay forever
+-- and are sent to every page that loads the tool). Needs pg_cron, which Supabase provides.
+do $$ begin
+  if exists (select 1 from pg_available_extensions where name = 'pg_cron') then
+    execute 'create extension if not exists pg_cron';
+    perform cron.schedule('mm-purge-deleted', '17 7 * * *',
+      $q$delete from public.mm_records where deleted and updated_at < now() - interval '90 days'$q$);
+  end if;
+end $$;
+
+-- ───────────────────────── Live updates ─────────────────────────
+
+do $$ begin
+  alter publication supabase_realtime add table public.mm_records;
+exception when duplicate_object then null; end $$;
 
 -- ───────────────────────── Admin helper (SQL Editor only) ─────────────────────────
 -- select public.mm_add_member('PM1', 'person@example.com', 'editor');
