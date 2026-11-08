@@ -63,13 +63,13 @@ a#mode[href]:hover{background:var(--hover-2)}
 .text .ck{display:flex;gap:6px;align-items:flex-start}
 .text .ck.on > span:last-child{text-decoration:line-through;color:var(--muted)}
 .cb{flex:none;width:14px;height:14px;margin-top:2px;border:1.5px solid var(--faint);border-radius:4px;background:var(--surface);cursor:pointer;display:grid;place-items:center;font-size:11px;color:#fff;line-height:1}
-.cb.on{background:var(--ok);border-color:var(--ok)}
+.cb.on{background:var(--ink-2);border-color:var(--ink-2)}
 .text a,.title a{color:var(--accent);text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .placeholder{color:rgb(var(--fg-rgb) / .35);font-style:italic;font-weight:400}
 .meta{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
 .meta:empty{display:none}
 .chip{background:rgb(var(--fg-rgb) / .06);max-width:150px;overflow:hidden;text-overflow:ellipsis;color:var(--ink-2)}
-.chip.late{background:var(--bad-soft);color:var(--bad-ink)}
+.chip.late{background:var(--bad);color:var(--on-primary)}
 .pill{color:var(--sc);background:color-mix(in srgb,var(--sc) 12%,var(--surface))}
 .pill::before,.dot{content:"";width:7px;height:7px;border-radius:50%;background:var(--sc);flex:none}
 .atts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;align-items:center}
@@ -129,21 +129,21 @@ textarea.inline{width:100%;min-height:110px;border:1px solid var(--accent-line);
 .note.expanded .tucked.sub{padding:7px 0 3px 12px;margin-top:6px;gap:6px}
 .note.expanded .mini{font-size:12px;line-height:1.3;padding:7px 10px 7px 12px;border-radius:var(--r-sm)}
 .note.expanded .mini > .row{min-height:20px}
-.mini.drop-into{outline:2px solid var(--ok);outline-offset:1px}
+.mini.drop-into{outline:2px solid var(--accent);outline-offset:1px}
 .mini.drop-bad{outline:2px solid var(--bad);outline-offset:1px}
-.mini.drop-into > .row::after{content:"↳ drop inside";font-size:11px;font-weight:600;color:var(--ok);flex:none}
+.mini.drop-into > .row::after{content:"↳ drop inside";font-size:11px;font-weight:600;color:var(--accent);flex:none}
 .mini.drop-bad > .row::after{content:attr(data-why);font-size:11px;font-weight:600;color:var(--bad);flex:none}
 .note.dragging{cursor:grabbing;transform:rotate(1.2deg) scale(1.02);opacity:.94;transition:none;pointer-events:none;
     box-shadow:0 2px 4px rgba(0,0,0,.08),0 22px 44px rgba(0,0,0,.18)}
 .note.dragging.shrunk{transform:translate(18px,16px) scale(.42);opacity:.6;transition:transform .15s ease,opacity .15s ease}
 .note.group-drag{transition:none;pointer-events:none;opacity:.92}
 body.is-dragging,body.is-dragging *{cursor:grabbing!important}
-.note.join-ok{outline:2px solid var(--ok);outline-offset:3px}
+.note.join-ok{outline:2px solid var(--accent);outline-offset:3px}
 .note.join-full{outline:2px solid var(--bad);outline-offset:3px}
 .note.join-ok::after,.note.join-full::after{position:absolute;left:10px;right:10px;bottom:-36px;height:28px;border-radius:var(--r-sm);
     display:grid;place-items:center;font-size:12px;font-weight:600;pointer-events:none}
-.note.join-ok::after{content:"Drop to tuck in";border:2px dashed var(--ok);color:var(--ok);background:rgba(22,163,74,.08)}
-.note.join-full::after{content:attr(data-why);border:2px dashed var(--bad);color:var(--bad);background:rgba(220,38,38,.07)}
+.note.join-ok::after{content:"Drop to tuck in";border:2px dashed var(--accent);color:var(--accent);background:var(--accent-soft)}
+.note.join-full::after{content:attr(data-why);border:2px dashed var(--bad);color:var(--bad-ink);background:var(--warn-soft)}
 @keyframes popout{0%{transform:scale(.7)}70%{transform:scale(1.04)}100%{transform:scale(1)}}
 @keyframes flash{0%,100%{box-shadow:0 1px 2px rgba(0,0,0,.06),0 6px 16px rgba(0,0,0,.07)}40%{box-shadow:0 0 0 6px rgba(106,160,255,.35)}}
 /* ---------- Menus & popovers ---------- */
@@ -312,10 +312,10 @@ textarea.inline.mini-inline{min-height:54px;font-size:12px;padding:5px 7px;borde
 /* icon chips (mm-icons.js) */
 .chip,.tbar > span,.mini .ma,.mini .caret{display:inline-flex;align-items:center;gap:4px}
 .chip .mi-ic,.mini .ma .mi-ic,.mini .caret .mi-ic,.tbar .mi-ic{opacity:.75}
-.cb .mi-ic{width:10px;height:10px;stroke-width:3;color:#fff}
+.cb .mi-ic{width:10px;height:10px;stroke-width:3;color:var(--bg)}
 .tab .tx .mi-ic{width:11px;height:11px;stroke-width:2}
-.note{border-color:color-mix(in srgb,var(--c,var(--line)) 22%,var(--line))}
-.mini{border-color:color-mix(in srgb,var(--c,var(--line)) 18%,var(--line))}
+.note{border-color:var(--line-strong)}
+.mini{border-color:var(--line)}
 /* data colours (areas, statuses) are picked for white paper; lift them for text on dark */
 .pill,.sp.on{color:color-mix(in srgb,var(--sc) 65%,#fff)}
 .ppage .pill,.rpage .pill{color:var(--sc)}
@@ -327,7 +327,7 @@ textarea.inline.mini-inline{min-height:54px;font-size:12px;padding:5px 7px;borde
    sizes grew as little as possible so hand-placed cards on existing boards don't start overlapping;
    and secondary text inside a card is lifted off the card's tint */
 .note,.mini,.pkg{--muted:rgb(var(--fg-rgb) / .68)}
-.note .chip,.note .pill,.pkg .chip,.pkg .pill{font-size:13px;height:20px;padding:0 6px}
+.note .chip,.note .pill{font-size:13px;height:20px;padding:0 6px}
 .mini{font-size:13px}
 .mini[data-level="3"]{font-size:12.5px}
 .mini[data-level="4"]{font-size:12px}

@@ -24,11 +24,15 @@ window.MMBoard = { start(cfg){
   const GRID = 24;
   const COLORS = ['#ffffff','#fff4b8','#ffd8e1','#d4ecff','#d9f3d3','#e9e0ff','#ffe2c4'];
   const FRAME_COLORS = ['#2563eb','#16a34a','#d97706','#9333ea','#dc2626','#0891b2','#64748b'];
+  // Colour is kept for what needs attention: in progress uses the accent, blocked the attention colour;
+  // the rest are grey (mm-theme.css). Note and frame colours chosen in older versions stay in the data
+  // but show neutral, and the pickers are off (SHOW_COLORS).
+  const SHOW_COLORS = false;
   const STATUSES = {
-    planned:  { label:'Planned',     c:'#64748b' },
-    progress: { label:'In progress', c:'#2563eb' },
-    done:     { label:'Done',        c:'#16a34a' },
-    blocked:  { label:'Blocked',     c:'#dc2626' },
+    planned:  { label:'Planned',     c:'var(--muted)' },
+    progress: { label:'In progress', c:'var(--accent)' },
+    done:     { label:'Done',        c:'var(--muted)' },
+    blocked:  { label:'Blocked',     c:'var(--warn)' },
   };
 
   const $ = id => document.getElementById(id);
@@ -1431,8 +1435,8 @@ window.MMBoard = { start(cfg){
     edLabel.textContent = parts.join(' · ');
     edDetach.hidden = !n.parent;
 
-    edSwatches.textContent = '';
-    COLORS.forEach(c => {
+    edSwatches.textContent = ''; edSwatches.hidden = !SHOW_COLORS;
+    if (SHOW_COLORS) COLORS.forEach(c => {
       const b = el('button', 'sw' + (c === n.color ? ' on' : ''));
       b.style.background = c; b.title = 'Note color'; b.setAttribute('aria-label', 'Color ' + c);
       b.addEventListener('click', () => { n.color = c; paintEditor(); render(); save(); });
@@ -1580,6 +1584,7 @@ window.MMBoard = { start(cfg){
   }
   const ms = () => menu.appendChild(el('div', 'ms'));
   function colorRow(ids){
+    if (!SHOW_COLORS) return;
     menu.appendChild(el('div', 'ml', 'Color'));
     const row = el('div', 'mrow');
     COLORS.forEach(c => {
@@ -1729,7 +1734,7 @@ window.MMBoard = { start(cfg){
   let libDirty = true, libQueued = false;
   const AREAS = cfg.areas || [];
   const AREA_COLORS = cfg.areaColors || {};
-  const areaColor = a => AREA_COLORS[(a || '').trim().toLowerCase()] || cfg.areaDefault || '#78716c';
+  const areaColor = a => SHOW_COLORS ? (AREA_COLORS[(a || '').trim().toLowerCase()] || cfg.areaDefault || '#78716c') : 'var(--muted)';   // areas are named, not coloured
   const fmtHrs = h => { const v = Number(h); return isFinite(v) && v > 0 ? (Math.round(v * 100) / 100) + ' h' : ''; };
 
   function libChanged(){
@@ -2400,7 +2405,7 @@ function pkgSummary(b){
       return h + '</div>';
     };
     const keep = n => o.rDone || n.status !== 'done';
-    let out = `<div class="rep sz-${o.rSize || 'm'}${o.rCols == 2 ? ' cols2' : ''}"><div class="sum">${LIB ? pkgSummary(B) : `${all.length} notes · ${done} done${late ? ` · <b style="color:#b91c1c">${late} overdue</b>` : ''}${B.links.length ? ` · ${B.links.length} connections` : ''}`}</div>${B.meta && B.meta.desc ? `<div class="rm" style="margin-bottom:8px">${esc(B.meta.desc)}</div>` : ''}`;
+    let out = `<div class="rep sz-${o.rSize || 'm'}${o.rCols == 2 ? ' cols2' : ''}"><div class="sum">${LIB ? pkgSummary(B) : `${all.length} notes · ${done} done${late ? ` · <b style="color:var(--bad-ink)">${late} overdue</b>` : ''}${B.links.length ? ` · ${B.links.length} connections` : ''}`}</div>${B.meta && B.meta.desc ? `<div class="rm" style="margin-bottom:8px">${esc(B.meta.desc)}</div>` : ''}`;
     const frames = o.rGroup ? [...B.frames].sort((a, b) => (a.y - b.y) || (a.x - b.x)) : [];
     for (const f of frames){
       const ns = tops().filter(n => !used.has(n.id) && inFrame(f, n.id)).sort(byPos);
@@ -2522,15 +2527,17 @@ function pkgSummary(b){
       render(); save();
     });
     ms();
-    menu.appendChild(el('div', 'ml', 'Color'));
-    const row = el('div', 'mrow');
-    FRAME_COLORS.forEach(c => {
-      const b = el('button', 'sw' + (f.color === c ? ' on' : '')); b.style.background = c;
-      b.addEventListener('click', () => { checkpoint(); f.color = c; closeMenu(); render(); save(); });
-      row.appendChild(b);
-    });
-    menu.appendChild(row);
-    ms();
+    if (SHOW_COLORS){
+      menu.appendChild(el('div', 'ml', 'Color'));
+      const row = el('div', 'mrow');
+      FRAME_COLORS.forEach(c => {
+        const b = el('button', 'sw' + (f.color === c ? ' on' : '')); b.style.background = c;
+        b.addEventListener('click', () => { checkpoint(); f.color = c; closeMenu(); render(); save(); });
+        row.appendChild(b);
+      });
+      menu.appendChild(row);
+      ms();
+    }
     mi('Delete frame (keep notes)', () => deleteFrame(id, false), '', true);
     mi('Delete frame and its notes', () => deleteFrame(id, true), '', true);
     showMenu(x, y);

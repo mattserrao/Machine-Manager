@@ -25,20 +25,26 @@
   --accent:#6ea2ff; --accent-soft:rgba(110,162,255,.13); --accent-line:rgba(110,162,255,.5); --accent-ink:#a8c6ff;
   --primary:#e6e8eb; --primary-hover:#ffffff; --on-primary:#111316;
 
-  --ok:#3fb950;   --ok-soft:rgba(63,185,80,.13);   --ok-ink:#6bd47a;
-  --warn:#e3b341; --warn-soft:rgba(227,179,65,.13); --warn-ink:#ecc566; --warn-line:rgba(227,179,65,.5);
-  --flag:#f0883e; --flag-soft:rgba(240,136,62,.13); --flag-ink:#ffa463; --flag-line:rgba(240,136,62,.5);
-  --bad:#f85149;  --bad-soft:rgba(248,81,73,.13);  --bad-ink:#ff8079;  --bad-line:rgba(248,81,73,.5);
+  /* Two colours beyond the greys, and nothing else:
+       accent    (blue)  — interaction: links, selection, focus, "next", in progress
+       attention (amber) — something needs doing: due soon (soft), overdue (solid), flagged (outlined)
+     ok / good / done are grey: things that are fine don't need colour. */
+  --attn:#d9a441;
+  --ok:#9aa1a9;   --ok-soft:rgba(255,255,255,.06);   --ok-ink:var(--ink-2);
+  --warn:var(--attn); --warn-soft:rgba(217,164,65,.12); --warn-ink:#e3b35c; --warn-line:rgba(217,164,65,.45);
+  --flag:var(--attn); --flag-soft:transparent;        --flag-ink:#e3b35c; --flag-line:rgba(217,164,65,.6);
+  --bad:var(--attn);  --bad-soft:rgba(217,164,65,.22); --bad-ink:#efc56f; --bad-line:rgba(217,164,65,.7);
 
-  --teal:#2bb3c7; --orange:#e8913a; --purple:#a07cf2; --slate:#8796ab;
-  /* machine sections (My Machine, Outage Planning) */
-  --c-forming:var(--teal); --c-press:var(--orange); --c-dryer:var(--purple); --c-roll:#8f969e; --c-refiner:var(--slate);
+  /* former palette names: all grey now, so older page styles and stored colours render neutral */
+  --teal:#8f969f; --orange:#8f969f; --purple:#8f969f; --slate:#8f969f;
+  /* machine sections (My Machine, Outage Planning): fabrics light grey, rolls and refiners darker */
+  --c-forming:#a3a9b0; --c-press:#a3a9b0; --c-dryer:#a3a9b0; --c-roll:#6f767e; --c-refiner:#6f767e;
 
   /* older names, kept so page styles read the same */
-  --board:var(--bg); --dot:#22262b; --annual:var(--purple);
+  --board:var(--bg); --dot:#22262b; --annual:var(--ink-2);
 
-  /* note colours are stored as light pastels; on a dark surface they show as a tint */
-  --note-base:var(--raised); --note-tint:11%;
+  /* notes are neutral cards (stored pastel colours are kept in the data but not shown) */
+  --note-base:var(--raised); --note-tint:4%;
 
   --r-sm:6px; --r:6px; --r-lg:10px;   /* controls 6 · panels 10 · chips round; 2–4px only for small marks */
   --shadow-pop:0 12px 32px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.03);
@@ -54,11 +60,13 @@
   --ink:#1f2328; --ink-2:#44403c; --muted:#6b7280; --ink-3:#6b7280; --faint:#a8a29e;
   --accent:#2563eb; --accent-soft:#eff6ff; --accent-line:#bfdbfe; --accent-ink:#1e40af;
   --primary:#1f2328; --primary-hover:#000; --on-primary:#fff;
-  --ok:#16a34a; --ok-soft:#dcfce7; --ok-ink:#166534;
-  --warn:#eab308; --warn-soft:#fef9c3; --warn-ink:#854d0e; --warn-line:#fde047;
-  --flag:#ea580c; --flag-soft:#ffedd5; --flag-ink:#9a3412; --flag-line:#fed7aa;
-  --bad:#dc2626; --bad-soft:#fee2e2; --bad-ink:#b91c1c; --bad-line:#fca5a5;
-  --teal:#0891b2; --orange:#d97706; --purple:#9333ea; --slate:#64748b;
+  --attn:#b7791f;
+  --ok:#6b7280; --ok-soft:#f5f5f4; --ok-ink:#44403c;
+  --warn:#b7791f; --warn-soft:#fdf3dc; --warn-ink:#8a5a12; --warn-line:#e9c27a;
+  --flag:#b7791f; --flag-soft:transparent; --flag-ink:#8a5a12; --flag-line:#d9a441;
+  --bad:#b7791f; --bad-soft:#f6dfb0; --bad-ink:#6e470c; --bad-line:#b7791f;
+  --teal:#6b7280; --orange:#6b7280; --purple:#6b7280; --slate:#6b7280;
+  --c-forming:#6b7280; --c-press:#6b7280; --c-dryer:#6b7280; --c-roll:#44403c; --c-refiner:#44403c; --annual:#44403c;
   --dot:#d6d3d1; --note-base:#fff; --note-tint:100%; --fg-rgb:0 0 0; --bg-rgb:255 255 255;
 }
 
@@ -134,6 +142,19 @@ button.mmnav:hover{background:var(--hover-2);color:var(--ink)}
 .mi-ic.xs{width:12px;height:12px;vertical-align:-1px;stroke-width:1.8}
 .mi-ic.lg{width:20px;height:20px}
 
+/* ---------- Stored colours render neutral ----------
+   Older notes, frames, task stickies and areas carry their own colour in the data (set inline). It stays
+   saved, but the screen shows them grey so colour only ever means "accent" or "attention". */
+.note,.mini,.trow,.task,.sheet-head{--c:#ffffff!important}
+.frame,.pkg-ph,.rep h2{--fc:var(--slate)!important}
+.rep .rn{--nc:var(--line-strong)!important}
+.due{--cc:var(--line-strong)!important}
+.ph-t i{--pc:var(--faint)!important}
+
+/* chip meaning: soft = due soon · solid = overdue · outline = flagged */
+.mm-chip.bad,.chip.bad,.chip.over,.days.over{background:var(--bad);color:var(--on-primary)}
+.mm-chip.flag,.chip.flag,.cond.wear,.cond.worn,.cond.damaged{background:transparent;color:var(--flag-ink);box-shadow:inset 0 0 0 1px var(--flag-line)}
+
 /* ---------- Text roles ----------
    page title 18/600 ink · section title 13/600 ink · label 12/500 muted · body 13 · small 12 · minimum 11 (on screen) */
 .mm-page-title{margin:0;font-size:18px;font-weight:600;letter-spacing:-.01em}
@@ -148,8 +169,6 @@ button.mmnav:hover{background:var(--hover-2);color:var(--ink)}
 .mm-chip{background:var(--hover);color:var(--ink-2)}
 .mm-chip.ok{background:var(--ok-soft);color:var(--ok-ink)}
 .mm-chip.warn{background:var(--warn-soft);color:var(--warn-ink)}
-.mm-chip.flag{background:var(--flag-soft);color:var(--flag-ink)}
-.mm-chip.bad{background:var(--bad-soft);color:var(--bad-ink)}
 
 /* ---------- Empty / placeholder state ---------- */
 .mm-empty{padding:56px 24px;text-align:left;max-width:520px;margin:0 auto}

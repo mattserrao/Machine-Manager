@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>My Machine</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0155">
-<script src="mm-icons.js?v=2026-11-08.0155"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0205">
+<script src="mm-icons.js?v=2026-11-08.0205"></script>
 <style>
   /* shared look: mm-theme.css */
   .wrap{padding:14px 14px 60px;transition:margin-right .18s}
@@ -45,16 +45,16 @@
     background:var(--hover)}
   .days.unset{color:var(--ink-3);font-weight:500}
   .days.soon{background:var(--warn-soft);color:var(--warn-ink)}
-  .days.over{background:var(--bad-soft);color:var(--bad-ink)}
+  .days.over{background:var(--bad);color:var(--on-primary)}
   .left{font-size:12px;color:var(--muted);margin-top:3px;white-space:nowrap}
   .left.soon{color:var(--warn-ink);font-weight:600}
   .left.over{color:var(--bad-ink);font-weight:600}
   /* status shows as a thin bar on the row's left edge, not a row fill */
-  tbody tr.soon td:first-child{box-shadow:inset 2px 0 0 var(--warn)}
-  tbody tr.over td:first-child{box-shadow:inset 2px 0 0 var(--bad)}
+  tbody tr.soon td:first-child{box-shadow:inset 2px 0 0 var(--warn-line)}
+  tbody tr.over td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
   tbody tr.sel td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
   .chip.soon{background:var(--warn-soft);color:var(--warn-ink)}
-  .chip.over{background:var(--bad-soft);color:var(--bad-ink)}
+  .chip.over{background:var(--bad);color:var(--on-primary)}
   .legend{display:flex;gap:10px;align-items:center;font-size:12px;color:var(--muted)}
   .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
   .dt{color:var(--ink-2);font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -95,12 +95,12 @@
   .bdg.unset text{fill:var(--ink-3);font-weight:500}
   .halo{fill:none;stroke:transparent;stroke-width:18;stroke-linejoin:round;pointer-events:none}
   /* due soon / overdue: a faint ring around the part, and the day badge carries the colour */
-  .it.soon .halo{stroke:var(--warn);stroke-opacity:.14}
-  .it.over .halo{stroke:var(--bad);stroke-opacity:.18}
+  .it.soon .halo{stroke:var(--warn);stroke-opacity:.12}
+  .it.over .halo{stroke:var(--bad);stroke-opacity:.22}
   .it.soon .bdg rect,.it.sel.soon .bdg rect{fill:color-mix(in srgb,var(--warn) 20%,var(--surface));stroke:var(--warn)}
   .it.soon .bdg text{fill:var(--warn-ink)}
-  .it.over .bdg rect,.it.sel.over .bdg rect{fill:color-mix(in srgb,var(--bad) 24%,var(--surface));stroke:var(--bad)}
-  .it.over .bdg text{fill:var(--bad-ink)}
+  .it.over .bdg rect,.it.sel.over .bdg rect{fill:var(--bad);stroke:var(--bad)}
+  .it.over .bdg text{fill:var(--on-primary)}
   .it.sel .bdg rect{stroke:var(--accent);fill:color-mix(in srgb,var(--accent) 18%,var(--surface))}
   .sec-ln{stroke:var(--line-strong);stroke-width:1.5;fill:none}
   .sec-tx{font-size:17px;font-weight:600;fill:var(--muted);text-anchor:middle}
@@ -160,30 +160,25 @@
   .dsec input.rname{flex:1;border:1px solid var(--line);border-radius:var(--r-sm);padding:5px 8px;font-size:13px;outline:none}
   .dsec input.rname:focus{border-color:var(--faint)}
   /* ---------- Condition & history ---------- */
-  :root{ --cd-wear:var(--warn); --cd-worn:var(--flag); --cd-damaged:var(--bad); }
+  :root{ --cd-wear:var(--attn); --cd-worn:var(--attn); --cd-damaged:var(--attn); }   /* one attention colour; the word says how bad */
 
-  .cond.good{background:var(--ok-soft);color:var(--ok-ink)}
-  .cond.wear{background:var(--warn-soft);color:var(--warn-ink)}
-  .cond.worn{background:var(--flag-soft);color:var(--flag-ink)}
-  .cond.damaged{background:var(--bad-soft);color:var(--bad-ink)}
-  .chip.flag{background:var(--flag-soft);color:var(--flag-ink)}
+  .cond.good{background:var(--hover);color:var(--ink-2)}
+  .cond.wear,.cond.worn{background:transparent;color:var(--flag-ink);box-shadow:inset 0 0 0 1px var(--flag-line)}
+  .cond.damaged{background:var(--bad);color:var(--on-primary)}
+  .chip.flag{background:transparent;color:var(--flag-ink);box-shadow:inset 0 0 0 1px var(--flag-line)}
   .flg circle{stroke:var(--surface);stroke-width:2.5}
   .flg.wear circle{fill:var(--cd-wear)} .flg.worn circle{fill:var(--cd-worn)} .flg.damaged circle{fill:var(--cd-damaged)}
   .flg text{font-size:14px;font-weight:700;fill:var(--on-primary);text-anchor:middle;dominant-baseline:central}
   .seg{display:flex;border:1px solid var(--line);border-radius:var(--r-sm);padding:2px;gap:2px}
   .seg button{flex:1;border:0;background:transparent;border-radius:var(--r-sm);padding:6px 4px;font-size:13px;font-weight:500;color:var(--ink-2)}
   .seg button:hover{background:var(--hover)}
-  .seg button.on.good{background:var(--ok-soft);color:var(--ok-ink)}
-  .seg button.on.wear{background:var(--warn-soft);color:var(--warn-ink)}
-  .seg button.on.worn{background:var(--flag-soft);color:var(--flag-ink)}
-  .seg button.on.damaged{background:var(--bad-soft);color:var(--bad-ink)}
-  .flagbox{border-radius:var(--r-lg);padding:9px 12px;font-size:13px;line-height:1.45;background:var(--flag-soft);color:var(--flag-ink);border:1px solid var(--flag-line)}
-  .flagbox.damaged{background:var(--bad-soft);color:var(--bad-ink);border-color:var(--bad-line)}
-  .flagbox.wear{background:var(--warn-soft);color:var(--warn-ink);border-color:var(--warn-line)}
+  .seg button.on{background:var(--hover-2);color:var(--ink)}
+  .seg button.on.wear,.seg button.on.worn,.seg button.on.damaged{background:var(--warn-soft);color:var(--warn-ink)}
+  .flagbox{border-radius:var(--r-lg);padding:9px 12px;font-size:13px;line-height:1.45;background:transparent;color:var(--ink-2);border:1px solid var(--flag-line)}
   .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
   .grid2 .fld input,.grid2 .fld select{width:100%;min-width:0}
   .grid2 .full{grid-column:1/-1}
-  .chform{border:1px solid var(--bad-line);background:var(--bad-soft);border-radius:var(--r-lg);padding:12px;display:flex;flex-direction:column;gap:10px}
+  .chform{border:1px solid var(--line-strong);background:var(--surface-2);border-radius:var(--r-lg);padding:12px;display:flex;flex-direction:column;gap:10px}
   .chform h4,.hedit h4{margin:0;font-size:13px;font-weight:600;color:var(--ink)}
   .hstats{display:flex;gap:6px;flex-wrap:wrap}
   .hcard{border:1px solid var(--line);border-radius:var(--r-sm);padding:8px 8px 8px 11px;font-size:13px;display:flex;flex-direction:column;gap:4px}
@@ -198,11 +193,11 @@
   .hcard .rm:hover{color:var(--bad);background:var(--bad-soft)}
   .hedit{border:1px solid var(--accent-line);background:var(--accent-soft);border-radius:var(--r-lg);padding:12px;display:flex;flex-direction:column;gap:10px}
   .reason{background:var(--hover);color:var(--ink-2)}
-  .reason.damaged{background:var(--bad-soft);color:var(--bad-ink)}
-  .reason.performance{background:var(--accent-soft);color:var(--accent-ink)}
+  .reason.damaged{background:transparent;color:var(--flag-ink);box-shadow:inset 0 0 0 1px var(--flag-line)}
+  .reason.performance{background:var(--hover);color:var(--ink-2)}
   .demo-box{border:1px dashed var(--line-strong);border-radius:var(--r-lg);padding:10px 12px;display:flex;flex-direction:column;gap:8px}
 
-  .welcome{background:var(--accent-soft);border:1px solid var(--accent-line);border-radius:var(--r-lg);padding:10px 12px;font-size:13px;line-height:1.5;color:var(--accent-ink)}
+  .welcome{background:var(--surface-2);border:1px solid var(--line-strong);border-radius:var(--r-lg);padding:10px 12px;font-size:13px;line-height:1.5;color:var(--ink-2)}
 
 
   @media (max-width:820px){
@@ -232,7 +227,7 @@
     <div class="card-head">
       <h2>Machine</h2>
       <span class="hint-ic" data-ic="help" data-ic-size="sm" tabindex="0" role="img" aria-label="Click a fabric, roll or refiner to set dates and target life; click a section name for its card" title="Click a fabric, roll or refiner to set dates and target life; click a section name for its card"></span>
-      <span class="legend"><span><i style="background:var(--warn)"></i>Due within 6 wks</span><span><i style="background:var(--bad)"></i>Overdue</span><span><i style="background:var(--cd-worn);border-radius:50%"></i>Flagged: change at next outage</span></span>
+      <span class="legend"><span><i style="background:var(--warn-soft);box-shadow:inset 0 0 0 1px var(--warn-line)"></i>Due within 6 wks</span><span><i style="background:var(--bad)"></i>Overdue</span><span><i style="background:var(--cd-worn);border-radius:50%"></i>Flagged: change at next outage</span></span>
       <span class="spacer"></span>
       <span id="summary" class="row"></span>
       <div class="zoom">
@@ -264,13 +259,13 @@
 <aside id="drawer" class="drawer" hidden></aside>
 <div id="toast"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0155"></script>
-<script src="mm-config.js?v=2026-11-08.0155"></script>
-<script src="mm-cloud.js?v=2026-11-08.0155"></script>
-<script src="mm-ui.js?v=2026-11-08.0155"></script>
-<script src="mm-records.js?v=2026-11-08.0155"></script>
-<script src="mm-machine.js?v=2026-11-08.0155"></script>
-<script src="mm-demo.js?v=2026-11-08.0155"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0205"></script>
+<script src="mm-config.js?v=2026-11-08.0205"></script>
+<script src="mm-cloud.js?v=2026-11-08.0205"></script>
+<script src="mm-ui.js?v=2026-11-08.0205"></script>
+<script src="mm-records.js?v=2026-11-08.0205"></script>
+<script src="mm-machine.js?v=2026-11-08.0205"></script>
+<script src="mm-demo.js?v=2026-11-08.0205"></script>
 <script>
 (() => {
   'use strict';
@@ -1122,6 +1117,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.0155"></script>
+<script src="mm-nav.js?v=2026-11-08.0205"></script>
 </body>
 </html>
