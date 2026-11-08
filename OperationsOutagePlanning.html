@@ -5,8 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Operations Outage Planning</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0242">
-<script src="mm-icons.js?v=2026-11-08.0242"></script>
+<script src="mm-theme.js?v=2026-11-08.1141"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1141">
+<script src="mm-icons.js?v=2026-11-08.1141"></script>
 <style>
   /* shared look: mm-theme.css */
   main{padding:16px 16px 60px}
@@ -81,7 +82,7 @@
   .ch .rel b{color:var(--ink);font-weight:600}
   .badges{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
   .pill{
-    color:var(--sc,var(--ink-2));background:color-mix(in srgb,var(--sc,var(--ink-2)) 12%,var(--surface))}
+    color:color-mix(in srgb,var(--sc,var(--ink-2)) 55%,var(--ink));background:color-mix(in srgb,var(--sc,var(--ink-2)) 12%,var(--surface))}
   .sec{padding:12px 18px 14px}
   .sec + .sec{border-top:1px solid var(--line)}
   .sh{display:flex;align-items:center;gap:8px;margin-bottom:8px}
@@ -178,7 +179,7 @@
   .tab small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
   .tab .c{display:block;font-size:11px;font-weight:500;color:var(--ink-3);margin-top:1px}
   .tab.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink)}
-  .tab.on small,.tab.on .c{color:var(--accent-ink);opacity:.75}
+  .tab.on small,.tab.on .c{color:var(--accent-ink)}
   .mgrid{display:grid;grid-template-columns:62px 1fr;gap:5px 8px;align-items:center}
   .mgrid label{font-size:12px;font-weight:600;color:var(--ink-2);letter-spacing:.03em}
   .mgrid input{border:1px solid var(--line);border-radius:var(--r-sm);padding:0 8px;height:30px;font-size:13px;width:100%;background:var(--surface-2)}
@@ -191,7 +192,7 @@
   .foot a{color:var(--accent)}
 
   /* ---------- Schedule editor (styles) ---------- */
-  .backdrop{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:16px}
+  .backdrop{position:fixed;inset:0;z-index:300;background:var(--scrim);display:grid;place-items:center;padding:16px}
   .sheet{background:var(--overlay);border:1px solid var(--line-strong);border-radius:var(--r-lg);width:min(520px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;
     box-shadow:var(--shadow-pop)}
   .sheet-h{padding:18px 20px 10px}
@@ -268,12 +269,12 @@
 <div id="toast"></div>
 <div id="ver"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0242"></script>
-<script src="mm-config.js?v=2026-11-08.0242"></script>
-<script src="mm-cloud.js?v=2026-11-08.0242"></script>
-<script src="mm-ui.js?v=2026-11-08.0242"></script>
-<script src="mm-records.js?v=2026-11-08.0242"></script>
-<script src="mm-machine.js?v=2026-11-08.0242"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1141"></script>
+<script src="mm-config.js?v=2026-11-08.1141"></script>
+<script src="mm-cloud.js?v=2026-11-08.1141"></script>
+<script src="mm-ui.js?v=2026-11-08.1141"></script>
+<script src="mm-records.js?v=2026-11-08.1141"></script>
+<script src="mm-machine.js?v=2026-11-08.1141"></script>
 <script>
 (() => {
   'use strict';
@@ -1012,6 +1013,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.0242"></script>
+<script src="mm-nav.js?v=2026-11-08.1141"></script>
 </body>
 </html>

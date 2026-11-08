@@ -43,10 +43,11 @@
     };
     return api;
   }
-  const session = { user: { id: 'user-1', email: 'matt@example.com' } };
+  const session = { user: { id: 'user-1', email: 'matt@example.com', user_metadata: window.__userMeta || {} } };
   window.supabase = {
     createClient: () => ({
-      auth: { getSession: async () => ({ data: { session } }), signOut: async () => ({}), signInWithPassword: async () => ({}) },
+      auth: { getSession: async () => ({ data: { session } }), signOut: async () => ({}), signInWithPassword: async () => ({}),
+        updateUser: async ({ data }) => { session.user.user_metadata = Object.assign({}, session.user.user_metadata, data); window.__metaSaved = session.user.user_metadata; return { data: { user: session.user }, error: null }; } },
       from: query,
       async rpc(name, args){
         if (name === 'mm_apply'){ log.push(clone(args)); const data = apply(args.p_tool, args.p_changes); persist(); return { data, error: null }; }

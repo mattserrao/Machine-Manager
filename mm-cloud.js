@@ -35,6 +35,8 @@
           .sort((a, b) => a.name.localeCompare(b.name));
         const want = lsGet(ORG_KEY);
         cached = { user: s.user, orgs, org: orgs.find(o => o.id === want) || orgs[0] || null };
+        // appearance follows the account (mm-theme.js)
+        if (window.MMTheme) MMTheme.fromAccount((s.user.user_metadata || {}).mm_theme);
         return cached;
       } finally { pending = null; }
     })();
@@ -51,6 +53,15 @@
     cached = null; lsSet(ORG_KEY, null);
   }
   function setOrg(id){ lsSet(ORG_KEY, id); cached = null; }
+  // Save the light / dark / system choice on the signed-in account (Supabase user metadata: no table needed).
+  // Signed out it stays in this browser only (mm-theme.js).
+  async function saveTheme(pref){
+    const s = await session();
+    if (!s) return;
+    const { data, error } = await client.auth.updateUser({ data: { mm_theme: pref } });
+    if (error) throw error;
+    if (data && data.user && cached) cached.user = data.user;
+  }
   const canEdit = s => !!(s && s.org && s.org.role !== 'viewer');
 
   // Reload open tool pages when this browser signs in or out (or switches org) in another tab.
@@ -84,7 +95,7 @@
   .mmc-btn:disabled{opacity:.6;cursor:default}
   .mmc-dlg{border:1px solid var(--line-strong);border-radius:var(--r-lg);padding:0;box-shadow:var(--shadow-pop);width:min(360px,calc(100vw - 32px));
     font:13px/1.4 var(--font);color:var(--ink);background:var(--overlay)}
-  .mmc-dlg::backdrop{background:rgba(0,0,0,.6)}
+  .mmc-dlg::backdrop{background:var(--scrim)}
   .mmc-dlg form{padding:20px 20px 16px;display:flex;flex-direction:column;gap:12px}
   .mmc-dlg h3{margin:0;font-size:15px;font-weight:600}
   .mmc-dlg p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
@@ -361,5 +372,5 @@
     };
   }
 
-  window.MMCloud = { enabled, client, session, signIn, signOut, setOrg, canEdit, openSignIn, mountAccount, openStore, files, canon };
+  window.MMCloud = { enabled, client, session, signIn, signOut, setOrg, canEdit, saveTheme, openSignIn, mountAccount, openStore, files, canon };
 })();

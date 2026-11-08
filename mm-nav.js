@@ -30,7 +30,14 @@
   .mmnav-menu .cur .mi-ic{color:var(--accent)}
   .mmnav-menu .nm{flex:1}
   .mmnav-menu small{font-size:11px;font-weight:400;color:var(--ink-3);white-space:nowrap}
-  .mmnav-menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}`;
+  .mmnav-menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}
+  .mmnav-set{padding:6px 8px 6px}
+  .mmnav-set .lb{font-size:12px;font-weight:500;color:var(--muted);margin:0 0 6px}
+  .mmnav-seg{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:2px;border-radius:var(--r-sm);background:var(--hover)}
+  .mmnav-seg button{display:flex;align-items:center;justify-content:center;gap:5px;height:26px;border:0;border-radius:5px;background:transparent;
+    color:var(--muted);font:500 12px var(--font);cursor:pointer}
+  .mmnav-seg button:hover{color:var(--ink)}
+  .mmnav-seg button[aria-checked="true"]{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line-strong)}`;
   document.head.appendChild(css);
 
   const file = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
@@ -60,6 +67,25 @@
       if (sub){ const s = document.createElement('small'); s.textContent = sub; el.appendChild(s); }
       menu.appendChild(el);
     });
+    // Settings, at the bottom: appearance (mm-theme.js). Saved with the signed-in account.
+    if (window.MMTheme){
+      menu.appendChild(document.createElement('hr'));
+      const set = document.createElement('div'); set.className = 'mmnav-set';
+      const lb = document.createElement('div'); lb.className = 'lb'; lb.id = 'mmnavAppearance'; lb.textContent = 'Appearance';
+      const seg = document.createElement('div'); seg.className = 'mmnav-seg'; seg.setAttribute('role', 'radiogroup'); seg.setAttribute('aria-labelledby', lb.id);
+      const OPTS = [['system', 'System', 'monitor'], ['light', 'Light', 'sun'], ['dark', 'Dark', 'moon']];
+      const btns = OPTS.map(([v, label, ic]) => {
+        const b = document.createElement('button'); b.type = 'button'; b.setAttribute('role', 'radio'); b.dataset.theme = v;
+        b.title = v === 'system' ? 'Follow this computer’s light / dark setting' : label + ' mode';
+        if (window.MMIcons) b.appendChild(MMIcons.el(ic, 'xs'));
+        b.append(label);
+        b.addEventListener('click', () => MMTheme.set(v));
+        seg.appendChild(b); return b;
+      });
+      const sync = () => btns.forEach(b => b.setAttribute('aria-checked', String(b.dataset.theme === MMTheme.pref())));
+      MMTheme.onChange(sync); sync();
+      set.append(lb, seg); menu.appendChild(set);
+    }
     document.body.appendChild(menu);
 
     const links = () => [...menu.querySelectorAll('a')];
