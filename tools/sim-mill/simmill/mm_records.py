@@ -79,7 +79,8 @@ def outages(m, rec_):
 def consumables():
     bid = 'sm-pm1-consumables'
     cats = [('plates', 'Refiner plates', '#9333ea'), ('blade', 'Doctor blades', '#d97706'), ('nozzle', 'Shower nozzles', '#2563eb'),
-            ('rope', 'Dryer rope', '#dc2626'), ('uhle', 'Uhle box covers', '#16a34a'), ('deckle', 'Deckle strips', '#0891b2')]
+            ('rope', 'Dryer rope', '#dc2626'), ('uhle', 'Uhle box covers', '#16a34a'), ('deckle', 'Deckle strips', '#0891b2'),
+            ('parts', 'Bearings and seals', '#475569')]
     FW, FH, FG = 600, 580, 56
     r = {f'p:{bid}': {'name': f'{MACHINE} Consumables', 'meta': {'area': MACHINE, 'desc': 'Sim Mill stores: counts as of Oct 31, 2026, with reorder points.'},
                       'created': '2026-10-31T12:00:00.000Z'}}
@@ -97,17 +98,18 @@ def consumables():
         ('nozzle', 'HP shower nozzles (2nd press)', '#d4ecff', 'each', ['Nozzle', 'Part #'], [('Needle 1.0 mm', 'NZ-N100', 140)], 60,
          'Spraywell audit May 13 found 22% plugged on the 2nd press top shower.', None),
         ('blade', 'Dryer doctor blades', '#ffe2c4', 'each', ['Blade', 'Part #'], [('Steel 1.2 mm, 4.6 m', 'DB-DRY-S12', 22)], 20, '', None),
-        ('deckle', 'Rotary joint seal kits', '#fff4b8', 'kits', ['Kit', 'Part #'], [('Brightwater carbon ring kit', 'BS-RJ-2200', 1)], 2,
+        ('deckle', 'Deckle strips', '#fff4b8', 'each', ['Strip', 'Inventory #'], [('Forming board', 'INV 51207', 5)], 2, '', None),
+        ('parts', 'Rotary joint seal kits', '#ffffff', 'kits', ['Kit', 'Part #'], [('Brightwater carbon ring kit', 'BS-RJ-2200', 1)], 2,
          '3rd section DS joint used three this year.', None),
     ]
     for n, (cat, title, color, unit, cols, rows, mn, note, fits) in enumerate(cards):
         fid, x, y = frames[cat]; cid = f'{bid}-c{n + 1}'
-        cons = {'type': cat if cat != 'deckle' else 'inv', 'kind': 'inv', 'unit': unit, 'cols': cols, 'counted': '2026-10-31',
+        cons = {'type': cat if cat != 'parts' else 'inv', 'kind': 'inv', 'unit': unit, 'cols': cols, 'counted': '2026-10-31',
                 'rows': [{'id': f'{cid}-r{i + 1}', 'a': a, 'b': b, 'q': q} for i, (a, b, q) in enumerate(rows)], 'min': mn}
         if fits: cons['fits'] = fits
         r[f'n:{bid}:{cid}'] = {'x': x + 24, 'y': y + 58, 'z': n + 1, 'color': color, 'w': 268, 'text': title + ('\n' + note if note else ''),
                               'cons': cons, 'attachments': [], 'children': [], 'parent': None, 'cat': fid}
-    r[f'n:{bid}:{bid}-c7'] = {'x': frames['plates'][1] + 24, 'y': frames['plates'][2] + 260, 'z': 7, 'color': '#ffffff', 'w': 268,
+    r[f'n:{bid}:{bid}-c8'] = {'x': frames['parts'][1] + 24 + 284, 'y': frames['parts'][2] + 58, 'z': 8, 'cat': frames['parts'][0], 'color': '#ffffff', 'w': 268,
                               'text': 'Reel drum DS bearing\nOn order for the Nov 11 outage, ETA Nov 5.',
                               'cons': {'type': 'inv', 'kind': 'inv', 'unit': 'each', 'cols': ['Item', 'Part #'], 'counted': '2026-10-31',
                                        'rows': [{'id': 'b1', 'a': 'Spherical roller bearing', 'b': '22238 CCK/W33', 'q': 0}], 'min': 1},

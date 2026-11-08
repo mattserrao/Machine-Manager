@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>My Machine</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1905"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1905">
-<script src="mm-icons.js?v=2026-11-08.1905"></script>
+<script src="mm-theme.js?v=2026-11-08.2036"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2036">
+<script src="mm-icons.js?v=2026-11-08.2036"></script>
 <style>
   /* shared look: mm-theme.css */
   .wrap{padding:14px 14px 60px;transition:margin-right .18s}
@@ -150,6 +150,8 @@
   .dsec{display:flex;align-items:center;gap:8px}
   .dsec .n{font-size:12px;font-weight:600;color:var(--ink-2);width:62px}
   .dsec select{flex:1;border:1px solid var(--line);border-radius:var(--r-sm);padding:5px 7px;font-size:13px}
+  .dsec .fr{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--muted);white-space:nowrap}
+  .dsec .fr input{width:46px;border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 5px;font-size:13px}
   .slist{display:flex;flex-direction:column;gap:6px}
   .srow{display:flex;align-items:center;gap:9px;border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 9px 7px 11px;text-align:left;font-size:13px}
   .srow:hover{background:var(--surface-2)}
@@ -291,13 +293,13 @@
 <aside id="drawer" class="drawer" hidden></aside>
 <div id="toast"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1905"></script>
-<script src="mm-config.js?v=2026-11-08.1905"></script>
-<script src="mm-cloud.js?v=2026-11-08.1905"></script>
-<script src="mm-ui.js?v=2026-11-08.1905"></script>
-<script src="mm-records.js?v=2026-11-08.1905"></script>
-<script src="mm-machine.js?v=2026-11-08.1905"></script>
-<script src="mm-demo.js?v=2026-11-08.1905"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2036"></script>
+<script src="mm-config.js?v=2026-11-08.2036"></script>
+<script src="mm-cloud.js?v=2026-11-08.2036"></script>
+<script src="mm-ui.js?v=2026-11-08.2036"></script>
+<script src="mm-records.js?v=2026-11-08.2036"></script>
+<script src="mm-machine.js?v=2026-11-08.2036"></script>
+<script src="mm-demo.js?v=2026-11-08.2036"></script>
 <script>
 (() => {
   'use strict';
@@ -965,6 +967,7 @@
     const nipsOpt = [1, 2, 3].map(n => `<option value="${n}"${m.press.nips === n ? ' selected' : ''}>${n} nip${n > 1 ? 's' : ''}</option>`).join('');
     const dry = m.dryers.map((d, i) => `<div class="dsec"><span class="n">Section ${i + 1}</span>
       <select data-dry="${i}"><option value="uno"${d.type === 'uno' ? ' selected' : ''}>Unorun — single felt</option><option value="double"${d.type === 'double' ? ' selected' : ''}>Top &amp; bottom felts</option></select>
+      <label class="fr" title="Felt rolls in this section to track as roll positions (0 = none)">Felt rolls <input type="number" min="0" max="12" step="1" data-fr="${i}" value="${d.feltRolls || 0}"></label>
       <button class="ib" data-act="deldry" data-i="${i}" title="Remove section"${m.dryers.length < 2 ? ' disabled' : ''}>${MMIcons.svg('x', 'sm')}</button></div>`).join('');
     openDrawer(`
       <div class="d-head"><div><div class="kind" style="color:var(--ink)">Machine setup</div><div class="where">Headbox on the right, reel on the left</div></div>
@@ -1019,6 +1022,7 @@
     else if (t.id === 'pTandem') m.press.tandem = t.checked;
     else if (t.id === 'cal') m.calender = t.checked;
     else if (t.dataset.dry != null) m.dryers[+t.dataset.dry].type = t.value;
+    else if (t.dataset.fr != null) { const n = Math.max(0, Math.min(12, Math.round(+t.value) || 0)); if (n) m.dryers[+t.dataset.fr].feltRolls = n; else delete m.dryers[+t.dataset.fr].feltRolls; }
     drawSetup(); renderAll();
   }
   function setupAction(act, b){
@@ -1158,6 +1162,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.1905"></script>
+<script src="mm-nav.js?v=2026-11-08.2036"></script>
 </body>
 </html>

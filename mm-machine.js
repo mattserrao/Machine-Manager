@@ -1,6 +1,6 @@
 // Machine Manager — machine model shared by My Machine and Operations Outage Planning.
 // Positions (fabrics, rolls, refiner plates) come from the machine setup; an item is the
-// saved state of one position: { installed:'YYYY-MM-DD', target, targetUnit, note, vendor, style, serial,
+// saved state of one position (a dryer section can also list felt rolls: dryers[i].feltRolls → d<s>-froll-<n>): { installed:'YYYY-MM-DD', target, targetUnit, note, vendor, style, serial,
 // condition:'good'|'wear'|'worn'|'damaged', conditionNote, conditionDate, history:[] }.
 (() => {
   const DEFAULT_MACHINE = {
@@ -44,7 +44,12 @@
       former: { type: f.type === 'fourdrinier' ? 'fourdrinier' : 'twin', lumpbreaker: f.lumpbreaker == null ? d.former.lumpbreaker : !!f.lumpbreaker },
       press: { nips: nips >= 1 && nips <= 3 ? nips : d.press.nips, tandem: p.tandem == null ? d.press.tandem : !!p.tandem },
       dryers: (Array.isArray(m.dryers) && m.dryers.length ? m.dryers : d.dryers).slice(0, 8)
-        .map(x => ({ type: x && x.type === 'uno' ? 'uno' : 'double' })),
+        .map(x => {
+          const o = { type: x && x.type === 'uno' ? 'uno' : 'double' };
+          const fr = Math.round(Number(x && x.feltRolls));          // felt rolls tracked as roll positions (optional, 0–12)
+          if (fr >= 1 && fr <= 12) o.feltRolls = fr;
+          return o;
+        }),
       calender: m.calender == null ? d.calender : !!m.calender,
       refiners: null
     };
@@ -136,6 +141,7 @@
         add(`d${s}-felt-top`, `${ord(s)} section top felt`, 'fabric', 'dryer', sec);
         add(`d${s}-felt-bottom`, `${ord(s)} section bottom felt`, 'fabric', 'dryer', sec);
       }
+      for (let k = 1; k <= (d.feltRolls || 0); k++) add(`d${s}-froll-${k}`, `${ord(s)} section felt roll ${k}`, 'roll', 'roll', sec);
     });
     if (m.calender) {
       add('cal-top', 'Calender top roll', 'roll', 'roll', 'Calender');

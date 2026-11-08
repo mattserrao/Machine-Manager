@@ -8,9 +8,10 @@
     { href: 'TaskPackageLibrary.html', name: 'Ops Task Library', ic: 'list' },
     { href: 'ConsumablesTracker.html', name: 'Consumables Tracker', ic: 'box' },
     { href: 'Whiteboard.html', name: 'Whiteboard', ic: 'frame' },
-    { href: 'Daily.html', name: 'Daily', sub: 'Planned', ic: 'book' },
+    { href: 'Daily.html', name: 'Daily', sub: 'Mill data', ic: 'book' },
+    { href: 'Downtime.html', name: 'Downtime / RCFA', sub: 'Mill data', ic: 'alert' },
+    { href: 'VendorReports.html', name: 'Vendor Reports', sub: 'Mill data', ic: 'file' },
     { href: 'MMLLM.html', name: 'MM LLM', sub: 'Planned', ic: 'message' },
-    { href: 'VendorReports.html', name: 'Vendor Reports', sub: 'Planned', ic: 'file' },
     { href: 'http://10.15.212.124:8000', name: 'FieldAgent', sub: 'Mill network', external: true, ic: 'network' },
   ];
 

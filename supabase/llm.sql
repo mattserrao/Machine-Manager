@@ -25,7 +25,8 @@
 -- Tools (what the orchestrator calls; security invoker, so RLS applies to the signed-in user):
 --   mm_llm_search_docs, mm_llm_search_docs_vec, mm_llm_search_records, mm_llm_position_history, mm_llm_outage_scope,
 --   mm_llm_overdue_actions, mm_llm_envoy, mm_llm_pi_daily, mm_llm_pi_values,
---   mm_llm_downtime, mm_llm_downtime_summary, mm_llm_repeat_stops, mm_llm_rcfa_status, mm_llm_position_life, mm_llm_production (step 05)
+--   mm_llm_downtime, mm_llm_downtime_summary, mm_llm_repeat_stops, mm_llm_rcfa_status, mm_llm_position_life, mm_llm_production,
+--   mm_llm_documents, mm_llm_bus_day (step 05; the last two feed the Vendor Reports and Daily pages)
 --
 -- Asking: llm.query_access (who may ask, per org, with a daily limit) and llm.answers (every answer with its tool
 -- trace; readable by signed-in users who can see the org). Questions go through the mm-llm-ask edge function.
@@ -630,11 +631,28 @@ language sql stable security invoker set search_path = '' as $$
   group by 1 order by 1;
 $$;
 
+-- Documents of an org (newest first), optionally one kind ('vendor_report', 'rcfa', 'drawing', 'reference'), for the Vendor Reports page.
+create or replace function public.mm_llm_documents(p_org uuid, p_kind text default null)
+returns table (doc_id text, kind text, vendor text, doc_date date, title text, file_path text, mime text, positions text[], assets text[], pages int)
+language sql stable security invoker set search_path = '' as $$
+  select d.doc_id, d.kind, d.vendor, d.doc_date, d.title, d.file_path, d.mime, d.positions, d.assets, d.pages
+  from llm.documents d where d.org_id = p_org and (p_kind is null or d.kind = p_kind)
+  order by d.doc_date desc nulls last, d.doc_id limit 1000;
+$$;
+
+-- One BUS sheet: its lines on a day, in sheet order (the Daily page).
+create or replace function public.mm_llm_bus_day(p_org uuid, p_day date)
+returns table (line int, area text, equipment text, position_id text, issue text, action text, owner text, status text, days_open int, wo_no text)
+language sql stable security invoker set search_path = '' as $$
+  select b.line, b.area, b.equipment, b.position_id, b.issue, b.action, b.owner, b.status, b.days_open, b.wo_no
+  from llm.bus_items b where b.org_id = p_org and b.sheet_date = p_day order by b.line;
+$$;
+
 do $$ declare f text; begin
   foreach f in array array['mm_llm_summary(uuid)', 'mm_llm_search_docs(uuid, text, int, text[])', 'mm_llm_search_records(uuid, text, int)', 'mm_llm_position_history(uuid, text, date, date)',
                            'mm_llm_outage_scope(uuid, text)', 'mm_llm_overdue_actions(uuid, date)',
                            'mm_llm_envoy(uuid, text, date, date)', 'mm_llm_pi_daily(uuid, text, date, date)',
-                           'mm_llm_downtime(uuid, date, date, text)', 'mm_llm_downtime_summary(uuid, date, date, text)', 'mm_llm_repeat_stops(uuid, date, date, int)', 'mm_llm_rcfa_status(uuid, date)', 'mm_llm_position_life(uuid, text, date)', 'mm_llm_production(uuid, date, date, text)',
+                           'mm_llm_downtime(uuid, date, date, text)', 'mm_llm_downtime_summary(uuid, date, date, text)', 'mm_llm_repeat_stops(uuid, date, date, int)', 'mm_llm_rcfa_status(uuid, date)', 'mm_llm_position_life(uuid, text, date)', 'mm_llm_production(uuid, date, date, text)', 'mm_llm_documents(uuid, text)', 'mm_llm_bus_day(uuid, date)',
                            'mm_llm_pi_values(uuid, text, timestamptz, timestamptz)'] loop
     execute format('revoke execute on function public.%s from public', f);
     execute format('grant execute on function public.%s to anon, authenticated', f);   -- RLS decides what comes back
@@ -774,7 +792,7 @@ do $$ declare f text; begin
   foreach f in array array['mm_llm_context(uuid)', 'mm_llm_summary(uuid)', 'mm_llm_search_docs(uuid, text, int, text[])', 'mm_llm_search_records(uuid, text, int)',
                            'mm_llm_position_history(uuid, text, date, date)', 'mm_llm_outage_scope(uuid, text)', 'mm_llm_overdue_actions(uuid, date)',
                            'mm_llm_envoy(uuid, text, date, date)', 'mm_llm_pi_daily(uuid, text, date, date)',
-                           'mm_llm_downtime(uuid, date, date, text)', 'mm_llm_downtime_summary(uuid, date, date, text)', 'mm_llm_repeat_stops(uuid, date, date, int)', 'mm_llm_rcfa_status(uuid, date)', 'mm_llm_position_life(uuid, text, date)', 'mm_llm_production(uuid, date, date, text)',
+                           'mm_llm_downtime(uuid, date, date, text)', 'mm_llm_downtime_summary(uuid, date, date, text)', 'mm_llm_repeat_stops(uuid, date, date, int)', 'mm_llm_rcfa_status(uuid, date)', 'mm_llm_position_life(uuid, text, date)', 'mm_llm_production(uuid, date, date, text)', 'mm_llm_documents(uuid, text)', 'mm_llm_bus_day(uuid, date)',
                            'mm_llm_pi_values(uuid, text, timestamptz, timestamptz)'] loop
     execute format('revoke execute on function public.%s from public', f);
     execute format('grant execute on function public.%s to anon, authenticated, service_role', f);

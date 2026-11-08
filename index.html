@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Machine Manager</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1905"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1905">
-<script src="mm-icons.js?v=2026-11-08.1905"></script>
+<script src="mm-theme.js?v=2026-11-08.2036"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2036">
+<script src="mm-icons.js?v=2026-11-08.2036"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1080px;margin:0 auto;padding:28px 20px 72px}
@@ -94,24 +94,30 @@
   </section>
 
   <section class="grp">
+    <h3>Mill data</h3>
+    <div class="rows">
+      <a class="lrow" href="Daily.html"><span data-ic="book" data-ic-size="sm"></span><span class="n">Daily</span><span class="d">The mill day: production, downtime, the BUS sheet and Envoy</span><span class="tag">Demo orgs</span></a>
+      <a class="lrow" href="Downtime.html"><span data-ic="alert" data-ic-size="sm"></span><span class="n">Downtime / RCFA</span><span class="d">Pareto, MTBF, repeat failures and RCFA actions</span><span class="tag">Demo orgs</span></a>
+      <a class="lrow" href="VendorReports.html"><span data-ic="file" data-ic-size="sm"></span><span class="n">Vendor Reports</span><span class="d">Supplier reports, filed by machine position and run</span><span class="tag">Demo orgs</span></a>
+    </div>
+  </section>
+  <section class="grp">
     <h3>Planned and linked</h3>
     <div class="rows">
-      <a class="lrow" href="Daily.html"><span data-ic="book" data-ic-size="sm"></span><span class="n">Daily</span><span class="d">Formatted daily journal for machine managers</span><span class="tag">Planned</span></a>
       <a class="lrow" href="MMLLM.html"><span data-ic="message" data-ic-size="sm"></span><span class="n">MM LLM</span><span class="d">Information flow from mill data to the assistant</span><span class="tag">Planned</span></a>
-      <a class="lrow" href="VendorReports.html"><span data-ic="file" data-ic-size="sm"></span><span class="n">Vendor Reports</span><span class="d">Supplier reports, filed by machine position</span><span class="tag">Planned</span></a>
       <a class="lrow" href="http://10.15.212.124:8000" target="_blank" rel="noopener"><span data-ic="network" data-ic-size="sm"></span><span class="n">FieldAgent</span><span class="d">Monitor assets in real-time</span><span class="tag">Mill network only <span data-ic="external" data-ic-size="xs"></span></span></a>
     </div>
   </section>
 
   <div id="ver"></div>
 </main>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1905"></script>
-<script src="mm-config.js?v=2026-11-08.1905"></script>
-<script src="mm-cloud.js?v=2026-11-08.1905"></script>
-<script src="mm-ui.js?v=2026-11-08.1905"></script>
-<script src="mm-machine.js?v=2026-11-08.1905"></script>
-<script src="mm-demo.js?v=2026-11-08.1905"></script>
-<script src="mm-records.js?v=2026-11-08.1905"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2036"></script>
+<script src="mm-config.js?v=2026-11-08.2036"></script>
+<script src="mm-cloud.js?v=2026-11-08.2036"></script>
+<script src="mm-ui.js?v=2026-11-08.2036"></script>
+<script src="mm-machine.js?v=2026-11-08.2036"></script>
+<script src="mm-demo.js?v=2026-11-08.2036"></script>
+<script src="mm-records.js?v=2026-11-08.2036"></script>
 <script>
   const VERSION = 'v0.5.3';
   document.getElementById('ver').textContent = 'Machine Manager ' + VERSION;
@@ -188,6 +194,6 @@
     if (!signedIn) chip(o.chips, 'Demo');
   })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.1905"></script>
+<script src="mm-nav.js?v=2026-11-08.2036"></script>
 </body>
 </html>

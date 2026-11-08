@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MM LLM</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.1905"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.1905">
-<script src="mm-icons.js?v=2026-11-08.1905"></script>
+<script src="mm-theme.js?v=2026-11-08.2036"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2036">
+<script src="mm-icons.js?v=2026-11-08.2036"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1320px;margin:0 auto;padding:24px 20px 72px}
@@ -83,6 +83,7 @@
   .demo{margin:8px 0 0}
   .demo-h{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px 12px;margin:0 0 4px}
   .demo-h h2{margin:0;font-size:15px;font-weight:600}
+  .mm-orgpick{font:inherit;font-size:13px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 8px}
   .demo-sub{margin:0 0 16px;font-size:13px;color:var(--muted);line-height:1.55;max-width:760px}
   .tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:0 0 20px}
   .tile{padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface)}
@@ -164,7 +165,7 @@
 </header>
 <main>
   <section class="demo" id="demo" aria-live="polite">
-    <div class="demo-h"><h2 id="demoTitle">Demo data</h2><span class="mm-chip" id="demoChip">Loading…</span></div>
+    <div class="demo-h"><h2 id="demoTitle">Demo data</h2><span class="mm-chip" id="demoChip">Loading…</span><span id="orgPick"></span></div>
     <p class="demo-sub" id="demoSub">Loading what the assistant can see…</p>
     <div class="tiles" id="tiles"></div>
     <div id="askSlot"></div>
@@ -211,9 +212,10 @@
     </div>
   </div>
 </div>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.1905"></script>
-<script src="mm-config.js?v=2026-11-08.1905"></script>
-<script src="mm-cloud.js?v=2026-11-08.1905"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2036"></script>
+<script src="mm-config.js?v=2026-11-08.2036"></script>
+<script src="mm-cloud.js?v=2026-11-08.2036"></script>
+<script src="mm-llm-org.js?v=2026-11-08.2036"></script>
 <script>
   const VERSION = 'v0.5.2';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
@@ -402,19 +404,31 @@
           isDemo = (pubs || []).some(p => p.id === org.id);   // e.g. the demo account, a member of the Demo Mill
         }
       }
-      if (!org && pubs && pubs[0]) org = pubs[0];
+      if (!org && pubs && pubs[0]){
+        // several public demo orgs (Demo Mill, Sim Mill): ?org=<name> or the last one picked in this browser, else the first
+        let want = new URLSearchParams(location.search).get('org'); try { want = want || localStorage.getItem('mm-llm-org'); } catch (e) {}
+        org = pubs.find(p => p.name === want) || pubs[0];
+        if (pubs.length > 1){
+          const sel = mk('select', 'mm-orgpick'); sel.setAttribute('aria-label', 'Demo organization');
+          pubs.forEach(p => { const o = mk('option', '', p.name); o.value = p.name; o.selected = p.id === org.id; sel.appendChild(o); });
+          sel.addEventListener('change', () => { try { localStorage.setItem('mm-llm-org', sel.value); } catch (e) {}
+            const u = new URL(location.href); u.searchParams.set('org', sel.value); location.href = u.toString(); });
+          $('orgPick').appendChild(sel);
+        }
+      }
     } catch (e) { return fail('Couldn’t reach the server: ' + (e.message || e)); }
     if (!org) return fail('No demo organization is published yet.');
 
     $('demoTitle').textContent = org.name;
     chip.textContent = isDemo ? 'Public demo · fictional data' : 'Your organization';
-    sub.textContent = isDemo
-      ? 'One fictional year of PM1 data (Nov 2025 – Oct 2026), loaded the same way real mill files will be. “Today” in the demo is Oct 31, 2026, eleven days before the Nov 11 outage. Anyone can read the data and the prepared answers; signed-in users also see the model’s own answers.'
-      : 'Your organization’s MM LLM data.';
+    sub.textContent = !isDemo ? 'Your organization’s MM LLM data.'
+      : org.name === 'Sim Mill'
+      ? 'One modelled year (Nov 2025 – Oct 2026) of The Paper Mill’s own recycled-board machine: a Python port of the game’s simulation with five planted faults, loaded the same way real mill files will be. It also has downtime events, daily production and position runs (see Daily, Downtime / RCFA and Vendor Reports). “Today” is Oct 31, 2026, eleven days before the Nov 11 outage.'
+      : 'One fictional year of PM1 data (Nov 2025 – Oct 2026), loaded the same way real mill files will be. “Today” in the demo is Oct 31, 2026, eleven days before the Nov 11 outage. Anyone can read the data and the prepared answers; signed-in users also see the model’s own answers.';
 
     const { data: summary } = await db.rpc('mm_llm_summary', { p_org: org.id });
     const tiles = $('tiles'); tiles.textContent = '';
-    (summary || []).forEach(r => {
+    (summary || []).filter(r => Number(r.n) > 0).forEach(r => {
       const t = mk('div', 'tile'); t.append(mk('b', '', Number(r.n).toLocaleString()), mk('span', '', r.source));
       tiles.appendChild(t);
     });
@@ -431,9 +445,10 @@
     if (anyAns) $('aboutLive').textContent = `Answering now: ${anyAns.model} (${anyAns.provider}), through the model adapter. Swapping models is a setting, not a rewrite.`;
 
     let key;
-    try { key = await (await fetch('demo-data/answers/answer_key.json', { cache: 'no-cache' })).json(); }
+    const KEYS = { 'Demo Mill': 'demo-data/answers/answer_key.json', 'Sim Mill': 'demo-data/sim-mill/answers/answer_key.json' };
+    try { key = await (await fetch(KEYS[org.name] || KEYS['Demo Mill'], { cache: 'no-cache' })).json(); }
     catch (e) { $('qlist').appendChild(mk('p', 'demo-msg', 'The demo questions couldn’t be loaded.')); return; }
-    if (!isDemo) { $('qlist').appendChild(mk('p', 'demo-msg', 'Demo questions are written for the Demo Mill.')); return; }
+    if (!isDemo || !KEYS[org.name]) { $('qlist').appendChild(mk('p', 'demo-msg', 'Demo questions are written for the demo organizations (Demo Mill, Sim Mill).')); return; }
 
     key.questions.forEach(q => {
       const b = mk('button', 'q'); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
@@ -571,6 +586,6 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   requestAnimationFrame(draw);
 </script>
-<script src="mm-nav.js?v=2026-11-08.1905"></script>
+<script src="mm-nav.js?v=2026-11-08.2036"></script>
 </body>
 </html>
