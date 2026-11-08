@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Machine Manager</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0237">
-<script src="mm-icons.js?v=2026-11-08.0237"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0242">
+<script src="mm-icons.js?v=2026-11-08.0242"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1080px;margin:0 auto;padding:28px 20px 72px}
@@ -72,7 +72,7 @@
         <div class="ts"><span class="line">Outage-day tasks, packages and manning, every 6 weeks.</span><div class="chips"></div></div>
       </a>
       <a class="tile" href="TaskPackageLibrary.html">
-        <span class="ti" data-ic="list"></span><span class="tn">Task Package Library</span><span class="go" data-ic="arrow" data-ic-size="sm"></span>
+        <span class="ti" data-ic="list"></span><span class="tn">Ops Task Library</span><span class="go" data-ic="arrow" data-ic-size="sm"></span>
         <div class="ts">Reusable outage work packages: steps by phase, with who, time and checklists.</div>
       </a>
     </div>
@@ -104,15 +104,15 @@
 
   <div id="ver"></div>
 </main>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0237"></script>
-<script src="mm-config.js?v=2026-11-08.0237"></script>
-<script src="mm-cloud.js?v=2026-11-08.0237"></script>
-<script src="mm-ui.js?v=2026-11-08.0237"></script>
-<script src="mm-machine.js?v=2026-11-08.0237"></script>
-<script src="mm-demo.js?v=2026-11-08.0237"></script>
-<script src="mm-records.js?v=2026-11-08.0237"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0242"></script>
+<script src="mm-config.js?v=2026-11-08.0242"></script>
+<script src="mm-cloud.js?v=2026-11-08.0242"></script>
+<script src="mm-ui.js?v=2026-11-08.0242"></script>
+<script src="mm-machine.js?v=2026-11-08.0242"></script>
+<script src="mm-demo.js?v=2026-11-08.0242"></script>
+<script src="mm-records.js?v=2026-11-08.0242"></script>
 <script>
-  const VERSION = 'v0.5.0';
+  const VERSION = 'v0.5.1';
   document.getElementById('ver').textContent = 'Machine Manager ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true });
 
@@ -184,6 +184,6 @@
     if (!signedIn) chip(o.chips, 'Sign in to plan');
   })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.0237"></script>
+<script src="mm-nav.js?v=2026-11-08.0242"></script>
 </body>
 </html>

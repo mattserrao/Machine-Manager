@@ -1,4 +1,4 @@
-// Machine Manager — the board engine shared by the Whiteboard, Task Package Library, Consumables Tracker and Daily.
+// Machine Manager — the board engine shared by the Whiteboard, Ops Task Library, Consumables Tracker and Daily.
 // Notes (cards) with sub-cards, arrows and frames on a pannable board; undo, search, print, export; saved in
 // this browser (demo) or synced through MMCloud.openStore (signed in). Each page calls MMBoard.start(cfg):
 //
@@ -1727,7 +1727,7 @@ window.MMBoard = { start(cfg){
     if (e.key === 'Escape'){ search.value = ''; applySearch(); search.blur(); }
   });
 
-  /* ================= Library shell (Task Package Library, Consumables Tracker) ================= */
+  /* ================= Library shell (Ops Task Library, Consumables Tracker) ================= */
   // A library page of boards; each board is opened on its own. Frames group the cards, arrows give the
   // order, and the usual stacking rules hold (3 sub-cards per card, 4 levels).
   const libEl = $('library'), libGrid = $('libBody'), libSearch = $('libSearch'), pkgDlg = $('pkgDlg');

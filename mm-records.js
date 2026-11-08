@@ -1,8 +1,8 @@
 // Machine Manager — the record ids each tool keeps in mm_records, in one place.
-// A tool that reads another tool's data (Outage Planning reads My Machine and the Task Package Library)
+// A tool that reads another tool's data (Outage Planning reads My Machine and the Ops Task Library)
 // goes through these instead of spelling out prefixes, so a format change breaks in one file, loudly.
 (() => {
-  // Board tools (Whiteboard, Task Package Library, Consumables Tracker): one record per board, card,
+  // Board tools (Whiteboard, Ops Task Library, Consumables Tracker): one record per board, card,
   // arrow and frame.   p:<board> · n:<board>:<card> · l:<board>:<arrow> · f:<board>:<frame> · seeded
   const BOARD_KINDS = { p: 'board', n: 'note', l: 'link', f: 'frame' };
   const boards = {
