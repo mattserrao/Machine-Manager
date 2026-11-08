@@ -1,4 +1,4 @@
-/* Machine Manager — styles shared by the board tools (Whiteboard, Task Package Library, Consumables Tracker).
+/* Machine Manager — styles shared by the board tools (Whiteboard, Ops Task Library, Consumables Tracker).
    Load after mm-theme.css: colours, buttons and the top bar come from there. */
 html,body{height:100%;overflow:hidden}
 /* ---------- Board ---------- */

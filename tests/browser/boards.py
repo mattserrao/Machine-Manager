@@ -95,7 +95,7 @@ with sync_playwright() as p:
     check("WB: no page errors", not pg.errors, "; ".join(pg.errors))
     ctx.close()
 
-    # ───────── Task Package Library ─────────
+    # ───────── Ops Task Library ─────────
     ctx, pg = open_page(br, "TaskPackageLibrary.html")
     check("TPL: opens on the library with 5 examples", pg.locator("#library").is_visible() and pg.locator(".pkg:not(.pkg-new)").count() == 5)
     pg.get_by_text("Dryer Felt Change", exact=True).first.click(); pg.wait_for_timeout(500)

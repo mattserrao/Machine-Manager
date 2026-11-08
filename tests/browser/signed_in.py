@@ -76,7 +76,7 @@ with sync_playwright() as p:
     check("WB: no page errors", not pg.errors, "; ".join(pg.errors))
     ctx.close()
 
-    # ───────── Task Package Library and Consumables signed in ─────────
+    # ───────── Ops Task Library and Consumables signed in ─────────
     for name, tool in [("TaskPackageLibrary.html", "task-packages"), ("ConsumablesTracker.html", "consumables")]:
         ctx, pg = open_page(name, [])
         pg.wait_for_timeout(800)

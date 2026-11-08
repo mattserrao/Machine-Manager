@@ -5,7 +5,7 @@
     { href: 'index.html', name: 'Overview', ic: 'board' },
     { href: 'MyMachine.html', name: 'My Machine', ic: 'machine' },
     { href: 'OperationsOutagePlanning.html', name: 'Operations Outage Planning', ic: 'calendar' },
-    { href: 'TaskPackageLibrary.html', name: 'Task Package Library', ic: 'list' },
+    { href: 'TaskPackageLibrary.html', name: 'Ops Task Library', ic: 'list' },
     { href: 'ConsumablesTracker.html', name: 'Consumables Tracker', ic: 'box' },
     { href: 'Whiteboard.html', name: 'Whiteboard', ic: 'frame' },
     { href: 'Daily.html', name: 'Daily', sub: 'Planned', ic: 'book' },
