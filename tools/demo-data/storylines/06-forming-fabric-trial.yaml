@@ -24,3 +24,14 @@ demo_questions:
   - q: How did the last forming fabric trial go?
     output: Ask MM
     expect: Halden PF-3315 on the base ply, Dec 10–Jan 21. Formation was fine but it needed ~4% more vacuum and lost ~15 fpm on 33#, so it was pulled and the base ply went back to NX-2740.
+records:
+  bus:
+    - key: S06-B1
+      asset: Base ply forming fabric
+      start: 2025-12-22
+      end: 2025-12-24
+      issue: Base ply couch vac running high on trial fabric - losing ~15 fpm on 33#
+      action: Halden reviewing; decision at 1/21 outage
+      owner: P04
+  action:
+    - {key: S06-A1, title: 'Trial decision: base ply fabric for the 1/21 outage', asset: Base ply forming fabric, created: 2025-12-22, due: 2026-01-14, completed: 2026-01-13, owner: P04, bucket: Process}

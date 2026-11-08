@@ -33,3 +33,37 @@ demo_questions:
   - q: Which RCFA actions are overdue?
     output: Morning watch
     expect: Includes the RCFA-2026-02 doctor loading check (due Jun 30).
+records:
+  downtime:
+    - {start: 2026-02-18T02:40, hours: 10, asset: Base ply forming fabric, kind: equipment, note: Hole in base ply wire from lumpbreaker wad}
+  wo:
+    - {key: S03-WO1, asset: Base ply forming fabric, created: 2026-02-18, type: EM, priority: 1, desc: Change base ply forming fabric - 4 in hole at TS, originator: P08, craft: MECH, est_hours: 10, completed: 2026-02-18}
+    - {key: S03-WO2, asset: Lumpbreaker doctor, created: 2026-02-19, type: CM, priority: 2, desc: Replace worn lumpbreaker doctor blade, originator: P03, craft: MECH, est_hours: 3, outage: OUT-2026-03-04, completed: 2026-03-04}
+  pm_series:
+    - {desc: Change lumpbreaker doctor blade, asset: Lumpbreaker doctor, start: 2026-04-15, every: outage, craft: MECH, est_hours: 3}
+  bus:
+    - key: S03-B1
+      asset: Base ply forming fabric
+      start: 2026-02-18
+      end: 2026-02-20
+      issue: Base ply wire hole 02:40 - 10 h down, wad off lumpbreaker
+      action: Fabric changed with floor spare; RCFA to follow
+      updates: {2026-02-19: 'Running. Lumpbreaker blade worn - WO for 3/4 outage'}
+      owner: P01
+      wo: S03-WO1
+  action:
+    - {key: S03-A1, title: Create lumpbreaker doctor blade PM (every outage), asset: Lumpbreaker doctor, created: 2026-02-24, due: 2026-03-04, completed: 2026-03-03, owner: P02, bucket: RCFA, ref: RCFA-2026-02}
+    - {key: S03-A2, title: Lumpbreaker doctor loading check and setpoint, asset: Lumpbreaker doctor, created: 2026-02-24, due: 2026-06-30, owner: P19, bucket: RCFA, ref: RCFA-2026-02}
+    - {key: S03-A3, title: Add spare lumpbreaker doctor blade to stores, asset: Lumpbreaker doctor, created: 2026-02-24, due: 2026-03-20, completed: 2026-03-18, owner: P02, bucket: RCFA, ref: RCFA-2026-02}
+  rcfa:
+    - id: RCFA-2026-02
+      event: 2026-02-18
+      opened: 2026-02-24
+      title: Base ply wire hole - lumpbreaker wad
+      asset: Base ply forming fabric
+      downtime_h: 10
+      category: Equipment - PM gap
+      root_cause: Worn lumpbreaker doctor blade let a wad through; no PM on the blade
+      contributing: No spare blade in stores
+      lead: P03
+      actions: [S03-A1, S03-A2, S03-A3]

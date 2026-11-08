@@ -27,3 +27,9 @@ demo_questions:
   - q: What carried over from the annual outage, and what should go into Nov 11?
     output: Outage brief
     expect: The 12 carry-over WOs, which ones fit a 14 h outage, plus the can 27 bearing that was never in scope.
+records:
+  annual_scope:   # WOs tagged to OUT-2026-ANNUAL, including clothing/plate changes and S07
+    total: 120
+    created: [2026-08-03, 2026-09-08]
+    deferred: 6        # not done: parts; status 35 after the outage
+    not_finished: 6    # carried to OUT-2026-11-11

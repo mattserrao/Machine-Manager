@@ -24,3 +24,14 @@ demo_questions:
   - q: What needs an owner or a push before Monday's BUS meeting?
     output: Morning watch
     expect: Lists the 14 overdue actions by owner, flags the 2 Nov 11 WOs without parts, and links the can 27 bearing.
+records:
+  punch_list:   # annual outage punch list in Teams; exactly overdue_at_end of them overdue on Oct 31
+    created: [2026-10-12, 2026-10-13]
+    count: 40
+    overdue_at_end: 13
+  wo:
+    - {key: S08-WO, asset: 2nd section drive group, created: 2026-10-22, type: CM, priority: 3, desc: Replace 2nd section drive coupling insert - worn, originator: P05, craft: MECH, est_hours: 4, outage: OUT-2026-11-11, parts: Not reserved}
+  bus:
+    - {key: S08-B1, asset: 2nd section drive group, start: 2026-10-26, end: null, issue: Drive coupling insert worn - waiting on parts, action: WO for 11/11; parts not reserved yet, owner: P05, wo: S08-WO, status: Waiting parts}
+    - {key: S08-B2, asset: Vacuum pump 2, start: 2026-10-26, end: null, issue: Vac pump 2 packing leak - waiting on packing, action: Adjusted; packing on order, owner: P05, status: Waiting parts}
+    - {key: S08-B3, asset: Reel spool handling, start: 2026-10-27, end: null, issue: Spool clamp sensor intermittent - waiting on sensor, action: Bypassed with manual check each turn-up, owner: P20, status: Waiting parts}

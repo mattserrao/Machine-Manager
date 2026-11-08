@@ -38,7 +38,9 @@ jobs:
         with: { node-version: '22' }
       - run: node tests/unit/machine.test.js
       - run: node tests/sync/sync_sim.js
-      - run: pip install pyyaml && python3 tools/demo-data/backbone.py --check
+      - run: pip install pyyaml openpyxl
+      - run: python3 tools/demo-data/backbone.py --check
+      - run: python3 tools/demo-data/structured.py --check
 
   browser:
     runs-on: ubuntu-latest

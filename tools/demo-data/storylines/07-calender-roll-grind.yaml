@@ -27,3 +27,8 @@ demo_questions:
   - q: When was the calender bottom roll last ground, and what did they find?
     output: Ask MM
     expect: It was reground during the 2026 annual outage after the May report showed hardness drift and the crown near its limit. Cites both Teague reports.
+records:
+  wo:
+    - {key: S07-WO, asset: Calender bottom roll, created: 2026-08-12, type: PJ, priority: 3, desc: Change calender bottom roll - send for regrind (Teague), originator: P02, craft: MECH, est_hours: 24, outage: OUT-2026-ANNUAL, completed: 2026-10-06}
+  action:
+    - {key: S07-A1, title: Book Teague shop slot for calender bottom roll regrind, asset: Calender bottom roll, created: 2026-08-12, due: 2026-08-29, completed: 2026-08-27, owner: P02, bucket: Outage prep}

@@ -47,3 +47,42 @@ demo_questions:
   - q: When did we first see the can 27 problem?
     output: Ask MM
     expect: Envoy first flagged it on Sep 22 (rise visible from ~Sep 1), before the annual outage, and it was not added to the annual scope.
+records:
+  wo:
+    - key: S01-WO
+      asset: Dryer can 27
+      created: 2026-10-20
+      type: CM
+      priority: 2
+      desc: Replace can 27 DS bearing - outer race defect (Keel route 10/19)
+      originator: P03
+      craft: MECH
+      est_hours: 16
+      outage: OUT-2026-11-11
+      parts: Not reserved
+  bus:
+    - key: S01-B1
+      asset: Dryer can 27
+      start: 2026-09-28
+      end: 2026-09-29
+      issue: Can 27 vibration alarm (Envoy)
+      action: Reliability to look at
+      updates: {2026-09-29: 'Checked - within limits, closing'}
+      owner: P03
+    - key: S01-B2
+      asset: Dryer can 27
+      start: 2026-10-21
+      end: null
+      issue: Can 27 DS bearing - outer race defect (Keel 10/19)
+      action: WO for Nov 11 outage; monitor 2x per shift
+      owner: P02
+      wo: S01-WO
+  action:
+    - key: S01-A1
+      title: Confirm can 27 DS bearing and housing parts on site for Nov 11
+      asset: Dryer can 27
+      created: 2026-10-20
+      due: 2026-11-04
+      owner: P02
+      bucket: Outage prep
+      ref: S01-WO
