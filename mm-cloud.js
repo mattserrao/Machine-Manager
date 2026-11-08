@@ -75,9 +75,9 @@
   .mmc.compact .who > span{display:none}
   .mmc select{font:inherit;font-size:12px;border:1px solid var(--line);border-radius:var(--r-sm);padding:2px 4px;color:var(--ink-2);background:var(--surface-2);max-width:160px}
   .mmc-pill{font-size:12px;font-weight:400;color:var(--muted)}
-  .mmc-pill::before{content:"·";margin:0 6px 0 0;color:var(--faint)}
+  .mmc-pill::before{content:"·";margin:0 6px 0 0;color:var(--ink-3)}
   .mmc-pill.ro{color:var(--accent-ink)}
-  .mmc-btn{font:inherit;font-size:12.5px;font-weight:500;border:1px solid var(--line);background:transparent;border-radius:var(--r-sm);height:30px;padding:0 10px;cursor:pointer;color:var(--ink);white-space:nowrap}
+  .mmc-btn{font:inherit;font-size:13px;font-weight:500;border:1px solid var(--line);background:transparent;border-radius:var(--r-sm);height:30px;padding:0 10px;cursor:pointer;color:var(--ink);white-space:nowrap}
   .mmc-btn:hover{background:var(--hover);border-color:var(--line-strong)}
   .mmc-btn.primary{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
   .mmc-btn.primary:hover{background:var(--primary-hover)}
@@ -87,11 +87,11 @@
   .mmc-dlg::backdrop{background:rgba(0,0,0,.6)}
   .mmc-dlg form{padding:20px 20px 16px;display:flex;flex-direction:column;gap:12px}
   .mmc-dlg h3{margin:0;font-size:15px;font-weight:600}
-  .mmc-dlg p{margin:0;font-size:12.5px;color:var(--muted);line-height:1.5}
+  .mmc-dlg p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
   .mmc-dlg label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:500;color:var(--ink-2)}
   .mmc-dlg input{font:inherit;font-size:13px;border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:0 10px;height:34px;background:var(--surface-2);color:var(--ink)}
   .mmc-dlg input:focus{outline:none;border-color:var(--accent)}
-  .mmc-err{color:var(--bad-ink);font-size:12.5px;min-height:1em}
+  .mmc-err{color:var(--bad-ink);font-size:13px;min-height:1em}
   .mmc-row{display:flex;justify-content:flex-end;gap:8px}`;
   let dlg = null;
   const mk = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };

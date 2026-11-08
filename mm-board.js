@@ -1216,15 +1216,26 @@ window.MMBoard = { start(cfg){
     for (const e of els){ const r = worldRect(e); x1 = Math.min(x1, r.x); y1 = Math.min(y1, r.y); x2 = Math.max(x2, r.x + r.w); y2 = Math.max(y2, r.y + r.h); }
     return { x:x1, y:y1, w:x2 - x1, h:y2 - y1 };
   }
-  function fitAll(){
+  // Fit every card on screen. minZoom: when a board first opens, don't shrink cards past the point where
+  // their text stops being readable; if it still doesn't fit, start at the top-left of the content instead.
+  const OPEN_MIN_ZOOM = 0.85;
+  function fitAll(minZoom){
     const bb = contentBox(), r = board.getBoundingClientRect();
     if (!bb){ B.zoom = 1; B.pan = { x:0, y:0 }; applyView(); return; }
-    const z = Math.max(0.2, Math.min(1.25, (r.width - 120) / bb.w, (r.height - 170) / bb.h));
+    const want = Math.min(1.25, (r.width - 120) / bb.w, (r.height - 170) / bb.h);
+    const floor = typeof minZoom === 'number' ? minZoom : 0.2;
+    const z = Math.max(floor, want);
     B.zoom = z;
-    B.pan.x = Math.round(r.width/2 - (bb.x + bb.w/2) * z);
-    B.pan.y = Math.round(r.height/2 + 10 - (bb.y + bb.h/2) * z);
+    if (want >= floor){
+      B.pan.x = Math.round(r.width/2 - (bb.x + bb.w/2) * z);
+      B.pan.y = Math.round(r.height/2 + 10 - (bb.y + bb.h/2) * z);
+    } else {
+      B.pan.x = Math.round(40 - bb.x * z);
+      B.pan.y = Math.round(84 - bb.y * z);       // just under the top bar
+    }
     applyView(); viewChanged();
   }
+  const fitOnOpen = () => fitAll(OPEN_MIN_ZOOM);
   function centerOn(id){
     const e = visibleElFor(id); if (!e) return;
     const r = worldRect(e), br = board.getBoundingClientRect();
@@ -1645,7 +1656,7 @@ window.MMBoard = { start(cfg){
     if (clip) mi('Paste here', () => unpack(clip, { x:w.x, y:w.y }, 0), '⌘/Ctrl+V');
     mi('Select all', selectAll, '⌘/Ctrl+A');
     ms();
-    mi(`Fit all ${W.cards}`, fitAll, 'Shift+1');
+    mi(`Fit all ${W.cards}`, () => fitAll(), 'Shift+1');
     mi(app.snap ? 'Turn off snap to grid' : 'Snap to grid', toggleSnap, 'G');
     showMenu(x, y);
   }
@@ -1748,7 +1759,7 @@ window.MMBoard = { start(cfg){
     if (!app.boards[id]) return;
     switchBoard(id);
     closeLibrary();
-    if (!B.seen){ B.seen = true; requestAnimationFrame(fitAll); save(true); }
+    if (!B.seen){ B.seen = true; requestAnimationFrame(fitOnOpen); save(true); }
   }
   function renderChrome(){
     if (!LIB) return renderTabs();
@@ -1810,7 +1821,7 @@ function pkgSummary(b){
     section(T.yours, mine, q ? el('div', 'lib-none', 'No matches.') : null);
     if (!q){
       const make = el('button', 'pkg pkg-new');
-      make.innerHTML = `<span class="pn-plus">+</span><b>Create your own</b><span>${esc(T.makeOwn)}</span>`;
+      make.innerHTML = `<span class="pn-plus">${MMIcons.svg('plus', 'sm')}</span><b>Create your own</b><span>${esc(T.makeOwn)}</span>`;
       make.addEventListener('click', e => { e.stopPropagation(); openNewMenu(e.currentTarget); });
       libGrid.lastChild.querySelector('.lib-grid').appendChild(make);
     }
@@ -1830,7 +1841,7 @@ function pkgSummary(b){
     c.dataset.id = b.id;
     const top = el('div', 'pkg-top');
     if (m.area){ const a = el('span', 'pill', m.area); a.style.setProperty('--sc', areaColor(m.area)); top.appendChild(a); }
-    if (m.example) top.appendChild(el('span', 'chip', 'Example'));
+    // examples already sit under their own "Examples" heading, so the card doesn't repeat it
     const more = el('button', 'pkg-more', '⋯'); more.title = 'More'; more.setAttribute('aria-label', 'More actions');
     more.addEventListener('click', ev => { ev.stopPropagation(); openPkgMenu(more, b.id); });
     top.appendChild(more);
@@ -2027,7 +2038,7 @@ function pkgSummary(b){
       }
       t.appendChild(tab);
     }
-    const add = el('button', 'ib', '+'); add.title = 'New board';
+    const add = el('button', 'ib'); add.appendChild(I('plus', 'sm')); add.title = 'New board'; add.setAttribute('aria-label', 'New board');
     add.addEventListener('click', ev => {
       ev.stopPropagation(); closeMenu();
       menu.appendChild(el('div', 'ml', 'New board'));
@@ -2058,7 +2069,7 @@ function pkgSummary(b){
     const nb = newBoard(name);
     if (t) t.build(nb, api);
     switchBoard(nb.id);
-    if (t) requestAnimationFrame(fitAll);
+    if (t) requestAnimationFrame(fitOnOpen);
   }
   // First time signed in to an empty organization: offer to bring over boards made in demo mode.
     async function offerLocalCopy(){
@@ -2554,7 +2565,7 @@ function pkgSummary(b){
   $('zoomIn').addEventListener('click', () => zoomCenter(z => z * 1.2));
   $('zoomOut').addEventListener('click', () => zoomCenter(z => z / 1.2));
   $('zoomPct').addEventListener('click', () => zoomCenter(() => 1));
-  $('fitBtn').addEventListener('click', fitAll);
+  $('fitBtn').addEventListener('click', () => fitAll());
 
   /* ================= Keyboard ================= */
   let pendingPaste = null;

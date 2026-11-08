@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Whiteboard</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0136">
-<script src="mm-icons.js?v=2026-11-08.0136"></script>
-<link rel="stylesheet" href="mm-board.css?v=2026-11-08.0136">
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0155">
+<script src="mm-icons.js?v=2026-11-08.0155"></script>
+<link rel="stylesheet" href="mm-board.css?v=2026-11-08.0155">
 <style>
   /* this page only (shared styles: mm-board.css) */
   #tabs{bottom:14px;left:14px;max-width:calc(100vw - 260px);overflow-x:auto}
@@ -26,7 +26,7 @@
       <path id="tmpLink" class="tmp" d="" marker-end="url(#arrowSel)"/>
     </svg>
   </div>
-  <div id="empty"><div><h1>Blank whiteboard</h1><p>Double-click anywhere or press <b>+ New note</b> to start. Press <b>?</b> for shortcuts.</p></div></div>
+  <div id="empty"><div><h1>Blank whiteboard</h1><p>Double-click anywhere or press <b>New note</b> to start. Press <b>?</b> for shortcuts.</p></div></div>
   <div id="marquee" hidden></div>
 </div>
 
@@ -41,11 +41,11 @@
   <button id="undoBtn" class="ib" title="Undo (Ctrl/⌘+Z)" aria-label="Undo" data-ic="undo"></button>
   <button id="redoBtn" class="ib" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo" data-ic="redo"></button>
   <span class="sep"></span>
-  <button id="frameBtn" class="ib" title="New frame (F)" aria-label="New frame" data-ic="frame"></button>
-  <button id="snapBtn" class="ib wide" title="Snap to grid (G)" aria-label="Snap to grid" data-ic="grid"></button>
+  <button id="frameBtn" class="ib" title="New frame (F)" aria-label="New frame" data-ic="frame"><span class="tl">Frame</span></button>
+  <button id="snapBtn" class="ib wide" title="Snap to grid (G)" aria-label="Snap to grid" data-ic="grid"><span class="tl">Snap</span></button>
   <span class="sep"></span>
   <button id="fileBtn" class="btn" title="Export, import, print">File<svg class="mi-ic xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-  <button id="helpBtn" class="ib wide" title="Shortcuts (?)" aria-label="Shortcuts" data-ic="help"></button>
+  <button id="helpBtn" class="ib wide" title="Shortcuts (?)" aria-label="Shortcuts" data-ic="help"><span class="tl">Shortcuts</span></button>
   <span id="saveState"></span>
   <a id="mode" hidden></a>
 </div>
@@ -53,7 +53,7 @@
 
 <div id="topright">
 <div id="searchbar" class="bar">
-  <span style="color:var(--faint);display:flex" data-ic="search" data-ic-size="sm"></span>
+  <span style="color:var(--ink-3);display:flex" data-ic="search" data-ic-size="sm"></span>
   <input id="search" type="search" placeholder="Search notes  ( / )" autocomplete="off">
   <span id="searchCount"></span>
 </div>
@@ -97,7 +97,7 @@
       <div class="drop" id="edDrop">
         <div id="edAtts"></div>
         <div class="drop-row">
-          <label class="btn">+ Attach files<input type="file" id="edFile" multiple hidden></label>
+          <label class="btn" data-ic="paperclip" data-ic-size="sm">Attach files<input type="file" id="edFile" multiple hidden></label>
           <span>or drop / paste files here</span>
         </div>
       </div>
@@ -225,13 +225,13 @@
   </div>
 </div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0136"></script>
-<script src="mm-config.js?v=2026-11-08.0136"></script>
-<script src="mm-cloud.js?v=2026-11-08.0136"></script>
-<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.0136"></script>
-<script src="mm-ui.js?v=2026-11-08.0136"></script>
-<script src="mm-records.js?v=2026-11-08.0136"></script>
-<script src="mm-board.js?v=2026-11-08.0136"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0155"></script>
+<script src="mm-config.js?v=2026-11-08.0155"></script>
+<script src="mm-cloud.js?v=2026-11-08.0155"></script>
+<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.0155"></script>
+<script src="mm-ui.js?v=2026-11-08.0155"></script>
+<script src="mm-records.js?v=2026-11-08.0155"></script>
+<script src="mm-board.js?v=2026-11-08.0155"></script>
 <script>
 MMBoard.start({
     version:'v0.5.0',
@@ -279,6 +279,6 @@ MMBoard.start({
   },
 });
 </script>
-<script src="mm-nav.js?v=2026-11-08.0136"></script>
+<script src="mm-nav.js?v=2026-11-08.0155"></script>
 </body>
 </html>

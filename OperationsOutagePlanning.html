@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Operations Outage Planning</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0136">
-<script src="mm-icons.js?v=2026-11-08.0136"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0155">
+<script src="mm-icons.js?v=2026-11-08.0155"></script>
 <style>
   /* shared look: mm-theme.css */
   main{padding:16px 16px 60px}
@@ -33,6 +33,13 @@
   .card{background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--line);overflow:hidden}
   .card.annual{box-shadow:inset 0 2px 0 var(--annual)}
   .card.past{opacity:.7}
+  .card.ghost{background:transparent;border-style:dashed}
+  .card.ghost .wd,.card.ghost .rel{color:var(--muted)}
+  .card.ghost .date{font-size:18px;color:var(--ink-2)}
+  .card.ghost .ch{padding-bottom:14px}
+  .card.ghost:hover{background:var(--surface)}
+  .lane > .card.ghost.small::before{border-style:dashed}
+  @media print{ .card.ghost{display:none} }
   .card.next{border-color:var(--accent-line)}
   .ch{padding:16px 18px 12px;display:flex;align-items:flex-start;gap:12px;border-bottom:1px solid var(--line)}
   /* compact (default) vs expanded cards */
@@ -43,7 +50,7 @@
   .card.small .ch{border-bottom:0;padding-bottom:6px}
   .sum{padding:0 18px 16px}
   .chips{display:flex;flex-wrap:wrap;gap:6px}
-  .chip{font-size:11.5px;font-weight:500;color:var(--ink-2);background:var(--hover);border-radius:999px;padding:2px 8px;font-variant-numeric:tabular-nums}
+  .chip{color:var(--ink-2);background:var(--hover)}
   .chip.warn{color:var(--warn-ink);background:var(--warn-soft)}
   .chip.bad{color:var(--bad-ink);background:var(--bad-soft)}
   .sum .peek{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -64,24 +71,24 @@
     .card.big .body > .sec + .sec{border-top:0}
     .card.big .body > .sec:first-child{border-left:0}
   }
-  .card.big .ch .date{font-size:24px}
+  .card.big .ch .date{font-size:22px}
   .shrink{border:1px solid var(--line);background:transparent;border-radius:var(--r-sm);width:30px;height:30px;display:grid;place-items:center;color:var(--ink-2);flex:none}
   .shrink:hover{background:var(--hover);color:var(--ink)}
   .ch .d{flex:1;min-width:0}
   .ch .wd{font-size:12px;font-weight:500;color:var(--muted)}
   .ch .date{font-size:22px;font-weight:600;line-height:1.15;margin-top:1px;letter-spacing:-.01em;font-variant-numeric:tabular-nums}
-  .ch .rel{font-size:12.5px;color:var(--muted);margin-top:3px}
+  .ch .rel{font-size:13px;color:var(--muted);margin-top:3px}
   .ch .rel b{color:var(--ink);font-weight:600}
   .badges{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
-  .pill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap;
+  .pill{
     color:var(--sc,var(--ink-2));background:color-mix(in srgb,var(--sc,var(--ink-2)) 12%,var(--surface))}
   .sec{padding:12px 18px 14px}
   .sec + .sec{border-top:1px solid var(--line)}
   .sh{display:flex;align-items:center;gap:8px;margin-bottom:8px}
   .sh h3{margin:0;font-size:13px;font-weight:600;color:var(--ink)}
-  .sh .n{font-size:11px;font-weight:600;color:var(--muted);background:var(--hover);border-radius:999px;padding:1px 7px}
+  .sh .n{color:var(--muted);background:var(--hover)}
   .sh .sp{flex:1}
-  .none{font-size:13px;color:var(--faint);padding:4px 0}
+  .none{font-size:13px;color:var(--ink-3);padding:4px 0}
 
   /* due items: like tucked mini-notes on the whiteboard */
   .due{display:flex;align-items:center;gap:10px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:7px 8px 7px 12px;position:relative}
@@ -90,12 +97,12 @@
   .due .nm{flex:1;min-width:0}
   .due .nm a{font-size:13px;font-weight:600;text-decoration:none}
   .due .nm a:hover{text-decoration:underline}
-  .due .sub{font-size:11.5px;color:var(--muted);margin-top:1px}
+  .due .sub{font-size:12px;color:var(--muted);margin-top:1px}
   .due .cnote{margin-top:2px;color:var(--flag-ink);font-style:italic}
   .due.done{background:var(--ok-soft);border-color:transparent}
   .due.done .nm a{color:var(--ok-ink)}
-  .chg{font-size:11.5px;font-weight:600;color:var(--ok-ink);white-space:nowrap}
-  .lnk{border:0;background:none;padding:0;font-size:11.5px;color:var(--muted);text-decoration:underline;cursor:pointer}
+  .chg{font-size:12px;font-weight:600;color:var(--ok-ink);white-space:nowrap}
+  .lnk{border:0;background:none;padding:0;font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer}
 
   /* tasks: sticky notes */
   .tasks{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
@@ -105,7 +112,7 @@
   .task .tx{flex:1;min-width:0;font-size:13px;line-height:1.35;word-break:break-word;outline:none;white-space:pre-wrap;border-radius:4px}
   .task .tx[contenteditable=true]:focus{background:rgb(var(--bg-rgb) / .3)}
   .task.done .tx{text-decoration:line-through;color:var(--muted)}
-  .task .x{position:absolute;top:3px;right:3px;border:0;background:transparent;border-radius:5px;font-size:12px;color:var(--muted);padding:1px 5px;opacity:0}
+  .task .x{position:absolute;top:3px;right:3px;border:0;background:transparent;border-radius:var(--r-sm);font-size:12px;color:var(--muted);padding:1px 5px;opacity:0}
   .task:hover .x,.task .x:focus{opacity:1}
   .task .x:hover{background:rgb(var(--fg-rgb) / .08)}
   .addtask{display:flex;gap:6px;margin-top:8px}
@@ -115,13 +122,13 @@
   /* task packages (copied from the Task Package Library) */
   .pk{border:1px solid var(--line);border-radius:var(--r);background:var(--surface-2)}
   .pk + .pk{margin-top:6px}
-  .pk-h{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 10px;cursor:pointer;user-select:none;border-radius:9px}
+  .pk-h{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 10px;cursor:pointer;user-select:none;border-radius:var(--r-sm)}
   .pk-h:hover{background:var(--hover)}
   .pk-h .tw{width:14px;color:var(--muted);flex:none;display:flex;transition:transform .15s}
   .pk.open .pk-h .tw{transform:rotate(90deg)}
   .pk-h .nm{flex:1;min-width:0;font-size:13px;font-weight:600}
-  .pk-h .nm small{display:block;font-size:11.5px;font-weight:400;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .pk-h .x{border:0;background:transparent;border-radius:6px;padding:2px 6px;color:var(--faint);font-size:12px}
+  .pk-h .nm small{display:block;font-size:12px;font-weight:400;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pk-h .x{border:0;background:transparent;border-radius:var(--r-sm);padding:2px 6px;color:var(--ink-3);font-size:12px}
   .pk-h .x:hover{background:var(--hover);color:var(--bad)}
   .pk-b{padding:2px 12px 10px 12px;border-top:1px dashed rgb(var(--fg-rgb) / .12)}
   .pk-desc{font-size:12px;color:var(--muted);margin:8px 0 2px;line-height:1.45}
@@ -132,11 +139,11 @@
   .st + .st{margin-top:5px}
   .st input{margin:2px 0 0;accent-color:var(--accent);flex:none}
   .st .bd{flex:1;min-width:0}
-  .st .tt{font-size:12.5px;font-weight:600;line-height:1.35}
+  .st .tt{font-size:13px;font-weight:600;line-height:1.35}
   .st.done .tt{text-decoration:line-through;color:var(--muted)}
   .st .mt{font-size:11px;color:var(--muted);margin-top:1px}
   .st .ln{font-size:12px;color:var(--ink-2);line-height:1.45}
-  .st .sb{font-size:11.5px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 7px;margin-top:4px;white-space:pre-wrap}
+  .st .sb{font-size:12px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 7px;margin-top:4px;white-space:pre-wrap}
   .card.drop{outline:2px dashed var(--accent);outline-offset:3px}
   .card.drop .sec.pks{background:var(--accent-soft)}
   /* package panel + picker */
@@ -147,48 +154,48 @@
   #panel h2{margin:0;font-size:14px;display:flex;align-items:center;gap:8px}
   #panel h2 .sp{flex:1}
   #panel p{margin:4px 0 8px;font-size:12px;color:var(--muted);line-height:1.45}
-  #panel input{width:100%;border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:0 9px;height:32px;font-size:12.5px;background:var(--surface-2)}
+  #panel input{width:100%;border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:0 9px;height:32px;font-size:13px;background:var(--surface-2)}
   #pkgList{overflow:auto;padding:8px;flex:1}
   .lib{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--surface-2);border-radius:var(--r);padding:8px 10px;margin-bottom:6px;cursor:grab;font-size:13px;font-weight:600}
   .lib:hover{border-color:var(--line-strong);background:var(--hover)}
-  .lib small{display:block;font-size:11.5px;font-weight:400;color:var(--muted);margin-top:1px}
+  .lib small{display:block;font-size:12px;font-weight:400;color:var(--muted);margin-top:1px}
   .lib.dragging{opacity:.5}
   #panel .foot2{padding:8px 14px 12px;border-top:1px solid var(--line);font-size:12px}
   #panel .foot2 a{color:var(--accent)}
   #picker{position:fixed;z-index:400;min-width:260px;max-height:340px;overflow:auto;background:var(--overlay);border:1px solid var(--line-strong);border-radius:var(--r-lg);
     box-shadow:var(--shadow-pop);padding:4px}
   #picker .ml{font-size:12px;font-weight:500;color:var(--muted);padding:6px 8px 4px}
-  #picker button{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:8px;padding:7px 8px;font-size:13px;font-weight:500}
+  #picker button{display:block;width:100%;text-align:left;border:0;background:transparent;border-radius:var(--r-sm);padding:7px 8px;font-size:13px;font-weight:500}
   #picker button:hover,#picker button:focus-visible{background:var(--hover-2);outline:none}
   #picker button small{display:block;font-size:11px;font-weight:400;color:var(--muted)}
-  #picker button:disabled{color:var(--faint);cursor:default;background:transparent}
+  #picker button:disabled{color:var(--ink-3);cursor:default;background:transparent}
   /* manning */
   .mh{cursor:pointer;user-select:none}
   .mh .tw{width:14px;color:var(--muted);display:flex;transition:transform .15s}
   .sec.man.open .mh .tw{transform:rotate(90deg)}
   .tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin:2px 0 10px}
-  .tab{border:1px solid var(--line);background:transparent;border-radius:var(--r-sm);padding:5px 4px;font-size:11.5px;font-weight:600;line-height:1.2;text-align:center;color:var(--ink-2)}
-  .tab small{display:block;font-size:10.5px;font-weight:500;color:var(--muted)}
-  .tab .c{display:block;font-size:10.5px;font-weight:500;color:var(--faint);margin-top:1px}
+  .tab{border:1px solid var(--line);background:transparent;border-radius:var(--r-sm);padding:5px 4px;font-size:12px;font-weight:600;line-height:1.2;text-align:center;color:var(--ink-2)}
+  .tab small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+  .tab .c{display:block;font-size:11px;font-weight:500;color:var(--ink-3);margin-top:1px}
   .tab.on{background:var(--accent-soft);border-color:var(--accent-line);color:var(--accent-ink)}
   .tab.on small,.tab.on .c{color:var(--accent-ink);opacity:.75}
   .mgrid{display:grid;grid-template-columns:62px 1fr;gap:5px 8px;align-items:center}
-  .mgrid label{font-size:11.5px;font-weight:600;color:var(--ink-2);letter-spacing:.03em}
+  .mgrid label{font-size:12px;font-weight:600;color:var(--ink-2);letter-spacing:.03em}
   .mgrid input{border:1px solid var(--line);border-radius:var(--r-sm);padding:0 8px;height:30px;font-size:13px;width:100%;background:var(--surface-2)}
   .mgrid input:focus{outline:none;border-color:var(--accent-line)}
   .mgrid input.inh{background:transparent;color:var(--muted);border-style:dashed}
   .mgrid input[readonly]{background:transparent;border-color:transparent}
-  .mnote{font-size:11.5px;color:var(--muted);margin-top:8px}
+  .mnote{font-size:12px;color:var(--muted);margin-top:8px}
 
   .foot{font-size:12px;color:var(--muted);margin:26px 2px 0;line-height:1.6}
   .foot a{color:var(--accent)}
 
   /* ---------- Schedule editor (styles) ---------- */
   .backdrop{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.6);display:grid;place-items:center;padding:16px}
-  .sheet{background:var(--overlay);border:1px solid var(--line-strong);border-radius:12px;width:min(520px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;
+  .sheet{background:var(--overlay);border:1px solid var(--line-strong);border-radius:var(--r-lg);width:min(520px,100%);max-height:calc(100vh - 32px);display:flex;flex-direction:column;
     box-shadow:var(--shadow-pop)}
   .sheet-h{padding:18px 20px 10px}
-  .sheet-h h2{margin:0;font-size:17px}
+  .sheet-h h2{margin:0;font-size:18px}
   .sheet-h p{margin:5px 0 0;font-size:13px;color:var(--muted);line-height:1.5}
   .rows{padding:6px 20px;overflow:auto}
   .row{display:grid;grid-template-columns:1fr 130px auto;gap:8px;align-items:center;padding:5px 0}
@@ -198,7 +205,7 @@
   .row .wd{grid-column:1 / -1;font-size:11px;color:var(--muted);margin:-3px 0 0 2px}
   .sheet-f{display:flex;gap:8px;align-items:center;padding:12px 20px 18px;border-top:1px solid var(--line)}
   .sheet-f .sp{flex:1}
-  .err{color:var(--bad);font-size:12.5px}
+  .err{color:var(--bad);font-size:13px}
 
   @media print{
     .top,.addtask,.task .x,.btn,#toast,#panel,.pk-h .x{display:none!important}
@@ -238,7 +245,7 @@
     </div>
     <div class="rows" id="edRows"></div>
     <div class="sheet-f">
-      <button class="btn" id="edAdd">+ Add outage</button>
+      <button class="btn" id="edAdd" data-ic="plus" data-ic-size="sm">Add outage</button>
       <span class="err" id="edErr"></span>
       <span class="sp"></span>
       <button class="btn" id="edCancel">Cancel</button>
@@ -250,7 +257,7 @@
 <aside id="panel" hidden aria-label="Task packages">
   <div class="ph2">
     <h2>Task packages <span class="sp"></span><button class="ib" id="panelClose" aria-label="Close" data-ic="x" data-ic-size="sm"></button></h2>
-    <p>Drag a package onto an outage card, or use <b>+ Package</b> on the card.</p>
+    <p>Drag a package onto an outage card, or use <b>Add package</b> on the card.</p>
     <input id="pkgSearch" type="search" placeholder="Search packages" autocomplete="off">
   </div>
   <div id="pkgList"></div>
@@ -261,12 +268,12 @@
 <div id="toast"></div>
 <div id="ver"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0136"></script>
-<script src="mm-config.js?v=2026-11-08.0136"></script>
-<script src="mm-cloud.js?v=2026-11-08.0136"></script>
-<script src="mm-ui.js?v=2026-11-08.0136"></script>
-<script src="mm-records.js?v=2026-11-08.0136"></script>
-<script src="mm-machine.js?v=2026-11-08.0136"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0155"></script>
+<script src="mm-config.js?v=2026-11-08.0155"></script>
+<script src="mm-cloud.js?v=2026-11-08.0155"></script>
+<script src="mm-ui.js?v=2026-11-08.0155"></script>
+<script src="mm-records.js?v=2026-11-08.0155"></script>
+<script src="mm-machine.js?v=2026-11-08.0155"></script>
 <script>
 (() => {
   'use strict';
@@ -432,6 +439,13 @@
       main.appendChild(l);
     };
     lane('Upcoming', up);
+    // Keep the timeline readable as a schedule: show the next cycles on the 6-week grid even before they're
+    // added, dimmed. Clicking one opens the schedule editor (editors only).
+    const upLane = main.querySelector('.lane');
+    if (upLane && up.length < TIMELINE_CYCLES){
+      let d = up.length ? addDays(up[up.length - 1].date, CADENCE_DAYS) : cadenceFrom();
+      for (let i = up.length; i < TIMELINE_CYCLES; i++, d = addDays(d, CADENCE_DAYS)) upLane.appendChild(ghostCard(d));
+    }
     lane('Recently finished', recent, 'past');
     if (showPast) lane('Earlier', older.slice().reverse(), 'past');
     if (!up.length) main.insertBefore(el('div', 'foot', 'No upcoming outages. Use Edit schedule to add the next ones.'), main.firstChild);
@@ -442,6 +456,21 @@
     if (unset.length) bits.push(`${unset.length} position${unset.length === 1 ? ' has' : 's have'} no install date or target life, so ${unset.length === 1 ? 'it isn’t' : 'they aren’t'} planned yet.`);
     if (bits.length){ f.append(bits.join(' ') + ' '); const a = el('a', '', 'Open My Machine'); a.href = 'MyMachine.html'; f.appendChild(a); main.appendChild(f); }
     fitOpenCard();
+  }
+
+  const TIMELINE_CYCLES = 6;
+  function ghostCard(date){
+    const c = el('section', 'card small ghost');
+    const h = el('div', 'ch'), d = el('div', 'd');
+    d.append(el('div', 'wd', fmt(date, { weekday: 'long' })), el('div', 'date', fmtLong(date)), el('div', 'rel', relDay(date) + ' · not scheduled'));
+    h.appendChild(d); c.appendChild(h);
+    if (canEdit()){
+      c.tabIndex = 0; c.setAttribute('role', 'button'); c.setAttribute('aria-label', `Add the ${fmtLong(date)} outage to the schedule`);
+      c.title = 'Add to the schedule';
+      c.addEventListener('click', () => openEditor());
+      c.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openEditor(); } });
+    } else c.style.cursor = 'default';
+    return c;
   }
 
   function card(o, due, cls, isNext){
@@ -462,8 +491,7 @@
     if (big) rel.append(` · ${open} due · ${tdone}/${tasks.length} tasks done`);
     d.appendChild(rel);
     const bd = el('div', 'badges');
-    const ty = el('span', 'pill', o.type === 'annual' ? 'Annual outage' : 'Outage'); if (o.type === 'annual') ty.style.setProperty('--sc', 'var(--annual)');
-    bd.appendChild(ty);
+    if (o.type === 'annual'){ const ty = el('span', 'pill', 'Annual'); ty.style.setProperty('--sc', 'var(--annual)'); bd.appendChild(ty); }   // every card is an outage; only annual needs saying
     if (isNext){ const n = el('span', 'pill', 'Next'); n.style.setProperty('--sc', 'var(--accent)'); bd.appendChild(n); }
     h.append(d, bd);
     if (big){
@@ -714,12 +742,12 @@
     const list = Object.entries(O.pkgs).filter(([, k]) => k.outage === o.id).sort((a, b) => (a[1].at || 0) - (b[1].at || 0));
     sh.append(el('h3', '', 'Task packages'), el('span', 'n', String(list.length)), el('span', 'sp'));
     if (canEdit()){
-      const b = el('button', 'btn sm', '+ Package'); b.title = 'Add a package from the Task Package Library';
+      const b = el('button', 'btn sm', 'Add package'); b.prepend(MMIcons.el('plus', 'sm')); b.title = 'Add a package from the Task Package Library';
       b.addEventListener('click', e => { e.stopPropagation(); openPicker(b, o); });
       sh.appendChild(b);
     }
     sec.appendChild(sh);
-    if (!list.length) sec.appendChild(el('div', 'none', canEdit() ? 'Drag a package here from the Packages panel, or use + Package.' : 'No packages yet.'));
+    if (!list.length) sec.appendChild(el('div', 'none', canEdit() ? 'Drag a package here from the Packages panel, or use Add package.' : 'No packages yet.'));
     for (const [id, k] of list){
       const box = el('div', 'pk' + (openPk.has(id) ? ' open' : '')), h = el('div', 'pk-h');
       h.setAttribute('role', 'button'); h.tabIndex = 0; h.setAttribute('aria-expanded', String(openPk.has(id)));
@@ -984,6 +1012,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.0136"></script>
+<script src="mm-nav.js?v=2026-11-08.0155"></script>
 </body>
 </html>

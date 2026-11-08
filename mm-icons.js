@@ -42,7 +42,7 @@
     message: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
     loader: '<path d="M21 12a9 9 0 1 1-6.2-8.6"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3M12 17h.01"/>',
-    machine: '<circle cx="6" cy="15" r="3"/><circle cx="18" cy="15" r="3"/><circle cx="12" cy="7" r="3"/><path d="M8.5 13.5 10 9.5M15.5 13.5 14 9.5M9 15h6"/>',
+    machine: '<circle cx="7.5" cy="12" r="3"/><circle cx="16.5" cy="12" r="3"/><path d="M7.5 6.5h9a5.5 5.5 0 0 1 0 11h-9a5.5 5.5 0 0 1 0-11z"/>',   // two rolls in a felt run
     box: '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5M12 13v8"/>',
     list: '<path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/>',
     board: '<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',

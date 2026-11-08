@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Task Package Library</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0136">
-<script src="mm-icons.js?v=2026-11-08.0136"></script>
-<link rel="stylesheet" href="mm-board.css?v=2026-11-08.0136">
-<link rel="stylesheet" href="mm-board-library.css?v=2026-11-08.0136">
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.0155">
+<script src="mm-icons.js?v=2026-11-08.0155"></script>
+<link rel="stylesheet" href="mm-board.css?v=2026-11-08.0155">
+<link rel="stylesheet" href="mm-board-library.css?v=2026-11-08.0155">
 <style>
   /* this page only (shared styles: mm-board.css, mm-board-library.css) */
   
@@ -26,7 +26,7 @@
       <path id="tmpLink" class="tmp" d="" marker-end="url(#arrowSel)"/>
     </svg>
   </div>
-  <div id="empty"><div><h1>No steps yet</h1><p>Double-click anywhere or press <b>+ New step</b> to add the first step. Press <b>?</b> for shortcuts.</p></div></div>
+  <div id="empty"><div><h1>No steps yet</h1><p>Double-click anywhere or press <b>New step</b> to add the first step. Press <b>?</b> for shortcuts.</p></div></div>
   <div id="marquee" hidden></div>
 </div>
 
@@ -42,12 +42,12 @@
   <button id="undoBtn" class="ib" title="Undo (Ctrl/⌘+Z)" aria-label="Undo" data-ic="undo"></button>
   <button id="redoBtn" class="ib" title="Redo (Ctrl/⌘+Shift+Z)" aria-label="Redo" data-ic="redo"></button>
   <span class="sep"></span>
-  <button id="frameBtn" class="ib" title="New frame (F)" aria-label="New frame" data-ic="frame"></button>
-  <button id="snapBtn" class="ib wide" title="Snap to grid (G)" aria-label="Snap to grid" data-ic="grid"></button>
+  <button id="frameBtn" class="ib" title="New frame (F)" aria-label="New frame" data-ic="frame"><span class="tl">Frame</span></button>
+  <button id="snapBtn" class="ib wide" title="Snap to grid (G)" aria-label="Snap to grid" data-ic="grid"><span class="tl">Snap</span></button>
   <span class="sep"></span>
   <button id="infoBtn" class="btn" title="Package name, area, crew and window">Details</button>
   <button id="fileBtn" class="btn" title="Export, import, print">File<svg class="mi-ic xs" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
-  <button id="helpBtn" class="ib wide" title="Shortcuts (?)" aria-label="Shortcuts" data-ic="help"></button>
+  <button id="helpBtn" class="ib wide" title="Shortcuts (?)" aria-label="Shortcuts" data-ic="help"><span class="tl">Shortcuts</span></button>
   <span id="saveState"></span>
   <a id="mode" hidden></a>
 </div>
@@ -55,7 +55,7 @@
 
 <div id="topright">
 <div id="searchbar" class="bar">
-  <span style="color:var(--faint);display:flex" data-ic="search" data-ic-size="sm"></span>
+  <span style="color:var(--ink-3);display:flex" data-ic="search" data-ic-size="sm"></span>
   <input id="search" type="search" placeholder="Search steps  ( / )" autocomplete="off">
   <span id="searchCount"></span>
 </div>
@@ -78,7 +78,7 @@
       <div><h2>Task packages</h2><span id="libCount"></span></div>
       <span class="spacer"></span>
       <input id="libSearch" type="search" placeholder="Search packages and steps" autocomplete="off">
-      <button id="libNew" class="btn primary">+ New task package</button>
+      <button id="libNew" class="btn primary" data-ic="plus" data-ic-size="sm">New task package</button>
     </div>
     <p class="lib-intro">Pick a package to open its steps, or create your own. Each package is a board of step cards: frames are the phases, arrows give the order, and cards stack the same way as on the Whiteboard (3 per card, 4 levels).</p>
     <div id="libBody"></div>
@@ -134,7 +134,7 @@
       <div class="drop" id="edDrop">
         <div id="edAtts"></div>
         <div class="drop-row">
-          <label class="btn">+ Attach files<input type="file" id="edFile" multiple hidden></label>
+          <label class="btn" data-ic="paperclip" data-ic-size="sm">Attach files<input type="file" id="edFile" multiple hidden></label>
           <span>or drop / paste files here</span>
         </div>
       </div>
@@ -262,13 +262,13 @@
   </div>
 </div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0136"></script>
-<script src="mm-config.js?v=2026-11-08.0136"></script>
-<script src="mm-cloud.js?v=2026-11-08.0136"></script>
-<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.0136"></script>
-<script src="mm-ui.js?v=2026-11-08.0136"></script>
-<script src="mm-records.js?v=2026-11-08.0136"></script>
-<script src="mm-board.js?v=2026-11-08.0136"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.0155"></script>
+<script src="mm-config.js?v=2026-11-08.0155"></script>
+<script src="mm-cloud.js?v=2026-11-08.0155"></script>
+<script src="vendor/html-to-image-1.11.11.js?v=2026-11-08.0155"></script>
+<script src="mm-ui.js?v=2026-11-08.0155"></script>
+<script src="mm-records.js?v=2026-11-08.0155"></script>
+<script src="mm-board.js?v=2026-11-08.0155"></script>
 <script>
 MMBoard.start({
     version:'v0.3.0',
@@ -435,7 +435,7 @@ MMBoard.start({
     ];
 
     // Rough card height on the board, so phases line up without overlapping.
-    const estH = s => 84 + s.text.split('\n').reduce((t, l) => t + Math.max(1, Math.ceil(l.length / 34)), 0) * 19 + (s.sub ? 32 + s.sub.length * 30 : 0);
+    const estH = s => 92 + s.text.split('\n').reduce((t, l) => t + Math.max(1, Math.ceil(l.length / 32)), 0) * 19 + (s.sub ? 34 + s.sub.length * 32 : 0);
     function buildExample(x){
       const b = { id:x.id, name:x.name, meta:{ ...x.meta, example:true }, created:new Date().toISOString(), notes:{}, links:[], frames:[], pan:{ x:0, y:0 }, zoom:1, z:1 };
       const FW = 288, GAP = 56, TOP = 58, VG = 30;
@@ -467,6 +467,6 @@ MMBoard.start({
   },
 });
 </script>
-<script src="mm-nav.js?v=2026-11-08.0136"></script>
+<script src="mm-nav.js?v=2026-11-08.0155"></script>
 </body>
 </html>

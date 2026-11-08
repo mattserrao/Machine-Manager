@@ -28,7 +28,7 @@
   .mmnav-menu .cur{color:var(--ink);background:var(--hover);cursor:default}
   .mmnav-menu .cur .mi-ic{color:var(--accent)}
   .mmnav-menu .nm{flex:1}
-  .mmnav-menu small{font-size:11px;font-weight:400;color:var(--faint);white-space:nowrap}
+  .mmnav-menu small{font-size:11px;font-weight:400;color:var(--ink-3);white-space:nowrap}
   .mmnav-menu hr{border:0;border-top:1px solid var(--line);margin:4px 2px}`;
   document.head.appendChild(css);
 
@@ -85,4 +85,7 @@
     window.addEventListener('blur', () => close());
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+  // Paper is white: print with the light colour set from mm-theme.css (one copy, shared with the print preview).
+  window.addEventListener('beforeprint', () => document.documentElement.classList.add('mm-light'));
+  window.addEventListener('afterprint', () => document.documentElement.classList.remove('mm-light'));
 })();
