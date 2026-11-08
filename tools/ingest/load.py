@@ -8,6 +8,7 @@
     python3 tools/ingest/load.py --source demo-data/out --backbone demo-data/backbone --dsn "host=... dbname=..." --token <token>
 
     --dry-run   parse everything and print row counts, send nothing
+    --only t,u  replace just these tables (e.g. --only downtime,production_daily); everything else is left alone
 
 The token comes from an admin running  select public.mm_llm_new_ingest_token('<org name>', <hours>);  in the SQL
 editor. It decides the organization; rows never carry an org id. A load replaces the organization's MM LLM rows.
@@ -40,7 +41,7 @@ def collect(source, backbone_dir, log=print):
             m = __import__('re').search(r'WO (\d+)', a['description']); src = wo.get(m.group(1)) if m else None
         if src and not a['asset_no']: a['asset_no'], a['position_id'] = src['asset_no'], src['position_id']
     t['pi_series'] = I.pi_series(os.path.join(source, 'pi'))
-    # step 05: downtime events, daily production and position runs (Sim Mill has them; Demo Mill doesn't yet)
+    # step 05: downtime events, daily production and position runs (Demo Mill has downtime only, from tools/demo-data/downtime_feed.py)
     dtp = g('downtime/*.csv'); t['downtime'] = I.downtime_files(dtp, tg); files.update({p: 'downtime' for p in dtp})
     prp = g('production/*.csv'); t['production_daily'] = I.production_files(prp); files.update({p: 'production' for p in prp})
     psp = g('positions/*.csv'); t['position_runs'] = I.position_run_files(psp); files.update({p: 'position_runs' for p in psp})
@@ -86,13 +87,15 @@ class Local:
     def ingest(self, table, rows, mode='upsert'):
         return self.c.execute('select public.mm_llm_ingest(%s, %s, %s::jsonb, %s)', (self.token, table, json.dumps(rows), mode)).fetchone()[0]
 
-def push(target, tables, log=print):
-    for name in reversed(ORDER): target.ingest(name, [], 'reset')
-    for name in ORDER:
+def push(target, tables, log=print, only=None):
+    names = [n for n in ORDER if not only or n in only]
+    for name in reversed(names): target.ingest(name, [], 'reset')
+    for name in names:
         rows = tables[name]; b = BATCH.get(name, 2000); n = 0
         for i in range(0, len(rows), b):
             n += target.ingest(name, rows[i:i + b]) or 0
         log(f'  {name:12s} {n:>8,} rows')
+    if only: return
     # Machine Manager records (My Machine, Outage Planning, Consumables): only the tools the source has, each replaced whole
     for tool, rows in (tables.get('records') or {}).items():
         n = target.ingest(f'records:{tool}', [], 'reset') or 0
@@ -128,13 +131,17 @@ if __name__ == '__main__':
     ap.add_argument('--source', required=True); ap.add_argument('--backbone', required=True)
     ap.add_argument('--url'); ap.add_argument('--key'); ap.add_argument('--dsn'); ap.add_argument('--token')
     ap.add_argument('--files', action='store_true'); ap.add_argument('--embed', action='store_true'); ap.add_argument('--dry-run', action='store_true')
+    ap.add_argument('--only', help='comma-separated tables to replace; the rest are left alone')
     a = ap.parse_args()
+    only = set(a.only.split(',')) if a.only else None
+    if only and only - set(ORDER): sys.exit('unknown table(s): ' + ', '.join(sorted(only - set(ORDER))))
+    if only and (a.files or a.embed): sys.exit('--only replaces rows only; leave out --files and --embed')
     tables, paths = collect(a.source, a.backbone)
     for k in ORDER: print(f'  {k:12s} {len(tables[k]):>8,} rows parsed')
     for k, v in tables['records'].items(): print(f'  records:{k:12s} {len(v):>5,} records parsed')
     if a.dry_run: sys.exit(0)
     token = a.token or os.environ.get('MM_INGEST_TOKEN') or sys.exit('need --token or MM_INGEST_TOKEN')
     target = Local(a.dsn, token) if a.dsn else Supabase(a.url, a.key, token)
-    print('loading rows…'); push(target, tables)
+    print('loading rows…'); push(target, tables, only=only)
     if a.files and not a.dsn: print('uploading originals…'); upload_files(target, a.source, paths)
     if a.embed and not a.dsn: print('embedding chunks…'); embed(target)

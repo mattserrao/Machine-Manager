@@ -8,10 +8,12 @@
 // Every answer is saved to llm.answers with its tool trace. Model and provider come from MM_LLM_PROVIDER /
 // MM_LLM_MODEL and the provider's key secret (see adapter.ts). Deployed with verify_jwt off: it checks callers itself.
 //
-//   POST { question, question_id? }  ->  { id, answer, trace, model, provider, ms, remaining }
+//   POST { question, question_id?, org_id? }  ->  { id, answer, trace, charts, model, provider, ms, remaining }
+// org_id picks which of the user's orgs on llm.query_access to ask about (default: the first).
+// Charts (make_chart) are kept in the trace (tool 'make_chart', args = the chart), so saved answers can redraw them.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { makeModel, setTools, ModelError } from './adapter.ts';
-import { TOOLS, runTool, forModel } from './tools.ts';
+import { TOOLS, runTool, forModel, checkChart } from './tools.ts';
 import { systemPrompt } from './prompt.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!, ANON = Deno.env.get('SUPABASE_ANON_KEY')!, SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -46,7 +48,7 @@ Deno.serve(async (req) => {
     if (!u?.user) return json({ error: 'Sign in to ask questions.' }, 401);
     userId = u.user.id;
     const { data: acc } = await db.rpc('mm_llm_my_access');
-    const a = (acc ?? [])[0];
+    const a = (acc ?? []).find((x: any) => x.org_id === body.org_id) ?? (acc ?? [])[0];
     if (!a) return json({ error: 'Live questions are open to the demo account only. Everyone signed in can read the saved answers.' }, 403);
     if (a.used_today >= a.daily_limit) return json({ error: `Daily limit reached (${a.daily_limit} questions). Try again tomorrow.` }, 429);
     org = a.org_id; orgName = a.org_name; remaining = a.daily_limit - a.used_today - 1;
@@ -55,7 +57,7 @@ Deno.serve(async (req) => {
   if ((today ?? 0) >= DAILY_CAP) return json({ error: 'The assistant has reached its daily limit for everyone. Try again tomorrow.' }, 429);
 
   // ---- answer ----
-  const t0 = Date.now(), trace: any[] = [];
+  const t0 = Date.now(), trace: any[] = [], charts: any[] = [];
   let answer = '', status = 'ok', inT = 0, outT = 0, model = '', provider = '';
   try {
     const m = makeModel(); model = m.model; provider = m.provider;
@@ -68,6 +70,13 @@ Deno.serve(async (req) => {
       if (final || !turn.calls.length) { answer = turn.text.trim() || 'No answer came back. Try a narrower question.'; break; }
       const results = [];
       for (const c of turn.calls) {
+        if (c.name === 'make_chart') {          // drawn by the page; nothing to query
+          const { chart, error } = checkChart(c.args);
+          if (chart) charts.push(chart);
+          trace.push({ tool: 'make_chart', args: chart ?? c.args, rows: chart ? 1 : 0, error });
+          results.push({ id: c.id, content: JSON.stringify(chart ? { ok: true, note: 'The page draws this chart under your answer and offers a PNG download. Do not redraw it in text.' } : { error }) });
+          continue;
+        }
         const r = await runTool(db, org, c.name, c.args);
         trace.push({ tool: c.name, args: c.args, rows: (r as any).total ?? 0, error: (r as any).error ?? undefined });
         results.push({ id: c.id, content: forModel(r) });
@@ -81,5 +90,5 @@ Deno.serve(async (req) => {
   const ms = Date.now() - t0;
   const { data: id } = await svc.rpc('mm_llm_save_answer', { p_org: org, p_question_id: body.question_id ?? null, p_question: question,
     p_answer: answer, p_status: status, p_trace: trace, p_model: model, p_provider: provider, p_in: inT, p_out: outT, p_ms: ms, p_user: userId });
-  return json({ id, answer, status, trace, model, provider, ms, remaining }, status === 'ok' ? 200 : 502);
+  return json({ id, answer, status, trace, charts, model, provider, ms, remaining }, status === 'ok' ? 200 : 502);
 });

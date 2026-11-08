@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MM LLM</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.2108"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2108">
-<script src="mm-icons.js?v=2026-11-08.2108"></script>
+<script src="mm-theme.js?v=2026-11-08.2126"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2126">
+<script src="mm-icons.js?v=2026-11-08.2126"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1320px;margin:0 auto;padding:24px 20px 72px}
@@ -141,6 +141,16 @@
   .ev mark{background:var(--warn-soft);color:var(--ink);border-radius:2px;padding:0 1px}
   .demo-msg{font-size:13px;color:var(--muted)}
   .model{margin:0;font-size:13px;line-height:1.6;color:var(--ink);white-space:pre-wrap}
+  .mchart{margin:14px 0 4px;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-md,8px);background:var(--surface)}
+  .mchart h4{margin:0 0 2px;font-size:13px;font-weight:600}
+  .mchart .src{margin:0 0 8px;font-size:12px;color:var(--muted)}
+  .mchart svg{display:block;width:100%;height:auto}
+  .mchart svg .bar:hover,.mchart svg .dot:hover{opacity:.75}
+  .mchart .cbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+  .mchart .key{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--ink-2)}
+  .mchart .key i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px;vertical-align:-1px}
+  .mchart details{margin-top:6px;font-size:12px} .mchart table{border-collapse:collapse;margin-top:6px}
+  .mchart td,.mchart th{padding:2px 10px 2px 0;text-align:left;font-variant-numeric:tabular-nums} .mchart td+td,.mchart th+th{text-align:right}
   .model .cite{font:500 11px var(--mono);color:var(--ink-3);background:var(--surface-2);border-radius:3px;padding:0 3px;white-space:nowrap}
   .meta{margin:6px 0 0;font-size:12px;color:var(--muted)}
   .meta code{font:500 11px var(--mono);color:var(--ink-3)}
@@ -261,12 +271,12 @@
     </div>
   </div>
 </div>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2108"></script>
-<script src="mm-config.js?v=2026-11-08.2108"></script>
-<script src="mm-cloud.js?v=2026-11-08.2108"></script>
-<script src="mm-llm-org.js?v=2026-11-08.2108"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2126"></script>
+<script src="mm-config.js?v=2026-11-08.2126"></script>
+<script src="mm-cloud.js?v=2026-11-08.2126"></script>
+<script src="mm-llm-org.js?v=2026-11-08.2126"></script>
 <script>
-  const VERSION = 'v0.6.0';
+  const VERSION = 'v0.7.0';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true });
 
@@ -519,7 +529,7 @@
       if (narrow.matches) ans.classList.add('open'), ans.scrollIntoView({ behavior: 'smooth', block: 'start' });
       const m = saved[q.id];
       if (m) {
-        ans.append(mk('div', 'lbl', 'Model answer'), modelText(m.answer), meta(m));
+        ans.append(mk('div', 'lbl', 'Model answer'), modelText(m.answer), ...chartsOf(m).map(chartBox), meta(m));
         const d = mk('details', 'key'); d.append(mk('summary', '', 'Answer key (written by hand to check the model)'), mk('p', 'prep', q.expect));
         ans.appendChild(d);
       } else {
@@ -572,6 +582,70 @@
                     : /^\*\*.*\*\*$/.test(part) ? mk('b', '', part.slice(2, -2)) : document.createTextNode(part)));
       return p;
     }
+    // Charts the model asked for (make_chart). One hue for one series; up to four series in a fixed order.
+    // Hover gives each exact value, the numbers sit in a table below, and Download PNG rasterises the SVG.
+    const SER = ['var(--accent)', '#C2410C', '#0F766E', '#7C3AED'];
+    function chartsOf(r) {
+      if (Array.isArray(r.charts) && r.charts.length) return r.charts;
+      return (r.tool_trace || r.trace || []).filter(t => t.tool === 'make_chart' && t.args && Array.isArray(t.args.labels)).map(t => t.args);
+    }
+    function niceMax(v) { if (v <= 0) return 1; const e = Math.pow(10, Math.floor(Math.log10(v))), f = v / e; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * e; }
+    function chartBox(c) {
+      const NS = 'http://www.w3.org/2000/svg', el = (n, a, t) => { const e = document.createElementNS(NS, n); for (const k in a) e.setAttribute(k, a[k]); if (t != null) e.textContent = t; return e; };
+      const box = mk('div', 'mchart'); box.append(mk('h4', '', c.title || 'Chart'));
+      if (c.source) box.append(mk('p', 'src', 'Source: ' + c.source));
+      const W = 720, H = 320, L = 64, R = 12, T = 12, B = 64, n = c.labels.length, k = c.series.length;
+      const all = c.series.flatMap(x => x.values), max = niceMax(Math.max(0, ...all)), y = v => T + (H - T - B) * (1 - Math.max(0, v) / max);
+      const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': c.title || 'Chart', 'font-family': 'system-ui, sans-serif', 'font-size': '11' });
+      const fmtN = v => Number(v).toLocaleString(undefined, { maximumFractionDigits: 1 }) + (c.unit ? ' ' + c.unit : '');
+      for (let i = 0; i <= 4; i++) { const v = max * i / 4, yy = y(v);
+        svg.append(el('line', { x1: L, x2: W - R, y1: yy, y2: yy, stroke: 'var(--line)', 'stroke-width': 1 }));
+        svg.append(el('text', { x: L - 6, y: yy + 4, 'text-anchor': 'end', fill: 'var(--muted)' }, Number(v).toLocaleString())); }
+      if (c.unit) svg.append(el('text', { x: 12, y: T + (H - T - B) / 2, transform: `rotate(-90 12 ${T + (H - T - B) / 2})`, 'text-anchor': 'middle', fill: 'var(--muted)' }, c.unit));
+      const slot = (W - L - R) / n, rot = slot < 46;
+      c.labels.forEach((lab, i) => { const x = L + slot * (i + .5);
+        svg.append(el('text', rot ? { x, y: H - B + 14, transform: `rotate(-40 ${x} ${H - B + 14})`, 'text-anchor': 'end', fill: 'var(--ink-2)' } : { x, y: H - B + 16, 'text-anchor': 'middle', fill: 'var(--ink-2)' }, lab)); });
+      c.series.forEach((s, j) => {
+        const col = SER[j % SER.length];
+        if (c.type === 'line') {
+          const pts = s.values.map((v, i) => [L + slot * (i + .5), y(v)]);
+          svg.append(el('polyline', { points: pts.map(p => p.join(',')).join(' '), fill: 'none', stroke: col, 'stroke-width': 2 }));
+          pts.forEach((p, i) => { const d = el('circle', { class: 'dot', cx: p[0], cy: p[1], r: 4, fill: col, stroke: 'var(--surface)', 'stroke-width': 2 });
+            d.append(el('title', {}, `${c.labels[i]}${k > 1 ? ' · ' + s.name : ''}: ${fmtN(s.values[i])}`)); svg.append(d); });
+        } else {
+          const bw = Math.max(2, (slot * .7) / k - 2);
+          s.values.forEach((v, i) => { const x = L + slot * i + slot * .15 + j * (bw + 2), top = y(v), h = Math.max(0, y(0) - top), rr = Math.min(4, bw / 2, h);
+            const d = el('path', { class: 'bar', fill: col, d: `M${x},${y(0)}V${top + rr}Q${x},${top} ${x + rr},${top}H${x + bw - rr}Q${x + bw},${top} ${x + bw},${top + rr}V${y(0)}Z` });
+            d.append(el('title', {}, `${c.labels[i]}${k > 1 ? ' · ' + s.name : ''}: ${fmtN(v)}`)); svg.append(d); });
+        }
+      });
+      svg.append(el('line', { x1: L, x2: W - R, y1: y(0), y2: y(0), stroke: 'var(--line-strong)', 'stroke-width': 1 }));
+      box.append(svg);
+      const bar = mk('div', 'cbar');
+      if (k > 1) { const key = mk('div', 'key'); c.series.forEach((s, j) => { const sp = mk('span'), i = mk('i'); i.style.background = SER[j % SER.length]; sp.append(i, s.name); key.append(sp); }); bar.append(key); }
+      const dl = mk('button', 'btn', 'Download PNG'); dl.type = 'button'; dl.addEventListener('click', () => savePng(svg, c.title)); bar.prepend(dl);
+      box.append(bar);
+      const det = mk('details'), sum = mk('summary', '', 'Show the numbers'), tbl = mk('table'), hr = mk('tr');
+      hr.append(mk('th', '', ''), ...c.series.map(s => mk('th', '', (s.name || 'Value') + (c.unit ? ` (${c.unit})` : ''))));
+      tbl.append(hr); c.labels.forEach((lab, i) => { const tr = mk('tr'); tr.append(mk('td', '', lab), ...c.series.map(s => mk('td', '', Number(s.values[i]).toLocaleString()))); tbl.append(tr); });
+      det.append(sum, tbl); box.append(det);
+      return box;
+    }
+    // CSS variables don't survive into an <img>, so resolve every var(--x) before rasterising.
+    function savePng(svg, title) {
+      const cs = getComputedStyle(document.documentElement), clone = svg.cloneNode(true), vb = svg.viewBox.baseVal;
+      clone.querySelectorAll('*').forEach(e => ['fill', 'stroke'].forEach(a => { const v = e.getAttribute(a); if (v && v.startsWith('var(')) e.setAttribute(a, cs.getPropertyValue(v.slice(4, -1)).trim() || '#888'); }));
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg'); clone.setAttribute('width', vb.width); clone.setAttribute('height', vb.height);
+      const bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect'); bg.setAttribute('width', '100%'); bg.setAttribute('height', '100%');
+      bg.setAttribute('fill', cs.getPropertyValue('--surface').trim() || '#fff'); clone.prepend(bg);
+      const img = new Image(), sc = 2;
+      img.onload = () => { const cv = document.createElement('canvas'); cv.width = vb.width * sc; cv.height = vb.height * sc;
+        const g = cv.getContext('2d'); g.scale(sc, sc); g.drawImage(img, 0, 0);
+        cv.toBlob(b => { const a = document.createElement('a'); a.href = URL.createObjectURL(b);
+          a.download = (String(title || 'chart').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_') || 'chart') + '.png'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }, 'image/png'); };
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(clone));
+    }
+
     function meta(r) {
       const p = mk('p', 'meta'), tools = (r.tool_trace || r.trace || []).map(t => t.tool);
       const when = r.created_at ? new Date(r.created_at).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'just now';
@@ -592,7 +666,7 @@
       row.append(go, left); box.append(lab, ta, row, mine); $('askSlot').appendChild(box);
       const showMine = (r, q) => {
         cur = 'ask'; qlist.querySelectorAll('.q').forEach(x => x.setAttribute('aria-pressed', 'false'));
-        ans.textContent = ''; ans.append(mk('h3', '', q), mk('div', 'lbl', r.status === 'error' ? 'Error' : 'Model answer'), modelText(r.answer), meta(r));
+        ans.textContent = ''; ans.append(mk('h3', '', q), mk('div', 'lbl', r.status === 'error' ? 'Error' : 'Model answer'), modelText(r.answer), ...chartsOf(r).map(chartBox), meta(r));
       };
       const addMine = r => {
         const b = mk('button', '', r.question); b.type = 'button'; b.title = r.question;
@@ -606,7 +680,7 @@
         try {
           cur = 'ask'; ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', 'Searching the demo data… this usually takes 15–60 seconds.'));
           if (narrow.matches) ans.classList.add('open'), ans.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          const { data, error } = await db.functions.invoke('mm-llm-ask', { body: { question: q } });
+          const { data, error } = await db.functions.invoke('mm-llm-ask', { body: { question: q, org_id: org.id } });
           let r = data;
           if (error) { try { r = await error.context.json(); } catch { r = { error: error.message }; } }
           if (!r || r.error) { ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', (r && r.error) || 'No answer came back.')); return; }
@@ -724,6 +798,6 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   requestAnimationFrame(draw);
 </script>
-<script src="mm-nav.js?v=2026-11-08.2108"></script>
+<script src="mm-nav.js?v=2026-11-08.2126"></script>
 </body>
 </html>

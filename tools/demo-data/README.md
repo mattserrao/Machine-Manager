@@ -10,6 +10,7 @@ All people and companies are fictional. Plan: *MM LLM - Demo Data Plan* in the M
 | `pi_envoy.py` | Phase 3. Mock Pi series (`demo-data/out/pi/`: hourly averages for 39 tags, 1-minute data around the storyline events, `points.json`) and the daily Envoy exception reports derived from them (`demo-data/out/envoy/`). Driven by the grade schedule, outages and `_truth/downtime.csv`. `--check` re-derives every Envoy report from the CSVs, checks stops/breaks against the truth table, and holds the storyline flag dates (S01 Sep 22, S02 Mar 24/25, S04 Oct 13, S05 two PV fan flags). |
 | `mock_piwebapi.py` | A local mock of PI Web API over that data (`/dataservers`, `/points`, `/streams/{webId}/recorded·interpolated·summary·value`, `/streamsets/recorded`, PI relative times, UTC responses). `--selftest` round-trips it. Swapping to the real Pi later is a base-URL change plus mill network/VPN and credentials. |
 | `docs.py` | Phase 4. `demo-data/out/docs/`: 65 vendor reports (PDF: clothing surveys, trial reports, vibration routes, roll service, shower audits, refiner plate reports), 13 RCFA write-ups (.docx), 16 drawings (PDF, machine direction right to left) and 8 reference charts (PDF + typed CSV). Measured values come from the Pi series and the phase 2 exports. Three are scanned (no text layer, need OCR) and one has a rotated page. `_truth/documents.json` is the answer key: every field an extractor should find. `--check` extracts text from every document and finds each field (and OCRs the scanned ones when tesseract is installed). |
+| `downtime_feed.py` | `demo-data/out/downtime/Downtime_PM1_<date>.csv`, the downtime feed in Sim Mill's layout, so MM LLM's downtime tools (totals by month, area, cause) work for Demo Mill too. Built from `_truth/downtime.csv` (breaks and equipment stops), the outages up to Oct 31 and the RCFA log; no new randomness. Run after `structured.py`. Load just this table with `tools/ingest/load.py … --only downtime`. |
 | `storylines/*.yaml` | The planted stories the demo is built around. Each has a timeline (dates, the sources it shows up in, what happens), demo questions with expected answers, and `records:`: the exact WOs, BUS lines, actions, RCFAs and breaks it puts into the data. |
 | `../../demo-data/backbone/` | Equipment register (My Machine position ids, fake JDE asset nos.), outages, grade schedule, DuPont crew schedule, roster, vendors, Pi tags |
 
@@ -26,6 +27,7 @@ python3 tools/demo-data/pi_envoy.py --check
 python3 tools/demo-data/mock_piwebapi.py      # http://localhost:8811/piwebapi
 python3 tools/demo-data/docs.py               # phase 4 (after pi_envoy.py)
 python3 tools/demo-data/docs.py --check
+python3 tools/demo-data/downtime_feed.py      # downtime feed (after structured.py)
 ```
 
 Envoy convention: a report covers one calendar day (`Period`) and arrives the next morning (`Report Date`). Storyline dates for Envoy flags are the Period.

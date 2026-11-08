@@ -17,6 +17,7 @@ psql "$PGDSN" -q -v ON_ERROR_STOP=1 -f tests/db/supabase-shim.sql -f supabase/sc
 python3 tests/db/test_schema.py
 python3 tests/db/test_llm.py
 python3 tools/demo-data/docs.py >/dev/null
+python3 tools/demo-data/downtime_feed.py >/dev/null
 TOKEN=$(psql "$PGDSN" -Atc "select public.mm_llm_new_ingest_token('Demo Mill', 1)")
 python3 tools/ingest/load.py --source demo-data/out --backbone demo-data/backbone --dsn "$PGDSN" --token "$TOKEN" >/dev/null
 python3 tools/ingest/verify_answers.py --dsn "$PGDSN" --org 'Demo Mill'
