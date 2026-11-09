@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MM LLM</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-09.0050"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.0050">
-<script src="mm-icons.js?v=2026-11-09.0050"></script>
+<script src="mm-theme.js?v=2026-11-09.0257"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.0257">
+<script src="mm-icons.js?v=2026-11-09.0257"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1320px;margin:0 auto;padding:24px 20px 72px}
@@ -299,12 +299,12 @@
     </div>
   </div>
 </div>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-09.0050"></script>
-<script src="mm-config.js?v=2026-11-09.0050"></script>
-<script src="mm-cloud.js?v=2026-11-09.0050"></script>
-<script src="mm-llm-org.js?v=2026-11-09.0050"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-09.0257"></script>
+<script src="mm-config.js?v=2026-11-09.0257"></script>
+<script src="mm-cloud.js?v=2026-11-09.0257"></script>
+<script src="mm-llm-org.js?v=2026-11-09.0257"></script>
 <script>
-  const VERSION = 'v0.9.1';
+  const VERSION = 'v0.9.2';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
 
@@ -490,33 +490,13 @@
       box.append(ul, mk('p', 'note', 'When those are loaded, this page shows what’s there and the assistant can answer from it. The demo data stays in the demo account.'));
       $('tiles').after(box);
     }
-    if (!MMCloud.enabled) return fail('The demo data lives in Supabase, which isn’t set up for this copy of the site.');
-    const db = MMCloud.client;
-    let org = null, isDemo = true, s = null;
-    try {
-      s = await MMCloud.session();
-      const { data: pubs, error } = await db.rpc('mm_llm_public_org');
-      if (error) throw error;
-      if (s && s.org) {                         // a signed-in org with its own MM LLM data wins
-        const { data } = await db.rpc('mm_llm_summary', { p_org: s.org.id });
-        const demoOrg = (pubs || []).some(p => p.id === s.org.id);   // the demo account, a viewer of Sim Mill
-        if (data && data.some(r => r.n > 0)) { org = { id: s.org.id, name: s.org.name }; isDemo = demoOrg; }
-        else if (!demoOrg) return placeholder(s.org);   // a real org (e.g. PM1) never sees demo data
-      }
-      if (!org && pubs && pubs[0]){
-        // public demo orgs (Sim Mill): ?org=<name> or the last one picked in this browser, else the first
-        let want = new URLSearchParams(location.search).get('org'); try { want = want || localStorage.getItem('mm-llm-org'); } catch (e) {}
-        org = pubs.find(p => p.name === want) || pubs[0];
-        if (pubs.length > 1){
-          const sel = mk('select', 'mm-orgpick'); sel.setAttribute('aria-label', 'Demo organization');
-          pubs.forEach(p => { const o = mk('option', '', p.name); o.value = p.name; o.selected = p.id === org.id; sel.appendChild(o); });
-          sel.addEventListener('change', () => { try { localStorage.setItem('mm-llm-org', sel.value); } catch (e) {}
-            const u = new URL(location.href); u.searchParams.set('org', sel.value); location.href = u.toString(); });
-          $('orgPick').appendChild(sel);
-        }
-      }
-    } catch (e) { return fail('Couldn’t reach the server: ' + (e.message || e)); }
-    if (!org) return fail('No demo organization is published yet.');
+    // Which org this page shows comes from the same resolver as the other mill-data pages (mm-llm-org.js): a real
+    // organization only ever sees its own data (a placeholder until it's loaded); everyone else sees the public demo.
+    const st = await MMLLMOrg.resolve();
+    if (st.error) return fail(st.error);
+    if (st.empty) return placeholder(st.org);
+    const db = st.db, s = st.s, org = st.org, isDemo = !!org.demo;
+    if (st.orgs.length > 1) MMLLMOrg.picker($('orgPick'), st, () => location.reload());
 
     $('demoTitle').textContent = org.name;
     chip.textContent = isDemo ? 'Public demo · fictional data' : 'Your organization';
@@ -908,6 +888,6 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   requestAnimationFrame(draw);
 </script>
-<script src="mm-nav.js?v=2026-11-09.0050"></script>
+<script src="mm-nav.js?v=2026-11-09.0257"></script>
 </body>
 </html>

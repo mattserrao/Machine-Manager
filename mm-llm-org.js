@@ -23,24 +23,24 @@
   async function resolve(){
     if (!window.MMCloud || !MMCloud.enabled) return { error: 'The data lives in Supabase, which isn’t set up for this copy of the site.' };
     const db = MMCloud.client;
-    let s = null, pubs = [];
-    try {
-      s = await MMCloud.session();
-      const { data, error } = await db.rpc('mm_llm_public_org'); if (error) throw error;
-      pubs = data || [];
-    } catch (e) { return { error: 'Couldn’t reach the server: ' + (e.message || e) }; }
-    const orgs = pubs.map(p => ({ id: p.id, name: p.name, demo: true }));
-    if (s && s.org && !orgs.some(o => o.id === s.org.id)){
+    const a = await MMCloud.access();          // who is looking: one named state (mm-cloud.js)
+    if (a.kind === 'offline') return { error: 'Couldn’t reach the server: ' + ((a.error && a.error.message) || a.error) };
+    const s = a.session && !a.session.demo ? a.session : null;
+    if (a.kind === 'member'){
       // a real organization: its own data only, never a demo org's
-      const own = { id: s.org.id, name: s.org.name, demo: false };
+      const own = { id: a.org.id, name: a.org.name, demo: false };
       let has = false;
-      try { const { data } = await db.rpc('mm_llm_summary', { p_org: s.org.id }); has = !!(data && data.some(r => r.n > 0)); } catch (e) {}
-      return { db, s, orgs: [own], org: own, info: null, real: true, empty: !has };
+      try { const { data } = await db.rpc('mm_llm_summary', { p_org: a.org.id }); has = !!(data && data.some(r => r.n > 0)); } catch (e) {}
+      return { db, s, access: a, orgs: [own], org: own, info: null, real: true, empty: !has };
     }
+    let pubs = [];
+    try { const { data, error } = await db.rpc('mm_llm_public_org'); if (error) throw error; pubs = data || []; }
+    catch (e) { return { error: 'Couldn’t reach the server: ' + (e.message || e) }; }
+    const orgs = pubs.map(p => ({ id: p.id, name: p.name, demo: true }));
     if (!orgs.length) return { error: 'No organization with MM LLM data is published yet.', db, s };
     const want = new URLSearchParams(location.search).get('org') || (() => { try { return localStorage.getItem(KEY); } catch (e) { return null; } })();
     const org = orgs.find(o => o.name === want || o.id === want) || orgs[0];
-    return { db, s, orgs, org, info: info(org.name) };
+    return { db, s, access: a, orgs, org, info: info(org.name) };
   }
 
   function choose(st, org){
