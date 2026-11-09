@@ -30,6 +30,11 @@ with sync_playwright() as p:
     check("Outage Planning: shows the Sim Mill demo, view only", "Sim Mill" in sub and "view only" in sub, sub)
     cards = pg.locator(".lane > .card:not(.ghost)").count()
     check("Outage Planning: upcoming outages shown", cards >= 3, f"{cards} cards")
+    pg.locator(".lane > .card").first.click(); pg.wait_for_timeout(600)
+    check("Outage Planning: manning shows every shift at once on desktop", pg.locator(".card.big .mtab thead th").count() == 5)
+    pg.locator(".card.big .mtab .nm").first.click(); pg.wait_for_timeout(200)
+    check("Outage Planning: signed out, clicking a name asks to sign in", "Sign in to change names" in pg.locator("#toast").inner_text()
+      and pg.locator(".card.big .mtab input").count() == 0, pg.locator("#toast").inner_text())
 
     pg = page("ConsumablesTracker.html")
     check("Consumables: the Sim Mill board loads", "PM1 Consumables" in pg.content())
