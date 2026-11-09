@@ -48,7 +48,7 @@
 
   // Outage Planning.   settings · outage:<id> · task:<id> · pkg:<id> (package on an outage)
   //                    pkd:<pkg>:<step> (step done) · man:<outage>:<shift> (manning)
-  const OUTAGE_KINDS = ['outage', 'task', 'pkg', 'pkd', 'man'];
+  const OUTAGE_KINDS = ['outage', 'task', 'pkg', 'pkd', 'man', 'crew', 'dec'];   // crew: A–D roster · dec: accept / decline a fabric or roll at an outage
   const outages = {
     settings: 'settings',
     KINDS: OUTAGE_KINDS,
