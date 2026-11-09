@@ -75,6 +75,7 @@ jobs:
       - run: node tests/unit/machine.test.js
       - run: node tests/unit/outage_export.test.js
       - run: node tests/unit/cloud_states.test.js
+      - run: node tests/unit/mcp.test.mjs
       - run: node tests/sync/sync_sim.js
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }

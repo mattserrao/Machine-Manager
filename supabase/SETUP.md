@@ -90,6 +90,19 @@ every other table and file stays members-only. Never make an organization with r
 - Refresh the saved answers to the demo questions: create an ingest token (as above), then run
   `python3 tools/ingest/ask_demo.py --token <token>`, and delete the token.
 
+**MCP server** (the `mm-mcp` edge function, `supabase/functions/mm-mcp/`). The same read-only tools as the
+assistant, for any MCP client (Claude, MCP Inspector …), at `https://<project>.supabase.co/functions/v1/mm-mcp`.
+
+- Deploy: `supabase functions deploy mm-mcp --no-verify-jwt` (it checks callers itself). No secrets needed;
+  `MM_MCP_DEFAULT_ORG` optionally names the org used when a call doesn't give one (default `Sim Mill`).
+- No sign-in: the anon key, so only the public demo orgs. With `Authorization: Bearer <user session token>`:
+  that user's session, so row-level security adds their own orgs. It never writes and never calls a model.
+- Tools: `list_orgs`, `machine_context` (positions, Pi tags, outages, last day of data), and every tool in
+  `mm-llm-ask/tools.ts` except `make_chart`, each with an optional `org` (name or id).
+- Try it: add the URL as a custom connector in Claude, or `npx @modelcontextprotocol/inspector` with transport
+  **Streamable HTTP**. Unit tests: `node tests/unit/mcp.test.mjs`.
+- Not yet: sign-in through OAuth (so private orgs need a pasted session token), documents as resources, prompts.
+
 ## Updating the database
 
 `schema.sql` is the full, current schema and builds a new project in one go (safe to re-run). For the existing project, apply the steps in `migrations/` in order; see `migrations/README.md`.
