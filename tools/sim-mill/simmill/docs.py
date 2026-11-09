@@ -112,12 +112,18 @@ def build(m, p, rec, out):
                 perm = (32 - 14 * f if felt else 95 - 30 * f if dryer else 520 - 70 * f) * rnd.uniform(.97, 1.03)
                 third = f'{620 + 260 * f + rnd.uniform(-25, 25):.0f} gsm water' if felt else (f'{20 + 70 * f:.0f}% wear layer' if not dryer else 'Seam OK')
                 cond = 'Good' if f < .5 else ('Normal wear' if f < .95 else 'End of life')
-                rows.append([POS_NAME[pos], r['style'], us(r['installed'].date()), f'{age / 7:.1f}', f'{cal:.2f}', f'{perm:.0f}', third,
-                             f"{cond}. {'Change at this outage as planned' if chg else 'Continue'}"])
-            if not notes: notes.append('No unusual wear. Clothing running as expected for its age.')
+                if chg: rec_ = 'Change at this outage' + (' as planned' if f >= .9 else f" ({r.get('reason') or 'early'})")
+                elif f >= .95: rec_ = 'Change at the next outage'
+                elif f >= .8: rec_ = 'Continue; plan the change for the next outage'
+                else: rec_ = 'Continue'
+                rows.append([POS_NAME[pos], r['style'], us(r['installed'].date()), f'{age / 7:.1f}', f'{cal:.2f}', f'{perm:.0f}', third, f'{cond}. {rec_}'])
+                if chg: notes.append(f"{POS_NAME[pos]}: {age / 7:.0f} weeks against a {r['target_days'] // 7}-week target; changed at this outage.")
+                elif f >= .8: notes.append(f"{POS_NAME[pos]}: {age / 7:.0f} of {r['target_days'] // 7} weeks; order the replacement for the next outage.")
+            notes.append('Other positions: no unusual wear, running as expected for their age.' if notes else
+                         'No unusual wear. Clothing running as expected for its age.')
             if vendor == 'Marlow Press Fabrics' and d == B('2026-05-27'):
-                notes = [tx('The 2nd press top felt changed early on 05/19/2026 (34 days) was analysed separately: see MP-FA-260526. '
-                            'The replacement is running normally; Uhle vacuum back to 9.8 inHg.')]
+                notes = [tx('The 2nd press top felt changed early on 05/19/2026 (34 days) was analysed separately: see MP-FA-260526. ')
+                         + f"The replacement is running normally: 2nd press top Uhle vacuum {pi_day('UHLE_P2T_VAC', d - DAY):.1f} inHg the day before this outage."]
             blocks = [('kv', [('Customer', f'{HEAD} (recycled linerboard, fourdrinier)'), ('Survey date', us(d)), ('Issued', us(d + 2 * DAY)),
                               ('Surveyed by', v['rep']), ('Distribution', f"{NAME('P01')}, {NAME('P16')}")]),
                       ('h', 'Measurements'),
@@ -188,7 +194,8 @@ def build(m, p, rec, out):
             f"2nd press top felt HP shower: {F1['shower_plugged_pct']}% of nozzles plugged (fibre and stickies). The supply strainer was "
             'packed solid. This felt is not being conditioned: expect it to fill. Nozzles cleaned during the audit; strainer to be cleaned at the next stop.']
         add('shower_audit', rid, 'Spraywell Nozzle Supply', d, f'Spraywell Nozzle Supply - {MACHINE} shower audit {us(d)}',
-            [('kv', [('Audit date', us(d)), ('Auditor', VENDORS['Spraywell Nozzle Supply']['rep'])]), ('h', 'Showers'),
+            [('kv', [('Audit date', us(d)), ('Auditor', VENDORS['Spraywell Nozzle Supply']['rep']), ('Distribution', f"{NAME('P01')}, {NAME('P16')}")]),
+             ('h', 'Showers'),
              ('table', ['Shower', 'Pressure', 'Nozzles plugged', 'Action'], rows), ('h', 'Comments')] + [('p', n) for n in notes],
             ['form-bottom', 'p1-felt-top', 'p1-felt-bottom', 'p2-felt-top', 'p2-felt-bottom'], 'F1' if f1 else '',
             {'plugged': f"{F1['shower_plugged_pct']}%" if f1 else ''})
@@ -211,9 +218,12 @@ def build(m, p, rec, out):
                 [pos], r['story'], {'wear': f'{wear}%'})
     se_b = pi_day('REF_B_SE', B('2026-10-25')); se_a = pi_day('REF_A_SE', B('2026-10-25'))
     add('plate_report', tx('RR-FV-261026'), 'Ridgeway Refining', B('2026-10-26'), 'Ridgeway Refining - Field visit: REF 2 plates wearing fast',
-        [('kv', [('Visit', tx('10/26/2026')), ('Rep', VENDORS['Ridgeway Refining']['rep']), ('Plates', tx('Set installed 09/30/2026'))]),
+        [('kv', [('Visit', tx('10/26/2026')), ('Rep', VENDORS['Ridgeway Refining']['rep']), ('Refiners', 'REF 2 refiner (REF 1 refiner for comparison)'),
+                 ('Plates', tx('REF 2 set installed 09/30/2026')), ('Distribution', f"{NAME('P01')}, {NAME('P02')}")]),
          ('h', 'Findings'),
-         ('p', f"REF 2 specific energy {se_b:.1f} kWh/t on {md(B('2026-10-25'), '%m/%d')} against {se_a:.1f} on REF 1 at a similar stage; climbing about 1.4% a day since {md(F3['rise_from'], '%m/%d')}. "
+         ('p', f"REF 2 refiner specific energy {se_b:.1f} kWh/t on {md(B('2026-10-25'), '%m/%d')}, {(B('2026-10-25') - piece_at(runs, 'ref-refb', BT('2026-10-25T12:00'))['installed'].date()).days / 7:.0f} weeks into its plates, "
+               f"against {se_a:.1f} on REF 1 refiner at {(B('2026-10-25') - piece_at(runs, 'ref-refa', BT('2026-10-25T12:00'))['installed'].date()).days / 7:.0f} weeks; "
+               f"REF 2 has climbed about 1.4% a day since {md(F3['rise_from'], '%m/%d')}. "
                'The previous REF 2 set came out at 85% bar wear. Probable cause: sand carry-over from the LC cleaners into the REF 2 line.'),
          ('h', 'Recommendation'),
          ('p', tx('Change REF 2 plates at the 11/11/2026 outage (6 weeks early) together with REF 1 (due). The mill has one set on hand: '
@@ -224,14 +234,25 @@ def build(m, p, rec, out):
     for pos, rr in runs.items():
         for r in rr:
             if r['kind'] != 'roll' or not r['removed'] or not (Y0 <= r['removed'].date() <= TODAY): continue
-            d = r['removed'].date() + DAY * 9; rid = f"PR-RS-{d:%y%m%d}-{pos.split('-')[0]}{pos.split('-')[-1]}"
+            # dated by the change it covers (the run that came out), so it files under that run; issued 9 days later
+            out_d = r['removed'].date(); d = out_d + DAY * 9; rid = f"PR-RS-{d:%y%m%d}-{pos.split('-')[0]}{pos.split('-')[-1]}"
+            import re as _re
+            spec = int((_re.search(r'(\d+) P&J', r['style'] or '') or [0, 10])[1]); hard = spec - rnd.randint(2, 3)   # covers harden in service
+            crown = .004; worn = crown - rnd.uniform(.001, .002); tir = rnd.uniform(.002, .006); dias = rnd.uniform(.08, .14)
             add('roll_service', rid, 'Pellham Roll Service', d, f'Pellham Roll Service - Roll service report: {POS_NAME[pos]}',
-                [('kv', [('Roll', POS_NAME[pos]), ('Received', us(r['removed'].date() + DAY * 2)), ('Serial', r['serial']),
-                         ('In service', f"{(r['removed'] - r['installed']).days} days")]),
-                 ('h', 'Work done'), ('table', ['Item', 'As received', 'As shipped'],
-                                       [['Cover hardness', f'{rnd.randint(11, 14)} P&J', '10 P&J'], ['Crown', f'{rnd.uniform(.003, .009):.3f} in', '0.000 in (straight)'],
-                                        ['Bearings', 'Replaced', 'New, sealed'], ['TIR', f'{rnd.uniform(.002, .006):.3f} in', '0.001 in']])],
-                [pos], '', {})
+                [('kv', [('Roll', POS_NAME[pos]), ('Cover', r['style']), ('Serial', r['serial']), ('Removed from machine', us(out_d)),
+                         ('Received', us(out_d + DAY * 2)), ('Report date', us(d)), ('In service', f"{(r['removed'] - r['installed']).days} days"),
+                         ('Service rep', VENDORS['Pellham Roll Service']['rep'])]),
+                 ('h', 'Work done'), ('table', ['Item', 'As received', 'As shipped', 'Spec'],
+                                       [['Cover hardness', f'{hard} P&J (hardened)', f'{spec} P&J', f'{spec} ± 1 P&J'],
+                                        ['Crown', f'{worn:.4f} in (worn)', f'{crown:.4f} in', f'{crown:.4f} in'],
+                                        ['TIR (runout)', f'{tir:.4f} in', '0.0010 in', '≤ 0.0015 in'],
+                                        ['Cover removed in grind', '', f'{dias:.2f} in on diameter', ''],
+                                        ['Bearings', 'Worn, replaced', 'New, sealed', '']]),
+                 ('h', 'Findings'), ('p', f'Cover hardened {spec - hard} P&J in service and the crown wore flat in the centre, normal for '
+                                         f"{(r['removed'] - r['installed']).days // 7} weeks. No cracks, blisters or bond failure. Reground to spec crown, "
+                                         'bearings replaced, balanced and returned to stores as the spare.')],
+                [pos], '', {'serial': r['serial']})
 
     # ─── Brightwater steam surveys ───
     for d, f5 in ((B('2026-03-18'), False), (B('2026-10-14'), True)):
@@ -239,12 +260,16 @@ def build(m, p, rec, out):
         for s in range(1, 5):
             rows.append([f'{ORD(s)} section rotary joint (DS)', f"{pi_day(f'DRY{s}_STEAM_P', d):.0f} psig", f"{pi_day(f'DRY{s}_DP', d):.2f} psi",
                          'Seal worn: replace joint' if (f5 and s == 3) else 'OK'])
-        notes = ['All joints and syphons within spec.'] if not f5 else [
+        before = [e for e in PLANTS['F5']['events'] if D(e['start']) < d]
+        notes = [('All joints and syphons within spec.' if not before else
+                  f"All joints and syphons within spec. The 3rd section DS rotary joint was re-sealed after the {', '.join(md(D(e['start']), '%m/%d') for e in before)} "
+                  'leak and is running normally; watch its syphon differential.')] if not f5 else [
             f"The 3rd section DS rotary joint has had three seal failures this year ({', '.join(md(D(e['start']), '%m/%d') for e in PLANTS['F5']['events'])}), each a 2-3 h stop. The carbon ring "
             'wears unevenly: the joint body is misaligned on its support bracket. Replace the joint and re-align the bracket at the next outage. '
             'Seal kits alone will keep failing.']
         add('steam_survey', rid, 'Brightwater Steam Systems', d, f'Brightwater Steam Systems - {MACHINE} steam and condensate survey {us(d)}',
-            [('kv', [('Survey date', us(d)), ('Engineer', VENDORS['Brightwater Steam Systems']['rep'])]), ('h', 'Rotary joints and syphons'),
+            [('kv', [('Survey date', us(d)), ('Engineer', VENDORS['Brightwater Steam Systems']['rep']), ('Distribution', f"{NAME('P01')}, {NAME('P03')}")]),
+             ('h', 'Rotary joints and syphons'),
              ('table', ['Joint', 'Steam', 'Syphon ΔP', 'Condition'], rows), ('h', 'Comments')] + [('p', n) for n in notes],
             [], 'F5' if f5 else '', {})
 

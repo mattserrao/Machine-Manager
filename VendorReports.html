@@ -49,7 +49,7 @@
 <script src="mm-cloud.js?v=2026-11-09.0050"></script>
 <script src="mm-llm-org.js?v=2026-11-09.0050"></script>
 <script>
-  const VERSION = 'v0.3.0';
+  const VERSION = 'v0.3.1';
   document.getElementById('ver').textContent = 'Vendor Reports ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
   const $ = id => document.getElementById(id), O = MMLLMOrg, esc = O.esc;
@@ -57,7 +57,10 @@
 
   const daysBetween = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 864e5);
   // the run that was on a position on a day
-  const runOn = (pos, d) => runs.find(r => r.position_id === pos && r.installed <= d && (!r.removed || r.removed >= d));
+  // The run a report describes: the one on the machine that day. On a change day that's the run coming out (a survey or
+  // plate report is taken as it comes off), the same rule the run view below uses.
+  const runOn = (pos, d) => runs.find(r => r.position_id === pos && r.removed === d)
+    || runs.find(r => r.position_id === pos && r.installed <= d && (!r.removed || r.removed >= d));
 
   async function load(){
     $('body').innerHTML = '<div class="dmsg">Loading…</div>';
