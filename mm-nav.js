@@ -8,7 +8,7 @@
     { href: 'TaskPackageLibrary.html', name: 'Ops Task Library', ic: 'list' },
     { href: 'ConsumablesTracker.html', name: 'Consumables Tracker', ic: 'box' },
     { href: 'Whiteboard.html', name: 'Whiteboard', ic: 'frame' },
-    { href: 'Daily.html', name: 'Daily', sub: 'Mill data', ic: 'book' },
+    { href: 'DailyJournal.html', name: 'Daily Journal', sub: 'Mill data', ic: 'book' },
     { href: 'Downtime.html', name: 'Downtime / RCFA', sub: 'Mill data', ic: 'alert' },
     { href: 'VendorReports.html', name: 'Vendor Reports', sub: 'Mill data', ic: 'file' },
     { href: 'BonvoyReport.html', name: 'Bonvoy Report', sub: 'Mill data', ic: 'monitor' },

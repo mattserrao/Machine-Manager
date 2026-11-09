@@ -295,3 +295,18 @@ language sql stable security invoker set search_path = '' as $$
   union all select 'Shift reports', count(*), min(mill_day), max(mill_day) from llm.reports where org_id = p_org and type = 'shift'
   union all select 'Production reports', count(*), min(mill_day), max(mill_day) from llm.reports where org_id = p_org and type = 'production';
 $$;
+
+-- mm_llm_downtime also says which report each stop came from (so a page can open the shift lead's notes)
+drop function if exists public.mm_llm_downtime(uuid, date, date, text);
+create or replace function public.mm_llm_downtime(p_org uuid, p_from date, p_to date, p_kind text default null)
+returns table (event_id text, starts_at timestamptz, minutes numeric, kind text, area text, equipment text, position_id text,
+               cause text, grade text, crew text, wo_no text, rcfa_id text, comment text, report_id text)
+language sql stable security invoker set search_path = '' as $$
+  select d.event_id, d.starts_at, d.minutes, d.kind, d.area, d.equipment, d.position_id, d.cause, d.grade, d.crew, d.wo_no, d.rcfa_id, d.comment, d.report_id
+  from llm.downtime d
+  where d.org_id = p_org and (d.starts_at at time zone 'America/New_York')::date between p_from and p_to
+    and (p_kind is null or d.kind = p_kind)
+  order by d.starts_at limit 2000;
+$$;
+revoke execute on function public.mm_llm_downtime(uuid, date, date, text) from public;
+grant execute on function public.mm_llm_downtime(uuid, date, date, text) to anon, authenticated, service_role;

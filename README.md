@@ -21,7 +21,7 @@ Without signing in, every tool runs as a demo that saves only in your browser. S
 | `tools/ingest/` | MM LLM importers, loader and answer-key check |
 | `tools/demo-data/`, `demo-data/` | The original scripted demo year (Demo Mill: kept, no longer published) |
 | `tools/sim-mill/`, `demo-data/sim-mill/` | Sim Mill: a data-generating model of The Paper Mill's mill (Python port of its sim), one modelled year, its answer key |
-| `Daily.html`, `Downtime.html`, `VendorReports.html` | The data pages: the mill day, downtime / RCFA, vendor reports by position and run (`mm-llm-org.js`, `mm-data.css`). `DailyNotes.html` is the old Daily notes board |
+| `DailyJournal.html`, `Downtime.html`, `VendorReports.html` | The data pages: the mill day from its reports (Daily Journal; `Daily.html` redirects to it), downtime / RCFA, vendor reports by position and run (`mm-llm-org.js`, `mm-data.css`). `DailyNotes.html` is the old Daily notes board |
 | `tests/`, `tools/` | Tests (run on every pull request) and helper scripts |
 
 After changing any shared file (`mm-*.js`, `mm-*.css`, `vendor/`), run `python3 tools/stamp.py` so browsers load the new versions together.

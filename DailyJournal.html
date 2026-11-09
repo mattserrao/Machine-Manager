@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Daily Journal</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script src="mm-theme.js?v=2026-11-09.1700"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.1700">
+<link rel="stylesheet" href="mm-data.css?v=2026-11-09.1700">
+<script src="mm-icons.js?v=2026-11-09.1700"></script>
+<style>
+  .dbar button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--r-sm);padding:5px 10px;cursor:pointer}
+  .dbar button:hover{border-color:var(--line-strong)}
+  .dayh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:0 0 12px}
+  .dayh h2{margin:0;font-size:20px;font-weight:600}
+  .dayh span{font-size:13px;color:var(--muted)}
+  a.nb{font-size:12px;color:var(--accent);text-decoration:none}
+  .ome{display:grid;grid-template-columns:minmax(150px,200px) 1fr;gap:12px;align-items:stretch;margin:0 0 4px}
+  .ome .big{padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface-2)}
+  .ome .big b{display:block;font-size:30px;font-weight:600;font-variant-numeric:tabular-nums}
+  .ome .big span{font-size:12px;color:var(--muted)}
+  .ome .tiles{margin:0}
+  .qline{font-size:12px;color:var(--ink-2);margin:10px 0 0;line-height:1.5}
+  .shift .meta{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin:0 0 10px}
+  .shift .meta b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+  .shift .notes{font-size:13.5px;line-height:1.55;color:var(--ink);margin:0 0 12px;white-space:pre-wrap}
+  .shift h3{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 6px}
+  .shift ul{margin:0;padding-left:18px;font-size:13px;line-height:1.5;color:var(--ink-2)}
+  .shift .watch{display:flex;flex-wrap:wrap;gap:6px}
+  .shift .foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:11px;color:var(--muted)}
+  .pend{font-size:13px;color:var(--muted);margin:0}
+  .pipe{font-size:11px;color:var(--muted)}
+  @media (max-width:720px){ .ome{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<header class="mm-top">
+  <div class="bar brand">
+    <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
+    <div><h1>Daily Journal</h1><p>The mill day from its reports: production and OME, both shifts’ notes, the BUS sheet and Bonvoy</p></div>
+  </div>
+  <div id="acct"></div>
+</header>
+<main class="data">
+  <div class="dbar">
+    <span class="org" id="org"></span>
+    <button id="prev" type="button" title="Previous day">‹</button>
+    <input id="day" type="date" aria-label="Day">
+    <button id="next" type="button" title="Next day">›</button>
+    <button id="toToday" type="button">Today</button>
+    <span class="grow"></span>
+    <span class="pipe" id="pipe"></span>
+    <a class="nb" href="DailyNotes.html">Notes board</a>
+  </div>
+  <div id="body"><div class="dmsg">Loading…</div></div>
+  <div id="ver"></div>
+</main>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-09.1700"></script>
+<script src="mm-config.js?v=2026-11-09.1700"></script>
+<script src="mm-cloud.js?v=2026-11-09.1700"></script>
+<script src="mm-llm-org.js?v=2026-11-09.1700"></script>
+<script>
+  const VERSION = 'v1.0.0';
+  document.getElementById('ver').textContent = 'Daily Journal ' + VERSION;
+  MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
+  const $ = id => document.getElementById(id), O = MMLLMOrg, esc = O.esc;
+  let st, today, outages = [], shown = {};
+  const addDays = (d, n) => { const t = new Date(d + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+  const KIND = { planned: 'Planned', unplanned: 'Unplanned', break: 'Sheet break', slowdown: 'Slowdown' };
+  const hhmm = ts => new Date(ts).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/New_York' });
+
+  function tile(v, label, warn){ return `<div class="tile${warn ? ' warn' : ''}"><b>${v}</b><span>${esc(label)}</span></div>`; }
+  function panel(title, sub, ...els){ const p = document.createElement('section'); p.className = 'panel'; p.innerHTML = `<h2>${esc(title)}</h2>${sub ? `<p class="ps">${sub}</p>` : ''}`; els.forEach(e => p.appendChild(e)); return p; }
+  const div = (cls, html) => Object.assign(document.createElement('div'), { className: cls || '', innerHTML: html || '' });
+
+  function productionPanel(p){
+    if (!p) return panel('Production Report', 'Quality / Uptime / Tonnage / OME for the mill day (06:00 to 06:00)',
+      div('', `<p class="pend">Not in yet: the mill day ends at 06:00 tomorrow, and the report follows.</p>`));
+    const b = p.body, e = b.efficiency, q = b.quality;
+    const head = div('ome', `<div class="big"><b>${O.num(e.ome_pct, 1)}%</b><span>OME = time ${O.num(e.time_pct, 1)}% × production ${O.num(e.production_pct, 1)}% × quality ${O.num(e.quality_pct, 1)}%</span></div>`);
+    const t = div('tiles', [tile(O.num(b.tons), 'reel tons'), tile(O.num(b.saleable_tons), 'saleable tons'), tile(O.num(b.uptime_pct, 1) + '%', 'uptime', b.uptime_pct < 95),
+      tile(O.num(b.breaks), 'sheet breaks', b.breaks >= 4), tile(O.num(b.minutes.unplanned), 'unplanned min', b.minutes.unplanned > 0), tile(O.num(b.minutes.planned), 'planned min'),
+      tile(O.num(b.cull_tons, 1), 'cull tons', q.off_spec_hours > 0), tile(O.num(b.energy.kwh_per_t, 1), 'refining kWh/t'), tile(O.num(b.energy.steam_per_t, 2), 'steam t/t')].join(''));
+    head.appendChild(t);
+    const bw = q.basis_weight.filter(x => x.avg != null).map(x => `${esc(x.grade)} ${O.num(x.avg, 2)} (target ${O.num(x.target, 2)})`).join(' · ');
+    const ql = div('qline', `Basis weight ${bw || '—'} · reel moisture ${O.num(q.moisture.avg, 2)}% (target ${O.num(q.moisture.target, 1)}%) · ` +
+      (q.off_spec_hours ? `<b>${q.off_spec_hours} off-spec hour${q.off_spec_hours === 1 ? '' : 's'}</b> (basis weight ${q.off_bw_hours}, moisture ${q.off_moisture_hours})` : 'no off-spec hours') +
+      ` · grades ${esc(b.grade_hours)}`);
+    const sh = O.table(b.shifts, [['shift', 'Shift'], ['crew', 'Crew'], ['tons', 'Tons', 'n'], ['saleable_tons', 'Saleable', 'n'], ['breaks', 'Breaks', 'n'], ['sheet_on_pct', 'Sheet on %', 'n1'], ['ome_pct', 'OME %', 'n1']]);
+    const foot = div('shift', `<div class="foot"><span>${esc(p.author)}${p.author_role ? ' · ' + esc(p.author_role) : ''}</span><button class="linkbtn" data-rep="${esc(p.report_id)}">Open the report</button></div>`);
+    return panel('Production Report', 'Quality / Uptime / Tonnage / OME for the mill day (06:00 to 06:00)', head, ql, div('', '<div style="height:10px"></div>'), sh, foot);
+  }
+
+  function shiftPanel(name, r){
+    if (!r) return panel(`${name} shift`, name === 'Day' ? '06:00 to 18:00' : '18:00 to 06:00', div('', '<p class="pend">No Shift Report yet.</p>'));
+    const b = r.body, el = div('shift');
+    el.innerHTML = `<div class="meta"><span>Crew <b>${esc(r.crew)}</b> · ${esc(r.author)}</span><span><b>${O.num(b.tons)}</b> t</span><span>sheet on <b>${O.num(b.sheet_on_pct, 1)}%</b></span>
+      <span><b>${O.num(b.breaks)}</b> break${b.breaks === 1 ? '' : 's'}</span>${b.unplanned_min ? `<span>unplanned <b>${O.num(b.unplanned_min)}</b> min</span>` : ''}
+      <span>${(b.grades || []).map(g => esc(g.grade) + ' ' + g.hours + ' h').join(', ')}</span></div>
+      <p class="notes">${esc(b.notes)}</p>`;
+    const stops = (b.stops || []);
+    if (stops.length){
+      el.appendChild(div('', '<h3>Stops and breaks</h3>'));
+      el.appendChild(O.table(stops, [['start', 'Start', x => hhmm(x.start)], ['minutes', 'Min', 'n'], ['kind', 'Kind', x => `<span class="pill${x.kind === 'unplanned' ? ' bad' : ''}">${esc(KIND[x.kind] || x.kind)}</span>`],
+        ['equipment', 'Equipment'], ['cause', 'Cause'], ['wo_no', 'WO']]));
+    }
+    if ((b.watch || []).length) el.appendChild(div('', '<h3>Watching</h3><div class="watch">' + b.watch.map(w => `<span class="pill${w.wo_no ? '' : ' warn'}" title="${esc(w.tags.join(', '))}">${esc(w.equipment)}${w.wo_no ? ' · WO ' + esc(w.wo_no) : ' · no WO'}</span>`).join('') + '</div>'));
+    if ((b.handover || []).length) el.appendChild(div('', '<h3>Handover</h3><ul>' + b.handover.map(h => `<li>${esc(h)}</li>`).join('') + '</ul>'));
+    el.appendChild(div('foot', `<span>${esc(r.report_id)} · ${esc(r.status)}</span><button class="linkbtn" data-rep="${esc(r.report_id)}">Open the report</button>`));
+    return panel(`${name} shift`, name === 'Day' ? '06:00 to 18:00' : '18:00 to 06:00', el);
+  }
+
+  async function show(day){
+    $('day').value = day;
+    const u = new URL(location.href); u.searchParams.set('day', day); history.replaceState(null, '', u);
+    const body = $('body'); body.innerHTML = '<div class="dmsg">Loading…</div>';
+    let reps, bus, env, od;
+    try {
+      [reps, bus, env, od] = await Promise.all([
+        O.rpc(st, 'mm_llm_reports', { p_from: day, p_to: day, p_type: null, p_term: null, p_limit: 10 }),
+        O.rpc(st, 'mm_llm_bus_day', { p_day: day }), O.rpc(st, 'mm_llm_bonvoy', { p_term: null, p_from: day, p_to: day }),
+        O.rpc(st, 'mm_llm_overdue_actions', { p_as_of: day })]);
+    } catch (e) { body.innerHTML = `<div class="dmsg">${esc(e.message || e)}</div>`; return; }
+    body.textContent = '';
+    shown = { day, reps };
+    const prod = reps.find(r => r.type === 'production'), sd = reps.find(r => r.type === 'shift' && r.shift === 'Day'), sn = reps.find(r => r.type === 'shift' && r.shift === 'Night');
+    const nx = outages.find(o => o.starts >= day);
+    body.appendChild(div('dayh', `<h2>${new Date(day + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h2>
+      <span>${esc(st.org.name)} · mill day 6 AM to 6 AM${nx ? ` · next outage ${O.day(nx.starts)} (${Math.round((Date.parse(nx.starts) - Date.parse(day)) / 864e5)} days)` : ''}</span>`));
+    if (!reps.length)
+      body.appendChild(div('dsub', 'No reports for this day. ' + (bus.length || env.length ? 'The BUS sheet and Bonvoy are below.' : '')));
+    body.appendChild(productionPanel(prod));
+    const g = document.createElement('div'); g.className = 'grid2';
+    g.appendChild(shiftPanel('Day', sd)); g.appendChild(shiftPanel('Night', sn));
+    body.appendChild(g);
+    const g2 = document.createElement('div'); g2.className = 'grid2';
+    g2.appendChild(panel('Bonvoy exceptions', 'Tags 3+ hours outside their 60-day ±3σ band during the day (the report arrives the next morning)',
+      O.table(env, [['tag', 'Tag'], ['asset', 'Asset'], ['direction', 'Dir'], ['max', 'Max', 'n2'], ['hours_outside', 'Hours', 'n']], 'Nothing outside its band.')));
+    g2.appendChild(panel(`Overdue actions (${od.length})`, 'Planner actions past due and not completed, as of this day',
+      O.table(od, [['title', 'Action'], ['assigned_to', 'Owner'], ['due', 'Due', 'd'], ['days_late', 'Late', 'n']], 'Nothing overdue.')));
+    body.appendChild(g2);
+    body.appendChild(panel(`BUS sheet (${bus.length} line${bus.length === 1 ? '' : 's'})`, 'The morning meeting’s list, carried day to day until each line closes',
+      O.table(bus, [['area', 'Area'], ['equipment', 'Equipment'], ['issue', 'Issue'], ['action', 'Action / next step'], ['owner', 'Owner'],
+        ['status', 'Status', r => `<span class="pill${r.status === 'New' ? ' warn' : r.status === 'Waiting parts' ? ' bad' : ''}">${esc(r.status)}</span>`], ['days_open', 'Days', 'n'], ['wo_no', 'WO']],
+        'No BUS sheet for this day.')));
+  }
+
+  $('prev').onclick = () => show(addDays($('day').value, -1));
+  $('next').onclick = () => show(addDays($('day').value, 1));
+  $('toToday').onclick = () => show(today);
+  $('day').onchange = () => $('day').value && show($('day').value);
+  async function start(){
+    today = await O.today(st);
+    const ctx = await st.db.rpc('mm_llm_context', { p_org: st.org.id });
+    outages = ((ctx.data && ctx.data.outages) || []).map(o => ({ id: o.id, starts: o.starts }));
+    O.rpc(st, 'mm_llm_report_status').then(rs => {
+      const n = rs.reduce((t, r) => t + +r.reports, 0), bad = rs.filter(r => r.status === 'failed').reduce((t, r) => t + +r.reports, 0);
+      $('pipe').textContent = n ? `${O.num(n)} reports · ${bad ? bad + ' failed' : 'all processed'}` : '';
+    }).catch(() => {});
+    const want = new URLSearchParams(location.search).get('day');
+    show(want && /^\d{4}-\d{2}-\d{2}$/.test(want) ? want : today);
+  }
+  (async () => {
+    st = await O.resolve();
+    if (st.error){ $('body').innerHTML = `<div class="dmsg">${esc(st.error)}</div>`; return; }
+    if (st.empty) return O.placeholder(st, { icon: 'book', title: 'The Daily Journal isn’t set up yet',
+      text: 'The Daily Journal shows one mill day at a time, built from its reports: the Production Report (tons, uptime, quality and OME), both Shift Reports with the shift leads’ notes, stops and handover, the morning BUS sheet, Bonvoy flags and the actions due.',
+      needs: ['Shift Reports (each 12 h shift)', 'Production Reports (each mill day)', 'BUS daily sheet', 'Bonvoy (Pi exception) reports', 'Teams / Planner actions'],
+      links: [['DailyNotes.html', 'Open the notes board']] });
+    O.reportLinks(st);
+    O.picker($('org'), st, start);
+    start();
+  })();
+</script>
+<script src="mm-nav.js?v=2026-11-09.1700"></script>
+</body>
+</html>

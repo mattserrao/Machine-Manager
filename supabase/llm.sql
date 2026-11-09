@@ -149,6 +149,7 @@ create table if not exists llm.downtime (
   area text, equipment text, asset_no text, position_id text, cause text, grade text, crew text, wo_no text, rcfa_id text,
   comment text, source_file text,
   primary key (org_id, event_id));
+alter table llm.downtime add column if not exists report_id text;   -- step 09: the Shift Report it came from
 create index if not exists downtime_time_idx on llm.downtime (org_id, starts_at);
 create index if not exists downtime_asset_idx on llm.downtime (org_id, asset_no);
 
@@ -553,11 +554,13 @@ $$;
 
 -- ───────────────────────── Step 05: downtime, RCFA status, position life, production ─────────────────────────
 -- Downtime events in a date range (mill-local days), optionally one kind ('planned', 'unplanned', 'break', 'slowdown').
+-- (step 09 added report_id: drop first, since the return type changed)
+drop function if exists public.mm_llm_downtime(uuid, date, date, text);
 create or replace function public.mm_llm_downtime(p_org uuid, p_from date, p_to date, p_kind text default null)
 returns table (event_id text, starts_at timestamptz, minutes numeric, kind text, area text, equipment text, position_id text,
-               cause text, grade text, crew text, wo_no text, rcfa_id text, comment text)
+               cause text, grade text, crew text, wo_no text, rcfa_id text, comment text, report_id text)
 language sql stable security invoker set search_path = '' as $$
-  select d.event_id, d.starts_at, d.minutes, d.kind, d.area, d.equipment, d.position_id, d.cause, d.grade, d.crew, d.wo_no, d.rcfa_id, d.comment
+  select d.event_id, d.starts_at, d.minutes, d.kind, d.area, d.equipment, d.position_id, d.cause, d.grade, d.crew, d.wo_no, d.rcfa_id, d.comment, d.report_id
   from llm.downtime d
   where d.org_id = p_org and (d.starts_at at time zone 'America/New_York')::date between p_from and p_to
     and (p_kind is null or d.kind = p_kind)
@@ -1130,3 +1133,4 @@ language sql stable security invoker set search_path = '' as $$
   union all select 'Shift reports', count(*), min(mill_day), max(mill_day) from llm.reports where org_id = p_org and type = 'shift'
   union all select 'Production reports', count(*), min(mill_day), max(mill_day) from llm.reports where org_id = p_org and type = 'production';
 $$;
+
