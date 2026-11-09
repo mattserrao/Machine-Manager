@@ -69,7 +69,7 @@
    "story": "F1",
    "output": "Troubleshooting",
    "question": "Why did we change the 2nd press top felt early in May?",
-   "expect": "It filled in about three weeks: Uhle box vacuum climbed from late April (Bonvoy flagged it from May 10), press solids fell and the 4th section steam hit its limit on 34 Super, holding speed back. The Spraywell audit on May 13 found 22% of the 2nd press top HP shower nozzles plugged and the supply strainer packed. The felt came out on May 19 after 34 days (target 42) in a 7.5 h shut; Marlow's analysis found 71% fill. RCFA-SM-26-008 is still open: the action to add Uhle vacuum rate of rise to Bonvoy is overdue.",
+   "expect": "It filled in about three weeks: Uhle box vacuum climbed from late April (Bonvoy flagged it from May 10), press solids fell and the 4th section steam hit its limit on 34 Super, holding speed back. The Spraywell audit on May 13 found 22% of the 2nd press top HP shower nozzles plugged and the supply strainer packed. The felt came out on May 19 after 34 days (target 42) in a 7.5 h shut; Marlow's analysis found 71% fill. RCFA-SM-26-016 is still open: the action to add Uhle vacuum rate of rise to Bonvoy is overdue.",
    "tools": [
     "mm_llm_position_life",
     "mm_llm_bonvoy",
@@ -822,14 +822,14 @@
    "story": "",
    "output": "Morning watch",
    "question": "What actions are overdue?",
-   "expect": "Six, oldest first: adding the couch roll to a two-weekly vibration route (RCFA-SM-25-001, due Dec 11) and its grease review (same RCFA, due Jan 22), the wad detector camera (RCFA-SM-26-002, due Apr 30), Uhle vacuum rate of rise on Bonvoy (RCFA-SM-26-008, due Jul 15), expediting the reel drum bearing (due Oct 15) and ordering the second set of refiner plates (due Oct 28). The last two are for the Nov 11 outage.",
+   "expect": "Eleven, oldest first. Nine are RCFA actions: MCC room cooling (RCFA-SM-26-007, due Apr 20), the wad detector camera (RCFA-SM-26-006, due Apr 30), Uhle vacuum rate-of-rise shift checks for the 1st press bottom felt (RCFA-SM-26-015) and on Bonvoy (RCFA-SM-26-016, the 2nd press top felt), hood exhaust fan belts on the monthly PM (RCFA-SM-26-017), the felt design review (RCFA-SM-26-014), the grease reviews for the pulper rotor and the dryer drive lineup (RCFA-SM-26-013, -026) and the shower strainer on the outage clean list (RCFA-SM-26-024). Two are for the Nov 11 outage: expediting the reel drum bearing (due Oct 15) and ordering the second set of refiner plates (due Oct 28).",
    "tools": [
     "mm_llm_overdue_actions"
    ],
    "checks": [
     {
-     "desc": "5-10 overdue actions on Oct 31",
-     "sql": "(select count(*) from public.mm_llm_overdue_actions(:org, '2026-10-31')) between 5 and 10"
+     "desc": "8-14 overdue actions on Oct 31",
+     "sql": "(select count(*) from public.mm_llm_overdue_actions(:org, '2026-10-31')) between 8 and 14"
     },
     {
      "desc": "the reel bearing expedite is overdue",

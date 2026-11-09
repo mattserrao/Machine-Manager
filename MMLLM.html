@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MM LLM</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-09.1516"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.1516">
-<script src="mm-icons.js?v=2026-11-09.1516"></script>
+<script src="mm-theme.js?v=2026-11-09.1700"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.1700">
+<script src="mm-icons.js?v=2026-11-09.1700"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1320px;margin:0 auto;padding:24px 20px 72px}
@@ -246,7 +246,7 @@
   <div class="sheet about" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
     <div class="sheet-h">
       <div><h2 id="aboutTitle">About the model</h2>
-        <p>How mill data reaches the assistant: sources, import, storage, the tools the model can call, and the models behind it.</p>
+        <p>How mill data reaches the assistant: sources and reports, import, storage, the tools the model can call, and the models behind it.</p>
         <p class="live" id="aboutLive"></p></div>
       <button class="btn icon" type="button" id="aboutClose" aria-label="Close" data-ic="x" data-ic-size="sm"></button>
     </div>
@@ -272,6 +272,7 @@
   <h3 class="rules-h">Ground rules</h3>
       <div class="rules">
         <div class="rule"><b>Every row has a position</b><span>BUS items, WOs, RCFAs, Bonvoy rows and document chunks all carry a position id from My Machine. That key is what lets an outage brief pull everything for "2nd press felt".</span></div>
+        <div class="rule"><b>Reports in, tables out</b><span>A report is stored once as written and extracted into tables. Pages and the assistant read the tables, and every number links back to the report it came from; nothing re-reads report text to count.</span></div>
         <div class="rule"><b>Tables first, search second</b><span>Anything with rows and columns goes in a table and is answered with a query. Only narrative text (report findings, RCFA write-ups, manuals) is chunked and embedded for search.</span></div>
         <div class="rule"><b>Pi in summaries</b><span>The assistant gets daily or hourly Pi summaries for the tag and window it asks for, not raw points. The demo stores them; at the mill they’ll be read from the historian on demand.</span></div>
         <div class="rule"><b>Models are swappable</b><span>Prompts and tools live in this app, not in a vendor's features. The adapter maps one request format to each provider; embeddings record which model made them.</span></div>
@@ -289,22 +290,22 @@
       <ol class="sm-steps">
         <li><b>Strip the game.</b> On the-paper-mill’s <code>sim-headless</code> branch the 3D view, sound, panels and game systems (seasons, survival, leaders, civics, event cards, joke upsets) are left out; 34 of 116 source files run in Node. The full headless build replays 3 sim days to exactly the browser’s numbers.</li>
         <li><b>Run the engine as the historian.</b> <code>headless/historian.js</code> runs 426 days (Sep 1 warm-up to Oct 31) on Sim Mill’s calendar (20 h outages every 6 weeks at 6 AM), with the game’s season-tuned failure rates stretched to a year. It writes the hourly running value of every DCS tag and the event log (grades, sheet breaks, upsets, failures, outages) to <code>tools/sim-mill/engine/</code>.</li>
-        <li><b>Build on it.</b> <code>tools/sim-mill</code> (Python) takes the engine’s grades and stops, and drives 27 of the 47 PM1 tags from the engine (<code>config/tags.yaml</code>). It adds what the game doesn’t have: instrument noise, bearing vibration and Uhle vacuum, the life of every fabric, felt, plate and roll, and five planted faults. <code>validate_ref.py</code> holds it to the engine’s reference year.</li>
-        <li><b>Write the mill’s files.</b> Daily BUS sheets, JDE and Planner exports, the RCFA log and write-ups, Pi and Bonvoy, vendor PDFs; three new feeds: downtime events, daily production and position runs; and the last week of Bonvoy Reports. Plus My Machine, Outage Planning, Consumables and task-package records.</li>
-        <li><b>Load it like real data.</b> <code>load.py</code> and the importers send everything through the token-guarded <code>mm-llm-ingest</code> into the org’s tables, files and embeddings.</li>
-        <li><b>Read it.</b> The assistant’s tools, the 16 Sim Mill demo questions (37 checks), and the Daily, Downtime / RCFA, Vendor Reports and Bonvoy Report pages. Every 6 weeks the year rolls forward a cycle.</li>
+        <li><b>Build on it.</b> <code>tools/sim-mill</code> (Python) takes the engine’s grades and stops, and drives 27 of the 47 PM1 tags from the engine (<code>config/tags.yaml</code>). It adds what the game doesn’t have: instrument noise, bearing vibration and Uhle vacuum, the life of every fabric, felt, plate and roll, five planted faults, and about 30 developing failures a year (<code>degrade.py</code>: felts filling, showers plugging, pumps and syphons wearing, bearings, instrument drift). Each shows on its Pi tags for days or weeks and is caught and fixed, or missed and ends in a stop. <code>validate_ref.py</code> holds it to the engine’s reference year.</li>
+        <li><b>Write the mill’s files and reports.</b> Daily BUS sheets, JDE and Planner exports, the RCFA log and write-ups, Pi and Bonvoy, vendor PDFs, position runs and the last week of Bonvoy Reports. A Shift Report for every shift and a Production Report (Quality / Uptime / Tonnage / OME) for every mill day go through the report lifecycle (<code>tools/reports</code>), the same one a live report would take. Plus My Machine, Outage Planning, Consumables and task-package records.</li>
+        <li><b>Load it like real data.</b> <code>load.py</code> and the importers send everything through the token-guarded <code>mm-llm-ingest</code> into the org’s tables, files and embeddings; the reports are then extracted into downtime and production and indexed.</li>
+        <li><b>Read it.</b> The assistant’s tools, the 16 Sim Mill demo questions (37 checks), and the Daily Journal, Downtime / RCFA, Vendor Reports and Bonvoy Report pages. Every 6 weeks the year rolls forward a cycle.</li>
       </ol>
     </div>
 
     </div>
   </div>
 </div>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-09.1516"></script>
-<script src="mm-config.js?v=2026-11-09.1516"></script>
-<script src="mm-cloud.js?v=2026-11-09.1516"></script>
-<script src="mm-llm-org.js?v=2026-11-09.1516"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-09.1700"></script>
+<script src="mm-config.js?v=2026-11-09.1700"></script>
+<script src="mm-cloud.js?v=2026-11-09.1700"></script>
+<script src="mm-llm-org.js?v=2026-11-09.1700"></script>
 <script>
-  const VERSION = 'v0.9.2';
+  const VERSION = 'v0.10.0';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
 
@@ -320,8 +321,10 @@
   // kind: how the block's data is handled (shown as a mono line). live: in use today.
   const BLOCKS = [
     // Sources
-    { id: 'bus',    s: 'src', name: 'BUS daily sheet', d: 'Daily issues, actions and owners from the morning meeting.', k: 'rows + free text',
-      how: 'One row per issue: date, area, position, issue, action, owner, status. The issue text is also embedded so similar past problems can be found.' },
+    { id: 'bus',    s: 'src', name: 'BUS daily sheet', d: 'Daily issues, actions and owners from the morning meeting.', k: 'rows + free text', live: true,
+      how: 'One row per issue per sheet day: date, area, position, issue, action, owner, status, days open and WO. The text is searchable (full text), so similar past problems can be found.' },
+    { id: 'reports', s: 'src', name: 'Shift and Production Reports', d: 'Each shift lead\u2019s report, and each mill day\u2019s Quality / Uptime / Tonnage / OME.', k: 'reports (JSON + text)', live: true,
+      how: 'A Shift Report every 12 h (tons, breaks, every stop with its WO, the lead\u2019s notes on what they saw, the handover) and a Production Report every mill day (reel and saleable tons, uptime, quality, OME). Every stop and every production number reaches Machine Manager this way. For Sim Mill they are generated; at a mill they would come from a supervisor\u2019s form and the MES.' },
     { id: 'bonvoy',  s: 'src', name: 'Bonvoy reports', d: 'Pi trends outside their standard-deviation thresholds.', k: 'tag-days + daily report',
       how: 'One row per tag per day: the hours outside its ±3σ band, high or low, the grade and the position. A daily Bonvoy Report writes the last 7 days up, ranked, with likely causes and related work.', live: true },
     { id: 'pi',     s: 'src', name: 'Pi historian', d: 'Process and equipment tags.', k: 'hourly + 1-minute windows', live: true,
@@ -340,6 +343,8 @@
       how: 'Already stored as synced records. Fabric, felt, plate and roll runs reach the assistant as position runs (installed, removed, days against target, why). The other tools aren\u2019t read by the assistant yet.' },
 
     // Ingest
+    { id: 'life',   s: 'ing', name: 'Report lifecycle', d: 'Every report: ingested, extracted, indexed (or failed).', k: 'registry · state machine', live: true,
+      how: 'One procedure for every report type, listed in a registry (cadence, required fields, the tables it feeds). Where it\u2019s written a report is generated, validated and submitted; here it is ingested, extracted into the downtime and production tables (each row keeps its report id) and indexed for search. A report that fails says why and is retried. Every step is logged, and the same loop runs a backfill or a live shift.' },
     { id: 'imp',    s: 'ing', name: 'Structured import', d: 'Maps sheet and export columns to tables.', k: 'Excel · CSV · API',
       how: 'One saved column mapping per source, so a daily sheet or WO export can be loaded without the LLM, through a token-guarded ingest function. Re-imports update rows instead of duplicating them.', live: true },
     { id: 'parse',  s: 'ing', name: 'Document parse', d: 'PDF and Word to text and chunks.', k: 'text · OCR · chunks',
@@ -353,7 +358,9 @@
     { id: 'equip',  s: 'store', name: 'Equipment register', d: 'PM1 positions: the key every table joins on.', k: 'table',
       how: 'Built from My Machine (sections, fabrics, rolls, refiners) plus JDE numbers and Pi tags for each position.', live: true },
     { id: 'events', s: 'store', name: 'Event tables', d: 'BUS items, Bonvoy, RCFAs, actions, WOs, downtime, production, position runs, Pi.', k: 'Postgres tables', live: true,
-      how: 'One table per source with shared columns: date, position, status, source link. Answers come from queries, so counts and dates are exact.' },
+      how: 'One table per source with shared columns: date, position, status, source link. Downtime and daily production are extracted from the reports. Answers come from queries, so counts and dates are exact.' },
+    { id: 'reptab', s: 'store', name: 'Reports', d: 'Every report as written, with its lifecycle.', k: 'table + full text', live: true,
+      how: 'The report\u2019s fields and text, its status (ingested, extracted, indexed, failed), and a log of every step. The Daily Journal and Downtime / RCFA open the report a number came from.' },
     { id: 'records',s: 'store', name: 'MM records', d: 'Synced records from every Machine Manager tool.', k: 'mm_records', live: true,
       how: 'The existing table. Already scoped to your organization with row-level security.' },
     { id: 'docs',   s: 'store', name: 'Document index', d: 'Chunks with embeddings and full-text search.', k: 'pgvector + full text',
@@ -365,7 +372,7 @@
     { id: 'orch',   s: 'llm', name: 'Orchestrator', d: 'Plans the answer, calls tools, cites sources.', k: 'Supabase Edge Function', live: true,
       how: 'The mm-llm-ask function: holds the prompt, lets the model call tools for up to 10 steps, and returns the answer with its citations and charts. Every answer is saved with its tool trace. Runs server-side, so keys and data never sit in the browser.' },
     { id: 'tools',  s: 'llm', name: 'Tools', d: 'The only way the model reaches data.', k: 'search · history · trend · summary · chart', live: true,
-      how: 'Read-only and scoped to your organization: search_documents, search_records, position_history, outage_scope, overdue_actions, bonvoy_exceptions, bonvoy_report, pi_daily, pi_values, downtime_summary, downtime_events, repeat_stops, rcfa_status, position_life, production and grade_hours. make_chart hands numbers to the page, which draws the chart with a PNG download. Nothing writes back.' },
+      how: 'Read-only and scoped to your organization: search_documents, search_records, position_history, outage_scope, overdue_actions, bonvoy_exceptions, bonvoy_report, pi_daily, pi_values, downtime_summary, downtime_events, repeat_stops, rcfa_status, position_life, production, grade_hours, shift_reports (what the crews wrote) and efficiency (OME). make_chart hands numbers to the page, which draws the chart with a PNG download. Nothing writes back.' },
     { id: 'adapt',  s: 'llm', name: 'Model adapter', d: 'One request format, more than one provider.', k: 'Claude · OpenAI', live: true,
       how: 'Translates messages and tool calls to each provider. Claude Sonnet 5.5 answers by default; the demo account can pick Claude Opus 5.5, which runs on its own API key. Switching model is a setting; the tools and prompts stay the same.' },
     { id: 'helper', s: 'llm', name: 'Helper model', d: 'Small, cheap model for ingest jobs.', k: 'extract · tag · summarise',
@@ -386,7 +393,7 @@
 
   // from → to. dash: on demand / supporting link.
   const LINKS = [
-    ['bus','imp'],['bonvoy','imp'],['rcfa','imp'],['rcfa','parse'],['teams','imp'],['jde','imp'],
+    ['bus','imp'],['reports','life'],['life','events'],['life','reptab'],['reptab','tools'],['bonvoy','imp'],['rcfa','imp'],['rcfa','parse'],['teams','imp'],['jde','imp'],
     ['vendor','parse'],['ref','parse'],['pi','imp'],['pi','piconn',1],['mm','records'],['ref','files'],
     ['imp','tag'],['parse','tag'],['parse','files'],
     ['tag','events'],['tag','docs'],['equip','tag',1],['records','equip'],
@@ -815,21 +822,21 @@
       ['year', 1, 2, 'Historian run', '426 days, 20 h outages / 6 wk', 'new'],
       ['ref', 1, 3, 'engine/ + reference/', 'hourly tags, events, catalogue', 'new'],
       ['cfg', 2, 0, 'mill.yaml + plants.yaml', 'machine, calendar, F1–F5', 'new'],
-      ['model', 2, 1, 'model.py', 'grades, position life, stops', 'new'],
+      ['model', 2, 1, 'model.py + degrade.py', 'stops, life, developing failures', 'new'],
       ['proc', 2, 2, 'process.py + tags.yaml', '27 tags from the engine, Bonvoy', 'new'],
       ['rec', 2, 3, 'records.py + docs.py', 'WOs, actions, BUS, RCFAs, PDFs', 'new'],
       ['val', 2, 4, 'validate_ref + run --check', 'vs the engine; targets', 'chk'],
       ['f1', 3, 0, 'BUS · JDE · Planner · RCFA', 'xlsx, CSV exports, log + docx', ''],
       ['f2', 3, 1, 'Pi hourly + Bonvoy', 'CSV, Bonvoy Reports (7 days)', ''],
-      ['f3', 3, 2, 'Vendor reports, drawings', '80 PDFs and write-ups', ''],
-      ['f4', 3, 3, 'Downtime · production · runs', 'three new feeds', 'new'],
+      ['f3', 3, 2, 'Vendor reports, drawings', '96 PDFs and write-ups', ''],
+      ['f4', 3, 3, 'Shift + Production Reports', 'report lifecycle, position runs', 'new'],
       ['f5', 3, 4, 'Machine Manager records', 'My Machine, outages, stores', 'new'],
       ['imp', 4, 1, 'load.py + importers', 'map columns, tag positions', ''],
       ['ing', 4, 2, 'mm-llm-ingest', 'token decides the org', ''],
       ['db', 4, 3, 'Supabase: Sim Mill', 'llm tables, files, vectors, records', ''],
       ['tools', 5, 0, 'Assistant tools', 'outage scope, Bonvoy, docs…', ''],
       ['qs', 5, 1, 'Demo questions', '16 questions, 37 checks', 'new'],
-      ['pages', 5, 2, 'Daily, Downtime, Vendors', 'and the Bonvoy Report', 'new'],
+      ['pages', 5, 2, 'Daily Journal, Downtime', 'Vendors, Bonvoy Report', 'new'],
       ['mm', 5, 3, 'My Machine · Outage Planning', 'members of Sim Mill', ''],
     ];
     const E = [['game', 'src'], ['src', 'parts'], ['src', 'strip', 'acc'], ['strip', 'parity', 'dash'], ['strip', 'year'], ['year', 'ref'],
@@ -888,6 +895,6 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   requestAnimationFrame(draw);
 </script>
-<script src="mm-nav.js?v=2026-11-09.1516"></script>
+<script src="mm-nav.js?v=2026-11-09.1700"></script>
 </body>
 </html>

@@ -5,6 +5,8 @@
 //
 //   POST { action: 'rows', table, rows: [...], mode: 'upsert' | 'reset' }   -> public.mm_llm_ingest
 //   POST { action: 'upload', path: 'docs/vendor/x/y.pdf', contentType, data: <base64> }   -> <org>/llm/<path>
+//   POST { action: 'process', limit: 500 }   extracts and indexes ingested reports (public.mm_llm_process_reports):
+//                                             { picked, extracted, failed }; call until picked is 0
 //   POST { action: 'embed', limit: 6 }        embeds chunks that have no embedding yet (gte-small, 384 dims;
 //                                             keep batches small, larger ones hit the function's compute limit)
 //   POST { action: 'prune', keep: [paths] }   removes the org's stored files under <org>/llm/ that aren't in keep
@@ -30,6 +32,11 @@ Deno.serve(async (req) => {
     const { data: n, error } = await sb.rpc('mm_llm_ingest', { p_token: token, p_table: String(body.table ?? ''),
       p_rows: body.rows ?? [], p_mode: body.mode === 'reset' ? 'reset' : 'upsert' });
     return error ? json({ error: error.message }, 400) : json({ rows: n });
+  }
+
+  if (body.action === 'process') {
+    const { data, error } = await sb.rpc('mm_llm_process_reports', { p_token: token, p_limit: Math.min(Number(body.limit) || 500, 2000) });
+    return error ? json({ error: error.message }, 400) : json(data);
   }
 
   if (body.action === 'upload') {

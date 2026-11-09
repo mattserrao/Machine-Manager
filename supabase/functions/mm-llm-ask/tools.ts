@@ -74,6 +74,16 @@ export const DEFS: Def[] = [
     description: 'Hours run on each grade in a date range, with the share of run time. Use it to compare grades fairly: divide breaks, downtime or tons by the hours each grade ran (e.g. breaks per 100 h), not raw counts.',
     parameters: { type: 'object', properties: { from: date, to: date }, required: ['from', 'to'] },
     map: (a) => ({ p_from: a.from, p_to: a.to }) },
+  // ---- step 09: the reports (Shift Reports, Production Reports) as written, and efficiency (OME) ----
+  { name: 'shift_reports', rpc: 'mm_llm_reports', maxRows: 30,
+    description: 'The reports as written, newest first: Shift Reports (each 12 h shift by the crew\'s shift lead: tons, breaks, every stop with its WO, the lead\'s notes on what they saw, and the handover) and Production Reports (each mill day: reel and saleable tons, uptime, quality, OME). type: shift or production (omit for both). term: words to find in the text (e.g. "couch vacuum", "Uhle", "near miss"). Use it for what the crews saw and said, early signs nobody acted on, and handovers; cite as [Shift Report PM1-SHIFT-2026-10-30-D].',
+    parameters: { type: 'object', properties: { from: date, to: date, type: { type: 'string', enum: ['shift', 'production'] }, term: { type: 'string' } }, required: ['from', 'to'] },
+    map: (a) => ({ p_from: a.from, p_to: a.to, p_type: a.type ?? null, p_term: a.term ?? null, p_limit: 30 }),
+    filter: (rows) => rows.map((r: any) => ({ report_id: r.report_id, type: r.type, mill_day: r.mill_day, shift: r.shift, crew: r.crew, author: r.author, text: r.text })) },
+  { name: 'efficiency', rpc: 'mm_llm_efficiency', maxRows: 120,
+    description: 'Overall Machine Efficiency from the Production Reports, by day, week or month: tons, saleable tons, cull, off-spec hours, and time %, production (rate) %, quality % and OME % (OME = time x production x quality; period values are averages of the days).',
+    parameters: { type: 'object', properties: { from: date, to: date, by: { type: 'string', enum: ['day', 'week', 'month'] } }, required: ['from', 'to'] },
+    map: (a) => ({ p_from: a.from, p_to: a.to, p_by: a.by ?? 'month' }) },
 ];
 
 // Not a database tool: the model hands over the numbers and the page draws the chart (with a PNG download).

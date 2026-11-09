@@ -5,16 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Downtime / RCFA</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-09.1516"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.1516">
-<link rel="stylesheet" href="mm-data.css?v=2026-11-09.1516">
-<script src="mm-icons.js?v=2026-11-09.1516"></script>
+<script src="mm-theme.js?v=2026-11-09.1700"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.1700">
+<link rel="stylesheet" href="mm-data.css?v=2026-11-09.1700">
+<script src="mm-icons.js?v=2026-11-09.1700"></script>
 </head>
 <body>
 <header class="mm-top">
   <div class="bar brand">
     <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
-    <div><h1>Downtime / RCFA</h1><p>Where the time went, what keeps failing, and what the RCFAs still owe</p></div>
+    <div><h1>Downtime / RCFA</h1><p>Where the time went, what keeps failing, and what the RCFAs still owe, from the Shift and Production Reports</p></div>
   </div>
   <div id="acct"></div>
 </header>
@@ -31,12 +31,12 @@
   <div id="body"><div class="dmsg">Loading…</div></div>
   <div id="ver"></div>
 </main>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-09.1516"></script>
-<script src="mm-config.js?v=2026-11-09.1516"></script>
-<script src="mm-cloud.js?v=2026-11-09.1516"></script>
-<script src="mm-llm-org.js?v=2026-11-09.1516"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-09.1700"></script>
+<script src="mm-config.js?v=2026-11-09.1700"></script>
+<script src="mm-cloud.js?v=2026-11-09.1700"></script>
+<script src="mm-llm-org.js?v=2026-11-09.1700"></script>
 <script>
-  const VERSION = 'v0.2.0';
+  const VERSION = 'v0.3.0';
   document.getElementById('ver').textContent = 'Downtime / RCFA ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
   const $ = id => document.getElementById(id), O = MMLLMOrg, esc = O.esc;
@@ -51,12 +51,13 @@
     const from = $('from').value, to = $('to').value, g = $('grp').value;
     const u = new URL(location.href); u.searchParams.set('from', from); u.searchParams.set('to', to); u.searchParams.set('by', g); history.replaceState(null, '', u);
     const body = $('body'); body.innerHTML = '<div class="dmsg">Loading…</div>';
-    let byK, byG, byM, rep, rc, prod;
+    let byK, byG, byM, rep, rc, prod, eff, unpl;
     try {
-      [byK, byG, byM, rep, rc, prod] = await Promise.all([
+      [byK, byG, byM, rep, rc, prod, eff, unpl] = await Promise.all([
         O.rpc(st, 'mm_llm_downtime_summary', { p_from: from, p_to: to, p_group: 'kind' }), O.rpc(st, 'mm_llm_downtime_summary', { p_from: from, p_to: to, p_group: g }),
         O.rpc(st, 'mm_llm_downtime_summary', { p_from: from, p_to: to, p_group: 'month' }), O.rpc(st, 'mm_llm_repeat_stops', { p_from: from, p_to: to, p_min_events: 2 }),
-        O.rpc(st, 'mm_llm_rcfa_status', { p_as_of: today }), O.rpc(st, 'mm_llm_production', { p_from: from, p_to: to, p_by: 'month' })]);
+        O.rpc(st, 'mm_llm_rcfa_status', { p_as_of: today }), O.rpc(st, 'mm_llm_production', { p_from: from, p_to: to, p_by: 'month' }),
+        O.rpc(st, 'mm_llm_efficiency', { p_from: from, p_to: to, p_by: 'month' }), O.rpc(st, 'mm_llm_downtime', { p_from: from, p_to: to, p_kind: 'unplanned' })]);
     } catch (e) { body.innerHTML = `<div class="dmsg">${esc(e.message || e)}</div>`; return; }
     body.textContent = '';
     const k = kind => byK.find(r => r.kind === kind) || { events: 0, hours: 0, mtbf_h: null, mttr_h: null };
@@ -65,6 +66,7 @@
     const openR = rcIn.filter(r => /^Open/i.test(r.status)).length, odA = rcIn.reduce((t, r) => t + (r.overdue || 0), 0);
     const noR = rep.filter(r => r.rcfas === 'none');
     const tons = prod.reduce((t, r) => t + (+r.tons || 0), 0);
+    const effDays = eff.reduce((t, r) => t + r.days, 0), ome = effDays ? eff.reduce((t, r) => t + r.ome_pct * r.days, 0) / effDays : null;
     if (!byK.length){
       body.innerHTML = `<div class="dmsg">No downtime feed for ${esc(st.org.name)} in this range.</div>`;
       if (rc.length) body.appendChild(panel('RCFAs', 'From the RCFA log', O.table(rc, [['rcfa_id', 'RCFA'], ['event_date', 'Event', 'd'], ['title', 'Title'], ['downtime_h', 'Hours', 'n1'], ['status', 'Status']])));
@@ -74,7 +76,7 @@
     tiles.innerHTML = [tile(O.num(U.events), 'unplanned stops'), tile(O.num(U.hours, 1), 'unplanned hours'), tile(U.mtbf_h ? O.num(U.mtbf_h) + ' h' : '—', 'MTBF (running hours)'),
       tile(O.num(B.events), 'sheet breaks'), tile(O.num(B.hours, 1), 'sheet-off hours'), tile(O.num(P.hours, 1), 'planned hours'), tile(O.num(S.hours, 1), 'slowdown hours'),
       tile(O.num(openR), 'open RCFAs', openR > 0), tile(O.num(odA), 'overdue RCFA actions', odA > 0), tile(O.num(noR.length), 'repeat failures with no RCFA', noR.length > 0),
-      tons ? tile(O.num(tons), 'tons made') : ''].join('');
+      tons ? tile(O.num(tons), 'tons made') : '', ome != null ? tile(O.num(ome, 1) + '%', 'average OME') : ''].join('');
     body.appendChild(tiles);
     const un = byG.filter(r => r.kind === 'unplanned'), br = byG.filter(r => r.kind === 'break');
     const g2 = document.createElement('div'); g2.className = 'grid2';
@@ -88,11 +90,19 @@
     const months = [...new Set(byM.map(r => r.grp))].sort();
     const mrows = months.map(m => ({ month: m, unpl: +(byM.find(r => r.grp === m && r.kind === 'unplanned') || {}).hours || 0,
       brk: +(byM.find(r => r.grp === m && r.kind === 'break') || {}).hours || 0, plan: +(byM.find(r => r.grp === m && r.kind === 'planned') || {}).hours || 0,
-      tons: +(prod.find(p => p.period === m) || {}).tons || null, breaks: +(byM.find(r => r.grp === m && r.kind === 'break') || {}).events || 0 }));
+      tons: +(prod.find(p => p.period === m) || {}).tons || null, breaks: +(byM.find(r => r.grp === m && r.kind === 'break') || {}).events || 0,
+      ome: (eff.find(e => e.period === m) || {}).ome_pct ?? null }));
     const g3 = document.createElement('div'); g3.className = 'grid2';
     g3.appendChild(panel('Unplanned hours by month', 'One bar a month', O.bars(mrows.map(r => ({ label: r.month, value: r.unpl })), 'h')));
-    g3.appendChild(panel('By month', 'Lost time and output', O.table(mrows, [['month', 'Month'], ['unpl', 'Unplanned h', 'n1'], ['brk', 'Break h', 'n1'], ['breaks', 'Breaks', 'n'], ['plan', 'Planned h', 'n1'], ['tons', 'Tons', 'n']])));
+    g3.appendChild(panel('By month', 'Lost time and output', O.table(mrows, [['month', 'Month'], ['unpl', 'Unplanned h', 'n1'], ['brk', 'Break h', 'n1'], ['breaks', 'Breaks', 'n'], ['plan', 'Planned h', 'n1'], ['tons', 'Tons', 'n'], ['ome', 'OME %', 'n1']])));
     body.appendChild(g3);
+    if (eff.length) body.appendChild(panel('Overall Machine Efficiency by month', 'From the Production Reports: OME = time × production (rate) × quality efficiency, averaged over the days',
+      O.table(eff, [['period', 'Month'], ['days', 'Days', 'n'], ['tons', 'Tons', 'n'], ['saleable_tons', 'Saleable', 'n'], ['cull_tons', 'Cull t', 'n1'], ['off_spec_hours', 'Off-spec h', 'n'],
+        ['time_pct', 'Time %', 'n1'], ['prod_pct', 'Production %', 'n1'], ['quality_pct', 'Quality %', 'n1'], ['ome_pct', 'OME %', 'n1']])));
+    body.appendChild(panel(`Unplanned stops (${unpl.length})`, 'Every unplanned stop as the shift lead logged it. <b>Report</b> opens that Shift Report: the notes, what they saw before it, the handover.',
+      O.table(unpl.slice().reverse(), [['starts_at', 'Start', 't'], ['minutes', 'Min', 'n'], ['equipment', 'Equipment'], ['cause', 'Cause'], ['crew', 'Crew'], ['wo_no', 'WO'],
+        ['rcfa_id', 'RCFA', r => r.rcfa_id ? `<span class="pill warn">${esc(r.rcfa_id)}</span>` : ''],
+        ['report_id', 'Report', r => r.report_id ? `<button class="linkbtn" data-rep="${esc(r.report_id)}">Report</button>` : '—']], 'No unplanned stops in this range.')));
     body.appendChild(panel('Repeat failures', 'Equipment with two or more unplanned stops in the range. <b>No RCFA</b> on a repeat is the one to look at.',
       O.table(rep, [['equipment', 'Equipment'], ['events', 'Stops', 'n'], ['hours', 'Hours', 'n1'], ['first_day', 'First', 'd'], ['last_day', 'Last', 'd'], ['causes', 'Causes'],
         ['rcfas', 'RCFAs', r => r.rcfas === 'none' ? '<span class="pill bad">No RCFA</span>' : esc(r.rcfas)], ['wo_nos', 'WOs']], 'No equipment failed twice in this range.')));
@@ -110,7 +120,7 @@
     $('from').value = q.get('from') || (st.info ? st.info.from : today.slice(0, 4) + '-01-01');
     if (q.get('by') && GL[q.get('by')]) $('grp').value = q.get('by');
     $('sub').textContent = `${st.org.name}` + (st.info ? ` — ${st.info.about}. “Today” is ${O.day(st.info.today)}.` : '') +
-      ' Stops, breaks and slowdowns come from the downtime feed; RCFAs and their actions from the RCFA log and Planner.';
+      ' Stops, breaks and slowdowns come from the Shift Reports (or a downtime feed), tons and OME from the Production Reports; RCFAs and their actions from the RCFA log and Planner.';
     load();
   }
   (async () => {
@@ -118,11 +128,12 @@
     if (st.error){ $('body').innerHTML = `<div class="dmsg">${esc(st.error)}</div>`; return; }
     if (st.empty) return O.placeholder(st, { icon: 'alert', title: 'Downtime / RCFA isn’t set up yet',
       text: 'This page will show where the machine loses time: a Pareto by area, equipment and cause, MTBF and MTTR, repeat failures, and each RCFA with its open actions.',
-      needs: ['Downtime events (stops, breaks, slowdowns)', 'RCFA log', 'Teams / Planner actions', 'JDE work orders'] });
+      needs: ['Shift Reports (every stop, break and slowdown) or a downtime feed', 'Production Reports (tons, OME)', 'RCFA log', 'Teams / Planner actions', 'JDE work orders'] });
+    O.reportLinks(st);
     O.picker($('org'), st, start);
     start();
   })();
 </script>
-<script src="mm-nav.js?v=2026-11-09.1516"></script>
+<script src="mm-nav.js?v=2026-11-09.1700"></script>
 </body>
 </html>

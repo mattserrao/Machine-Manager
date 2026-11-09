@@ -24,7 +24,9 @@ def cycles_for(today):
 if '--auto' in sys.argv: os.environ['SIM_SHIFT_CYCLES'] = str(cycles_for(dt.date.today()))
 elif '--cycles' in sys.argv: os.environ['SIM_SHIFT_CYCLES'] = sys.argv[sys.argv.index('--cycles') + 1]
 
-from simmill import base, model, process, records, emit, docs, mm_records, bonvoy_report
+from simmill import base, model, process, records, emit, docs, mm_records, bonvoy_report, reports
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'reports'))
+import daemon as report_daemon
 from simmill.base import Y0, TODAY, DATA, PLANTS, MACHINE, D, B, BT, md
 
 def generate(out, seed=model.SEED, log=print):
@@ -38,6 +40,10 @@ def generate(out, seed=model.SEED, log=print):
     bus = emit.write_bus(m, rec, os.path.join(out, 'bus'))
     ev = emit.write_pi_bonvoy(m, p, out); log(f'pi + bonvoy written ({time.time() - t0:.1f}s)')
     emit.write_new_feeds(m, p, rec, out)
+    # the reports, through the same lifecycle a live report takes (tools/reports): every period that has ended by the
+    # end of the modelled hours, generated, validated and submitted to the outbox
+    at = dt.datetime.combine(TODAY, dt.time(23, 59)).isoformat()
+    nrep = report_daemon.reconcile(reports.Producer(m, p, rec), os.path.join(out, 'reports'), Y0, TODAY, through=base.T_END, at=at, log=log)
     man = docs.build(m, p, rec, out); log(f'documents: {len(man)} ({time.time() - t0:.1f}s)')
     nb = bonvoy_report.build(m, p, rec, ev, man, out); log(f'Bonvoy reports: {nb} days ({time.time() - t0:.1f}s)')
     mm_records.write(m, rec, out)
@@ -48,17 +54,17 @@ def generate(out, seed=model.SEED, log=print):
     json.dump(roll, open(os.path.join(out, '_truth', 'roll.json'), 'w'), indent=1)
     write_answer_key(out)
     log(f"roll: cycle {roll['cycles']} (+{roll['shift_days']} d), {roll['start']} to {roll['today']}, next outage {roll['next_outage']}")
-    return dict(m=m, p=p, rec=rec, bus=bus, ev=ev, docs=man)
+    return dict(m=m, p=p, rec=rec, bus=bus, ev=ev, docs=man, reports=nrep)
 
 def month_facts(out):
-    """The month-bucket facts the key quotes, from the production files the way mm_llm_production groups them
+    """The month-bucket facts the key quotes, from the Production Reports the way mm_llm_production groups them
     (sum of breaks, mean of the daily kWh/t). Calendar months don't move with the roll, so these are read, not shifted."""
     by = collections.defaultdict(list)
-    for fn in glob.glob(os.path.join(out, 'production', '*.csv')):
-        for r in csv.DictReader(open(fn)):
-            if Y0.isoformat() <= r['Mill Day'] <= TODAY.isoformat(): by[r['Mill Day'][:7]].append(r)
-    brk = {m: sum(int(r['Sheet Breaks']) for r in rs) for m, rs in by.items()}
-    kwh = {m: round(sum(float(r['Refining (kWh/t)']) for r in rs) / len(rs), 1) for m, rs in by.items()}
+    for fn in glob.glob(os.path.join(out, 'reports', 'production', '*', '*.json')):
+        r = json.load(open(fn))
+        if Y0.isoformat() <= r['mill_day'] <= TODAY.isoformat(): by[r['mill_day'][:7]].append(r['body'])
+    brk = {m: sum(int(r['breaks']) for r in rs) for m, rs in by.items()}
+    kwh = {m: round(sum(float(r['energy']['kwh_per_t']) for r in rs) / len(rs), 1) for m, rs in by.items()}
     bm = max(sorted(brk), key=lambda m: brk[m]); km = max(sorted(kwh), key=lambda m: kwh[m])
     name = lambda m: dt.date.fromisoformat(m + '-01').strftime('%B')
     return {'BRK_MONTH': bm, 'BRK_MONTH_NAME': name(bm), 'BRK_MONTH_N': str(brk[bm]),
@@ -87,8 +93,8 @@ def check(g, out):
     bpd = c['break'] / 365
     ok(1.0 <= bpd <= 3.0, f'sheet breaks {bpd:.2f}/day (target 1-3)')
     u = sum(1 for e in yr if e['kind'] == 'unplanned' and e['minutes'] > 60)
-    ok(15 <= u <= 25, f'{u} unplanned stops over 1 h (target 15-25)')
-    ok(10 <= len(rec['rcfas']) <= 20, f"{len(rec['rcfas'])} RCFAs (target 10-20)")
+    ok(30 <= u <= 45, f'{u} unplanned stops over 1 h (target 30-45)')
+    ok(10 <= len(rec['rcfas']) <= 30, f"{len(rec['rcfas'])} RCFAs (target 10-30)")
     ok(len([e for e in yr if e['cause'] == 'outage']) == 8, '8 outages in the year, 20 h each, on the 6-week grid')
     ok(all(e['minutes'] == 1200 for e in yr if e['cause'] == 'outage'), 'every outage is 20 h')
     ok(1000 <= len(rec['wos']) <= 2500, f"{len(rec['wos'])} work orders")
@@ -139,6 +145,23 @@ def check(g, out):
     rs = [json.load(open(f)) for f in reps]
     ok(any(x['short'] in ('REEL_DRUM_DS_VIB', 'REF_B_SE') and x['story'] for r in rs for x in r['items']),
        'Bonvoy Reports: the week flags the reel drum bearing or REF 2 plates with their story')
+    # the reports: every ended shift and mill day, validated and submitted, and they carry every stop of the year
+    import lifecycle as RL
+    reps = [json.load(open(f)) for f in glob.glob(os.path.join(out, 'reports', '*', '*', '*.json'))]
+    n_days = (TODAY - Y0).days + 1
+    ok(sum(r['type'] == 'shift' for r in reps) == 2 * n_days - 1 and sum(r['type'] == 'production' for r in reps) == n_days - 1,
+       f"{sum(r['type'] == 'shift' for r in reps)} Shift Reports and {sum(r['type'] == 'production' for r in reps)} Production Reports (every period that has ended)")
+    bad = [r['report_id'] for r in reps if r['status'] != 'submitted' or [h['to'] for h in r['history']] != ['generated', 'submitted']]
+    for r in reps:
+        try: RL.validate(r)
+        except RL.InvalidReport as e: bad.append(str(e))
+    ok(not bad, f'every report is valid and submitted ({len(bad)} not)')
+    ids = sorted(x['event_id'] for r in reps if r['type'] == 'shift' for x in r['body']['stops'])
+    want = sorted(e['event_id'] for e in m['events'] if Y0 <= e['start'].date() <= TODAY and e['start'] < dt.datetime.combine(TODAY, dt.time(18)))   # the last shift that has ended
+    ok(ids == want, f'the Shift Reports carry every stop and break of the year, once ({len(ids)} of {len(want)})')
+    dev = [f for f in m['developing'] if Y0 <= f['onset'].date() <= TODAY]
+    c2 = collections.Counter(f['outcome'] for f in dev)
+    ok(len(dev) >= 15 and all(c2[k] for k in ('missed', 'stop', 'calibrated')), f'developing failures: {len(dev)} ({dict(c2)})')
     print(f"{len(fails)} failing" if fails else 'all Sim Mill checks pass')
     return not fails
 

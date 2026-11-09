@@ -8,6 +8,8 @@ from .base import B, BT, md, tx, SHIFT
 from .base import (CFG, PLANTS, D, DT, DAY, HOUR, Y0, TODAY, OUTAGES, IN_YEAR, NEXT_OUTAGE, OUT_BY_ID, BY_NAME, POS_NAME, BY_POS,
                    NAME, LEAD_OF, crews, crew_at, section_name, next_outage, us, ORD)
 from .model import CAUSE_TEXT, ROUTES, due_at_next_outage, piece_at, CRITICAL
+from . import degrade
+MODE = {x['id']: x for x in degrade.MODES}
 
 STATUS = {10: 'Entered', 20: 'Approved', 30: 'Planned - parts not reserved', 35: 'Deferred - next opportunity',
           40: 'Scheduled', 45: 'Waiting on parts', 70: 'In progress', 90: 'Completed', 99: 'Closed'}
@@ -188,7 +190,7 @@ def build(m, proc, seed=5505):
         if not yr(d) or e['kind'] not in ('unplanned', 'slowdown'): continue
         h = e['minutes'] / 60
         if e['kind'] == 'unplanned':
-            craft = 'E&I' if e['cause'] in ('motorfail', 'drivefail') else 'MILL' if e['cause'] in ('feltchange', 'fabrichole') else 'MECH'
+            craft = 'E&I' if e['cause'] in ('motorfail', 'drivefail') else 'MILL' if e['cause'] in ('feltchange', 'fabrichole', 'feltfill') else 'MECH'
             e['wo'] = WO(e['asset'], 'EM', f"{CAUSE_TEXT[e['cause']]}: {e['asset']}", d, priority=1, craft=craft, est=round(h * 3, 1),
                          completed=(e['end']).date(), notes=e['note'], story=e['story'], originator=LEAD_OF[e['crew']])
             wos.append(e['wo'])
@@ -215,6 +217,26 @@ def build(m, proc, seed=5505):
             w = WO(f['asset'], 'CM', f"Change {f['asset']} bearing (found on the {fd:%b %d} vibration route)", fd, priority=1, craft='MECH',
                    est=6, completed=(f['fixed'].date() if f['fixed'] and f['fixed'].date() <= TODAY else None))
         f['wo'] = w; wos.append(w)
+
+    # ─── developing failures someone caught (Bonvoy, rounds, the operators): a WO and a BUS line ───
+    for f in m.get('developing', []):
+        if not f['found'] or not yr(f['found'].date()): continue
+        fd = f['found'].date(); mode = MODE[f['mode']]
+        done = f['fixed'].date() if f['fixed'] and f['fixed'].date() <= TODAY else None
+        if f['outcome'] == 'calibrated':
+            w = WO(f['asset'], 'CM', f"Calibrate: {mode['label']} on {f['asset']}", fd, priority=3, craft='INST', est=2, completed=done, originator=f['owner'])
+        elif f['outcome'] == 'outage':
+            o = OUT_BY_ID[f['fix_outage']]
+            w = WO(f['asset'], 'CM', f"{f['asset']}: {mode['label']} (found {fd:%b %d})", fd, priority=2, craft=f['craft'], est=6,
+                   outage=f['fix_outage'], completed=o['date'] if o['date'] <= TODAY else None, originator=f['owner'])
+        else:   # a short planned stop
+            w = WO(f['asset'], 'CM', f"{CAUSE_TEXT[f['stop']['cause']]}: {f['asset']}", fd, priority=1, craft=f['craft'], est=round(3 * (f['stop']['end'] - f['stop']['start']).total_seconds() / 3600, 1),
+                   completed=done, originator=f['owner'], planned=f['stop']['start'].date())
+            f['stop']['wo'] = w
+        f['wo'] = w; wos.append(w)
+        issues.append(Issue(fd, done, f['asset'], f"{f['asset']}: {mode['finding']}",
+                            mode['acts'] + ([f"Fixed at the {OUT_BY_ID[f['fix_outage']]['date']:%b %d} outage"] if f['outcome'] == 'outage' else ['Done; running normal']),
+                            f['owner'], w))
 
     # ─── routine corrective work behind the BUS background ───
     d = Y0 - DAY * 10
@@ -311,7 +333,8 @@ def build(m, proc, seed=5505):
                        'Stock build-up in the approach piping; no wad detection at the breast roll',
                        [tx('Clean headbox approach piping at the Mar 4 outage'), P['F4']['overdue_action'], 'Add the approach piping to the outage clean list']),
     }
-    TEMPL['steamjoint'] = TEMPL['steamjoint']
+    TEMPL.update(degrade.RCFA_TEMPL)
+    dev_of = {id(f['event']): f for f in m.get('developing', []) if f.get('event')}
     aseq = [0]
     def act(title, bucket, owner, created, due, completed=None, **k):
         a = Action(title, bucket, owner, created, due, completed, **k); actions.append(a); return a
@@ -319,6 +342,10 @@ def build(m, proc, seed=5505):
         rid = f'RCFA-SM-{e["start"]:%y}-{n:03d}'
         d = e['start'].date(); opened = d + DAY
         cat, root, contrib, acts = TEMPL.get(e['cause'], ('Equipment failure', f"{CAUSE_TEXT[e['cause']]}", 'Under review', ['Review with the vendor']))
+        f = dev_of.get(id(e))
+        if f:   # a developing failure nobody acted on: say how long the trend was there
+            tags = ', '.join(f'PM1:{k}' for k in f['tags'])
+            contrib = f"{contrib}. The trend was in Pi ({tags}) for about {max(1, round(f['pf_days'] * .5))} days before the stop"
         a_short = e['asset']
         lead = 'P04' if cat in ('Process', 'Clothing') else 'P03'
         aids = []

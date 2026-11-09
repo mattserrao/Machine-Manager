@@ -143,5 +143,38 @@
     </section>`;
   }
 
-  window.MMLLMOrg = { resolve, placeholder, choose, picker, rpc, today, table, bars, fileUrl, esc, num, day, time, DEMO };
+  // A report as a person reads it. Report text is light markdown (# and ## headings, **bold**, - lists): just that, escaped.
+  function md(t){
+    let out = '', list = false;
+    for (const raw of String(t || '').split('\n')){
+      const l = esc(raw).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+      if (/^- /.test(raw)){ if (!list){ out += '<ul>'; list = true; } out += `<li>${l.slice(2)}</li>`; continue; }
+      if (list){ out += '</ul>'; list = false; }
+      if (/^# /.test(raw)) out += `<h1>${l.slice(2)}</h1>`; else if (/^## /.test(raw)) out += `<h2>${l.slice(3)}</h2>`; else if (raw.trim()) out += `<p>${l}</p>`;
+    }
+    return out + (list ? '</ul>' : '');
+  }
+  // Open one report (Shift, Production, …) in a dialog, with its lifecycle underneath. Any element with
+  // data-rep="<report id>" opens it when clicked, once MMLLMOrg.reportLinks(st) has been called.
+  async function openReport(st, id){
+    let dlg = document.getElementById('mmRepDlg');
+    if (!dlg){
+      dlg = document.createElement('dialog'); dlg.id = 'mmRepDlg'; dlg.className = 'mm-rep';
+      dlg.innerHTML = '<div class="mm-rep-b"></div><form method="dialog"><button class="mm-rep-x">Close</button></form>';
+      document.body.appendChild(dlg);
+    }
+    const b = dlg.querySelector('.mm-rep-b'); b.innerHTML = '<p>Loading…</p>'; dlg.showModal();
+    try {
+      const [r] = await rpc(st, 'mm_llm_report', { p_report_id: id });
+      b.innerHTML = !r ? '<p>Not found.</p>' : md(r.text) + `<div class="mm-rep-life"><span>${esc(r.report_id)}</span>` +
+        (r.events || []).map(e => `<span class="pill">${esc(e.to)} ${esc(time(e.at))}</span>`).join('') + (r.error ? `<span class="pill bad">${esc(r.error)}</span>` : '') + '</div>';
+    } catch (e) { b.innerHTML = `<p>${esc(e.message || e)}</p>`; }
+  }
+  function reportLinks(st){
+    if (reportLinks.on) { reportLinks.st = st; return; }
+    reportLinks.on = true; reportLinks.st = st;
+    document.addEventListener('click', e => { const x = e.target.closest('[data-rep]'); if (x){ e.preventDefault(); openReport(reportLinks.st, x.dataset.rep); } });
+  }
+
+  window.MMLLMOrg = { resolve, placeholder, choose, picker, rpc, today, table, bars, fileUrl, esc, num, day, time, md, openReport, reportLinks, DEMO };
 })();

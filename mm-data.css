@@ -53,3 +53,14 @@ a.doc:hover{text-decoration:underline}
 .ph .ph-n{font-size:12px;color:var(--muted)}
 .ph .ph-a{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .ph-i{width:36px;height:36px;border-radius:10px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin:0 0 14px}
+/* A report opened from a page (MMLLMOrg.openReport) */
+dialog.mm-rep{max-width:760px;width:calc(100% - 32px);max-height:85vh;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);color:var(--ink);padding:18px 20px}
+dialog.mm-rep::backdrop{background:rgba(0,0,0,.45)}
+.mm-rep h1{font-size:16px;margin:0 0 4px}
+.mm-rep h2{font-size:12px;margin:14px 0 4px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.mm-rep p,.mm-rep li{font-size:13.5px;line-height:1.55;margin:4px 0}
+.mm-rep ul{padding-left:18px;margin:4px 0}
+.mm-rep-life{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0 0;padding-top:10px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}
+.mm-rep form{text-align:right;margin-top:12px}
+.mm-rep-x,.linkbtn{font:inherit;font-size:12px;background:none;border:0;color:var(--accent);cursor:pointer;padding:0}
+

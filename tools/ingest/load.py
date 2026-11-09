@@ -18,8 +18,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import importers as I
 
 ORDER = ['equipment', 'pi_tags', 'outages', 'bus_items', 'work_orders', 'actions', 'rcfa', 'bonvoy', 'pi_series',
-         'documents', 'doc_chunks', 'downtime', 'production_daily', 'position_runs', 'bonvoy_reports', 'ingest_files']
-BATCH = {'pi_series': 1000, 'doc_chunks': 300, 'documents': 200}
+         'documents', 'doc_chunks', 'downtime', 'production_daily', 'position_runs', 'bonvoy_reports', 'report_types', 'reports', 'ingest_files']
+BATCH = {'pi_series': 1000, 'doc_chunks': 300, 'documents': 200, 'reports': 300}
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'reports'))
+import daemon as reports_daemon, lifecycle as reports_lifecycle
 
 def collect(source, backbone_dir, log=print):
     equipment, tags, outages = I.backbone(backbone_dir)
@@ -45,6 +47,11 @@ def collect(source, backbone_dir, log=print):
     # step 05: downtime events, daily production and position runs (Demo Mill has downtime only, from tools/demo-data/downtime_feed.py)
     dtp = g('downtime/*.csv'); t['downtime'] = I.downtime_files(dtp, tg); files.update({p: 'downtime' for p in dtp})
     prp = g('production/*.csv'); t['production_daily'] = I.production_files(prp); files.update({p: 'production' for p in prp})
+    # step 09: reports (Shift, Production, ...) and their types; the database extracts downtime and production from them
+    t['report_types'] = [dict(type=k, title=v['title'], cadence=v['cadence'], required=v['required'], extract=v['extract'], index_kind=v.get('index'))
+                         for k, v in reports_lifecycle.REGISTRY['types'].items()]
+    t['reports'] = reports_daemon.rows(os.path.join(source, 'reports'), source)
+    files.update({os.path.join(source, r['file_path']): 'report' for r in t['reports']})
     psp = g('positions/*.csv'); t['position_runs'] = I.position_run_files(psp); files.update({p: 'position_runs' for p in psp})
     t['records'] = I.record_files(os.path.join(source, 'records'))
     log('parsing documents (OCR for scanned ones)…')
@@ -78,6 +85,8 @@ class Supabase:
             time.sleep(2 * (i + 1))
     def ingest(self, table, rows, mode='upsert'):
         return self.fn(dict(action='rows', table=table, rows=rows, mode=mode))['rows']
+    def process_reports(self, limit=500):
+        return self.fn(dict(action='process', limit=limit))
     def fn(self, body):
         return self._post('/functions/v1/mm-llm-ingest', body, {'x-mm-ingest-token': self.token})
 
@@ -87,6 +96,8 @@ class Local:
         self.c = psycopg.connect(dsn, autocommit=True); self.token = token
     def ingest(self, table, rows, mode='upsert'):
         return self.c.execute('select public.mm_llm_ingest(%s, %s, %s::jsonb, %s)', (self.token, table, json.dumps(rows), mode)).fetchone()[0]
+    def process_reports(self, limit=500):
+        return self.c.execute('select public.mm_llm_process_reports(%s, %s)', (self.token, limit)).fetchone()[0]
 
 def push(target, tables, log=print, only=None):
     names = [n for n in ORDER if not only or n in only]
@@ -96,6 +107,10 @@ def push(target, tables, log=print, only=None):
         for i in range(0, len(rows), b):
             n += target.ingest(name, rows[i:i + b]) or 0
         log(f'  {name:12s} {n:>8,} rows')
+    if 'reports' in names and tables['reports']:   # extract + index what was just ingested
+        done = reports_daemon.process(target)
+        log(f"  reports      {done.get('extracted', 0):>8,} extracted and indexed, {done.get('failed', 0)} failed")
+        if done.get('failed'): raise SystemExit('some reports failed to process: see llm.reports.error')
     if only: return
     # Machine Manager records (My Machine, Outage Planning, Consumables): only the tools the source has, each replaced whole
     for tool, rows in (tables.get('records') or {}).items():

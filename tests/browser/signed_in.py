@@ -108,7 +108,7 @@ with sync_playwright() as p:
     check("OOP: no page errors", not pg.errors, "; ".join(pg.errors))
     ctx.close()
     # ───────── Mill data pages for a real org with no data of its own: placeholders, never the demo org ─────────
-    for name in ["Daily.html", "Downtime.html", "VendorReports.html", "BonvoyReport.html", "MMLLM.html"]:
+    for name in ["DailyJournal.html", "Downtime.html", "VendorReports.html", "BonvoyReport.html", "MMLLM.html"]:
         ctx, pg = open_page(name, [])
         pg.wait_for_timeout(600)
         calls = pg.evaluate("window.__llmCalls || []")
@@ -139,9 +139,9 @@ with sync_playwright() as p:
           " return !!(a.compareDocumentPosition(l) & 4) && !!(l.compareDocumentPosition(e) & 4); })()"))
     check("The question went to Opus", pg.evaluate("window.__invokes[0].body.model") == "opus")
     ctx.close()
-    ctx, pg = open_page("Daily.html", [], org=("org-sim", "Sim Mill"))
+    ctx, pg = open_page("DailyJournal.html", [], org=("org-sim", "Sim Mill"))
     calls = pg.evaluate("window.__llmCalls || []")
-    check("Demo account: Daily asks for Sim Mill's data, no placeholder", pg.locator(".ph").count() == 0 and any(c["args"].get("p_org") == "org-sim" for c in calls))
+    check("Demo account: the Daily Journal asks for Sim Mill's data, no placeholder", pg.locator(".ph").count() == 0 and any(c["args"].get("p_org") == "org-sim" for c in calls))
     ctx.close()
     ctx, pg = open_page("MMLLM.html", [])
     check("PM1: no model picker (no live asking)", pg.locator(".mpick").count() == 0)

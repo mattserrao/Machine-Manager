@@ -39,10 +39,12 @@ def main():
             print(f"{k:14} {g:8} {a:9.3f} {b:9.3f}  {'ok' if ok else 'OUT'} ({tol:.0%})")
     yr = [e for e in m['events'] if Y0 <= e['start'].date() <= TODAY]
     bpd = sum(1 for e in yr if e['kind'] == 'break') / 365
-    unp = sum(1 for e in yr if e['kind'] == 'unplanned' and e['minutes'] > 60)
+    unp = sum(1 for e in yr if e['kind'] == 'unplanned' and e['minutes'] > 60 and not e.get('degrade'))   # the engine's own
+    dev = sum(1 for e in yr if e['kind'] == 'unplanned' and e['minutes'] > 60 and e.get('degrade'))       # developing failures (degrade.py)
     outs = sum(1 for e in yr if e['cause'] == 'outage')
     checks = [(f"breaks/day {bpd:.2f} vs reference {S['breaks_per_day']}", abs(bpd - S['breaks_per_day']) <= .25 * S['breaks_per_day']),
-              (f"unplanned stops > 1 h: {unp} vs reference {S['unplanned_gt1h']} (target 15-25)", 15 <= unp <= 25),
+              (f"unplanned stops > 1 h from the engine: {unp} vs reference {S['unplanned_gt1h']} (15-25)", 15 <= unp <= 25),
+              (f"with the developing failures: {unp + dev} (target 30-45)", 30 <= unp + dev <= 45),
               (f"outages {outs} vs reference {S['outages']}", outs == S['outages'])]
     for msg, ok in checks:
         print(('PASS ' if ok else 'FAIL ') + msg); fails += not ok

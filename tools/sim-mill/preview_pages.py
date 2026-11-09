@@ -15,8 +15,8 @@ def rpc(fn, args):
     try: return c.execute(q, vals).fetchone()[0]
     finally: c.execute("reset role")
 BASE = "http://localhost:8799/"
-shots = [("Downtime.html?org=Sim%20Mill", "downtime"), ("Daily.html?org=Sim%20Mill&day=2026-05-18", "daily-may18"),
-         ("Daily.html?org=Sim%20Mill", "daily-oct31"), ("VendorReports.html?org=Sim%20Mill&pos=p2-felt-top", "vendor-p2felt"),
+shots = [("Downtime.html?org=Sim%20Mill", "downtime"), ("DailyJournal.html?org=Sim%20Mill&day=2026-05-18", "daily-may18"),
+         ("DailyJournal.html?org=Sim%20Mill&day=2026-10-30", "daily-oct30"), ("VendorReports.html?org=Sim%20Mill&pos=p2-felt-top", "vendor-p2felt"),
          ("VendorReports.html?org=Sim%20Mill", "vendor-all"), ("MMLLM.html?org=Sim%20Mill", "mmllm")]
 with sync_playwright() as p:
     b = p.chromium.launch()

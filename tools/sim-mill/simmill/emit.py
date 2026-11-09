@@ -161,7 +161,7 @@ def write_pi_bonvoy(m, p, out):
 
 
 def write_new_feeds(m, p, rec, out):
-    """Downtime events (daily), production (monthly files, a row per mill day) and position runs (as of today)."""
+    """Event ids for the stops (the Shift Reports quote them) and position runs (as of today)."""
     rc_of = {}
     for r in rec['rcfas']: rc_of[id(r['event'])] = r['id']
     by_day = {}
@@ -170,54 +170,10 @@ def write_new_feeds(m, p, rec, out):
         if e['start'].date() < Y0 or e['start'].date() > TODAY: continue
         n += 1; e['event_id'] = f"DT-{e['start']:%y%m%d}-{n:04d}"
         by_day.setdefault(e['start'].date(), []).append(e)
-    for d in (Y0 + DAY * k for k in range((TODAY - Y0).days + 1)):
-        rows = []
-        for e in by_day.get(d, []):
-            a = BY_NAME.get(e['asset']) if e['asset'] else None
-            pos = a['position_id'] if a else ''
-            if a and not pos:
-                q = a['parent_asset']
-                while q and not pos:
-                    from .base import BY_NO
-                    pos = BY_NO[q]['position_id']; q = BY_NO[q]['parent_asset']
-            rows.append({'Event ID': e['event_id'], 'Start': e['start'].isoformat(timespec='minutes'), 'End': e['end'].isoformat(timespec='minutes'),
-                         'Minutes': f"{e['minutes']:g}", 'Kind': {'planned': 'Planned', 'unplanned': 'Unplanned', 'break': 'Sheet break', 'slowdown': 'Slowdown'}[e['kind']],
-                         'Area': SECTION_NAME.get(a['section'], '') if a else ('All' if e['cause'] == 'outage' else ''),
-                         'Equipment': a['name'] if a else ('Machine' if e['cause'] == 'outage' else ''), 'Asset Number': a['asset_no'] if a else '',
-                         'Position': pos or '', 'Cause': CAUSE_TEXT[e['cause']] + (f" ({e['where']})" if e.get('where') else ''),
-                         'Grade': GLABEL[e['grade']], 'Crew': e['crew'], 'WO #': e['wo'].no if e.get('wo') else '',
-                         'RCFA ID': rc_of.get(id(e), ''), 'Comment': (e.get('outage', '') + ' ' if e.get('outage') else '') + e['note']})
-        write_csv(os.path.join(out, 'downtime', f'Downtime_{MACHINE}_{d.isoformat()}.csv'), DOWNTIME_COLS, rows)
-    # production: mill day 6 AM to 6 AM, from the hourly series and the events
-    O = p['OUT']; months = {}
-    d = Y0
-    while d <= TODAY:
-        a = dt.datetime.combine(d, dt.time(6)); b = a + DAY
-        hs = range(int(hidx(a)), min(H, int(hidx(b))))
-        tons = float(np.nansum([O[f'{MACHINE}:PROD'][h] for h in hs]))
-        mins = {k: 0.0 for k in ('planned', 'unplanned', 'break', 'slowdown')}; nb = 0
-        for e in m['events']:
-            ov = max(0, (min(e['end'], b) - max(e['start'], a)).total_seconds()) / 60
-            if ov: mins[e['kind']] += ov
-            if e['kind'] == 'break' and a <= e['start'] < b: nb += 1
-        gh = {}
-        for h in hs: g = GRADE_IDS[p['grade'][h]]; gh[GLABEL[g]] = gh.get(GLABEL[g], 0) + 1
-        run = [h for h in hs if p['sheet'][h] > .95]
-        avg = lambda t: float(np.nanmean([O[f'{MACHINE}:{t}'][h] for h in run])) if run else float('nan')
-        se = (np.nansum([O[f'{MACHINE}:REF_A_KW'][h] + O[f'{MACHINE}:REF_B_KW'][h] for h in hs]) / tons) if tons > 1 else float('nan')
-        st_t = (np.nansum([O[f'{MACHINE}:STEAM_FLOW'][h] for h in hs]) / tons) if tons > 1 else float('nan')
-        dc, nc = crews(d)
-        months.setdefault(d.strftime('%Y-%m'), []).append({
-            'Mill Day': d.isoformat(), 'Tons': f'{tons:.0f}', 'Uptime %': f"{100 * (1 - (mins['planned'] + mins['unplanned']) / 1440):.1f}",
-            'Sheet Breaks': nb, 'Break Minutes': f"{mins['break']:.0f}", 'Unplanned Minutes': f"{mins['unplanned']:.0f}",
-            'Planned Minutes': f"{mins['planned']:.0f}", 'Slowdown Minutes': f"{mins['slowdown']:.0f}",
-            'Avg Speed (fpm)': '' if math.isnan(avg('SPEED')) else f"{avg('SPEED'):.0f}",
-            'Grade Hours': '; '.join(f'{k} {v}' for k, v in gh.items()), 'Steam (t/t)': '' if math.isnan(st_t) else f'{st_t:.2f}',
-            'Refining (kWh/t)': '' if math.isnan(se) else f'{se:.1f}', 'Reel Moisture %': '' if math.isnan(avg('REEL_MOIST')) else f"{avg('REEL_MOIST'):.2f}",
-            'Crew Day': dc, 'Crew Night': nc})
-        d += DAY
-    for mon, rows in months.items():
-        write_csv(os.path.join(out, 'production', f'Production_{MACHINE}_{mon}.csv'), PRODUCTION_COLS, rows)
+    # Downtime and daily production now reach Machine Manager as reports (simmill/reports.py: the Shift Report carries
+    # every stop, the Production Report the mill day's numbers); the database extracts them into llm.downtime and
+    # llm.production_daily. The event ids above are what the Shift Reports quote.
+    months = None
     rows = []
     for pos, rr in m['runs'].items():
         for r in rr:

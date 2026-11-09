@@ -12,6 +12,7 @@ five planted faults (config/plants.yaml), RCFA trigger rule. Everything is seede
 import datetime as dt, math, random
 from .base import B, BT, md, tx, SHIFT
 from . import engine as ENG
+from . import degrade
 from .base import (CFG, PLANTS, CATALOG, D, DT, DAY, HOUR, MIN, T0, T_END, Y0, TODAY, OUTAGES, IN_YEAR, NEXT_OUTAGE,
                    GRADES, full_tph, POS_NAME, BY_NAME, crew_at, ORD)
 
@@ -164,6 +165,7 @@ EVENT_ASSET = {
     'steamjoint': ('1st section rotary joint (DS)', 'stop'), 'boiler': ('Steam header', 'stop'), 'chestover': ('Machine chest', 'none'),
 }
 CAUSE_TEXT = {e['id']: e['name'] for e in CATALOG['events']}
+CAUSE_TEXT.update(degrade.CAUSES)
 CAUSE_TEXT.update(bearingfail='Bearing failure', motorfail='Motor failure', drivefail='Drive trip', bearingplan='Bearing change (found on the vibration route)',
                   outage='Planned outage', break_='Sheet break', feltchange='Unplanned felt change', fabrichole='Forming fabric hole',
                   jointleak='Rotary joint leak', rectfail='Rectifier fault (MCC DC bus down)', hbdoor='Headbox side door blew off',
@@ -388,4 +390,9 @@ def build(seed=SEED):
     sched = grade_schedule(rnd)
     runs = position_runs(rnd)
     ev, faults = stops(rnd, sched, runs)
-    return dict(seed=seed, sched=sched, runs=runs, events=ev, faults=faults, rcfa_events=rcfa_events(ev))
+    dev = degrade.build(seed, ev, in_outage)                 # developing failures (their own random stream)
+    ev.sort(key=lambda e: e['start'])
+    for e in ev:
+        e['grade'] = grade_at(sched, e['start']); e['crew'] = crew_at(e['start'])
+        e['minutes'] = round((e['end'] - e['start']).total_seconds() / 60, 1)
+    return dict(seed=seed, sched=sched, runs=runs, events=ev, faults=faults, developing=dev, rcfa_events=rcfa_events(ev))

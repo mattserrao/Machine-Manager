@@ -18,5 +18,7 @@ safe to run again.
 
 | `08-grade-hours.sql` | Any time after step 05 (applied 2026-11-08) | `mm_llm_grade_hours`: hours run on each grade from the production feed, so the assistant can compare grades per 100 h run. Read-only, only adds; also in `../llm.sql`. |
 
+| `09-reports.sql` | Any time after step 08 (**not applied yet**) | Reports and the report lifecycle: `llm.report_types`, `llm.reports` (as written, full-text searchable), `llm.report_events` (every status change); `report_id` on `llm.downtime` and `llm.production_daily`, plus saleable / broke / cull tons, off-spec hours and the OME parts; the ingest accepts `report_types` and `reports`; `mm_llm_process_reports` (service role) extracts and indexes them; read tools `mm_llm_reports`, `mm_llm_report`, `mm_llm_report_status`, `mm_llm_efficiency`; `mm_llm_downtime` also returns `report_id` (dropped and recreated); `mm_llm_summary` counts the reports. Then deploy `mm-llm-ingest` (new `process` action) and `mm-llm-ask` (tools `shift_reports`, `efficiency`) and reload Sim Mill. Also in `../llm.sql`. |
+
 After step 3, delete the empty `wb-files` bucket under **Storage** in the dashboard
 (Supabase doesn't allow deleting buckets from SQL).
