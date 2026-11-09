@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Operations Outage Planning</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-09.0050"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.0050">
-<script src="mm-icons.js?v=2026-11-09.0050"></script>
+<script src="mm-theme.js?v=2026-11-09.0257"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.0257">
+<script src="mm-icons.js?v=2026-11-09.0257"></script>
 <style>
   /* shared look: mm-theme.css */
   main{padding:16px 16px 60px}
@@ -320,19 +320,19 @@
 <div id="toast"></div>
 <div id="ver"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-09.0050"></script>
-<script src="mm-config.js?v=2026-11-09.0050"></script>
-<script src="mm-cloud.js?v=2026-11-09.0050"></script>
-<script src="mm-ui.js?v=2026-11-09.0050"></script>
-<script src="mm-records.js?v=2026-11-09.0050"></script>
-<script src="mm-machine.js?v=2026-11-09.0050"></script>
-<script src="mm-demo.js?v=2026-11-09.0050"></script>
-<script src="mm-task-examples.js?v=2026-11-09.0050"></script>
-<script src="mm-demo-outages.js?v=2026-11-09.0050"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-09.0257"></script>
+<script src="mm-config.js?v=2026-11-09.0257"></script>
+<script src="mm-cloud.js?v=2026-11-09.0257"></script>
+<script src="mm-ui.js?v=2026-11-09.0257"></script>
+<script src="mm-records.js?v=2026-11-09.0257"></script>
+<script src="mm-machine.js?v=2026-11-09.0257"></script>
+<script src="mm-demo.js?v=2026-11-09.0257"></script>
+<script src="mm-task-examples.js?v=2026-11-09.0257"></script>
+<script src="mm-demo-outages.js?v=2026-11-09.0257"></script>
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.5.0';
+  const VERSION = 'v0.5.1';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'Operations Outage Planning ' + VERSION;
 
@@ -431,17 +431,10 @@
     else { const k = r.pos, it = data && MM.cleanItem(data); if (!/^[a-z0-9-]{1,60}$/.test(k)) return; if (it) items[k] = it; else delete items[k]; }
     softRender();
   }
-  let warned = false, viewWarned = false, stT;
-  function status(x, detail){
-    const s = $('saveState');
-    if (x === 'rejected') return toast('A change couldn’t be saved: ' + (detail || 'not allowed') + '.');
-    if (x === 'saving') s.textContent = 'Saving…';
-    else if (x === 'saved'){
-      s.textContent = 'Saved'; warned = false; clearTimeout(stT); stT = setTimeout(() => s.textContent = '', 1600);
-      if ((oStore && oStore.conflicts) || (mStore && mStore.conflicts)) toast('Someone else changed that at the same moment — showing their version.');
-    } else if (x === 'error'){ s.textContent = 'Not saved'; if (!warned){ warned = true; toast('Can’t reach the server — keep this page open, it will keep retrying.'); } }
-    else if (x === 'viewonly'){ s.textContent = 'View only'; if (!viewWarned){ viewWarned = true; toast(session && session.demo ? `This is the ${session.org.name} demo, view only: changes aren’t saved. Sign in to plan your own outages.` : 'You have view-only access — changes you make here aren’t saved.'); } }
-  }
+  // Saved / Saving… / Not saved / View only across both stores (outages and My Machine): the worst state wins, so
+  // one store saving fine can't hide the other failing (MMCloud.saveIndicator).
+  const saveInd = MMCloud.saveIndicator($('saveState'), { toast, fadeSaved: true,
+    viewOnlyText: () => session && session.demo ? `This is the ${session.org.name} demo, view only: changes aren’t saved. Sign in to plan your own outages.` : '' });
   const saveO = () => { oStore.save(); };
   const saveM = () => { mStore.save(); };
 
@@ -1130,7 +1123,7 @@
   const DEMO_KEY = 'machine-manager-outages-demo', MYMACHINE_KEY = 'machine-manager-mymachine';
   function localStore(save){
     return { edit: true, conflicts: 0, ready: Promise.resolve(null),
-      save(){ try { save(); status('saved'); } catch (e) { status('error'); } } };
+      save(){ try { save(); saveInd.show('saved'); } catch (e) { saveInd.show('error'); toast('Couldn’t save in this browser — it may be full or in private mode.'); } } };
   }
   function readJSON(k){ try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }
   function demoLibrary(){
@@ -1204,14 +1197,15 @@
   (async () => {
     if (!window.MMCloud || !MMCloud.enabled) return startDemo();
     MMCloud.mountAccount($('acct'), { compact: true, tool: 'outages' });
-    try { session = await MMCloud.session() || await MMCloud.demoSession('outages'); }
-    catch (e) { return startDemo('Can’t reach the server — showing the demo in this browser.'); }
-    if (!session) return startDemo('Showing demo outages for PM1. Sign in to plan your team’s.');
-    if (!session.org) return startDemo('Your account isn’t in an organization yet — showing the demo.');
+    const a = await MMCloud.access('outages');     // who is looking, as one named state (mm-cloud.js)
+    if (a.kind === 'offline') return startDemo('Can’t reach the server — showing the demo in this browser.');
+    if (a.kind === 'signed-out') return startDemo('Showing demo outages for PM1. Sign in to plan your team’s.');
+    if (a.kind === 'no-org') return startDemo('Your account isn’t in an organization yet — showing the demo.');
+    session = a.session;                            // public-demo, demo-member or member
     $('brandSub').textContent = session.demo ? `Demo · ${session.org.name} · view only` : `${session.org.name} · outages`;
     gate('loader', 'Loading…', 'Getting your outages and machine.');
-    oStore = MMCloud.openStore('outages', { snapshot: oRecords, onChange: onO, onStatus: status });
-    mStore = MMCloud.openStore('mymachine', { snapshot: mRecords, onChange: onM, onStatus: status });
+    oStore = MMCloud.openStore('outages', { snapshot: oRecords, onChange: onO, onStatus: saveInd.handler(() => oStore) });
+    mStore = MMCloud.openStore('mymachine', { snapshot: mRecords, onChange: onM, onStatus: saveInd.handler(() => mStore) });
     // Read only here: snapshot hands back exactly what was loaded, and save() is never called on it.
     tpStore = MMCloud.openStore('task-packages', { snapshot: () => tp, onChange: onTP });
     let od, md, td;
@@ -1230,6 +1224,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-09.0050"></script>
+<script src="mm-nav.js?v=2026-11-09.0257"></script>
 </body>
 </html>

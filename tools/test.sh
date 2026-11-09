@@ -6,6 +6,7 @@ cd "$(dirname "$0")/.."
 export PGDSN
 python3 tools/stamp.py --check
 node tests/unit/machine.test.js
+node tests/unit/cloud_states.test.js
 node tests/sync/sync_sim.js
 python3 tools/demo-data/backbone.py --check
 python3 tools/sim-mill/run.py --check

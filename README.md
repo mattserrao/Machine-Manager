@@ -8,7 +8,7 @@ Without signing in, every tool runs as a demo that saves only in your browser. S
 | File | What |
 |---|---|
 | `index.html`, `*.html` | One page per tool. Without signing in, every tool runs as a demo saved in your browser. |
-| `mm-cloud.js` | Sign-in, synced records (`openStore`) and files for every tool |
+| `mm-cloud.js` | Sign-in, who is looking (`access`), synced records (`openStore`), the save indicator and files for every tool. The app's named states are mapped in [docs/state-machines.md](docs/state-machines.md) |
 | `mm-board.js`, `mm-board*.css` | The board engine behind the Whiteboard, Ops Task Library, Consumables Tracker and Daily |
 | `mm-machine.js`, `mm-demo.js` | The machine model shared by My Machine and Outage Planning, and its demo data |
 | `mm-demo-outages.js`, `mm-task-examples.js` | Outage Planning's demo outages, and the example task packages (Ops Task Library, and the outage demo) |

@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>My Machine</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-09.0050"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.0050">
-<script src="mm-icons.js?v=2026-11-09.0050"></script>
+<script src="mm-theme.js?v=2026-11-09.0257"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.0257">
+<script src="mm-icons.js?v=2026-11-09.0257"></script>
 <style>
   /* shared look: mm-theme.css */
   .wrap{padding:14px 14px 60px;transition:margin-right .18s}
@@ -299,17 +299,17 @@
 <aside id="drawer" class="drawer" hidden></aside>
 <div id="toast"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-09.0050"></script>
-<script src="mm-config.js?v=2026-11-09.0050"></script>
-<script src="mm-cloud.js?v=2026-11-09.0050"></script>
-<script src="mm-ui.js?v=2026-11-09.0050"></script>
-<script src="mm-records.js?v=2026-11-09.0050"></script>
-<script src="mm-machine.js?v=2026-11-09.0050"></script>
-<script src="mm-demo.js?v=2026-11-09.0050"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-09.0257"></script>
+<script src="mm-config.js?v=2026-11-09.0257"></script>
+<script src="mm-cloud.js?v=2026-11-09.0257"></script>
+<script src="mm-ui.js?v=2026-11-09.0257"></script>
+<script src="mm-records.js?v=2026-11-09.0257"></script>
+<script src="mm-machine.js?v=2026-11-09.0257"></script>
+<script src="mm-demo.js?v=2026-11-09.0257"></script>
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.4.2';
+  const VERSION = 'v0.4.3';
   const KEY = 'machine-manager-mymachine';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'My Machine ' + VERSION;
@@ -351,23 +351,10 @@
     for (const [k, v] of Object.entries(d)){ const r = RID.parse(k); if (r && r.kind === 'item') items[r.pos] = v; }
     return { machine: d[RID.machine] ? normalize(d[RID.machine]) : null, items: MM.cleanItems(items) };
   }
-  let saveTimer, warned = false, viewWarned = false;
-  function cloudStatus(x, detail){
-    const el = $('saveState');
-    if (x === 'rejected') return toast('A change couldn’t be saved: ' + (detail || 'not allowed') + '.');
-    if (x === 'saving') el.textContent = 'Saving…';
-    else if (x === 'saved'){
-      el.textContent = 'Saved'; warned = false;
-      clearTimeout(saveTimer); saveTimer = setTimeout(() => el.textContent = '', 1600);
-      if (cloud.conflicts) toast('Someone else changed that at the same moment — showing their version.');
-    } else if (x === 'error'){
-      el.textContent = 'Not saved';
-      if (!warned){ warned = true; toast('Can’t reach the server — keep this page open, it will keep retrying.'); }
-    } else if (x === 'viewonly'){
-      el.textContent = 'View only';
-      if (!viewWarned){ viewWarned = true; toast(cloud && cloud.demo ? `This is the ${cloud.org.name} demo, view only: changes aren’t saved. Sign in to work on your own machine.` : 'You have view-only access — changes you make here aren’t saved.'); }
-    }
-  }
+  let saveTimer;
+  // Saved / Saving… / Not saved / View only: one indicator (MMCloud.saveIndicator) for the synced store
+  const saveInd = window.MMCloud ? MMCloud.saveIndicator($('saveState'), { toast, fadeSaved: true,
+    viewOnlyText: () => cloud && cloud.demo ? `This is the ${cloud.org.name} demo, view only: changes aren’t saved. Sign in to work on your own machine.` : '' }) : null;
   let remoteFrame = 0;
   function onRemote(id, data){
     const r = RID.parse(id); if (!r) return;
@@ -1158,7 +1145,7 @@
   (async () => {
     if (window.MMCloud && MMCloud.enabled){
       MMCloud.mountAccount($('acct'), { compact: true, tool: 'mymachine' });
-      cloud = MMCloud.openStore('mymachine', { snapshot: toRecords, onChange: onRemote, onStatus: cloudStatus });
+      cloud = MMCloud.openStore('mymachine', { snapshot: toRecords, onChange: onRemote, onStatus: saveInd.handler(() => cloud) });
       let data = null;
       try { data = await cloud.ready; }
       catch (e) { toast('Can’t reach the server — showing this browser’s copy.'); }
@@ -1192,6 +1179,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-09.0050"></script>
+<script src="mm-nav.js?v=2026-11-09.0257"></script>
 </body>
 </html>

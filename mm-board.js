@@ -205,19 +205,12 @@ window.MMBoard = { start(cfg){
     clearTimeout(upTimer);
     upTimer = setTimeout(async () => { upTimer = null; await uploadPending(); cloud.st.save(); }, 300);
   }
-  function cloudStatus(s, detail){
-    if (s === 'rejected'){ toast('A change couldn’t be saved: ' + (detail || 'not allowed') + '.'); return; }
-    if (s === 'saving') saveStateEl.textContent = 'Saving…';
-    else if (s === 'saved'){
-      saveStateEl.textContent = 'Saved'; cloud.warned = false;
-      const c = cloud.st && cloud.st.conflicts;
-      if (c) toast(c === 1 ? 'Someone else changed that at the same moment — showing their version.' : `${c} items were changed by someone else at the same moment — showing their versions.`);
-    }
-    else if (s === 'error'){ saveStateEl.textContent = 'Not saved'; if (!cloud.warned){ cloud.warned = true; toast('Can’t reach the server — keep this tab open, it will keep retrying.'); } }
-    else if (s === 'viewonly'){ saveStateEl.textContent = 'View only'; if (!cloud.viewWarned){ cloud.viewWarned = true; toast('You have view-only access — changes you make here aren’t saved.'); } }
-    else if (s === 'live') setMode('');
-    else if (s === 'reconnecting') setMode('Reconnecting…', 'Live updates from others are paused. Your changes still save.');
-  }
+  // Saved / Saving… / Not saved / View only for the synced store (MMCloud.saveIndicator); live updates show in the
+  // mode chip. Saves in this browser (signed out) write the indicator directly.
+  const cloudInd = window.MMCloud ? MMCloud.saveIndicator(saveStateEl, { toast: m => toast(m),   // toast is defined further down
+    viewOnlyText: () => cloud.demo ? `This is the ${cloud.org.name} demo, view only: changes aren’t saved. Sign in to work on your own.` : '',
+    onConnection: x => x === 'live' ? setMode('') : setMode('Reconnecting…', 'Live updates from others are paused. Your changes still save.') }) : null;
+  const cloudStatus = cloudInd ? cloudInd.handler(() => cloud.st) : () => {};
 
   /* ---- receive changes (on load, live, after a reconnect, or as a conflict answer) ---- */
   function applyRecord(id, data){
@@ -306,7 +299,7 @@ window.MMBoard = { start(cfg){
 
   /* ---- load ---- */
   async function loadCloud(s){
-    Object.assign(cloud, { on:true, org:s.org, user:s.user, edit:MMCloud.canEdit(s) });
+    Object.assign(cloud, { on:true, org:s.org, user:s.user, edit:MMCloud.canEdit(s), demo:!!s.demo });
     viewCache = loadView();
     app = { boards:{}, order:[], current:viewCache.current || null, snap:!!viewCache.snap, tipsSeen:!!viewCache.tipsSeen, printOpts:viewCache.printOpts || undefined };
     cloud.st = MMCloud.openStore(TOOL, { snapshot:records, onChange:(id, data) => applyRecord(id, data), onStatus:cloudStatus });
@@ -2857,8 +2850,9 @@ function pkgSummary(b){
     let sess = null;
     if (window.MMCloud && MMCloud.enabled){
       MMCloud.mountAccount($('acct'), { compact: true, tool: TOOL });
-      try { sess = await MMCloud.session() || await MMCloud.demoSession(TOOL); }
-      catch (e) { sess = null; toast(`Can’t reach the server — showing ${T.demo} in this browser.`); }
+      const a = await MMCloud.access(TOOL);        // who is looking, as one named state (mm-cloud.js)
+      if (a.kind === 'offline') toast(`Can’t reach the server — showing ${T.demo} in this browser.`);
+      sess = a.session || null;
     }
     if (sess && sess.org){
       try {
@@ -2907,8 +2901,9 @@ function pkgSummary(b){
     let sess = null;
     if (window.MMCloud && MMCloud.enabled){
       MMCloud.mountAccount($('acct'), { compact: true, tool: TOOL });
-      try { sess = await MMCloud.session() || await MMCloud.demoSession(TOOL); }
-      catch (e) { sess = null; toast(`Can’t reach the server — showing ${T.demo} in this browser.`); }
+      const a = await MMCloud.access(TOOL);        // who is looking, as one named state (mm-cloud.js)
+      if (a.kind === 'offline') toast(`Can’t reach the server — showing ${T.demo} in this browser.`);
+      sess = a.session || null;
     }
     if (sess && sess.org){
       try {

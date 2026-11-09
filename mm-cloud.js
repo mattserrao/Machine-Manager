@@ -9,6 +9,8 @@
 //   MMCloud.openStore(tool, opts)   synced records for a tool (see below)
 //   MMCloud.files(tool)             upload / download / remove files for a tool
 //   MMCloud.demoSession(tool)       signed out, a demo tool: a view-only session on the public demo org, else null
+//   MMCloud.access(tool?)           who is looking, as one named state (see "Who is looking" below)
+//   MMCloud.saveIndicator(el, o)    the Saved / Saving… / Not saved / View only indicator for one or more stores
 (() => {
   const cfg = window.MM_CONFIG || {};
   const enabled = !!(cfg.supabaseUrl && cfg.supabaseKey && window.supabase);
@@ -80,6 +82,89 @@
     if (!DEMO_TOOLS.includes(tool) || await session()) return null;
     const org = await demoOrgInfo();
     return org ? { demo: true, user: { id: 'demo', email: null }, orgs: [org], org } : null;
+  }
+
+  /* ───────────── Who is looking: one explicit access state ─────────────
+     const a = await MMCloud.access(tool?)   // tool: a demo tool name, to see whether signed-out visitors get its demo org
+     a.kind is exactly one of:
+       'unavailable'  Supabase isn't configured for this copy of the site       (data: this browser only)
+       'offline'      the server can't be reached (a.error)                     (data: this browser only)
+       'signed-out'   nobody signed in, no public demo for this page             (data: this browser only)
+       'public-demo'  nobody signed in, viewing the public demo org (a.org)      (view only)
+       'no-org'       signed in (a.user) but in no organization yet              (data: this browser only)
+       'demo-member'  signed in to a public demo org, e.g. the demo account      (sees demo data; a.canEdit by role)
+       'member'       signed in to a real organization (a.org, a.role)           (its own data only, never demo data)
+     Every result also has canEdit, demo (true for 'public-demo' and 'demo-member') and, when there is one,
+     session (the object session() / demoSession() give). Decide what a page shows from a.kind, not from
+     combinations of session fields. */
+  let publicIds = null;
+  function publicOrgIds(){
+    return publicIds || (publicIds = client.rpc('mm_llm_public_org').then(({ data, error }) => {
+      if (error) throw error;
+      return new Set((data || []).map(o => o.id));
+    }).catch(e => { publicIds = null; throw e; }));
+  }
+  async function access(tool){
+    if (!enabled) return { kind: 'unavailable', canEdit: false, demo: false };
+    let s;
+    try { s = await session(); } catch (error) { return { kind: 'offline', error, canEdit: false, demo: false }; }
+    if (!s){
+      let d = null;
+      try { d = tool ? await demoSession(tool) : await demoOrgInfo().then(org => org && { demo: true, user: { id: 'demo', email: null }, orgs: [org], org }); }
+      catch (e) { d = null; }                  // the server answered the session check; no demo is the safe reading
+      return d ? { kind: 'public-demo', org: d.org, role: 'viewer', session: d, canEdit: false, demo: true }
+               : { kind: 'signed-out', canEdit: false, demo: false };
+    }
+    if (!s.org) return { kind: 'no-org', user: s.user, session: s, canEdit: false, demo: false };
+    // Unknown (the lookup failed) counts as a real organization: it then sees placeholders, never demo data.
+    let pub = false; try { pub = (await publicOrgIds()).has(s.org.id); } catch (e) {}
+    return { kind: pub ? 'demo-member' : 'member', user: s.user, org: s.org, role: s.org.role, session: s, canEdit: canEdit(s), demo: pub };
+  }
+
+  /* ───────────── The "Saved / Saving… / Not saved / View only" indicator ─────────────
+     One indicator for one or more stores: it shows the worst state across them (Not saved > Saving… > View only >
+     Saved), warns once per problem, and reports conflicts and refused changes.
+       const ind = MMCloud.saveIndicator(el, { toast, fadeSaved: true, viewOnlyText: () => '…', onConnection: x => {} });
+       MMCloud.openStore('tool', { …, onStatus: ind.handler(() => store) });   // one handler per store
+       ind.show('saved' | 'saving' | 'error' | 'viewonly' | 'notloaded' | '')  // for saves that don't go through a store
+     onConnection gets 'live' or 'reconnecting' (live updates from others), for pages that show it. */
+  const SAVE_TEXT = { saved: 'Saved', saving: 'Saving…', viewonly: 'View only', error: 'Not saved', notloaded: 'Not loaded', '': '' };
+  const SAVE_RANK = { saved: 0, viewonly: 1, saving: 2, error: 3 };
+  function saveIndicator(el, o = {}){
+    const per = new Map(), toast = msg => { try { o.toast && o.toast(msg); } catch (e) {} };
+    let warned = false, viewWarned = false, fade = null;
+    function show(state){
+      clearTimeout(fade);
+      if (!el) return;
+      el.textContent = SAVE_TEXT[state] != null ? SAVE_TEXT[state] : '';
+      el.dataset.state = state || 'idle';
+      if (state === 'saved' && o.fadeSaved) fade = setTimeout(() => { if (el.dataset.state === 'saved'){ el.textContent = ''; el.dataset.state = 'idle'; } }, 1600);
+    }
+    function render(){
+      let worst = 'saved';
+      for (const v of per.values()) if (SAVE_RANK[v] > SAVE_RANK[worst]) worst = v;
+      show(worst);
+    }
+    function handler(storeOf){
+      const key = {};
+      return (x, detail) => {
+        if (x === 'rejected') return toast('A change couldn’t be saved: ' + (detail || 'not allowed') + '.');
+        if (x === 'live' || x === 'reconnecting'){ try { o.onConnection && o.onConnection(x); } catch (e) {} return; }
+        if (!(x in SAVE_RANK)) return;
+        per.set(key, x);
+        if (x === 'saved'){
+          if (![...per.values()].includes('error')) warned = false;   // warn again only after everything has recovered
+          const st = typeof storeOf === 'function' ? storeOf() : storeOf, c = st && st.conflicts;
+          if (c) toast(c === 1 ? 'Someone else changed that at the same moment — showing their version.'
+                               : `${c} items were changed by someone else at the same moment — showing their versions.`);
+        } else if (x === 'error' && !warned){ warned = true; toast('Can’t reach the server — keep this page open, it will keep retrying.'); }
+        else if (x === 'viewonly' && !viewWarned){
+          viewWarned = true; toast((o.viewOnlyText && o.viewOnlyText()) || 'You have view-only access — changes you make here aren’t saved.');
+        }
+        render();
+      };
+    }
+    return { handler, show };
   }
 
   // Reload open tool pages when this browser signs in or out (or switches org) in another tab.
@@ -360,6 +445,9 @@
     };
     st.flush = flush;
     st.pending = () => st.edit && (busy || !!timer || failing);
+    // The store's state, named: 'loading' until ready, then 'viewonly' (can't edit), 'saving' (a save is queued or
+    // in flight), 'retrying' (the last save failed; it retries with backoff) or 'idle'. live: live updates arriving.
+    st.state = () => ({ phase: !loaded ? 'loading' : !st.edit ? 'viewonly' : failing ? 'retrying' : (busy || timer) ? 'saving' : 'idle', live });
     st.catchUp = catchUp;
     return st;
   }
@@ -416,5 +504,5 @@
     };
   }
 
-  window.MMCloud = { enabled, client, session, demoSession, signIn, signOut, setOrg, canEdit, saveTheme, openSignIn, mountAccount, openStore, files, canon };
+  window.MMCloud = { enabled, client, session, demoSession, access, signIn, signOut, setOrg, canEdit, saveTheme, openSignIn, mountAccount, openStore, saveIndicator, files, canon };
 })();
