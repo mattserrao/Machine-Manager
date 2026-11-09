@@ -145,6 +145,23 @@ def check(g, out):
     rs = [json.load(open(f)) for f in reps]
     ok(any(x['short'] in ('REEL_DRUM_DS_VIB', 'REF_B_SE') and x['story'] for r in rs for x in r['items']),
        'Bonvoy Reports: the week flags the reel drum bearing or REF 2 plates with their story')
+    # the reports: every ended shift and mill day, validated and submitted, and they carry every stop of the year
+    import lifecycle as RL
+    reps = [json.load(open(f)) for f in glob.glob(os.path.join(out, 'reports', '*', '*', '*.json'))]
+    n_days = (TODAY - Y0).days + 1
+    ok(sum(r['type'] == 'shift' for r in reps) == 2 * n_days - 1 and sum(r['type'] == 'production' for r in reps) == n_days - 1,
+       f"{sum(r['type'] == 'shift' for r in reps)} Shift Reports and {sum(r['type'] == 'production' for r in reps)} Production Reports (every period that has ended)")
+    bad = [r['report_id'] for r in reps if r['status'] != 'submitted' or [h['to'] for h in r['history']] != ['generated', 'submitted']]
+    for r in reps:
+        try: RL.validate(r)
+        except RL.InvalidReport as e: bad.append(str(e))
+    ok(not bad, f'every report is valid and submitted ({len(bad)} not)')
+    ids = sorted(x['event_id'] for r in reps if r['type'] == 'shift' for x in r['body']['stops'])
+    want = sorted(e['event_id'] for e in m['events'] if Y0 <= e['start'].date() <= TODAY and e['start'] < dt.datetime.combine(TODAY, dt.time(18)))   # the last shift that has ended
+    ok(ids == want, f'the Shift Reports carry every stop and break of the year, once ({len(ids)} of {len(want)})')
+    dev = [f for f in m['developing'] if Y0 <= f['onset'].date() <= TODAY]
+    c2 = collections.Counter(f['outcome'] for f in dev)
+    ok(len(dev) >= 15 and all(c2[k] for k in ('missed', 'stop', 'calibrated')), f'developing failures: {len(dev)} ({dict(c2)})')
     print(f"{len(fails)} failing" if fails else 'all Sim Mill checks pass')
     return not fails
 

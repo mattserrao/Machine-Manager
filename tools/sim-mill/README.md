@@ -17,11 +17,13 @@ mill and writes every Machine Manager source. The year is written for Nov 1 2025
 | `reference/` | From the-paper-mill `sim-headless`: the upset catalogue, critical assets, reliability constants and grades (`catalog.json`), the reference year's per-grade tag statistics and event summary |
 | `simmill/engine.py` | Loads `engine/` onto Sim Mill's clock (it moves with the roll) and evaluates the tag map |
 | `simmill/model.py` | Grade campaigns (the engine's), position life, every stop: the engine's sheet breaks, upsets and failures; outages; bearing faults found on the vibration route; the planted faults; RCFA rule. Without `engine/` it falls back to its own catalogue draws |
+| `simmill/degrade.py` | Developing failures: felts filling, showers plugging, vacuum pump and syphon wear, hood and fan pump faults, bearings, instrument drifts. Each has a signature on its Pi tags over days or weeks and ends one of three ways: fixed at the next outage, fixed in a short planned stop, or missed and ending in an unplanned stop (and usually an RCFA). Own random stream; never touches the planted faults' tags |
+| `simmill/reports.py` | The report producer for `tools/reports`: a **Shift Report** per 12 h shift (written by the crew's shift lead, templated notes in each lead's own style, every stop with its WO, what they saw developing, the handover) and a **Production Report** per mill day (Quality / Uptime / Tonnage / OME). They replace the old downtime and production CSV feeds: the database extracts `llm.downtime` and `llm.production_daily` from them |
 | `simmill/bonvoy_report.py` | The Bonvoy Report for the last 7 days (mocked MM LLM write-up): flags ranked by σ × hours × days running, with clothing age, open WOs, RCFAs, vendor reports, the planted-fault story, and bearings above fixed alarm limits |
 | `simmill/process.py` | Hourly Pi values for 47 tags (27 driven by the engine), 1-minute windows around F1–F5, and the Bonvoy rule (same as Demo Mill's) |
 | `simmill/records.py` | JDE work orders, Planner actions, BUS issues, RCFAs and their actions |
 | `simmill/docs.py` | Vendor reports (clothing surveys, felt analysis, vibration routes, shower audits, plate reports, roll service, steam surveys), RCFA write-ups, drawings, reference charts |
-| `simmill/emit.py` | Writers, in Demo Mill's layouts, plus three new feeds: downtime events, daily production, position runs |
+| `simmill/emit.py` | Writers, in Demo Mill's layouts, plus position runs and the event ids the Shift Reports quote |
 | `simmill/mm_records.py` | My Machine (machine + 35 positions with run history and condition notes), the task-package library, Outage Planning (the last three outages done with their packages, the next one being planned, the one after started, all from one change plan) and Consumables records |
 | `packages.js` | Sim Mill's task-package library (forming fabric, press felt, dryer felt, felt roll, refiner plates, stock prep cleaners), laid out by the Task Library's own code |
 | `roll.py` | The scheduled roll: regenerate for the current cycle, check, reload Sim Mill (rows, records, files, embeddings) and re-ask the demo questions |
@@ -50,8 +52,13 @@ are read from the generated data, since calendar months don't move with the roll
 `roll.py` weekly; it does work only when a new cycle has started. Position histories also get two or three runs before
 the modelled year (their own random stream, so the year itself is unchanged).
 
-**Targets** (agreed): 1–3 sheet breaks a day (1.46), 15–25 unplanned stops over 1 h a year (20), 10–20 RCFAs (14),
-8 outages of 20 h on the 6-week grid.
+**Targets** (agreed; Nov 9 for the stops): 1–3 sheet breaks a day (1.56), 30–45 unplanned stops over 1 h a year (42: 22 from
+the engine, the rest developing failures nobody caught), 10–30 RCFAs (29), 8 outages of 20 h on the 6-week grid. Plus about 30
+developing failures a year, so the Bonvoy Reports and shift notes have early signs to find.
+
+**Reports.** `run.py` runs the report daemon (`tools/reports/daemon.py`) over the year: every shift and mill day that has ended
+by the end of the modelled hours gets its report, validated and submitted to `out/reports/<type>/<yyyy-mm>/`. `load.py` ingests
+them and the database extracts and indexes them (`mm_llm_process_reports`); see `tools/reports/README.md`.
 
 **Planted faults**: F1 2nd press top felt fills early (HP shower nozzles plugged, changed at 34 days) ·
 F2 reel drum DS bearing found on the route, missed at the Aug 19 outage (no bearing in stores), now 0.42 in/s ·
