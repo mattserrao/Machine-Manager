@@ -176,10 +176,13 @@
      border:1px solid var(--line-strong);border-radius:var(--r);background:var(--surface);color:var(--ink)}
   .ask .row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:8px 0 0}
   .ask .row span{font-size:12px;color:var(--muted)}
-  .mpick{display:inline-flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-  .mpick button{font:inherit;font-size:12px;padding:5px 12px;border:0;background:var(--surface);color:var(--ink-2);cursor:pointer}
-  .mpick button + button{border-left:1px solid var(--line)}
-  .mpick button[aria-checked="true"]{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
+  /* the Ask button takes the box's accent; the picked model is the raised, outlined one (the other sits flat on the box) */
+  .ask .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--bg);font-weight:600}
+  .ask .btn.primary:hover{filter:brightness(1.08)}
+  .mpick{display:inline-flex;gap:2px;padding:2px;border:1px solid var(--accent-line);border-radius:var(--r)}
+  .mpick button{font:inherit;font-size:12px;padding:4px 12px;border:0;border-radius:4px;background:transparent;color:var(--muted);cursor:pointer}
+  .mpick button:hover{color:var(--ink)}
+  .mpick button[aria-checked="true"]{background:var(--surface);color:var(--accent-ink);font-weight:600;box-shadow:0 0 0 1px var(--accent-line)}
   .ask .mine{margin:10px 0 0;display:flex;flex-wrap:wrap;gap:6px}
   .ask .mine button{font:inherit;font-size:12px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:999px;
      padding:3px 10px;cursor:pointer;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -241,7 +244,7 @@
   <div class="sheet about" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
     <div class="sheet-h">
       <div><h2 id="aboutTitle">About the model</h2>
-        <p>How mill data reaches the assistant: sources, storage, the tools the model can call, and the model connectors.</p>
+        <p>How mill data reaches the assistant: sources, import, storage, the tools the model can call, and the models behind it.</p>
         <p class="live" id="aboutLive"></p></div>
       <button class="btn icon" type="button" id="aboutClose" aria-label="Close" data-ic="x" data-ic-size="sm"></button>
     </div>
@@ -253,7 +256,7 @@
     <div id="tabFlow" role="tabpanel" aria-labelledby="tabFlowBtn">
   <section class="intro">
         <h3 class="sub-h">Information flow</h3>
-        <p>Mill sources are imported, tagged to a PM1 position and stored in Supabase. The orchestrator answers through a small set of tools, so any model can sit behind it. Select a block to see what it connects to.</p>
+        <p>Mill sources are imported, tagged to a machine position and stored in Supabase. The orchestrator answers through a fixed set of read-only tools, so the model behind it can be swapped. Blocks marked <b>In use</b> run today on the demo data; the others are planned. Select a block to see what it connects to.</p>
       </section>
 
       <div class="flow" id="flow">
@@ -266,11 +269,11 @@
 
   <h3 class="rules-h">Ground rules</h3>
       <div class="rules">
-        <div class="rule"><b>Every row has a position</b><span>BUS items, WOs, RCFAs, vendor findings and document chunks all carry a PM1 position id from My Machine. That key is what lets an outage brief pull everything for "2nd press felt".</span></div>
+        <div class="rule"><b>Every row has a position</b><span>BUS items, WOs, RCFAs, Bonvoy rows and document chunks all carry a position id from My Machine. That key is what lets an outage brief pull everything for "2nd press felt".</span></div>
         <div class="rule"><b>Tables first, search second</b><span>Anything with rows and columns goes in a table and is answered with a query. Only narrative text (report findings, RCFA write-ups, manuals) is chunked and embedded for search.</span></div>
-        <div class="rule"><b>Pi stays in Pi</b><span>Trends are read on demand from the historian. Only Bonvoy exceptions are stored, as dated events.</span></div>
+        <div class="rule"><b>Pi in summaries</b><span>The assistant gets daily or hourly Pi summaries for the tag and window it asks for, not raw points. The demo stores them; at the mill they’ll be read from the historian on demand.</span></div>
         <div class="rule"><b>Models are swappable</b><span>Prompts and tools live in this app, not in a vendor's features. The adapter maps one request format to each provider; embeddings record which model made them.</span></div>
-        <div class="rule"><b>Answers cite records</b><span>Every statement links back to the row, page or trend it came from, so it can be checked before it goes on an outage plan.</span></div>
+        <div class="rule"><b>Answers cite records</b><span>Statements carry the WO, report, RCFA, BUS day or Pi tag they came from in brackets, and the tools’ evidence is shown under each demo answer, so it can be checked before it goes on an outage plan.</span></div>
       </div>
     </div>
 
@@ -287,7 +290,7 @@
         <li><b>Build on it.</b> <code>tools/sim-mill</code> (Python) takes the engine’s grades and stops, and drives 27 of the 47 PM1 tags from the engine (<code>config/tags.yaml</code>). It adds what the game doesn’t have: instrument noise, bearing vibration and Uhle vacuum, the life of every fabric, felt, plate and roll, and five planted faults. <code>validate_ref.py</code> holds it to the engine’s reference year.</li>
         <li><b>Write the mill’s files.</b> Daily BUS sheets, JDE and Planner exports, the RCFA log and write-ups, Pi and Bonvoy, vendor PDFs; three new feeds: downtime events, daily production and position runs; and the last week of Bonvoy Reports. Plus My Machine, Outage Planning, Consumables and task-package records.</li>
         <li><b>Load it like real data.</b> <code>load.py</code> and the importers send everything through the token-guarded <code>mm-llm-ingest</code> into the org’s tables, files and embeddings.</li>
-        <li><b>Read it.</b> The assistant’s tools, the 11 Sim Mill demo questions (31 checks), and the Daily, Downtime / RCFA, Vendor Reports and Bonvoy Report pages. Every 6 weeks the year rolls forward a cycle.</li>
+        <li><b>Read it.</b> The assistant’s tools, the 16 Sim Mill demo questions (37 checks), and the Daily, Downtime / RCFA, Vendor Reports and Bonvoy Report pages. Every 6 weeks the year rolls forward a cycle.</li>
       </ol>
     </div>
 
@@ -317,72 +320,72 @@
     // Sources
     { id: 'bus',    s: 'src', name: 'BUS daily sheet', d: 'Daily issues, actions and owners from the morning meeting.', k: 'rows + free text',
       how: 'One row per issue: date, area, position, issue, action, owner, status. The issue text is also embedded so similar past problems can be found.' },
-    { id: 'bonvoy',  s: 'src', name: 'Bonvoy reports', d: 'Pi trends outside their standard-deviation thresholds.', k: 'exception events',
-      how: 'Each flagged tag becomes an event: tag, position, value, limit, sigma, time. Bonvoy has already done the screening, so these are kept in full.' },
-    { id: 'pi',     s: 'src', name: 'Pi historian', d: 'Live process and equipment tags.', k: 'read on demand',
-      how: 'Not copied. A connector reads trends for a tag and time window when a question needs them, and a tag map links Pi tags to PM1 positions.' },
+    { id: 'bonvoy',  s: 'src', name: 'Bonvoy reports', d: 'Pi trends outside their standard-deviation thresholds.', k: 'tag-days + daily report',
+      how: 'One row per tag per day: the hours outside its ±3σ band, high or low, the grade and the position. A daily Bonvoy Report writes the last 7 days up, ranked, with likely causes and related work.', live: true },
+    { id: 'pi',     s: 'src', name: 'Pi historian', d: 'Process and equipment tags.', k: 'hourly + 1-minute windows', live: true,
+      how: 'For the demo, hourly averages for every tag (plus 1-minute data around key events) are stored, so the assistant can trend, compare and chart them. At the mill the same tools will read the PI Web API on demand. A tag map links each Pi tag to a machine position.' },
     { id: 'rcfa',   s: 'src', name: 'RCFA log', d: 'Failures, root causes and corrective actions.', k: 'rows + narrative',
-      how: 'Event, date, position, root cause, actions and owners go in a table; the write-up is chunked and embedded.' },
+      how: 'Event, date, position, root cause, actions and owners go in a table; the write-up is chunked and embedded.', live: true },
     { id: 'teams',  s: 'src', name: 'Teams action tracker', d: 'Open actions, owners and due dates.', k: 'rows',
-      how: 'One row per action, synced from the tracker list. Overdue and outage-tagged actions surface in the outage brief.' },
+      how: 'One row per action, from the tracker\u2019s scheduled export. Overdue actions surface in outage briefs and the morning watch.', live: true },
     { id: 'jde',    s: 'src', name: 'JDE work orders', d: 'Open and closed WOs by equipment.', k: 'rows',
-      how: 'WO number, equipment, description, priority, status, dates. JDE equipment numbers map to PM1 positions once, in the equipment register.' },
+      how: 'WO number, equipment, description, priority, status, parts status, outage and dates, from weekly exports. JDE equipment numbers map to machine positions once, in the equipment register.', live: true },
     { id: 'vendor', s: 'src', name: 'Vendor reports', d: 'Clothing, roll, vibration and shower audits (PDF).', k: 'fields + narrative',
-      how: 'The helper extracts vendor, date, position, measurements and recommendations into a table; the full text is chunked and embedded; the PDF is kept.' },
+      how: 'Text is pulled from each PDF (scans are read with OCR), tagged with vendor, date and positions, chunked and embedded; the PDF is kept. Field extraction into a table is planned for the helper model.', live: true },
     { id: 'ref',    s: 'src', name: 'Drawings and reference charts', d: 'Machine drawings, clothing specs, setting charts.', k: 'files + description',
-      how: 'Original kept in storage with tags (section, position, drawing no.). A short written description is embedded. Tabular charts are typed into a table once.' },
-    { id: 'mm',     s: 'src', name: 'Machine Manager', d: 'My Machine, outages, task library, consumables, Daily.', k: 'already structured', live: true,
-      how: 'Already stored as synced records. No parsing needed: the orchestrator reads them directly.' },
+      how: 'Original kept in storage with tags (section, position, drawing no.). Its text is indexed for search. Tabular charts are typed into a table once.', live: true },
+    { id: 'mm',     s: 'src', name: 'Machine Manager', d: 'My Machine, outages, task library, consumables.', k: 'already structured', live: true,
+      how: 'Already stored as synced records. Fabric, felt, plate and roll runs reach the assistant as position runs (installed, removed, days against target, why). The other tools aren\u2019t read by the assistant yet.' },
 
     // Ingest
     { id: 'imp',    s: 'ing', name: 'Structured import', d: 'Maps sheet and export columns to tables.', k: 'Excel · CSV · API',
-      how: 'One saved column mapping per source, so a daily sheet or WO export can be dropped in and loaded without the LLM. Re-imports update rows instead of duplicating them.' },
-    { id: 'parse',  s: 'ing', name: 'Document parse', d: 'PDF and Word to text, tables and key fields.', k: 'text · tables · chunks',
-      how: 'Text and tables are pulled from each page, split into chunks with page numbers, and passed to the helper for field extraction.' },
+      how: 'One saved column mapping per source, so a daily sheet or WO export can be loaded without the LLM, through a token-guarded ingest function. Re-imports update rows instead of duplicating them.', live: true },
+    { id: 'parse',  s: 'ing', name: 'Document parse', d: 'PDF and Word to text and chunks.', k: 'text · OCR · chunks',
+      how: 'Text is pulled from each page (OCR for scans), split into chunks with page numbers and tagged to positions.', live: true },
     { id: 'piconn', s: 'ing', name: 'Pi connector', d: 'Reads trends for a tag and window.', k: 'PI Web API · mill network',
-      how: 'Runs where it can reach the historian (the mill network). Returns summarised trends, not raw points, to keep answers small.' },
-    { id: 'tag',    s: 'ing', name: 'Position tagger', d: 'Links every row and chunk to a PM1 position.', k: 'rules, then helper',
-      how: 'Exact matches first (JDE number, Pi tag, roll id), then the helper suggests a position for free text. Uncertain matches are left for a person to confirm.' },
+      how: 'Planned for the mill: runs where it can reach the historian and returns daily or hourly summaries, not raw points. The demo uses a mock PI Web API and stored Pi data instead.' },
+    { id: 'tag',    s: 'ing', name: 'Position tagger', d: 'Links every row and chunk to a PM1 position.', k: 'rules (helper planned)',
+      how: 'Exact matches by rule (JDE number, Pi tag, roll id); equipment inherits its parent\u2019s position, so a shower belongs to its felt. Suggesting positions for free text is planned for the helper model.', live: true },
 
     // Storage
     { id: 'equip',  s: 'store', name: 'Equipment register', d: 'PM1 positions: the key every table joins on.', k: 'table',
-      how: 'Built from My Machine (sections, fabrics, rolls, refiners) plus JDE numbers and Pi tags for each position.' },
-    { id: 'events', s: 'store', name: 'Event tables', d: 'BUS items, Bonvoy exceptions, RCFAs, actions, WOs, vendor findings.', k: 'Postgres tables',
+      how: 'Built from My Machine (sections, fabrics, rolls, refiners) plus JDE numbers and Pi tags for each position.', live: true },
+    { id: 'events', s: 'store', name: 'Event tables', d: 'BUS items, Bonvoy, RCFAs, actions, WOs, downtime, production, position runs, Pi.', k: 'Postgres tables', live: true,
       how: 'One table per source with shared columns: date, position, status, source link. Answers come from queries, so counts and dates are exact.' },
     { id: 'records',s: 'store', name: 'MM records', d: 'Synced records from every Machine Manager tool.', k: 'mm_records', live: true,
       how: 'The existing table. Already scoped to your organization with row-level security.' },
     { id: 'docs',   s: 'store', name: 'Document index', d: 'Chunks with embeddings and full-text search.', k: 'pgvector + full text',
-      how: 'Each chunk keeps its source file, page, position and the embedding model used. Search combines meaning and keywords.' },
+      how: 'Each chunk keeps its source file, page, positions and the embedding model used (gte-small). The assistant searches by keywords; meaning-based search is built in and not yet used by it.', live: true },
     { id: 'files',  s: 'store', name: 'File storage', d: 'Original PDFs, drawings and sheets.', k: 'Supabase Storage',
-      how: 'Kept as uploaded so every answer can link to the page it came from, and so drawings can be shown to a vision-capable model when needed.' },
+      how: 'Kept as uploaded, so a report or drawing can be opened from Vendor Reports and checked against an answer.', live: true },
 
     // LLM layer
-    { id: 'orch',   s: 'llm', name: 'Orchestrator', d: 'Plans the answer, calls tools, cites sources.', k: 'Supabase Edge Function',
-      how: 'Holds the prompts for each output, decides which tools to call, and returns an answer with links. Runs server-side so keys and data never sit in the browser.' },
-    { id: 'tools',  s: 'llm', name: 'Tools', d: 'The only way the model reaches data.', k: 'query · search · trend · history',
-      how: 'Read-only, organization-scoped: query_events, search_docs, get_trend, position_history, upcoming_outage, plus add_to_outage which needs your confirmation.' },
-    { id: 'adapt',  s: 'llm', name: 'Model adapter', d: 'One request format, any provider.', k: 'Claude · OpenAI · Gemini · local',
-      how: 'Translates messages and tool calls to each provider. Switching model is a setting; the tools and prompts stay the same.' },
+    { id: 'orch',   s: 'llm', name: 'Orchestrator', d: 'Plans the answer, calls tools, cites sources.', k: 'Supabase Edge Function', live: true,
+      how: 'The mm-llm-ask function: holds the prompt, lets the model call tools for up to 10 steps, and returns the answer with its citations and charts. Every answer is saved with its tool trace. Runs server-side, so keys and data never sit in the browser.' },
+    { id: 'tools',  s: 'llm', name: 'Tools', d: 'The only way the model reaches data.', k: 'search · history · trend · summary · chart', live: true,
+      how: 'Read-only and scoped to your organization: search_documents, search_records, position_history, outage_scope, overdue_actions, bonvoy_exceptions, bonvoy_report, pi_daily, pi_values, downtime_summary, downtime_events, repeat_stops, rcfa_status, position_life, production and grade_hours. make_chart hands numbers to the page, which draws the chart with a PNG download. Nothing writes back.' },
+    { id: 'adapt',  s: 'llm', name: 'Model adapter', d: 'One request format, more than one provider.', k: 'Claude · OpenAI', live: true,
+      how: 'Translates messages and tool calls to each provider. Claude Sonnet 5.5 answers by default; the demo account can pick Claude Opus 5.5, which runs on its own API key. Switching model is a setting; the tools and prompts stay the same.' },
     { id: 'helper', s: 'llm', name: 'Helper model', d: 'Small, cheap model for ingest jobs.', k: 'extract · tag · summarise',
-      how: 'Runs on every upload: pulls fields from vendor reports, suggests positions, writes chunk summaries. Can be a local model if data must stay on site.' },
+      how: 'Planned: a small model that runs on each upload to pull fields from vendor reports, suggest positions for free text and summarise chunks. Today rules and OCR do this part. Could be a local model if data must stay on site.' },
 
     // Outputs
     { id: 'outage', s: 'out', name: 'Outage brief', d: 'What to work on at the next outage, and why.', k: 'per outage',
-      how: 'Fabrics and rolls due, open WOs, Bonvoy exceptions, vendor recommendations and open RCFA actions, grouped by section, with "add to outage" on each item.' },
+      how: 'Ask for it: the outage scope with parts status, fabrics, felts and plates due, Bonvoy flags, vendor recommendations and open RCFA actions, prioritized with the evidence for each. Adding items straight to an outage is planned.', live: true },
     { id: 'trbl',   s: 'out', name: 'Troubleshooting', d: 'Help on an active problem from the BUS sheet.', k: 'per issue',
-      how: 'Finds similar past issues and RCFAs, pulls recent trends and WOs for the position, and shows the relevant drawing or chart.' },
-    { id: 'ask',    s: 'out', name: 'Ask MM', d: 'Plain questions across everything, with links.', k: 'chat',
-      how: 'Free questions, e.g. "how long did the last three base ply wires run?", answered from tables first and documents second.' },
-    { id: 'watch',  s: 'out', name: 'Morning watch', d: 'New exceptions, overdue actions, items due.', k: 'daily, suggested',
-      how: 'A short summary before the BUS meeting: what changed since yesterday and what needs an owner.' },
-    { id: 'rcfad',  s: 'out', name: 'RCFA draft', d: 'Timeline and evidence for a new RCFA.', k: 'suggested',
-      how: 'Pre-fills the timeline from trends, WOs and BUS entries around the event, ready to edit.' },
+      how: 'Finds similar past issues and RCFAs, pulls recent trends and WOs for the position, and charts the trends that matter.', live: true },
+    { id: 'ask',    s: 'out', name: 'Ask MM', d: 'Plain questions across everything, with citations and charts.', k: 'chat', live: true,
+      how: 'Free questions, e.g. "how long did the last three felts run?", answered from tables first and documents second. Asked for a graph, it draws one with a PNG download. Open to the demo account today.' },
+    { id: 'watch',  s: 'out', name: 'Morning watch', d: 'New exceptions, overdue actions, items due.', k: 'planned',
+      how: 'Planned as a scheduled summary before the BUS meeting: what changed since yesterday and what needs an owner. Today it can be asked for, and the Bonvoy Report covers the Pi side.' },
+    { id: 'rcfad',  s: 'out', name: 'RCFA draft', d: 'Timeline and evidence for a new RCFA.', k: 'planned',
+      how: 'Planned: pre-fills the timeline from trends, WOs and BUS entries around the event, ready to edit. Today the assistant can be asked to lay out that timeline.' },
   ];
 
   // from → to. dash: on demand / supporting link.
   const LINKS = [
     ['bus','imp'],['bonvoy','imp'],['rcfa','imp'],['rcfa','parse'],['teams','imp'],['jde','imp'],
-    ['vendor','parse'],['ref','parse'],['pi','piconn',1],['mm','records'],['ref','files'],
+    ['vendor','parse'],['ref','parse'],['pi','imp'],['pi','piconn',1],['mm','records'],['ref','files'],
     ['imp','tag'],['parse','tag'],['parse','files'],
     ['tag','events'],['tag','docs'],['equip','tag',1],['records','equip'],
     ['equip','tools'],['events','tools'],['records','tools'],['docs','tools'],['files','tools',1],['piconn','tools',1],
@@ -535,8 +538,7 @@
       access = (b.data || []).find(r => r.org_id === org.id) || null;
     }
     if (access) mountAsk();
-    const anyAns = Object.values(saved)[0];
-    if (anyAns) $('aboutLive').textContent = `Answering now: ${anyAns.model} (${anyAns.provider}), through the model adapter. Swapping models is a setting, not a rewrite.`;
+    $('aboutLive').textContent = 'Answering with Claude Sonnet 5.5 by default; the demo account can switch to Claude Opus 5.5. Both go through the model adapter, so swapping models is a setting, not a rewrite.';
 
     let key;
     const KEYS = { 'Demo Mill': 'demo-data/answers/answer_key.json', 'Sim Mill': 'demo-data/sim-mill/answers/answer_key.json' };
@@ -837,14 +839,14 @@
       ['val', 2, 4, 'validate_ref + run --check', 'vs the engine; targets', 'chk'],
       ['f1', 3, 0, 'BUS · JDE · Planner · RCFA', 'xlsx, CSV exports, log + docx', ''],
       ['f2', 3, 1, 'Pi hourly + Bonvoy', 'CSV, Bonvoy Reports (7 days)', ''],
-      ['f3', 3, 2, 'Vendor reports, drawings', '84 PDFs and write-ups', ''],
+      ['f3', 3, 2, 'Vendor reports, drawings', '80 PDFs and write-ups', ''],
       ['f4', 3, 3, 'Downtime · production · runs', 'three new feeds', 'new'],
       ['f5', 3, 4, 'Machine Manager records', 'My Machine, outages, stores', 'new'],
       ['imp', 4, 1, 'load.py + importers', 'map columns, tag positions', ''],
       ['ing', 4, 2, 'mm-llm-ingest', 'token decides the org', ''],
       ['db', 4, 3, 'Supabase: Sim Mill', 'llm tables, files, vectors, records', ''],
       ['tools', 5, 0, 'Assistant tools', 'outage scope, Bonvoy, docs…', ''],
-      ['qs', 5, 1, 'Demo questions', '11 questions, 31 checks', 'new'],
+      ['qs', 5, 1, 'Demo questions', '16 questions, 37 checks', 'new'],
       ['pages', 5, 2, 'Daily, Downtime, Vendors', 'and the Bonvoy Report', 'new'],
       ['mm', 5, 3, 'My Machine · Outage Planning', 'members of Sim Mill', ''],
     ];
