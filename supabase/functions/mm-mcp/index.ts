@@ -4,10 +4,10 @@
 //   Deploy:    supabase functions deploy mm-mcp --no-verify-jwt     (it handles callers itself, like mm-llm-ask)
 //
 // Who can read what:
-//   - no Authorization header: the anon key, so only the public demo orgs (Demo Mill, Sim Mill);
+//   - no Authorization header: the anon key, so only the public demo orgs (today: Sim Mill);
 //   - Authorization: Bearer <user session token>: that user's session, so row-level security adds their own orgs.
 // Nothing is written and no model is called, so there is no daily cap. Stateless: no sessions, no SSE stream (GET → 405).
-// MM_MCP_DEFAULT_ORG (optional) names the org used when a tool call doesn't give one; otherwise the first public org.
+// MM_MCP_DEFAULT_ORG (optional) names the org used when a tool call doesn't give one; default Sim Mill.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { handle } from './mcp.ts';
 
