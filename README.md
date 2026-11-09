@@ -1,7 +1,7 @@
 # Machine-Manager
 Various tools for machine management.
 
-Without signing in, every tool runs as a demo that saves only in your browser. Signed-in users share data through Supabase, scoped to their organization. See [supabase/SETUP.md](supabase/SETUP.md) for adding people and how access works.
+Without signing in, every tool runs as a demo that saves only in your browser. Signed-in users share data through Supabase, scoped to their organization. A real organization (e.g. PM1) only ever sees what its own people add or load: the mill-data pages (Daily, Downtime / RCFA, Vendor Reports, Bonvoy Report, MM LLM) show a placeholder until its files are loaded, and the Ops Task Library starts empty (the example packages can be added on request). The demo account and signed-out visitors see the Sim Mill demo. `RAG.html` is a placeholder for uploading documents for the assistant to search. See [supabase/SETUP.md](supabase/SETUP.md) for adding people and how access works.
 
 ## Layout
 

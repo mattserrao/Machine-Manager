@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Downtime / RCFA</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.2256"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2256">
-<link rel="stylesheet" href="mm-data.css?v=2026-11-08.2256">
-<script src="mm-icons.js?v=2026-11-08.2256"></script>
+<script src="mm-theme.js?v=2026-11-09.0050"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.0050">
+<link rel="stylesheet" href="mm-data.css?v=2026-11-09.0050">
+<script src="mm-icons.js?v=2026-11-09.0050"></script>
 </head>
 <body>
 <header class="mm-top">
@@ -31,12 +31,12 @@
   <div id="body"><div class="dmsg">Loading…</div></div>
   <div id="ver"></div>
 </main>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2256"></script>
-<script src="mm-config.js?v=2026-11-08.2256"></script>
-<script src="mm-cloud.js?v=2026-11-08.2256"></script>
-<script src="mm-llm-org.js?v=2026-11-08.2256"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-09.0050"></script>
+<script src="mm-config.js?v=2026-11-09.0050"></script>
+<script src="mm-cloud.js?v=2026-11-09.0050"></script>
+<script src="mm-llm-org.js?v=2026-11-09.0050"></script>
 <script>
-  const VERSION = 'v0.1.0';
+  const VERSION = 'v0.2.0';
   document.getElementById('ver').textContent = 'Downtime / RCFA ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
   const $ = id => document.getElementById(id), O = MMLLMOrg, esc = O.esc;
@@ -116,10 +116,13 @@
   (async () => {
     st = await O.resolve();
     if (st.error){ $('body').innerHTML = `<div class="dmsg">${esc(st.error)}</div>`; return; }
+    if (st.empty) return O.placeholder(st, { icon: 'alert', title: 'Downtime / RCFA isn’t set up yet',
+      text: 'This page will show where the machine loses time: a Pareto by area, equipment and cause, MTBF and MTTR, repeat failures, and each RCFA with its open actions.',
+      needs: ['Downtime events (stops, breaks, slowdowns)', 'RCFA log', 'Teams / Planner actions', 'JDE work orders'] });
     O.picker($('org'), st, start);
     start();
   })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.2256"></script>
+<script src="mm-nav.js?v=2026-11-09.0050"></script>
 </body>
 </html>

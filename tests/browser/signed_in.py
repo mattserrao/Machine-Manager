@@ -42,10 +42,10 @@ MM_ROWS = [
 with sync_playwright() as p:
     br = p.chromium.launch(channel=os.environ.get("PW_CHANNEL") or None, headless=True)
 
-    def open_page(name, rows):
+    def open_page(name, rows, org=None):
         ctx = br.new_context(viewport={"width": 1400, "height": 860})
         ctx.route(re.compile(r".*/vendor/supabase-[^/]*\.js(\?.*)?$"), lambda route: route.fulfill(content_type="application/javascript", body=FAKE))
-        ctx.add_init_script(f"window.__seedRows = {json.dumps(rows)};")
+        ctx.add_init_script(f"window.__seedRows = {json.dumps(rows)};" + (f"window.__orgId = {json.dumps(org[0])}; window.__orgName = {json.dumps(org[1])};" if org else ""))
         pg = ctx.new_page(); pg.errors = []
         pg.on("pageerror", lambda e: pg.errors.append(str(e)[:300]))
         pg.on("dialog", lambda d: d.dismiss())
@@ -83,7 +83,8 @@ with sync_playwright() as p:
         rows = pg.evaluate("window.__rows()")
         mine = [r for r in rows if r["tool"] == tool]
         if tool == "task-packages":
-            check("TPL: first editor seeds the 5 examples into the org", len([r for r in mine if r["id"].startswith("p:")]) == 5 and any(r["id"] == "seeded" for r in mine))
+            check("TPL: a real org starts empty (no example packages written)", not mine, json.dumps([r["id"] for r in mine])[:200])
+            check("TPL: the examples can be added on request", pg.locator(".lib-link").filter(has_text="Add the example packages").count() == 1)
         else:
             check("CT: first editor gets one empty PM1 board with category frames", len([r for r in mine if r["id"].startswith("p:")]) == 1
                   and len([r for r in mine if r["id"].startswith("f:")]) == 6 and not any(r["id"].startswith("n:") for r in mine))
@@ -105,6 +106,45 @@ with sync_playwright() as p:
     check("OOP: shows the outage", "Nov" in pg.locator("body").inner_text() and pg.locator("#gate").is_hidden() if pg.locator("#gate").count() else True)
     check("OOP: no save on load", pg.evaluate("window.__rpcLog.length") == 0, json.dumps(pg.evaluate("window.__rpcLog"))[:300])
     check("OOP: no page errors", not pg.errors, "; ".join(pg.errors))
+    ctx.close()
+    # ───────── Mill data pages for a real org with no data of its own: placeholders, never the demo org ─────────
+    for name in ["Daily.html", "Downtime.html", "VendorReports.html", "BonvoyReport.html", "MMLLM.html"]:
+        ctx, pg = open_page(name, [])
+        pg.wait_for_timeout(600)
+        calls = pg.evaluate("window.__llmCalls || []")
+        demo = [c for c in calls if c["args"].get("p_org") == "org-sim"]
+        text = pg.locator("main").inner_text()
+        ph = pg.locator(".ph").count() == 1
+        check(f"{name}: PM1 sees a placeholder", ph and "Sim Mill" not in text, text[:160].replace("\n", " "))
+        check(f"{name}: no demo-org data is requested", not demo, json.dumps(demo)[:200])
+        check(f"{name}: no page errors", not pg.errors, "; ".join(pg.errors))
+        ctx.close()
+    # ───────── The demo account (a viewer of Sim Mill): still sees the demo data, and can pick Sonnet or Opus ─────────
+    ctx, pg = open_page("MMLLM.html", [], org=("org-sim", "Sim Mill"))
+    pg.wait_for_timeout(600)
+    calls = pg.evaluate("window.__llmCalls || []")
+    check("Demo account: MM LLM loads Sim Mill, no placeholder", pg.locator(".ph").count() == 0 and any(c["args"].get("p_org") == "org-sim" for c in calls))
+    picks = pg.locator(".mpick button").all_inner_texts()
+    check("Demo account: model picker offers Sonnet and Opus", picks == ["Sonnet", "Opus"], str(picks))
+    pg.locator(".mpick button").filter(has_text="Opus").click()
+    check("Demo account: the choice sticks", pg.evaluate("localStorage.getItem('mm-llm-model')") == "opus"
+          and pg.locator(".mpick button[aria-checked='true']").inner_text() == "Opus")
+    check("Examples start collapsed", not pg.evaluate("document.getElementById('examples').open"))
+    pg.fill("#askQ", "What actions are overdue?"); pg.locator(".ask .btn.primary").click(); pg.wait_for_timeout(800)
+    live = pg.locator("#liveAns")
+    check("Live answer shows under the Ask box with the examples still collapsed", live.is_visible() and "Six actions are overdue" in live.inner_text()
+          and live.locator(".mchart").count() == 1 and not pg.evaluate("document.getElementById('examples').open"), live.inner_text()[:120])
+    check("Live answer sits between the Ask box and the examples", pg.evaluate(
+          "(() => { const a = document.querySelector('.ask'), l = document.getElementById('liveAns'), e = document.getElementById('examples');"
+          " return !!(a.compareDocumentPosition(l) & 4) && !!(l.compareDocumentPosition(e) & 4); })()"))
+    check("The question went to Opus", pg.evaluate("window.__invokes[0].body.model") == "opus")
+    ctx.close()
+    ctx, pg = open_page("Daily.html", [], org=("org-sim", "Sim Mill"))
+    calls = pg.evaluate("window.__llmCalls || []")
+    check("Demo account: Daily asks for Sim Mill's data, no placeholder", pg.locator(".ph").count() == 0 and any(c["args"].get("p_org") == "org-sim" for c in calls))
+    ctx.close()
+    ctx, pg = open_page("MMLLM.html", [])
+    check("PM1: no model picker (no live asking)", pg.locator(".mpick").count() == 0)
     ctx.close()
     br.close()
 

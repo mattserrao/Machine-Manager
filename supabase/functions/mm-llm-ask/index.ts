@@ -8,7 +8,8 @@
 // Every answer is saved to llm.answers with its tool trace. Model and provider come from MM_LLM_PROVIDER /
 // MM_LLM_MODEL and the provider's key secret (see adapter.ts). Deployed with verify_jwt off: it checks callers itself.
 //
-//   POST { question, question_id?, org_id? }  ->  { id, answer, trace, charts, model, provider, ms, remaining }
+//   POST { question, question_id?, org_id?, model? }  ->  { id, answer, trace, charts, model, provider, ms, remaining }
+// model: 'sonnet' (default) or 'opus' (the larger model; see makeModel in adapter.ts).
 // org_id picks which of the user's orgs on llm.query_access to ask about (default: the first).
 // Charts (make_chart) are kept in the trace (tool 'make_chart', args = the chart), so saved answers can redraw them.
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -60,7 +61,7 @@ Deno.serve(async (req) => {
   const t0 = Date.now(), trace: any[] = [], charts: any[] = [];
   let answer = '', status = 'ok', inT = 0, outT = 0, model = '', provider = '';
   try {
-    const m = makeModel(); model = m.model; provider = m.provider;
+    const m = makeModel(body.model === 'opus' ? 'opus' : 'default'); model = m.model; provider = m.provider;
     const { data: ctx, error: e } = await db.rpc('mm_llm_context', { p_org: org });
     if (e) throw new Error(e.message);
     m.start(systemPrompt(orgName, ctx ?? {}), question);

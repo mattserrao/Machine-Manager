@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Machine Manager</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.2256"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2256">
-<script src="mm-icons.js?v=2026-11-08.2256"></script>
+<script src="mm-theme.js?v=2026-11-09.0050"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.0050">
+<script src="mm-icons.js?v=2026-11-09.0050"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1080px;margin:0 auto;padding:28px 20px 72px}
@@ -106,21 +106,22 @@
     <h3>Planned and linked</h3>
     <div class="rows">
       <a class="lrow" href="MMLLM.html"><span data-ic="message" data-ic-size="sm"></span><span class="n">MM LLM</span><span class="d">Information flow from mill data to the assistant</span><span class="tag">Planned</span></a>
+      <a class="lrow" href="RAG.html"><span data-ic="upload" data-ic-size="sm"></span><span class="n">RAG</span><span class="d">Upload documents for the assistant to search</span><span class="tag">Placeholder</span></a>
       <a class="lrow" href="http://10.15.212.124:8000" target="_blank" rel="noopener"><span data-ic="network" data-ic-size="sm"></span><span class="n">FieldAgent</span><span class="d">Monitor assets in real-time</span><span class="tag">Mill network only <span data-ic="external" data-ic-size="xs"></span></span></a>
     </div>
   </section>
 
   <div id="ver"></div>
 </main>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2256"></script>
-<script src="mm-config.js?v=2026-11-08.2256"></script>
-<script src="mm-cloud.js?v=2026-11-08.2256"></script>
-<script src="mm-ui.js?v=2026-11-08.2256"></script>
-<script src="mm-machine.js?v=2026-11-08.2256"></script>
-<script src="mm-demo.js?v=2026-11-08.2256"></script>
-<script src="mm-records.js?v=2026-11-08.2256"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-09.0050"></script>
+<script src="mm-config.js?v=2026-11-09.0050"></script>
+<script src="mm-cloud.js?v=2026-11-09.0050"></script>
+<script src="mm-ui.js?v=2026-11-09.0050"></script>
+<script src="mm-machine.js?v=2026-11-09.0050"></script>
+<script src="mm-demo.js?v=2026-11-09.0050"></script>
+<script src="mm-records.js?v=2026-11-09.0050"></script>
 <script>
-  const VERSION = 'v0.5.3';
+  const VERSION = 'v0.6.0';
   document.getElementById('ver').textContent = 'Machine Manager ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
 
@@ -137,6 +138,11 @@
 
     let session = null; try { session = await MMCloud.session() || await MMCloud.demoSession('mymachine'); } catch (e) {}
     const signedIn = !!(session && session.org);           // signed in to an org, or the read-only demo org
+    // A real organization (not the demo org) sees its own mill data only: until it's loaded those pages are placeholders.
+    if (signedIn && !session.demo) MMCloud.client.rpc('mm_llm_public_org').then(({ data }) => {
+      if ((data || []).some(p => p.id === session.org.id)) return;
+      document.querySelectorAll('.lrow .tag').forEach(t => { if (t.textContent === 'Demo orgs') t.textContent = 'Not set up'; });
+    }, () => {});
 
     // ---- My Machine ----
     let machine = null, items = {};
@@ -195,6 +201,6 @@
     if (!signedIn || session.demo) chip(o.chips, session && session.demo ? `Demo · ${session.org.name}` : 'Demo');
   })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.2256"></script>
+<script src="mm-nav.js?v=2026-11-09.0050"></script>
 </body>
 </html>

@@ -11,8 +11,12 @@ export interface Model {
   results(r: { id: string; content: string }[]): void;  // tool results for the last step's calls
 }
 
-export function makeModel(): Model {
+// tier: 'default' (Sonnet unless MM_LLM_MODEL says otherwise, on ANTHROPIC_API_KEY) or 'opus', the larger model the
+// demo account can pick: MM_LLM_MODEL_OPUS (default claude-opus-5-5) on its own key, the secret MM-LLM-OP.
+const OPUS_KEY = 'MM-LLM-OP';
+export function makeModel(tier: 'default' | 'opus' = 'default'): Model {
   const provider = (Deno.env.get('MM_LLM_PROVIDER') ?? 'anthropic').toLowerCase();
+  if (tier === 'opus') return new Anthropic(Deno.env.get('MM_LLM_MODEL_OPUS') ?? 'claude-opus-5-5', OPUS_KEY);
   if (provider === 'anthropic') return new Anthropic(Deno.env.get('MM_LLM_MODEL') ?? 'claude-sonnet-5-5');
   if (provider === 'openai') return new OpenAI(Deno.env.get('MM_LLM_MODEL') ?? '');
   throw new ModelError(`Unknown MM_LLM_PROVIDER "${provider}" (use anthropic or openai).`);
@@ -31,13 +35,14 @@ let TOOLS: Tool[] = [];
 export function setTools(t: Tool[]) { TOOLS = t; }
 
 class Anthropic implements Model {
-  provider = 'anthropic'; key = secret('ANTHROPIC_API_KEY');
+  provider = 'anthropic'; key: string;
   system = ''; messages: any[] = [];
-  constructor(public model: string) {
-    const raw = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
-    if (!raw) throw new ModelError('ANTHROPIC_API_KEY is not set (Supabase → Edge Functions → Secrets).');
-    if (!this.key) throw new ModelError(`ANTHROPIC_API_KEY is saved but unusable: ${raw.length} characters, none of them key characters (first is U+${raw.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}). Paste the key again.`);
-    if (!this.key.startsWith('sk-ant-')) throw new ModelError(`ANTHROPIC_API_KEY doesn't look like an Anthropic key (should start sk-ant-; saved value is ${this.key.length} characters).`); }
+  constructor(public model: string, keyName = 'ANTHROPIC_API_KEY') {
+    this.key = secret(keyName);
+    const raw = Deno.env.get(keyName) ?? '';
+    if (!raw) throw new ModelError(`${keyName} is not set (Supabase → Edge Functions → Secrets).`);
+    if (!this.key) throw new ModelError(`${keyName} is saved but unusable: ${raw.length} characters, none of them key characters (first is U+${raw.codePointAt(0)!.toString(16).toUpperCase().padStart(4, '0')}). Paste the key again.`);
+    if (!this.key.startsWith('sk-ant-')) throw new ModelError(`${keyName} doesn't look like an Anthropic key (should start sk-ant-; saved value is ${this.key.length} characters).`); }
   start(system: string, question: string) { this.system = system; this.messages = [{ role: 'user', content: question }]; }
   async next(final = false): Promise<Turn> {
     const r = await fetch('https://api.anthropic.com/v1/messages', {

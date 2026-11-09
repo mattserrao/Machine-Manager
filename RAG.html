@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RAG</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script src="mm-theme.js?v=2026-11-09.0050"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.0050">
+<link rel="stylesheet" href="mm-data.css?v=2026-11-09.0050">
+<script src="mm-icons.js?v=2026-11-09.0050"></script>
+<style>
+  /* RAG (placeholder): where documents will be uploaded for the assistant to search */
+  .rag{max-width:860px;margin:0 auto}
+  .rag-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 6px}
+  .rag-h h2{margin:0;font-size:18px;font-weight:600}
+  .rag-p{margin:0 0 18px;font-size:13px;color:var(--muted);line-height:1.55;max-width:700px}
+  .drop{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:34px 20px;border:1.5px dashed var(--line-strong);
+        border-radius:var(--r-lg);background:var(--surface);color:var(--muted);font-size:13px}
+  .drop .ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+  .drop b{color:var(--ink);font-size:14px;font-weight:600}
+  .drop .btn[disabled]{opacity:.55;cursor:not-allowed}
+  .types{font-size:12px;color:var(--muted)}
+  .docs{margin-top:18px}
+  .docs h3{margin:0 0 8px;font-size:14px;font-weight:600}
+  .how{margin-top:18px}
+  .how ol{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--ink-2);line-height:1.6}
+</style>
+</head>
+<body>
+<header class="mm-top">
+  <div class="bar brand">
+    <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
+    <div><h1>RAG</h1><p>Documents the assistant can search</p></div>
+  </div>
+  <div id="acct"></div>
+</header>
+<main class="data">
+  <div class="rag">
+    <div class="rag-h"><h2>Document library</h2><span class="mm-chip">Placeholder</span></div>
+    <p class="rag-p">Upload manuals, vendor reports, drawings, procedures and reference charts here. Each document will be split into passages and indexed, so MM LLM can find the right page and cite it when it answers. This page is a placeholder: uploading isn’t switched on yet.</p>
+
+    <div class="drop" aria-disabled="true">
+      <span class="ic" data-ic="upload"></span>
+      <b>Drop documents here</b>
+      <span>or</span>
+      <button class="btn" type="button" disabled title="Uploading isn’t switched on yet">Choose files</button>
+      <span class="types">PDF, Word, Excel, CSV, text and images · uploading is coming soon</span>
+    </div>
+
+    <section class="panel docs">
+      <h2>Documents</h2>
+      <p class="ps">What’s been uploaded, with its status (indexed, waiting, failed) and who added it.</p>
+      <p class="dt-empty">No documents yet.</p>
+    </section>
+
+    <section class="panel how">
+      <h2>How it will work</h2>
+      <ol>
+        <li>Upload a file. The original is kept in your organization’s storage.</li>
+        <li>Text is pulled out (scans are read with OCR) and tagged with machine positions and equipment.</li>
+        <li>The passages are indexed for search, so MM LLM can quote and link the source when it answers.</li>
+      </ol>
+    </section>
+  </div>
+  <div id="ver"></div>
+</main>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-09.0050"></script>
+<script src="mm-config.js?v=2026-11-09.0050"></script>
+<script src="mm-cloud.js?v=2026-11-09.0050"></script>
+<script>
+  const VERSION = 'v0.1.0';
+  document.getElementById('ver').textContent = 'RAG ' + VERSION;
+  if (window.MMCloud && MMCloud.enabled) MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
+</script>
+<script src="mm-nav.js?v=2026-11-09.0050"></script>
+</body>
+</html>
