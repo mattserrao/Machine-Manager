@@ -16,5 +16,7 @@ safe to run again.
 
 | `06-demo-sim-mill.sql` | Any time after step 05 (applied 2026-11-08) | Sim Mill becomes the only demo: `mm_demo_org` and `mm_demo_records` let signed-out visitors read the public demo org's My Machine, Outage Planning, Consumables and task-package records (read-only, no user ids). Access was switched with the admin functions: `mm_llm_set_public('Demo Mill', false)` (data kept), `mm_add_member('Sim Mill', 'demodemo@gmail.com', 'viewer')`, `mm_llm_grant_query('demodemo@gmail.com', 'Sim Mill', 40)` and `… 'Demo Mill', 0)`, and demodemo's Demo Mill membership removed. PM1 untouched. |
 
+| `08-grade-hours.sql` | Any time after step 05 (applied 2026-11-08) | `mm_llm_grade_hours`: hours run on each grade from the production feed, so the assistant can compare grades per 100 h run. Read-only, only adds; also in `../llm.sql`. |
+
 After step 3, delete the empty `wb-files` bucket under **Storage** in the dashboard
 (Supabase doesn't allow deleting buckets from SQL).

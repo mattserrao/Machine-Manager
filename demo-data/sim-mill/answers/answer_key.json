@@ -65,122 +65,6 @@
    ]
   },
   {
-   "id": "F2-Q2",
-   "story": "F2",
-   "output": "Equipment history",
-   "question": "Why wasn't the reel drum bearing changed at the Aug 19 outage?",
-   "expect": "The Keel route found it on Aug 12 and a WO was raised for Aug 19, but on Aug 18 the bearing (22238 CCK/W33) wasn't in stores. The job was deferred, the bearing ordered (ETA Nov 5) and the WO rescheduled for Nov 11. Vibration has kept rising since: 0.39 in/s on the Oct 14 route, about 0.42 on Oct 31. The expedite action is overdue (due Oct 15).",
-   "tools": [
-    "mm_llm_position_history",
-    "mm_llm_search_records",
-    "mm_llm_pi_daily"
-   ],
-   "checks": [
-    {
-     "desc": "the WO notes say the bearing wasn't in stores and it moved to Nov 11",
-     "sql": "exists (select 1 from llm.work_orders w where w.org_id = :org and w.description ilike '%reel drum DS bearing%' and w.notes ilike '%not in stores%' and w.outage = '2026-11-11')"
-    },
-    {
-     "desc": "position history of the reel drum DS bearing has Bonvoy, WO and BUS entries",
-     "sql": "(select count(distinct source) from public.mm_llm_position_history(:org, 'Reel drum DS bearing')) >= 3"
-    },
-    {
-     "desc": "Pi: about 0.42 in/s on Oct 31",
-     "sql": "(select avg from public.mm_llm_pi_daily(:org, 'PM1:REEL_DRUM_DS_VIB', '2026-10-31', '2026-10-31')) between 0.38 and 0.46"
-    }
-   ],
-   "show": [
-    {
-     "label": "Reel drum DS bearing: history",
-     "fn": "mm_llm_position_history",
-     "args": {
-      "p_term": "Reel drum DS bearing"
-     },
-     "cols": [
-      "source",
-      "day",
-      "ref",
-      "summary"
-     ],
-     "limit": 8
-    },
-    {
-     "label": "Pi daily: reel drum DS bearing vibration",
-     "fn": "mm_llm_pi_daily",
-     "args": {
-      "p_tag": "PM1:REEL_DRUM_DS_VIB",
-      "p_from": "2026-10-20",
-      "p_to": "2026-10-31"
-     },
-     "cols": [
-      "day",
-      "avg",
-      "max"
-     ],
-     "limit": 12
-    }
-   ]
-  },
-  {
-   "id": "F3-Q1",
-   "story": "F3",
-   "output": "Parts check",
-   "question": "Do we have refiner plates for Nov 11?",
-   "expect": "No: both refiners need plates (REF 1 is due; REF 2's Sep 30 set is wearing out fast, specific energy up about 1.4% a day since Oct 7, 85 kWh/t vs 66 on REF 1) and there is one Ridgeway set on hand. The previous REF 2 set came out at 85% bar wear. Ridgeway (field visit Oct 26) suspects sand carry-over from the LC cleaners and says order a second set now (10-day lead time). The action to order it was due Oct 28 and is overdue.",
-   "tools": [
-    "mm_llm_outage_scope",
-    "mm_llm_bonvoy",
-    "mm_llm_overdue_actions",
-    "mm_llm_search_docs"
-   ],
-   "checks": [
-    {
-     "desc": "Bonvoy flags REF 2 specific energy on 8+ days in October",
-     "sql": "(select count(*) from public.mm_llm_bonvoy(:org, 'PM1:REF_B_SE', '2026-10-01', '2026-10-31')) >= 8"
-    },
-    {
-     "desc": "the order-a-second-set action is overdue",
-     "sql": "exists (select 1 from public.mm_llm_overdue_actions(:org, '2026-10-31') where title ilike '%second set%refiner plates%')"
-    },
-    {
-     "desc": "Ridgeway's field visit is found for \"REF 2 plates wearing fast\"",
-     "sql": "exists (select 1 from public.mm_llm_search_docs(:org, 'REF 2 plates wearing fast', 3) where doc_id = 'RR-FV-261026')"
-    }
-   ],
-   "show": [
-    {
-     "label": "Bonvoy: REF 2 specific energy",
-     "fn": "mm_llm_bonvoy",
-     "args": {
-      "p_term": "PM1:REF_B_SE",
-      "p_from": "2026-10-01",
-      "p_to": "2026-10-31"
-     },
-     "cols": [
-      "period",
-      "max",
-      "high",
-      "grade"
-     ],
-     "limit": 8
-    },
-    {
-     "label": "Overdue actions",
-     "fn": "mm_llm_overdue_actions",
-     "args": {
-      "p_as_of": "2026-10-31"
-     },
-     "cols": [
-      "task_id",
-      "title",
-      "due",
-      "days_late"
-     ],
-     "limit": 8
-    }
-   ]
-  },
-  {
    "id": "F1-Q1",
    "story": "F1",
    "output": "Troubleshooting",
@@ -246,6 +130,336 @@
    ]
   },
   {
+   "id": "H1",
+   "story": "F1",
+   "output": "Trend overlay · chart",
+   "question": "Overlay Uhle vacuum on the 2nd press top felt for the April felt against the two felts before it, by days on the machine.",
+   "expect": "The Apr 15 felt tracks the Jan 21 and Mar 4 felts for about two weeks (all around 9.5–10 inHg), then pulls away from about day 14–17: roughly 11.9 inHg at day 25 against about 10.5 for the other two, and 14.4 inHg at day 33, the day before it came out on May 19. The earlier felts were still near 11 inHg at day 33 and ran their full 41 days, ending near 11.8. Chart: three lines on a shared Day 1… axis.",
+   "tools": [
+    "mm_llm_position_life",
+    "mm_llm_pi_daily",
+    "make_chart"
+   ],
+   "checks": [
+    {
+     "desc": "the Jan 21, Mar 4 and Apr 15 felt runs are on file",
+     "sql": "(select count(*) from public.mm_llm_position_life(:org, 'p2-felt-top') where installed in ('2026-01-21', '2026-03-04', '2026-04-15')) = 3"
+    },
+    {
+     "desc": "at day 33 the April felt reads 2+ inHg above the March felt",
+     "sql": "(select avg from public.mm_llm_pi_daily(:org, 'PM1:UHLE_P2T_VAC', '2026-05-18', '2026-05-18')) > (select avg from public.mm_llm_pi_daily(:org, 'PM1:UHLE_P2T_VAC', '2026-04-06', '2026-04-06')) + 2"
+    }
+   ],
+   "answer": {
+    "chart": 1,
+    "series_min": 3
+   },
+   "show": [
+    {
+     "label": "2nd press top felt: runs",
+     "fn": "mm_llm_position_life",
+     "args": {
+      "p_position": "p2-felt-top"
+     },
+     "cols": [
+      "installed",
+      "removed",
+      "days",
+      "target_days",
+      "reason"
+     ],
+     "limit": 8
+    },
+    {
+     "label": "Pi: Uhle vacuum, April felt",
+     "fn": "mm_llm_pi_daily",
+     "args": {
+      "p_tag": "PM1:UHLE_P2T_VAC",
+      "p_from": "2026-04-15",
+      "p_to": "2026-05-19"
+     },
+     "cols": [
+      "day",
+      "avg",
+      "min",
+      "max"
+     ],
+     "limit": 10
+    }
+   ]
+  },
+  {
+   "id": "H5",
+   "story": "F1",
+   "output": "Before / after · chart",
+   "question": "Did the May 19 felt change fix the press? Chart the week before against the week after.",
+   "expect": "Yes. Week before (May 12–18) against week after (May 20–26): Uhle vacuum about 13.6 → 9.5 inHg, press exit solids 42.5 → 44.0%, 4th section steam 126 → 117 psig (off its limit), speed about 2,170 → 2,310 fpm, sheet breaks 22 → 5, and about 686 → 729 t a day. The press was back to its early-April numbers within the week. Chart: before and after for each measure.",
+   "tools": [
+    "mm_llm_pi_daily",
+    "mm_llm_production",
+    "make_chart"
+   ],
+   "checks": [
+    {
+     "desc": "Uhle vacuum fell 3+ inHg after the change",
+     "sql": "(select avg(avg) from public.mm_llm_pi_daily(:org, 'PM1:UHLE_P2T_VAC', '2026-05-12', '2026-05-18')) - (select avg(avg) from public.mm_llm_pi_daily(:org, 'PM1:UHLE_P2T_VAC', '2026-05-20', '2026-05-26')) > 3"
+    },
+    {
+     "desc": "press solids rose and breaks fell",
+     "sql": "(select avg(avg) from public.mm_llm_pi_daily(:org, 'PM1:PRESS_SOLIDS', '2026-05-20', '2026-05-26')) > (select avg(avg) from public.mm_llm_pi_daily(:org, 'PM1:PRESS_SOLIDS', '2026-05-12', '2026-05-18')) and (select sum(breaks) from public.mm_llm_production(:org, '2026-05-20', '2026-05-26', 'day')) < (select sum(breaks) from public.mm_llm_production(:org, '2026-05-12', '2026-05-18', 'day'))"
+    }
+   ],
+   "answer": {
+    "chart": 1
+   },
+   "show": [
+    {
+     "label": "Pi: Uhle vacuum around the change",
+     "fn": "mm_llm_pi_daily",
+     "args": {
+      "p_tag": "PM1:UHLE_P2T_VAC",
+      "p_from": "2026-05-12",
+      "p_to": "2026-05-26"
+     },
+     "cols": [
+      "day",
+      "avg",
+      "min",
+      "max"
+     ],
+     "limit": 10
+    },
+    {
+     "label": "Production around the change",
+     "fn": "mm_llm_production",
+     "args": {
+      "p_from": "2026-05-12",
+      "p_to": "2026-05-26",
+      "p_by": "day"
+     },
+     "cols": [
+      "period",
+      "tons",
+      "breaks",
+      "uptime_pct"
+     ],
+     "limit": 15
+    }
+   ]
+  },
+  {
+   "id": "H2",
+   "story": "F3",
+   "output": "Trend projection · chart",
+   "question": "Chart REF 1 against REF 2 specific energy since the Sep 30 outage. At this rate, where will REF 2 be on Nov 11?",
+   "expect": "REF 1 holds steady at about 61–63 kWh/t. REF 2 ran with it until about Oct 8, then climbed about 1.4% a day to about 81 kWh/t on Oct 31 (daily average). Carried on, that is roughly 92–95 kWh/t by Nov 11: an extrapolation, not a forecast. Both plate sets are due on Nov 11 and there is one Ridgeway set on hand, so the second set needs ordering now (that action is overdue). Chart: two lines from Oct 1, the projection dashed, the outage marked.",
+   "tools": [
+    "mm_llm_pi_daily",
+    "make_chart",
+    "mm_llm_outage_scope"
+   ],
+   "checks": [
+    {
+     "desc": "REF 2 reads 15+ kWh/t above REF 1 on Oct 31",
+     "sql": "(select avg from public.mm_llm_pi_daily(:org, 'PM1:REF_B_SE', '2026-10-31', '2026-10-31')) > (select avg from public.mm_llm_pi_daily(:org, 'PM1:REF_A_SE', '2026-10-31', '2026-10-31')) + 15"
+    },
+    {
+     "desc": "REF 2 rose 30%+ between Oct 8 and Oct 31 (about 1.4% a day)",
+     "sql": "(select avg from public.mm_llm_pi_daily(:org, 'PM1:REF_B_SE', '2026-10-31', '2026-10-31')) > 1.3 * (select avg from public.mm_llm_pi_daily(:org, 'PM1:REF_B_SE', '2026-10-08', '2026-10-08'))"
+    },
+    {
+     "desc": "both plate changes are in the Nov 11 scope",
+     "sql": "(select count(*) from public.mm_llm_outage_scope(:org, 'OUT-2026-11-11') where description in ('Change REF 1 refiner plates', 'Change REF 2 refiner plates')) = 2"
+    }
+   ],
+   "answer": {
+    "chart": 1,
+    "series_min": 2,
+    "re": [
+     "extrapolat|projection|project"
+    ]
+   },
+   "show": [
+    {
+     "label": "Pi: REF 2 specific energy",
+     "fn": "mm_llm_pi_daily",
+     "args": {
+      "p_tag": "PM1:REF_B_SE",
+      "p_from": "2026-10-01",
+      "p_to": "2026-10-31"
+     },
+     "cols": [
+      "day",
+      "avg",
+      "min",
+      "max"
+     ],
+     "limit": 10
+    },
+    {
+     "label": "Pi: REF 1 specific energy",
+     "fn": "mm_llm_pi_daily",
+     "args": {
+      "p_tag": "PM1:REF_A_SE",
+      "p_from": "2026-10-01",
+      "p_to": "2026-10-31"
+     },
+     "cols": [
+      "day",
+      "avg",
+      "min",
+      "max"
+     ],
+     "limit": 10
+    }
+   ]
+  },
+  {
+   "id": "O1",
+   "story": "F2",
+   "output": "Outage readiness · chart",
+   "question": "Chart the Nov 11 outage scope by parts status and list what isn't ready.",
+   "expect": "22 work orders: 17 with parts reserved, 4 not reserved and 1 on order. Not ready: change REF 1 and REF 2 refiner plates (one set on hand for two changes), rebuild the couch roll seal strips, replace the 2nd section PV fan belts and sheaves (all four at status 30, parts not reserved), and the reel drum DS bearing change (status 45, bearing on order, ETA Nov 5). Chart: WO count by parts status.",
+   "tools": [
+    "mm_llm_outage_scope",
+    "make_chart"
+   ],
+   "checks": [
+    {
+     "desc": "22 WOs in the Nov 11 scope",
+     "sql": "(select count(*) from public.mm_llm_outage_scope(:org, 'OUT-2026-11-11')) = 22"
+    },
+    {
+     "desc": "4 not reserved and 1 on order",
+     "sql": "(select count(*) from public.mm_llm_outage_scope(:org, 'OUT-2026-11-11') where parts_status = 'Not reserved') = 4 and (select count(*) from public.mm_llm_outage_scope(:org, 'OUT-2026-11-11') where parts_status = 'On order') = 1"
+    }
+   ],
+   "answer": {
+    "chart": 1
+   },
+   "show": [
+    {
+     "label": "Nov 11 outage scope",
+     "fn": "mm_llm_outage_scope",
+     "args": {
+      "p_outage": "OUT-2026-11-11"
+     },
+     "cols": [
+      "wo_no",
+      "description",
+      "status_text",
+      "parts_status"
+     ],
+     "limit": 22
+    }
+   ]
+  },
+  {
+   "id": "O2",
+   "story": "F3",
+   "output": "Draft · BUS line",
+   "question": "Write tomorrow's BUS line for REF 2 and say who should own it.",
+   "expect": "Area: Refiners · Position: REF 2 · Issue: specific energy climbing about 1.4%/day on the Sep 30 plates, about 81 kWh/t against 62 on REF 1; Ridgeway suspects sand carry-over · Action: order the second 34\" LC plate set today so both refiners can be changed on Nov 11 (one set on hand) · Owner: Quentin Adeyemi, who has the overdue plate order action (due Oct 28); Tobias Renner owns the current BUS item. WOs: the two Nov 11 plate changes, parts not reserved.",
+   "tools": [
+    "mm_llm_search_records",
+    "mm_llm_overdue_actions",
+    "mm_llm_pi_daily",
+    "mm_llm_outage_scope"
+   ],
+   "checks": [
+    {
+     "desc": "the order-a-second-set action is overdue and owned by Quentin Adeyemi",
+     "sql": "exists (select 1 from public.mm_llm_overdue_actions(:org, '2026-10-31') where title ilike '%second set%refiner plates%' and assigned_to = 'Quentin Adeyemi')"
+    },
+    {
+     "desc": "the REF 2 plate change is in the Nov 11 scope, parts not reserved",
+     "sql": "exists (select 1 from public.mm_llm_outage_scope(:org, 'OUT-2026-11-11') where description = 'Change REF 2 refiner plates' and parts_status = 'Not reserved')"
+    }
+   ],
+   "answer": {
+    "re": [
+     "Quentin Adeyemi|Tobias Renner"
+    ]
+   },
+   "show": [
+    {
+     "label": "Overdue actions",
+     "fn": "mm_llm_overdue_actions",
+     "args": {
+      "p_as_of": "2026-10-31"
+     },
+     "cols": [
+      "title",
+      "assigned_to",
+      "due",
+      "days_late"
+     ],
+     "limit": 8
+    }
+   ]
+  },
+  {
+   "id": "H3",
+   "story": "F5",
+   "output": "Event comparison · chart",
+   "question": "Did the 3rd section syphon differential warn us before each rotary joint leak? Show the 10 days before each one.",
+   "expect": "Clearly for two of the three, by a few days; October is muddied by the Sep 30 outage. The differential normally sits around 4.1–4.3 psi and dropped to about 3.1–3.3 psi before each seal failure: from about Dec 31 before the Jan 6 leak, from about Jun 20 before Jun 23, and from about Oct 1 before Oct 2, after a smaller dip around Sep 21–25 (Sep 30 reads low because of the outage, not the joint). Bonvoy flagged it 2, 3 and 1 days ahead. That is enough warning to plan the seal change, and with three failures and no RCFA the joint should be replaced on Nov 11. Chart: three lines aligned on days before each leak.",
+   "tools": [
+    "mm_llm_repeat_stops",
+    "mm_llm_pi_daily",
+    "mm_llm_bonvoy",
+    "make_chart"
+   ],
+   "checks": [
+    {
+     "desc": "three unplanned stops on the 3rd section DS rotary joint",
+     "sql": "exists (select 1 from public.mm_llm_repeat_stops(:org, '2025-11-01', '2026-10-31') where equipment = '3rd section rotary joint (DS)' and events = 3)"
+    },
+    {
+     "desc": "Bonvoy flagged the differential in the days before the Jan 6 and Jun 23 leaks",
+     "sql": "(select count(*) from public.mm_llm_bonvoy(:org, 'PM1:DRY3_DP', '2026-01-01', '2026-01-06')) >= 1 and (select count(*) from public.mm_llm_bonvoy(:org, 'PM1:DRY3_DP', '2026-06-18', '2026-06-23')) >= 1"
+    }
+   ],
+   "answer": {
+    "chart": 1,
+    "series_min": 3
+   },
+   "show": [
+    {
+     "label": "Bonvoy: 3rd section syphon differential",
+     "fn": "mm_llm_bonvoy",
+     "args": {
+      "p_term": "PM1:DRY3_DP",
+      "p_from": "2025-11-01",
+      "p_to": "2026-10-31"
+     },
+     "cols": [
+      "period",
+      "max",
+      "low",
+      "direction"
+     ],
+     "limit": 12
+    },
+    {
+     "label": "Pi: 3rd section differential before Jun 23",
+     "fn": "mm_llm_pi_daily",
+     "args": {
+      "p_tag": "PM1:DRY3_DP",
+      "p_from": "2026-06-13",
+      "p_to": "2026-06-23"
+     },
+     "cols": [
+      "day",
+      "avg",
+      "min",
+      "max"
+     ],
+     "limit": 10
+    }
+   ]
+  },
+  {
    "id": "F5-Q1",
    "story": "F5",
    "output": "Reliability review",
@@ -305,136 +519,205 @@
    ]
   },
   {
-   "id": "F4-Q1",
-   "story": "F4",
-   "output": "Morning watch",
-   "question": "What's still open from the forming fabric hole in February?",
-   "expect": "RCFA-SM-26-002 (Feb 9, 9.5 h down: a wad off the headbox approach piping holed the fabric). Cleaning the approach piping was done at the Mar 4 outage, but installing a wad detector camera at the breast roll was due Apr 30 and is still open, six months late.",
+   "id": "H4",
+   "story": "F2",
+   "output": "Two-tag trend · chart",
+   "question": "Is the reel drum bearing temperature following the vibration? Plot both since mid-July.",
+   "expect": "Yes. Both were flat until late July and have climbed together since: vibration from about 0.06 to about 0.43 in/s on Oct 31 (past Danger at 0.40) and DS bearing temperature from about 134 to about 168 °F. Neither has levelled off, which fits the outer race defect the Keel route found on Aug 12 getting worse. The change is in the Nov 11 scope with the bearing on order. Chart: vibration on the left axis, temperature on the right, the 0.40 Danger line marked.",
    "tools": [
-    "mm_llm_rcfa_status",
-    "mm_llm_overdue_actions"
+    "mm_llm_pi_daily",
+    "make_chart"
    ],
    "checks": [
     {
-     "desc": "the wad-detector action is overdue",
-     "sql": "exists (select 1 from public.mm_llm_overdue_actions(:org, '2026-10-31') where title ilike '%wad detector%' and due = '2026-04-30')"
+     "desc": "vibration above 0.40 in/s on Oct 31",
+     "sql": "(select avg from public.mm_llm_pi_daily(:org, 'PM1:REEL_DRUM_DS_VIB', '2026-10-31', '2026-10-31')) >= 0.40"
     },
     {
-     "desc": "the RCFA is open with one overdue action",
-     "sql": "exists (select 1 from public.mm_llm_rcfa_status(:org, '2026-10-31') where title ilike 'Forming fabric hole%' and overdue = 1 and status ilike 'Open%')"
+     "desc": "bearing temperature up 20+ °F since mid-July",
+     "sql": "(select avg from public.mm_llm_pi_daily(:org, 'PM1:REEL_DRUM_DS_TEMP', '2026-10-31', '2026-10-31')) - (select avg from public.mm_llm_pi_daily(:org, 'PM1:REEL_DRUM_DS_TEMP', '2026-07-15', '2026-07-15')) >= 20"
     }
    ],
+   "answer": {
+    "chart": 1,
+    "right_axis": true
+   },
    "show": [
     {
-     "label": "RCFA status",
-     "fn": "mm_llm_rcfa_status",
+     "label": "Pi: reel drum DS vibration",
+     "fn": "mm_llm_pi_daily",
      "args": {
-      "p_as_of": "2026-10-31"
+      "p_tag": "PM1:REEL_DRUM_DS_VIB",
+      "p_from": "2026-10-22",
+      "p_to": "2026-10-31"
      },
      "cols": [
-      "rcfa_id",
-      "event_date",
-      "title",
-      "downtime_h",
-      "actions",
-      "overdue"
+      "day",
+      "avg",
+      "min",
+      "max"
      ],
-     "limit": 8
+     "limit": 10
+    },
+    {
+     "label": "Pi: reel drum DS temperature",
+     "fn": "mm_llm_pi_daily",
+     "args": {
+      "p_tag": "PM1:REEL_DRUM_DS_TEMP",
+      "p_from": "2026-10-22",
+      "p_to": "2026-10-31"
+     },
+     "cols": [
+      "day",
+      "avg",
+      "min",
+      "max"
+     ],
+     "limit": 10
     }
    ]
   },
   {
-   "id": "DT-Q1",
-   "story": "",
-   "output": "Downtime summary",
-   "question": "Where did we lose the most time to unplanned stops this year?",
-   "expect": "The press section: 6 stops and about 23 h. The 7.5 h unplanned change of the filled 2nd press top felt (May 19), the 2nd press drive's motor (Feb 15) and bearing (Mar 18) failures, and three press felt blows. Close behind is forming: 4 stops and about 20 h (the Feb 9 fabric hole, 9.5 h; headbox slime, 5.3 h; the couch roll bearing in November; the headbox side door). Then stock prep (about 12 h: two MCC-1 rectifier faults and a pulper drive trip). In all, 22 unplanned stops and about 85 h, against 8 planned outages of 20 h.",
+   "id": "P1",
+   "story": "F2",
+   "output": "Premise check",
+   "question": "If the reel drum bearing keeps rising, will it hit Danger before Nov 11?",
+   "expect": "It already has. Daily average vibration crossed the 0.40 in/s Danger level around Oct 22 and was about 0.43 on Oct 31, still rising. The change (outer race defect found on the Aug 12 Keel route) is in the Nov 11 scope, waiting on the 22238 CCK/W33 bearing (ETA Nov 5; the expedite action is overdue). Until then: closer checks on the bearing and a plan for an unplanned change if it gets worse.",
    "tools": [
-    "mm_llm_downtime_summary"
+    "mm_llm_pi_daily",
+    "mm_llm_bonvoy_report",
+    "mm_llm_outage_scope"
    ],
    "checks": [
     {
-     "desc": "the press section leads unplanned downtime",
-     "sql": "(select grp from public.mm_llm_downtime_summary(:org, '2025-11-01', '2026-10-31', 'area') where kind = 'unplanned' order by minutes desc limit 1) = 'Press section'"
+     "desc": "vibration is already above 0.40 in/s on Oct 31",
+     "sql": "(select avg from public.mm_llm_pi_daily(:org, 'PM1:REEL_DRUM_DS_VIB', '2026-10-31', '2026-10-31')) >= 0.40"
     },
     {
-     "desc": "22 unplanned stops in the year",
-     "sql": "(select sum(events) from public.mm_llm_downtime_summary(:org, '2025-11-01', '2026-10-31', 'kind') where kind = 'unplanned') between 15 and 25"
-    },
-    {
-     "desc": "8 planned outages of 20 h",
-     "sql": "(select count(*) from public.mm_llm_downtime(:org, '2025-11-01', '2026-10-31', 'planned') where cause = 'Planned outage' and minutes = 1200) = 8"
+     "desc": "the bearing WO is in the Nov 11 scope, on order",
+     "sql": "exists (select 1 from public.mm_llm_outage_scope(:org, 'OUT-2026-11-11') where description ilike '%reel drum DS bearing%' and parts_status = 'On order')"
     }
    ],
+   "answer": {
+    "re": [
+     "already"
+    ]
+   },
    "show": [
     {
-     "label": "Unplanned downtime by area",
+     "label": "Pi: reel drum DS vibration",
+     "fn": "mm_llm_pi_daily",
+     "args": {
+      "p_tag": "PM1:REEL_DRUM_DS_VIB",
+      "p_from": "2026-10-18",
+      "p_to": "2026-10-31"
+     },
+     "cols": [
+      "day",
+      "avg",
+      "min",
+      "max"
+     ],
+     "limit": 10
+    }
+   ]
+  },
+  {
+   "id": "S1",
+   "story": "DT",
+   "output": "Fair comparison · chart",
+   "question": "Do we break more on 24# than on 34 Super? Chart it.",
+   "expect": "Yes, but by less than the raw counts suggest. 24# has 402 of the 578 breaks (70%), but it also ran 64% of the hours (about 5,600 h). Per 100 h run: 24# 7.2, 28# 6.7 (only 238 h, so a small sample), 31# 6.1 and 34 Super 5.2. So 24# breaks about 40% more often per hour than 34 Super. Chart: breaks per 100 h by grade.",
+   "tools": [
+    "mm_llm_downtime_summary",
+    "mm_llm_grade_hours",
+    "make_chart"
+   ],
+   "checks": [
+    {
+     "desc": "24# has 65%+ of the breaks but under 70% of the hours",
+     "sql": "(select share_pct from public.mm_llm_downtime_summary(:org, '2025-11-01', '2026-10-31', 'grade') where kind = 'break' and grp = '24#') >= 65 and (select share_pct from public.mm_llm_grade_hours(:org, '2025-11-01', '2026-10-31') where grade = '24#') < 70"
+    },
+    {
+     "desc": "24# breaks more per 100 h than 34 Super",
+     "sql": "(select b.events / h.hours from public.mm_llm_downtime_summary(:org, '2025-11-01', '2026-10-31', 'grade') b join public.mm_llm_grade_hours(:org, '2025-11-01', '2026-10-31') h on h.grade = b.grp where b.kind = 'break' and b.grp = '24#') > (select b.events / h.hours from public.mm_llm_downtime_summary(:org, '2025-11-01', '2026-10-31', 'grade') b join public.mm_llm_grade_hours(:org, '2025-11-01', '2026-10-31') h on h.grade = b.grp where b.kind = 'break' and b.grp = '34 Super')"
+    }
+   ],
+   "answer": {
+    "chart": 1,
+    "re": [
+     "100 ?h|per hour|per 100"
+    ]
+   },
+   "show": [
+    {
+     "label": "Breaks by grade",
      "fn": "mm_llm_downtime_summary",
      "args": {
       "p_from": "2025-11-01",
       "p_to": "2026-10-31",
-      "p_group": "area"
+      "p_group": "grade"
      },
      "cols": [
       "grp",
       "kind",
       "events",
       "hours",
-      "share_pct",
-      "mtbf_h"
+      "share_pct"
      ],
-     "limit": 7
+     "filter": {
+      "col": "kind",
+      "contains": "^break$"
+     },
+     "limit": 6
     },
     {
-     "label": "By equipment",
-     "fn": "mm_llm_downtime_summary",
+     "label": "Hours run by grade",
+     "fn": "mm_llm_grade_hours",
      "args": {
       "p_from": "2025-11-01",
-      "p_to": "2026-10-31",
-      "p_group": "equipment"
+      "p_to": "2026-10-31"
      },
      "cols": [
-      "grp",
-      "kind",
-      "events",
-      "hours"
+      "grade",
+      "hours",
+      "days",
+      "share_pct"
      ],
      "limit": 6
     }
    ]
   },
   {
-   "id": "DT-Q2",
-   "story": "",
-   "output": "Downtime summary",
-   "question": "How many sheet breaks did we have this year, and where?",
-   "expect": "About 580 breaks (1.6 a day), roughly 445 h of sheet-off time. Press breaks are the most common and cost the most (about 215, 260 h, over an hour each); the reel has about 155 short ones (around 18 min) and each dryer section about 50. May was the worst month (73 breaks), and breaks ran higher while the 2nd press top felt was filling in May.",
+   "id": "S2",
+   "story": "DT",
+   "output": "Fair comparison · chart",
+   "question": "Is one crew breaking more than the others? Show it on a chart.",
+   "expect": "B has the most breaks (164) and A the fewest (122), with C 147 and D 145. On DuPont 12 the four crews work the same hours, so the counts compare directly. B against A alone is a real-looking gap (about 2.5 standard deviations), but across all four crews the spread is close to what chance gives (chi-square p about 0.1). Worth watching, not proof of a crew problem; grade mix on each crew's shifts is the next thing to check. Chart: breaks by crew.",
    "tools": [
     "mm_llm_downtime_summary",
-    "mm_llm_production"
+    "make_chart"
    ],
    "checks": [
     {
-     "desc": "500-600 breaks in the year",
-     "sql": "(select sum(events) from public.mm_llm_downtime_summary(:org, '2025-11-01', '2026-10-31', 'kind') where kind = 'break') between 450 and 650"
-    },
-    {
-     "desc": "press-section breaks cost the most time",
-     "sql": "(select grp from public.mm_llm_downtime_summary(:org, '2025-11-01', '2026-10-31', 'area') where kind = 'break' order by minutes desc limit 1) = 'Press section'"
-    },
-    {
-     "desc": "May has the most breaks",
-     "sql": "(select period from public.mm_llm_production(:org, '2025-11-01', '2026-10-31', 'month') order by breaks desc limit 1) = '2026-05'"
+     "desc": "B has the most breaks and A the fewest",
+     "sql": "(select grp from public.mm_llm_downtime_summary(:org, '2025-11-01', '2026-10-31', 'crew') where kind = 'break' order by events desc limit 1) = 'B' and (select grp from public.mm_llm_downtime_summary(:org, '2025-11-01', '2026-10-31', 'crew') where kind = 'break' order by events limit 1) = 'A'"
     }
    ],
+   "answer": {
+    "chart": 1,
+    "re": [
+     "chance|random|significan|variation|not proof|noise"
+    ]
+   },
    "show": [
     {
-     "label": "Breaks by area",
+     "label": "Breaks by crew",
      "fn": "mm_llm_downtime_summary",
      "args": {
       "p_from": "2025-11-01",
       "p_to": "2026-10-31",
-      "p_group": "area"
+      "p_group": "crew"
      },
      "cols": [
       "grp",
@@ -443,45 +726,38 @@
       "hours",
       "mttr_h"
      ],
-     "limit": 14
-    },
-    {
-     "label": "Production by month",
-     "fn": "mm_llm_production",
-     "args": {
-      "p_from": "2025-11-01",
-      "p_to": "2026-10-31",
-      "p_by": "month"
+     "filter": {
+      "col": "kind",
+      "contains": "^break$"
      },
-     "cols": [
-      "period",
-      "tons",
-      "uptime_pct",
-      "breaks"
-     ],
-     "limit": 12
+     "limit": 4
     }
    ]
   },
   {
-   "id": "PR-Q1",
-   "story": "",
-   "output": "Production",
-   "question": "What did we make this year, and how was uptime?",
-   "expect": "About 251,000 t (roughly 690 t a day) at 97% uptime. The 8 outages took 160 h; unplanned stops about 85 h. Refining energy per ton was highest in October (67.8 kWh/t against ~65 the rest of the year) with REF 2's plates wearing out.",
+   "id": "S3",
+   "story": "F1",
+   "output": "Monthly charts",
+   "question": "Make a monthly chart of tons and break hours. Which month hurt most, and why?",
+   "expect": "Tons run about 20,500–21,700 a month (fewer in February, a short month). May was the worst month for breaks: 73 breaks and about 52 h of sheet-off time, with tons down to about 670 a day. That was the 2nd press top felt filling: Uhle vacuum up, the 4th section steam at its limit on 34 Super holding speed back, until the unplanned felt change on May 19. March had the lowest uptime (94.7%) from unplanned stops. Charts: tons by month and break hours by month (or one chart with two axes).",
    "tools": [
-    "mm_llm_production"
+    "mm_llm_production",
+    "make_chart",
+    "mm_llm_bonvoy"
    ],
    "checks": [
     {
-     "desc": "245-258 kt in the year",
-     "sql": "(select sum(tons) from public.mm_llm_production(:org, '2025-11-01', '2026-10-31', 'month')) between 240000 and 262000"
+     "desc": "May has the most breaks",
+     "sql": "(select period from public.mm_llm_production(:org, '2025-11-01', '2026-10-31', 'month') order by breaks desc limit 1) = '2026-05'"
     },
     {
-     "desc": "October refining energy is the year's highest",
-     "sql": "(select period from public.mm_llm_production(:org, '2025-11-01', '2026-10-31', 'month') order by kwh_per_t desc limit 1) = '2026-10'"
+     "desc": "the 2nd press top felt came out early in May",
+     "sql": "exists (select 1 from public.mm_llm_position_life(:org, 'p2-felt-top') where removed = '2026-05-19' and early)"
     }
    ],
+   "answer": {
+    "chart": 1
+   },
    "show": [
     {
      "label": "Production by month",
@@ -494,49 +770,50 @@
      "cols": [
       "period",
       "tons",
-      "tons_per_day",
       "uptime_pct",
-      "kwh_per_t"
+      "breaks",
+      "break_min"
      ],
      "limit": 12
     }
    ]
   },
   {
-   "id": "PL-Q1",
-   "story": "",
-   "output": "Clothing review",
-   "question": "Which clothing came out early this year, and what's due next?",
-   "expect": "Two early removals: the forming fabric on Feb 9 (damaged by a wad, 60 days of 84) and the 2nd press top felt on May 19 (filled, 34 days of 42). Everything else ran to the outage plan. Due Nov 11: the 2nd press top felt and 1st press bottom felt and both refiner plate sets. The next felt roll (3rd section roll 5) comes out on Dec 23, with the forming fabric and three press felts.",
+   "id": "P2",
+   "story": "—",
+   "output": "Premise check",
+   "question": "When was the calender bottom roll last ground?",
+   "expect": "Sim Mill's PM1 has no calender: the sheet goes from the 4th dryer section straight to the reel. There's no calender roll in My Machine, the work orders or the vendor reports. The rolls with grind history are the press rolls, the couch roll and the reel and winder drums, if one of those was meant.",
    "tools": [
-    "mm_llm_position_life",
-    "mm_llm_outage_scope"
+    "mm_llm_position_history",
+    "mm_llm_search_records",
+    "mm_llm_search_documents"
    ],
    "checks": [
     {
-     "desc": "two early removals in the year",
-     "sql": "(select count(*) from public.mm_llm_position_life(:org) where early and removed between '2025-11-01' and '2026-10-31') = 2"
-    },
-    {
-     "desc": "both press felt changes are in the Nov 11 scope",
-     "sql": "(select count(*) from public.mm_llm_outage_scope(:org, 'OUT-2026-11-11') where description ~ '^Change (2nd press top felt|1st press bottom felt)$') = 2"
+     "desc": "nothing on file for a calender",
+     "sql": "(select count(*) from public.mm_llm_position_history(:org, 'calender', null, null)) = 0 and (select count(*) from public.mm_llm_search_records(:org, 'calender', 10)) = 0"
     }
    ],
+   "answer": {
+    "re": [
+     "no calender|doesn.t have a calender|does not have a calender|isn.t a calender|no calender roll"
+    ]
+   },
    "show": [
     {
-     "label": "Early removals and current runs",
-     "fn": "mm_llm_position_life",
-     "args": {},
+     "label": "Position history: calender",
+     "fn": "mm_llm_position_history",
+     "args": {
+      "p_term": "calender"
+     },
      "cols": [
-      "position_name",
-      "installed",
-      "removed",
-      "days",
-      "target_days",
-      "pct_of_target",
-      "early"
+      "source",
+      "day",
+      "title"
      ],
-     "limit": 12
+     "limit": 5,
+     "empty": "Nothing: Sim Mill has no calender."
     }
    ]
   },

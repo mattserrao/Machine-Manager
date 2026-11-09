@@ -640,6 +640,21 @@ language sql stable security invoker set search_path = '' as $$
   group by 1 order by 1;
 $$;
 
+-- Hours run on each grade (step 08), for fair comparisons between grades.
+create or replace function public.mm_llm_grade_hours(p_org uuid, p_from date, p_to date)
+returns table (grade text, hours numeric, days int, share_pct numeric)
+language sql stable security invoker set search_path = '' as $$
+  with parts as (
+    select p.day, trim(x) as part
+    from llm.production_daily p, unnest(string_to_array(coalesce(p.grade_hours, ''), ';')) as x
+    where p.org_id = p_org and p.day between p_from and p_to and trim(x) <> ''
+  ), g as (
+    select regexp_replace(part, '\s+[0-9.]+$', '') as grade, substring(part from '([0-9.]+)$')::numeric as h, day from parts
+  )
+  select g.grade, round(sum(g.h), 1), count(distinct g.day)::int, round(100 * sum(g.h) / nullif(sum(sum(g.h)) over (), 0), 1)
+  from g group by g.grade order by sum(g.h) desc;
+$$;
+
 -- Documents of an org (newest first), optionally one kind ('vendor_report', 'rcfa', 'drawing', 'reference'), for the Vendor Reports page.
 create or replace function public.mm_llm_documents(p_org uuid, p_kind text default null)
 returns table (doc_id text, kind text, vendor text, doc_date date, title text, file_path text, mime text, positions text[], assets text[], pages int)
@@ -661,7 +676,7 @@ do $$ declare f text; begin
   foreach f in array array['mm_llm_summary(uuid)', 'mm_llm_search_docs(uuid, text, int, text[])', 'mm_llm_search_records(uuid, text, int)', 'mm_llm_position_history(uuid, text, date, date)',
                            'mm_llm_outage_scope(uuid, text)', 'mm_llm_overdue_actions(uuid, date)',
                            'mm_llm_bonvoy(uuid, text, date, date)', 'mm_llm_pi_daily(uuid, text, date, date)',
-                           'mm_llm_downtime(uuid, date, date, text)', 'mm_llm_downtime_summary(uuid, date, date, text)', 'mm_llm_repeat_stops(uuid, date, date, int)', 'mm_llm_rcfa_status(uuid, date)', 'mm_llm_position_life(uuid, text, date)', 'mm_llm_production(uuid, date, date, text)', 'mm_llm_documents(uuid, text)', 'mm_llm_bus_day(uuid, date)',
+                           'mm_llm_downtime(uuid, date, date, text)', 'mm_llm_downtime_summary(uuid, date, date, text)', 'mm_llm_repeat_stops(uuid, date, date, int)', 'mm_llm_rcfa_status(uuid, date)', 'mm_llm_position_life(uuid, text, date)', 'mm_llm_production(uuid, date, date, text)', 'mm_llm_grade_hours(uuid, date, date)', 'mm_llm_documents(uuid, text)', 'mm_llm_bus_day(uuid, date)',
                            'mm_llm_pi_values(uuid, text, timestamptz, timestamptz)'] loop
     execute format('revoke execute on function public.%s from public', f);
     execute format('grant execute on function public.%s to anon, authenticated', f);   -- RLS decides what comes back
@@ -801,7 +816,7 @@ do $$ declare f text; begin
   foreach f in array array['mm_llm_context(uuid)', 'mm_llm_summary(uuid)', 'mm_llm_search_docs(uuid, text, int, text[])', 'mm_llm_search_records(uuid, text, int)',
                            'mm_llm_position_history(uuid, text, date, date)', 'mm_llm_outage_scope(uuid, text)', 'mm_llm_overdue_actions(uuid, date)',
                            'mm_llm_bonvoy(uuid, text, date, date)', 'mm_llm_pi_daily(uuid, text, date, date)',
-                           'mm_llm_downtime(uuid, date, date, text)', 'mm_llm_downtime_summary(uuid, date, date, text)', 'mm_llm_repeat_stops(uuid, date, date, int)', 'mm_llm_rcfa_status(uuid, date)', 'mm_llm_position_life(uuid, text, date)', 'mm_llm_production(uuid, date, date, text)', 'mm_llm_documents(uuid, text)', 'mm_llm_bus_day(uuid, date)',
+                           'mm_llm_downtime(uuid, date, date, text)', 'mm_llm_downtime_summary(uuid, date, date, text)', 'mm_llm_repeat_stops(uuid, date, date, int)', 'mm_llm_rcfa_status(uuid, date)', 'mm_llm_position_life(uuid, text, date)', 'mm_llm_production(uuid, date, date, text)', 'mm_llm_grade_hours(uuid, date, date)', 'mm_llm_documents(uuid, text)', 'mm_llm_bus_day(uuid, date)',
                            'mm_llm_pi_values(uuid, text, timestamptz, timestamptz)'] loop
     execute format('revoke execute on function public.%s from public', f);
     execute format('grant execute on function public.%s to anon, authenticated, service_role', f);
