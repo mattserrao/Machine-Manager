@@ -196,6 +196,22 @@
   .mgrid input.inh{background:transparent;color:var(--muted);border-style:dashed}
   .mgrid input[readonly]{background:transparent;border-color:transparent}
   .mnote{font-size:12px;color:var(--muted);margin-top:8px}
+  /* manning, desktop: positions × shifts */
+  .mwrap{overflow-x:auto}
+  .mtab{width:100%;border-collapse:collapse;table-layout:fixed;font-size:13px}
+  .mtab th,.mtab td{border-bottom:1px solid var(--line);padding:0;text-align:left;vertical-align:middle}
+  .mtab thead th{font-size:12px;font-weight:600;color:var(--ink-2);padding:2px 6px 6px;line-height:1.25}
+  .mtab thead th small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+  .mtab thead th .c{display:block;font-size:11px;font-weight:500;color:var(--ink-3)}
+  .mtab thead th:first-child{width:52px}
+  .mtab tbody th{font-size:11px;font-weight:600;color:var(--ink-2);letter-spacing:.03em;padding:0 6px 0 0}
+  .mtab td{border-left:1px solid var(--line)}
+  .mtab .nm{display:block;width:100%;border:0;background:transparent;text-align:left;padding:6px;font-size:13px;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:var(--r-sm);cursor:pointer}
+  .mtab .nm:hover{background:var(--hover)}
+  .mtab .nm.inh{color:var(--muted);font-style:italic}
+  .mtab .nm.empty{color:var(--ink-3)}
+  .mtab td input{width:100%;height:30px;border:1px solid var(--accent-line);border-radius:var(--r-sm);padding:0 6px;font-size:13px;background:var(--surface-2)}
 
   /* planned shutdown → on reel */
   .ch .times{font-size:12px;color:var(--ink-2);margin-top:4px;display:flex;align-items:center;gap:2px;font-variant-numeric:tabular-nums}
@@ -395,7 +411,7 @@
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.6.0';
+  const VERSION = 'v0.6.1';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'Operations Outage Planning ' + VERSION;
 
@@ -407,7 +423,7 @@
   const { todayStr, parseDay, daysBetween, addDays } = MM;
 
   /* ---------- State ---------- */
-  let session = null, oStore = null, mStore = null;
+  let session = null, oStore = null, mStore = null, accessKind = 'demo';
   let machineRaw = null, machine = null, items = {};             // from My Machine (shared)
   const emptyO = () => ({ settings: null, outages: {}, tasks: {}, pkgs: {}, pdone: {}, man: {}, crews: {}, dec: {} });
   let O = emptyO();   // this tool's records
@@ -416,6 +432,13 @@
   let showPast = false;
   let lastPhase = (() => { try { return localStorage.getItem('mm-op-phase') || 'prep'; } catch (e) { return 'prep'; } })();
   const canEdit = () => !!(oStore && oStore.edit);
+  // Someone who can't edit clicks a name: say why, once per click. Names belong to each organization;
+  // only its editors change them (the demo account and signed-out visitors see Sim Mill's, view only).
+  function viewOnlyNote(){
+    if (accessKind === 'public-demo') return toast('Sign in to change names. These are the Sim Mill demo’s, view only.');
+    if (session && session.demo) return toast(`The ${session.org.name} demo is view only: names can’t be changed here.`);
+    toast(`View only: ask an editor in ${session && session.org ? session.org.name : 'your organization'} to change names.`);
+  }
 
   /* ---------- Helpers ---------- */
   const { el, uid, toast } = MMUI;             // mm-ui.js
@@ -981,6 +1004,7 @@
     // Who and where: area · crew · person. Editors click it to assign.
     const bits = [t.area, t.crew && `Crew ${t.crew}`, t.who].filter(Boolean);
     const meta = el(canEdit() ? 'button' : 'div', 'tmeta' + (bits.length ? '' : ' empty'), bits.length ? bits.join(' · ') : 'Assign');
+    if (!canEdit()) meta.addEventListener('click', viewOnlyNote);
     if (canEdit()){
       meta.type = 'button'; meta.title = 'Phase, area, crew and person';
       meta.setAttribute('aria-label', 'Assign: ' + (bits.join(', ') || 'not assigned'));
@@ -1261,6 +1285,8 @@
     if (Object.keys(m).length) O.man[key] = m; else delete O.man[key];
     saveO(); pending = true;          // refresh the counts once focus leaves the manning list
   }
+  const wideMan = matchMedia('(min-width:900px)');
+  wideMan.addEventListener('change', () => softRender());
   function manSection(o){
     const open = !manClosed.has(o.id), sec = el('div', 'sec man' + (open ? ' open' : ''));
     const total = SHIFTS.reduce((t, s) => t + filled(o, s.k), 0);
@@ -1271,6 +1297,7 @@
     sh.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); } });
     sec.appendChild(sh);
     if (!open) return sec;
+    if (wideMan.matches){ sec.appendChild(manGrid(o)); return sec; }
     const cur = manTab[o.id] || 'shutdown';
     const tabs = el('div', 'tabs'); tabs.setAttribute('role', 'tablist');
     for (const s of SHIFTS){
@@ -1287,7 +1314,7 @@
       const inp = el('input'); inp.id = id; inp.autocomplete = 'off';
       if (inherited){ inp.value = ''; inp.placeholder = v; if (v) inp.classList.add('inh'); }
       else inp.value = v;
-      if (!canEdit()){ inp.readOnly = true; if (inherited) inp.value = v; }
+      if (!canEdit()){ inp.readOnly = true; if (inherited) inp.value = v; inp.addEventListener('click', viewOnlyNote); }
       inp.addEventListener('change', () => setSeat(o, cur, pos, inp.value));
       inp.addEventListener('keydown', e => { if (e.key === 'Enter') inp.blur(); });
       g.append(lb, inp);
@@ -1295,6 +1322,45 @@
     sec.appendChild(g);
     if (cur === 'startup') sec.appendChild(el('div', 'mnote', 'Startup uses the Shutdown crew. Type a name to change a position; clear it to go back to Shutdown’s.'));
     return sec;
+  }
+  // Desktop: every shift at once, positions down the side. Click a name to change it (editors); Enter or
+  // leaving the box saves, Escape cancels. Startup names copied from Shutdown show faint until changed.
+  function manGrid(o){
+    const t = el('table', 'mtab'), hd = el('tr');
+    hd.appendChild(el('th', ''));
+    for (const s of SHIFTS){ const th = el('th', ''); th.append(el('small', '', s.grp), s.name, el('span', 'c', `${filled(o, s.k)}/${POS.length}`)); hd.appendChild(th); }
+    const thead = el('thead'); thead.appendChild(hd); t.appendChild(thead);
+    const tb = el('tbody');
+    for (const pos of POS){
+      const tr = el('tr'); tr.appendChild(el('th', '', pos));
+      for (const s of SHIFTS){
+        const { v, inherited } = seat(o, s.k, pos), td = el('td');
+        const b = el('button', 'nm' + (inherited ? ' inh' : '') + (v ? '' : ' empty'), v || (canEdit() ? '+' : '—'));
+        b.type = 'button';
+        b.title = canEdit() ? (inherited && v ? `${v} (from Shutdown) · click to change` : v ? 'Click to change' : 'Click to add a name') : (v || '');
+        b.setAttribute('aria-label', `${s.grp} ${s.name} ${pos}: ${v || 'empty'}`);
+        b.addEventListener('click', () => canEdit() ? editSeat(td, o, s.k, pos) : viewOnlyNote());
+        td.appendChild(b); tr.appendChild(td);
+      }
+      tb.appendChild(tr);
+    }
+    t.appendChild(tb);
+    const w = el('div', 'mwrap'); w.appendChild(t);
+    w.appendChild(el('div', 'mnote', 'Start-up uses the Shutdown crew (faint) unless a name is changed; clear it to go back.'));
+    return w;
+  }
+  function editSeat(td, o, k, pos){
+    const { v, inherited } = seat(o, k, pos), inp = el('input');
+    inp.value = inherited ? '' : v; inp.placeholder = inherited ? v : 'Name'; inp.autocomplete = 'off';
+    inp.setAttribute('list', 'man-names'); inp.setAttribute('aria-label', `${pos} name`);
+    let dl = $('man-names');
+    if (!dl){ dl = el('datalist'); dl.id = 'man-names'; document.body.appendChild(dl); }
+    dl.textContent = ''; CREWS.flatMap(crewNames).forEach(n => { const op = el('option'); op.value = n; dl.appendChild(op); });
+    let done = false;
+    const finish = save => { if (done) return; done = true; if (save) setSeat(o, k, pos, inp.value); pending = false; render(); };
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); finish(true); } if (e.key === 'Escape'){ e.preventDefault(); e.stopPropagation(); finish(false); } });
+    inp.addEventListener('blur', () => finish(true));
+    td.textContent = ''; td.appendChild(inp); inp.focus(); inp.select();
   }
 
   /* ---------- Crews (A–D on the DuPont rotation) ----------
@@ -1309,7 +1375,7 @@
     }
     $('crSave').hidden = !canEdit(); $('crCancel').textContent = canEdit() ? 'Cancel' : 'Close';
     $('crHelp').textContent = canEdit() ? 'One name per line, the way the shift sheet reads them. Tasks are assigned to a crew, then to someone on it.'
-      : 'Who is on each crew. View only.';
+      : accessKind === 'public-demo' ? 'Who is on each crew. Sign in to change names.' : 'Who is on each crew. View only.';
     $('crewEd').hidden = false;
     const f = box.querySelector('textarea'); if (f) f.focus();
   }
@@ -1547,7 +1613,7 @@
     if (a.kind === 'offline') return startDemo('Can’t reach the server — showing the demo in this browser.');
     if (a.kind === 'signed-out') return startDemo('Showing demo outages for PM1. Sign in to plan your team’s.');
     if (a.kind === 'no-org') return startDemo('Your account isn’t in an organization yet — showing the demo.');
-    session = a.session;                            // public-demo, demo-member or member
+    session = a.session; accessKind = a.kind;       // public-demo, demo-member or member
     $('brandSub').textContent = session.demo ? `Demo · ${session.org.name} · view only` : `${session.org.name} · outages`;
     gate('loader', 'Loading…', 'Getting your outages and machine.');
     oStore = MMCloud.openStore('outages', { snapshot: oRecords, onChange: onO, onStatus: saveInd.handler(() => oStore) });
