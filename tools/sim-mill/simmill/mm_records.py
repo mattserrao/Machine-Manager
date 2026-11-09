@@ -109,16 +109,30 @@ FELTS = ('sm-press-felt', 'sm-forming-fabric', 'sm-dryer-felt')
 
 def outages(m, rec_, lib):
     rnd = random.Random(7707)
+    who_rnd = random.Random(7708)       # its own stream: assigning people doesn't move the draws above
     runs = m['runs']; cad = CFG['outages']['cadence_days']
     r = {'settings': {'cadenceDays': cad, 'anchor': str(CFG['outages']['anchor']), 'setUp': True}}
+    for c, names in CREW_NAMES.items(): r[f'crew:{c}'] = {'names': names}
+    def outage(oid, d):
+        # planned shutdown → on reel, as Outage Planning stores them (local 'YYYY-MM-DDTHH:MM')
+        s0 = dt.datetime.combine(d, dt.time(CFG['outages']['start_hour'])); e0 = s0 + HOUR * CFG['outages']['hours']
+        r[f'outage:{oid}'] = {'date': d.isoformat(), 'type': 'normal', 'shutdown': s0.strftime('%Y-%m-%dT%H:%M'), 'onReel': e0.strftime('%Y-%m-%dT%H:%M')}
+    def area(text):
+        t = text.lower()
+        if any(w in t for w in ('refiner', 'plate', 'cleaner', 'stock', 'sand trap', 'chest', 'approach')): return 'SP'
+        if any(w in t for w in ('dryer', 'reel', 'rotary joint', 'syphon', 'pv fan', 'section', 'doctor')): return 'DE'
+        return 'WE'
     past = [o for o in OUTAGES if TODAY - DAY * 130 <= o['date'] <= TODAY]
     nxt = NEXT_OUTAGE
     later = [nxt['date'] + DAY * cad * k for k in (1, 2, 3)]
     at = [_ms(dt.datetime.combine(past[0]['date'] - DAY * 45, dt.time(8)))]; tn = [0]
     def stamp(step=60000): at[0] += step; return at[0]
-    def task(oid, text, done):
+    def task(oid, text, done, phase=None, crew=None):
         tn[0] += 1
-        r[f'task:{oid}-t{tn[0]}'] = {'outage': oid, 'text': text, 'done': bool(done), 'at': stamp(), 'color': COLORS[tn[0] % len(COLORS)]}
+        t = {'outage': oid, 'text': text, 'done': bool(done), 'at': stamp(), 'color': COLORS[tn[0] % len(COLORS)]}
+        if phase: t['phase'] = phase; t['area'] = area(text)
+        if crew: t['crew'] = crew; t['who'] = who_rnd.choice(CREW_NAMES[crew])
+        r[f'task:{oid}-t{tn[0]}'] = t
     def pkg(oid, src, positions, tick):
         L = lib[src]; meta = L['meta']; pid = f'{oid}-{src}'
         names = ', '.join(POS_NAME[p] for p in positions)
@@ -147,26 +161,28 @@ def outages(m, rec_, lib):
 
     # ---- the last outages: done ----
     for o in past:
-        oid = 'sm-' + o['date'].isoformat(); r[f'outage:{oid}'] = {'date': o['date'].isoformat(), 'type': 'normal'}
+        oid = 'sm-' + o['date'].isoformat(); outage(oid, o['date'])
+        day_crew = crews(o['date'] - DAY)[0]
         changed = sorted({pos for pos, rr in runs.items() for x in rr if x['removed'] and o['start'] <= x['removed'] <= o['end'] + HOUR * 3})
         for src, poss in group(changed).items(): pkg(oid, src, poss, lambda i, st: True)
         if o is past[-1]: pkg(oid, 'sm-stock-prep-cleaners', [], lambda i, st: True)
         for p in changed:
-            if package_for(p) is None: task(oid, f'Change the {POS_NAME[p]} (recovered roll from Pellham)', True)
+            if package_for(p) is None: task(oid, f'Change the {POS_NAME[p]} (recovered roll from Pellham)', True, 'day', day_crew)
         for a in rec_['actions']:
-            if a.bucket == 'Outage prep' and f"{o['date']:%b %d}" in a.title: task(oid, a.title.replace(f" for the {o['date']:%b %d} outage", ''), True)
-        for t in rnd.sample(CREW_TASKS, 3): task(oid, t, True)
+            if a.bucket == 'Outage prep' and f"{o['date']:%b %d}" in a.title: task(oid, a.title.replace(f" for the {o['date']:%b %d} outage", ''), True, 'prep')
+        for t in rnd.sample(CREW_TASKS, 3): task(oid, t, True, 'day', day_crew)
         man(oid, o['date'])
 
     # ---- the next outage: being planned ----
-    nid = 'sm-' + nxt['date'].isoformat(); r[f'outage:{nid}'] = {'date': nxt['date'].isoformat(), 'type': 'normal'}
+    nid = 'sm-' + nxt['date'].isoformat(); outage(nid, nxt['date'])
+    n_day, n_night = crews(nxt['date'] - DAY)
     due = plan[nxt['date']]
     for src, poss in group(due).items():
         # prep phase done, except the plates: only one set is on hand
         pkg(nid, src, poss, (lambda i, st: i == 0 and not st['title'].startswith('Plates on hand')) if src == 'sm-refiner-plates' else (lambda i, st: i == 0))
     pkg(nid, 'sm-stock-prep-cleaners', [], lambda i, st: i == 0 and st['title'].startswith('Plan'))
     for p in due:
-        if package_for(p) is None: task(nid, f'Change the {POS_NAME[p]}: recovered spare from Pellham on site', True)
+        if package_for(p) is None: task(nid, f'Change the {POS_NAME[p]}: recovered spare from Pellham on site', True, 'day', n_day)
     fel = [POS_NAME[p] for p in due if package_for(p) in FELTS]
     for text, done in ((f"Order clothing for {md(nxt['date'])}: {', '.join(fel)}" if fel else None, True),
                        ('Refiner plates: REF 1 and REF 2 both due, one Ridgeway set on hand. Order the second set (SM action)', False),
@@ -174,12 +190,13 @@ def outages(m, rec_, lib):
                        ('Brightwater: replace the 3rd section DS rotary joint and re-align the bracket (3 seal failures this year)', False),
                        ('Couch roll seal strips and 2nd section PV fan belts: parts not reserved', False),
                        ('Confirm crane and riggers booked for 06:00', True), ('Scaffold request for the reel and 3rd section joint', False)):
-        if text: task(nid, text, done)
+        if text: task(nid, text, done, 'day' if text.startswith(('Brightwater', 'Reel drum')) else 'prep',
+                      n_day if text.startswith('Brightwater') else None)
     man(nid, nxt['date'], seats_day=9, seats_short=8)
 
     # ---- the one after: started; then two more with a note each ----
     for k, d in enumerate(later):
-        oid = 'sm-' + d.isoformat(); r[f'outage:{oid}'] = {'date': d.isoformat(), 'type': 'normal'}
+        oid = 'sm-' + d.isoformat(); outage(oid, d)
         due = plan[d]
         if k == 0:
             for src, poss in group(due).items(): pkg(oid, src, poss, lambda i, st: False)

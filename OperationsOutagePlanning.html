@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Operations Outage Planning</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-09.0257"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.0257">
-<script src="mm-icons.js?v=2026-11-09.0257"></script>
+<script src="mm-theme.js?v=2026-11-09.1516"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.1516">
+<script src="mm-icons.js?v=2026-11-09.1516"></script>
 <style>
   /* shared look: mm-theme.css */
   main{padding:16px 16px 60px}
@@ -197,6 +197,45 @@
   .mgrid input[readonly]{background:transparent;border-color:transparent}
   .mnote{font-size:12px;color:var(--muted);margin-top:8px}
 
+  /* planned shutdown → on reel */
+  .ch .times{font-size:12px;color:var(--ink-2);margin-top:4px;display:flex;align-items:center;gap:2px;font-variant-numeric:tabular-nums}
+  .ch .times svg{color:var(--muted);flex:none}
+  .ch .times.unset{color:var(--ink-3)}
+  .wordbtn{flex:none;margin-left:auto}
+  .card.big .wordbtn + .nav{margin-left:0}
+  /* accept / decline */
+  .due .acts{display:flex;gap:4px;flex:none}
+  .due.declined{opacity:.6}
+  .due.declined .nm a{text-decoration:line-through}
+  /* task groups and assignment */
+  .tg-h{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--ink-2);margin:10px 0 5px}
+  .tg-h:first-of-type{margin-top:2px}
+  .tg-h .n{font-weight:500;color:var(--muted);background:var(--hover);border-radius:999px;padding:0 6px;font-size:11px}
+  .task .tcol{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+  .task .tmeta{align-self:flex-start;border:0;background:rgb(var(--fg-rgb) / .06);color:var(--ink-2);border-radius:var(--r-sm);font-size:11px;font-weight:500;padding:1px 6px;text-align:left;line-height:1.5;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  button.tmeta{cursor:pointer}
+  button.tmeta:hover{background:rgb(var(--fg-rgb) / .12);color:var(--ink)}
+  .task .tmeta.empty{background:transparent;color:var(--muted);padding-left:0;opacity:0}
+  .task:hover .tmeta.empty,.task .tmeta.empty:focus{opacity:1}
+  @media (hover:none){ .task .tmeta.empty{opacity:.7} }
+  .addtask select{border:1px solid var(--line-strong);border-radius:var(--r);padding:0 6px;height:34px;font-size:12px;background:var(--surface-2);color:var(--ink-2);flex:none}
+  #picker.form{padding:4px 10px 10px;min-width:280px;overflow:visible}
+  #picker .af{display:grid;grid-template-columns:60px 1fr;gap:6px 8px;align-items:center}
+  #picker .af label{font-size:12px;color:var(--muted);font-weight:500}
+  #picker .af select,#picker .af input{border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:0 8px;height:32px;font-size:13px;background:var(--surface-2);width:100%}
+  #picker .ahint{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+  /* crews editor */
+  .sheet.wide{width:min(760px,100%)}
+  .crews{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:6px 20px 12px;overflow:auto}
+  .crcol label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:4px}
+  .crcol textarea{width:100%;border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:6px 8px;font:inherit;font-size:13px;line-height:1.5;background:var(--surface-2);resize:vertical}
+  /* schedule editor: times line */
+  .row .tm{grid-column:1 / -1;display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;margin:0 0 6px 2px}
+  .row .tm label{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+  .row .tm input{height:30px}
+  .row .tm .du{font-size:12px;font-weight:600;color:var(--ink-2)}
+  .row .tm .du.bad{color:var(--bad)}
+
   .foot{font-size:12px;color:var(--muted);margin:26px 2px 0;line-height:1.6}
   .foot a{color:var(--accent)}
 
@@ -253,13 +292,20 @@
     .row input,.row select{height:40px}
     #picker{left:8px!important;right:8px;min-width:0;max-height:60dvh}
     #picker button{padding:10px}
+    .crews{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .addtask select{height:40px}
+    #picker .af select,#picker .af input{height:40px}
+    .card.big .wordbtn{padding:0;width:40px;height:40px;justify-content:center}
+    .card.big .wordbtn .wl{display:none}
+    .card.big .ch .date{white-space:nowrap}
+    .ch .times{white-space:nowrap}
   }
   /* no hover on touch screens: the delete buttons on tasks are always visible */
   @media (hover:none){ .task .x{opacity:.6} }
   @media (pointer:coarse){ .task input[type=checkbox],.st input{width:18px;height:18px} .shrink{width:40px;height:40px} .lib{padding:11px 12px} }
 
   @media print{
-    .top,.addtask,.task .x,.btn,#toast,#panel,.pk-h .x{display:none!important}
+    .top,.addtask,.task .x,.btn,#toast,#panel,.pk-h .x,.tmeta.empty,.due .acts,.lnk{display:none!important}
     .lane{display:grid;grid-template-columns:repeat(2,1fr);background:none;padding:0}
     .lane > .card.small::before{display:none}
     body.panel-open main{margin-right:0}
@@ -278,6 +324,7 @@
     <div class="bar" id="toolbar" hidden>
       <button class="btn" id="schedBtn">Edit schedule</button>
       <button class="btn" id="pkgBtn" title="Drag task packages onto an outage">Packages</button>
+      <button class="btn" id="crewBtn" title="Who is on crews A–D, for assigning tasks">Crews</button>
       <button class="btn" id="pastBtn" title="Show outages that have already happened">Past</button>
       <button class="btn" id="printBtn" title="Print the upcoming outage cards">Print</button>
       <button class="btn" id="resetDemoBtn" title="Put the sample outages back the way they started" hidden>Reset demo</button>
@@ -306,6 +353,21 @@
   </div>
 </div>
 
+<div id="crewEd" class="backdrop" hidden>
+  <div class="sheet wide" role="dialog" aria-modal="true" aria-labelledby="crTitle">
+    <div class="sheet-h">
+      <h2 id="crTitle">Crews</h2>
+      <p id="crHelp">One name per line, the way the shift sheet reads them. Tasks are assigned to a crew, then to someone on it.</p>
+    </div>
+    <div class="crews" id="crCols"></div>
+    <div class="sheet-f">
+      <span class="sp"></span>
+      <button class="btn" id="crCancel">Cancel</button>
+      <button class="btn primary" id="crSave">Save crews</button>
+    </div>
+  </div>
+</div>
+
 <aside id="panel" hidden aria-label="Task packages">
   <div class="ph2">
     <h2>Task packages <span class="sp"></span><button class="ib" id="panelClose" aria-label="Close" data-ic="x" data-ic-size="sm"></button></h2>
@@ -320,19 +382,20 @@
 <div id="toast"></div>
 <div id="ver"></div>
 
-<script src="vendor/supabase-2.119.0.js?v=2026-11-09.0257"></script>
-<script src="mm-config.js?v=2026-11-09.0257"></script>
-<script src="mm-cloud.js?v=2026-11-09.0257"></script>
-<script src="mm-ui.js?v=2026-11-09.0257"></script>
-<script src="mm-records.js?v=2026-11-09.0257"></script>
-<script src="mm-machine.js?v=2026-11-09.0257"></script>
-<script src="mm-demo.js?v=2026-11-09.0257"></script>
-<script src="mm-task-examples.js?v=2026-11-09.0257"></script>
-<script src="mm-demo-outages.js?v=2026-11-09.0257"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-09.1516"></script>
+<script src="mm-config.js?v=2026-11-09.1516"></script>
+<script src="mm-cloud.js?v=2026-11-09.1516"></script>
+<script src="mm-ui.js?v=2026-11-09.1516"></script>
+<script src="mm-records.js?v=2026-11-09.1516"></script>
+<script src="mm-machine.js?v=2026-11-09.1516"></script>
+<script src="mm-demo.js?v=2026-11-09.1516"></script>
+<script src="mm-task-examples.js?v=2026-11-09.1516"></script>
+<script src="mm-demo-outages.js?v=2026-11-09.1516"></script>
+<script src="mm-outage-export.js?v=2026-11-09.1516"></script>
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.5.1';
+  const VERSION = 'v0.6.0';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'Operations Outage Planning ' + VERSION;
 
@@ -346,10 +409,12 @@
   /* ---------- State ---------- */
   let session = null, oStore = null, mStore = null;
   let machineRaw = null, machine = null, items = {};             // from My Machine (shared)
-  let O = { settings: null, outages: {}, tasks: {}, pkgs: {}, pdone: {}, man: {} };   // this tool's records
+  const emptyO = () => ({ settings: null, outages: {}, tasks: {}, pkgs: {}, pdone: {}, man: {}, crews: {}, dec: {} });
+  let O = emptyO();   // this tool's records
   let tpStore = null, tp = {};                                   // Ops Task Library records (read only here)
   const openPk = new Set(), manClosed = new Set(), manTab = {};    // what's expanded / collapsed (this browser only; manning starts open)
   let showPast = false;
+  let lastPhase = (() => { try { return localStorage.getItem('mm-op-phase') || 'prep'; } catch (e) { return 'prep'; } })();
   const canEdit = () => !!(oStore && oStore.edit);
 
   /* ---------- Helpers ---------- */
@@ -365,6 +430,43 @@
   const outages = () => Object.entries(O.outages).map(([id, o]) => ({ ...o, id }))
     .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
 
+  /* ---------- Planned shutdown and on-reel times ----------
+     Stored on the outage as local 'YYYY-MM-DDTHH:MM' (what a datetime-local input gives). Both optional. */
+  const pad2 = n => String(n).padStart(2, '0');
+  const hm = s => s ? s.slice(11, 16) : '';
+  const whenShort = s => s ? `${fmtShort(s.slice(0, 10))} ${hm(s)}` : '';
+  const hoursOf = o => {
+    if (!o.shutdown || !o.onReel) return null;
+    const h = (Date.parse(o.onReel) - Date.parse(o.shutdown)) / 36e5;
+    return h > 0 ? Math.round(h * 10) / 10 : null;
+  };
+  const hoursTxt = h => h == null ? '' : `${String(h).replace(/\.0$/, '')} h`;
+  function timesTxt(o){
+    if (!o.shutdown && !o.onReel) return '';
+    const h = hoursOf(o);
+    return `${o.shutdown ? whenShort(o.shutdown) : '?'} → ${o.onReel ? whenShort(o.onReel) : '?'}${h != null ? ' · ' + hoursTxt(h) : ''}`;
+  }
+  // Move a local date-time by whole days (when an outage's date changes, its times move with it).
+  function shiftDays(s, n){
+    if (!s || !n) return s;
+    return addDays(s.slice(0, 10), n) + s.slice(10);
+  }
+  function addHours(s, h){
+    const d = new Date(Date.parse(s) + h * 36e5);
+    return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  }
+
+  /* ---------- Phases and areas (tasks, package steps, the Word export) ---------- */
+  const PHASES = [
+    { k: 'prep', l: 'Outage prep', s: 'Prep' }, { k: 'shutdown', l: 'Shutdown', s: 'Shutdown' }, { k: 'shortoff', l: 'Short Off', s: 'Short Off' },
+    { k: 'day', l: 'Days', s: 'Days' }, { k: 'startup', l: 'Start-up', s: 'Start-up' },
+  ];
+  const AREAS = [{ k: 'SP', l: 'Stock prep' }, { k: 'WE', l: 'Wet end' }, { k: 'DE', l: 'Dry end' }];
+  const CREWS = ['A', 'B', 'C', 'D'];
+  const phaseName = k => (PHASES.find(p => p.k === k) || {}).l || '';
+  const crewNames = c => ((O.crews[c] || {}).names || []).filter(Boolean);
+  const crewOf = name => CREWS.find(c => crewNames(c).includes(name)) || null;
+
   /* ---------- Which fabrics and rolls are due at which outage ----------
      An item belongs to the last outage before it would go overdue: the latest outage on or
      before its due date. It can only be changed at an outage after its current install date;
@@ -379,13 +481,30 @@
     const by = Object.fromEntries(list.map(o => [o.id, []]));
     const unset = [], later = [];
     if (!machine) return { by, unset, later };
+    // Accept / decline at an outage holds for the run it was made on (its install date); a new run starts clean.
+    const decOf = (o, x) => { const d = O.dec[`${o.id}:${x.p.id}`]; return d && d.run === (x.it.installed || '') ? d : null; };
+    // Put an item on outage i. Declined there: it stays on that card (struck through, with Undo) and moves on to the
+    // next outage, as many times as it's declined. Returns where it ended up (-1: past the last scheduled outage).
+    const put = (i, x) => {
+      for (; i < list.length; i++){
+        const o = list[i], d = decOf(o, x);
+        if (d && d.state === 'declined'){
+          by[o.id].push({ ...x, declined: true, to: list[i + 1] || null });
+          x = { ...x, deferred: o };
+          continue;
+        }
+        by[o.id].push({ ...x, accepted: !!(d && d.state === 'accepted') });
+        return i;
+      }
+      later.push(x.p); return -1;
+    };
     for (const p of MM.positions(machine)){
       const it = items[p.id], due = MM.dueDate(it, p.id), flag = MM.flagged(it);
       if (!due && !flag){ unset.push(p); continue; }
       const at = it.installed && list.find(o => o.date === it.installed);
       if (at) by[at.id].push({ p, it, due, changed: true });
       if (flag && firstUp && (!it.installed || firstUp.date > it.installed)){
-        by[firstUp.id].push({ p, it, due, changed: false, flag: it.condition });
+        put(list.indexOf(firstUp), { p, it, due, changed: false, flag: it.condition });
         continue;
       }
       if (!due){ unset.push(p); continue; }
@@ -395,17 +514,18 @@
       if (!a) a = cands[0];                                     // due before any chance: first one, overdue by then
       const lastOne = a === list[list.length - 1];
       if (lastOne && due > addDays(a.date, CADENCE_DAYS)){ later.push(p); continue; }   // can wait past the planned schedule
-      by[a.id].push({ p, it, due, changed: false });
-      if (a.date < today && firstUp && firstUp !== a && firstUp.date > it.installed) by[firstUp.id].push({ p, it, due, changed: false, missed: a });
+      const fi = put(list.indexOf(a), { p, it, due, changed: false });
+      const end = list[fi];
+      if (end && end.date < today && firstUp && firstUp.date > it.installed) put(list.indexOf(firstUp), { p, it, due, changed: false, missed: end });
     }
-    for (const k in by) by[k].sort((x, y) => (x.changed - y.changed) || (!!y.flag - !!x.flag) || (x.due || '9999').localeCompare(y.due || '9999'));
+    for (const k in by) by[k].sort((x, y) => (x.changed - y.changed) || (!!x.declined - !!y.declined) || (!!y.flag - !!x.flag) || (x.due || '9999').localeCompare(y.due || '9999'));
     return { by, unset, later };
   }
 
   /* ---------- Saving ---------- */
   // Record ids (mm-records.js): this tool's own, and the two tools it reads.
   const OR = MMRecords.outages, MR = MMRecords.mymachine, TR = MMRecords.boards;
-  const OBAGS = () => ({ outage: O.outages, task: O.tasks, pkg: O.pkgs, pkd: O.pdone, man: O.man });
+  const OBAGS = () => ({ outage: O.outages, task: O.tasks, pkg: O.pkgs, pkd: O.pdone, man: O.man, crew: O.crews, dec: O.dec });
   const oRecords = () => {
     const r = {};
     if (O.settings) r[OR.settings] = O.settings;
@@ -586,9 +706,15 @@
     d.append(el('div', 'wd', fmt(o.date, { weekday: 'long' })), el('div', 'date', fmtLong(o.date)));
     const rel = el('div', 'rel'); const rb = el('b', '', relDay(o.date)); rel.append(rb);
     const tasks = Object.entries(O.tasks).filter(([, t]) => t.outage === o.id).map(([id, t]) => ({ ...t, id })).sort((a, b) => (a.at || 0) - (b.at || 0));
-    const open = due.filter(x => !x.changed).length, tdone = tasks.filter(t => t.done).length;
+    const open = due.filter(x => !x.changed && !x.declined).length, tdone = tasks.filter(t => t.done).length;
     if (big) rel.append(` · ${open} due · ${tdone}/${tasks.length} tasks done`);
     d.appendChild(rel);
+    // Planned shutdown → on reel, and how long that is
+    const tt = timesTxt(o), tm = el('div', 'times' + (tt ? '' : ' unset'));
+    tm.appendChild(MMIcons.el('clock', 'xs'));
+    tm.append(tt ? ' ' + tt : ' Shutdown and on-reel times not set');
+    tm.title = tt ? 'Planned shutdown → on reel (duration)' : 'Set them in Edit schedule';
+    if (tt || canEdit()) d.appendChild(tm);
     const bd = el('div', 'badges');
     if (o.type === 'annual'){ const ty = el('span', 'pill', 'Annual'); ty.style.setProperty('--sc', 'var(--annual)'); bd.appendChild(ty); }   // every card is an outage; only annual needs saying
     if (isNext){ const n = el('span', 'pill', 'Next'); n.style.setProperty('--sc', 'var(--accent)'); bd.appendChild(n); }
@@ -602,6 +728,10 @@
         nav.appendChild(b);
       });
       h.appendChild(nav);
+      const wb = el('button', 'btn sm wordbtn'); wb.prepend(MMIcons.el('file', 'sm')); wb.append(el('span', 'wl', ' Word'));
+      wb.title = 'Download this outage plan as a Word document'; wb.setAttribute('aria-label', 'Export the ' + fmtLong(o.date) + ' outage plan to Word');
+      wb.addEventListener('click', e => { e.stopPropagation(); exportWord(o, wb); });
+      h.appendChild(wb);
       const x = el('button', 'shrink'); x.title = 'Make smaller'; x.setAttribute('aria-label', 'Make ' + fmtLong(o.date) + ' card smaller');
       x.innerHTML = '<svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true"><path d="M9.5 2.5v4h4M6.5 13.5v-4h-4M9.5 6.5l4.5-4.5M6.5 9.5L2 14" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>';
       x.addEventListener('click', e => { e.stopPropagation(); setBig(o.id, false); });
@@ -613,7 +743,7 @@
       // Compact: a summary; click anywhere to open it up.
       const pk = Object.entries(O.pkgs).filter(([, k]) => k.outage === o.id);
       const pkSteps = pk.reduce((t, [, k]) => t + pkgSteps(k), 0), pkDone = pk.reduce((t, [id, k]) => t + pkgDone(id, k), 0);
-      const late = due.filter(x => !x.changed && (x.missed || x.flag === 'damaged' || (x.due && x.due < o.date))).length;
+      const late = due.filter(x => !x.changed && !x.declined && (x.missed || x.flag === 'damaged' || (x.due && x.due < o.date))).length;
       const crewN = SHIFTS.reduce((t, sh) => t + filled(o, sh.k), 0);
       const sm = el('div', 'sum'), chips = el('div', 'chips');
       const chip = (t, k) => chips.appendChild(el('span', 'chip' + (k ? ' ' + k : ''), t));
@@ -622,7 +752,7 @@
       chip(`${tdone}/${tasks.length} tasks`);
       chip(`Manning ${crewN}/${POS.length * SHIFTS.length}`);
       sm.appendChild(chips);
-      const names = [...due.filter(x => !x.changed).map(x => x.p.name + (x.flag ? ` (${MM.condLabel(x.flag).toLowerCase()})` : '')), ...pk.map(([, k]) => k.name)];
+      const names = [...due.filter(x => !x.changed && !x.declined).map(x => x.p.name + (x.flag ? ` (${MM.condLabel(x.flag).toLowerCase()})` : '')), ...pk.map(([, k]) => k.name)];
       if (names.length) sm.appendChild(el('div', 'peek', names.join(' · ')));
       const op = el('div', 'open', 'Open outage'); op.appendChild(MMIcons.el('arrow', 'xs')); sm.appendChild(op);
       c.appendChild(sm);
@@ -644,25 +774,36 @@
 
     body.appendChild(pkgSection(o));
 
-    // tasks
+    // tasks, grouped by outage phase (in the order the day runs), then any not given a phase yet
     const s2 = el('div', 'sec'), sh2 = el('div', 'sh');
     sh2.append(el('h3', '', 'Tasks'), el('span', 'n', tasks.length ? `${tdone}/${tasks.length}` : '0'));
     s2.appendChild(sh2);
-    const grid = el('div', 'tasks');
-    tasks.forEach(t => grid.appendChild(taskNote(t)));
-    if (tasks.length) s2.appendChild(grid);
-    else if (!canEdit()) s2.appendChild(el('div', 'none', 'No tasks yet.'));
+    const groups = [...PHASES.map(ph => ({ k: ph.k, l: ph.l })), { k: '', l: 'No phase yet' }];
+    for (const g of groups){
+      const ts = tasks.filter(t => (PHASES.some(ph => ph.k === t.phase) ? t.phase : '') === g.k);
+      if (!ts.length) continue;
+      const gh = el('div', 'tg-h'); gh.append(g.l, el('span', 'n', `${ts.filter(t => t.done).length}/${ts.length}`));
+      s2.appendChild(gh);
+      const grid = el('div', 'tasks');
+      ts.forEach(t => grid.appendChild(taskNote(t)));
+      s2.appendChild(grid);
+    }
+    if (!tasks.length && !canEdit()) s2.appendChild(el('div', 'none', 'No tasks yet.'));
     if (canEdit()){
-      const add = el('div', 'addtask'), inp = el('input');
+      const add = el('div', 'addtask'), inp = el('input'), ps = el('select');
+      ps.setAttribute('aria-label', 'Phase for the new task'); ps.title = 'Outage phase for the new task';
+      PHASES.forEach(ph => { const op = el('option', '', ph.s); op.value = ph.k; ps.appendChild(op); });
+      ps.value = lastPhase;
+      ps.addEventListener('change', () => { lastPhase = ps.value; try { localStorage.setItem('mm-op-phase', lastPhase); } catch (e) {} });
       inp.placeholder = 'Add a task for this outage…'; inp.setAttribute('aria-label', 'New task for ' + fmtLong(o.date));
       inp.addEventListener('keydown', e => {
         if (e.key !== 'Enter' || !inp.value.trim()) return;
         const id = uid(), n = Object.values(O.tasks).filter(t => t.outage === o.id).length;
-        O.tasks[id] = { outage: o.id, text: inp.value.trim(), done: false, at: Date.now(), color: TASK_COLORS[n % TASK_COLORS.length] };
+        O.tasks[id] = { outage: o.id, text: inp.value.trim(), done: false, at: Date.now(), color: TASK_COLORS[n % TASK_COLORS.length], phase: ps.value };
         saveO(); inp.value = ''; render();
         const again = document.querySelector(`.card[data-id="${o.id}"] .addtask input`); if (again) again.focus();
       });
-      add.appendChild(inp); s2.appendChild(add);
+      add.append(ps, inp); s2.appendChild(add);
     }
     // Tasks and manning share a column when the card is wide.
     const col = el('div', 'sec col'); col.style.padding = '0';
@@ -692,14 +833,14 @@
   }
   window.addEventListener('resize', fitOpenCard);
   document.addEventListener('keydown', e => {
-    if (e.key !== 'Escape' || !bigCards.size || !$('picker').hidden || !$('editor').hidden) return;
+    if (e.key !== 'Escape' || !bigCards.size || !$('picker').hidden || !$('editor').hidden || !$('crewEd').hidden) return;
     const a = document.activeElement;
     if (a && (a.isContentEditable || a.tagName === 'INPUT')) return;      // Escape there cancels the edit
     setBig([...bigCards][0], false);
   });
 
   function dueRow(o, x, today){
-    const r = el('div', 'due' + (x.changed ? ' done' : ''));
+    const r = el('div', 'due' + (x.changed ? ' done' : '') + (x.declined ? ' declined' : ''));
     r.style.setProperty('--cc', CAT[x.p.cat] || '#78716c');
     const nm = el('div', 'nm'), a = el('a', '', x.p.name);
     a.href = 'MyMachine.html#item=' + encodeURIComponent(x.p.id); a.title = 'Open in My Machine';
@@ -707,10 +848,16 @@
     const sub = el('div', 'sub');
     if (x.changed){
       sub.textContent = `${x.p.section} · changed at this outage${x.due ? ' · next due ' + fmtLong(x.due) : ''}`;
+    } else if (x.declined){
+      sub.textContent = `${x.p.section} · declined, ` + (x.to ? `moved to ${fmtShort(x.to.date)}` : 'no later outage scheduled');
     } else {
       const gap = x.due ? daysBetween(o.date, x.due) : 0;
       sub.textContent = x.due ? `${x.p.section} · due ${fmtLong(x.due)}` : x.p.section;
       const pill = el('span', 'pill');
+      if (x.deferred){
+        const dp = el('span', 'pill', `Deferred from ${fmtShort(x.deferred.date)}`); dp.style.setProperty('--sc', 'var(--warn)'); dp.style.marginLeft = '6px';
+        dp.title = `Declined at the ${fmtLong(x.deferred.date)} outage`; sub.appendChild(dp);
+      }
       if (x.flag){
         pill.textContent = `${MM.condLabel(x.flag)} — flagged`;
         pill.title = (x.it.conditionNote ? x.it.conditionNote + ' — ' : '') + 'Flagged in My Machine to change at the next outage';
@@ -722,8 +869,34 @@
       if (x.flag && x.it.conditionNote) sub.appendChild(el('div', 'cnote', x.it.conditionNote));
     }
     nm.appendChild(sub); r.appendChild(nm);
+    if (!x.changed && !x.declined && x.accepted){
+      const ap = el('span', 'chg', 'Accepted'); ap.prepend(MMIcons.el('check', 'xs')); ap.title = 'Accepted for this outage'; r.appendChild(ap);
+    }
     if (!canEdit()) return r;
-    if (x.changed){
+    const upcoming = o.date > today;
+    if (x.declined){
+      const u = el('button', 'lnk', 'Undo'); u.title = 'Bring it back to this outage';
+      u.addEventListener('click', () => decide(o, x, null));
+      r.appendChild(u);
+    } else if (upcoming && !x.changed){
+      if (x.missed){     // it may have been changed at the missed outage after all
+        const b = el('button', 'lnk', `Changed ${fmtShort(x.missed.date)}?`);
+        b.title = `If it was changed at the ${fmtLong(x.missed.date)} outage, record that in My Machine`;
+        b.addEventListener('click', () => markChanged(x.p, x.missed));
+        r.appendChild(b);
+      }
+      if (x.accepted){
+        const u = el('button', 'lnk', 'Undo'); u.title = 'Take back the accept';
+        u.addEventListener('click', () => decide(o, x, null));
+        r.appendChild(u);
+      } else {
+        const a = el('button', 'btn sm', 'Accept'); a.title = 'Plan this change for this outage';
+        a.addEventListener('click', () => decide(o, x, 'accepted'));
+        const dcl = el('button', 'btn sm', 'Decline'); dcl.title = 'Not at this outage: move it to the next one';
+        dcl.addEventListener('click', () => decide(o, x, 'declined'));
+        const bx = el('div', 'acts'); bx.append(a, dcl); r.appendChild(bx);
+      }
+    } else if (x.changed){
       const last = (x.it.history || [])[x.it.history.length - 1];
       { const cg = el('span', 'chg', 'Changed'); cg.prepend(MMIcons.el('check', 'xs')); r.appendChild(cg); }
       if (last && last.removed === o.date){
@@ -741,10 +914,44 @@
       b.title = `If it was changed at the ${fmtLong(x.missed.date)} outage, record that in My Machine`;
       b.addEventListener('click', () => markChanged(x.p, x.missed));
       r.appendChild(b);
-    } else {
-      const p = el('span', 'pill', 'Planned'); p.title = 'Mark it changed on or after the outage day'; r.appendChild(p);
     }
     return r;
+  }
+
+  /* ---------- Accept / decline a suggested fabric or roll ----------
+     One record per outage and position, for the current run (its install date). Declined: it moves to the next
+     outage. Accepted: listed in the outage prep, and the matching task package is offered. */
+  function decide(o, x, state){
+    const key = `${o.id}:${x.p.id}`, was = O.dec[key];
+    if (state) O.dec[key] = { state, run: x.it.installed || '', at: Date.now() }; else delete O.dec[key];
+    saveO(); render();
+    const undo = () => { if (was) O.dec[key] = was; else delete O.dec[key]; saveO(); render(); };
+    if (state === 'declined'){
+      const nx = outages().find(z => z.date > o.date);
+      return toast(`${x.p.name}: moved to ${nx ? fmtShort(nx.date) : 'after the last scheduled outage'}`, { label: 'Undo', fn: undo });
+    }
+    if (state !== 'accepted') return;
+    const pk = packageFor(x.p);
+    if (pk && !Object.values(O.pkgs).some(k => k.outage === o.id && k.source === pk.id))
+      return toast(`${x.p.name} accepted for ${fmtShort(o.date)}`, { label: `Add ${pk.name}`, fn: () => addPackage(o, pk.id) });
+    toast(`${x.p.name} accepted for ${fmtShort(o.date)}` + (pk ? ` · ${pk.name} is already on it` : ''));
+  }
+  // The library package that does this change, by name / area words (best match first). None: no offer.
+  function packageFor(p){
+    const id = p.id, words = [];
+    if (p.kind === 'refiner') words.push('refiner plate', 'refiner', 'plate');
+    else if (id === 'form-bottom') words.push(p.section === 'Base ply wire' ? 'bp wire' : 'forming fabric', 'base ply', 'forming fabric', 'forming', 'wire');
+    else if (id === 'form-top') words.push('tp wire', 'top ply', 'forming fabric', 'wire');
+    else if (/-froll-/.test(id)) words.push('felt roll');
+    else if (p.cat === 'press' && p.kind === 'fabric') words.push('press felt');
+    else if (p.cat === 'dryer' && p.kind === 'fabric') words.push('dryer felt');
+    else if (p.kind === 'roll') words.push(p.name.toLowerCase(), 'roll change');
+    const lib = libPackages();
+    for (const w of words){
+      const hit = lib.find(k => `${k.name} ${k.meta.area || ''}`.toLowerCase().includes(w));
+      if (hit) return hit;
+    }
+    return null;
   }
 
   // "Changed at this outage" → new run in My Machine starting on the outage date (old run kept in history).
@@ -771,6 +978,15 @@
     cb.setAttribute('aria-label', 'Done');
     cb.addEventListener('change', () => { O.tasks[t.id] = { ...O.tasks[t.id], done: cb.checked }; saveO(); requestAnimationFrame(render); });
     const tx = el('div', 'tx', t.text);
+    // Who and where: area · crew · person. Editors click it to assign.
+    const bits = [t.area, t.crew && `Crew ${t.crew}`, t.who].filter(Boolean);
+    const meta = el(canEdit() ? 'button' : 'div', 'tmeta' + (bits.length ? '' : ' empty'), bits.length ? bits.join(' · ') : 'Assign');
+    if (canEdit()){
+      meta.type = 'button'; meta.title = 'Phase, area, crew and person';
+      meta.setAttribute('aria-label', 'Assign: ' + (bits.join(', ') || 'not assigned'));
+      meta.addEventListener('click', e => { e.stopPropagation(); openAssign(meta, t.id); });
+    }
+    const col = el('div', 'tcol'); col.append(tx); if (bits.length || canEdit()) col.append(meta);
     if (canEdit()){
       tx.contentEditable = 'true'; tx.spellcheck = true;
       tx.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); tx.blur(); } if (e.key === 'Escape'){ tx.textContent = O.tasks[t.id].text; tx.blur(); } });
@@ -785,9 +1001,49 @@
         const was = O.tasks[t.id]; delete O.tasks[t.id]; saveO(); render();
         toast('Task deleted', { label: 'Undo', fn: () => { O.tasks[t.id] = was; saveO(); render(); } });
       });
-      n.append(cb, tx, x);
-    } else n.append(cb, tx);
+      n.append(cb, col, x);
+    } else n.append(cb, col);
     return n;
+  }
+
+  // Assign a task: phase and area, then a crew (A–D) and someone on it. Changes save as they're made.
+  function openAssign(btn, id){
+    const t0 = O.tasks[id]; if (!t0) return;
+    const pk = $('picker'); pk.textContent = ''; pk.classList.add('form');
+    pk.appendChild(el('div', 'ml', 'Assign task'));
+    const f = el('div', 'af');
+    const sel = (label, opts, val, on) => {
+      const lb = el('label', '', label), s = el('select');
+      opts.forEach(([v, l]) => { const op = el('option', '', l); op.value = v; s.appendChild(op); });
+      s.value = val || ''; s.addEventListener('change', () => on(s.value)); f.append(lb, s); return s;
+    };
+    const set = patch => { if (!O.tasks[id]) return; O.tasks[id] = { ...O.tasks[id], ...patch }; for (const k in patch) if (!patch[k]) delete O.tasks[id][k]; saveO(); render(); };
+    sel('Phase', [['', '—'], ...PHASES.map(p => [p.k, p.l])], t0.phase, v => set({ phase: v }));
+    sel('Area', [['', '—'], ...AREAS.map(a => [a.k, `${a.k} · ${a.l}`])], t0.area, v => set({ area: v }));
+    const cs = sel('Crew', [['', '—'], ...CREWS.map(c => [c, `Crew ${c}` + (crewNames(c).length ? ` (${crewNames(c).length})` : '')])], t0.crew, v => {
+      const who = O.tasks[id].who, keep = !who || !v || crewNames(v).includes(who) || !crewOf(who);
+      set({ crew: v, who: keep ? who : '' }); fill();
+    });
+    // Person: anyone on the chosen crew (or any crew if none is picked); any other name can be typed.
+    const lb = el('label', '', 'Person'), wi = el('input'), dl = el('datalist');
+    dl.id = 'assign-names'; wi.setAttribute('list', dl.id); wi.value = t0.who || ''; wi.autocomplete = 'off'; wi.placeholder = 'Name';
+    const fill = () => {
+      dl.textContent = '';
+      const c = (O.tasks[id] || {}).crew, names = c ? crewNames(c) : CREWS.flatMap(crewNames);
+      names.forEach(n => { const op = el('option'); op.value = n; dl.appendChild(op); });
+    };
+    fill();
+    wi.addEventListener('change', () => {
+      const v = wi.value.trim(), c = v && crewOf(v), cur = (O.tasks[id] || {}).crew;
+      set({ who: v, crew: c && c !== cur ? c : cur });       // picking someone on another crew moves the task to that crew
+      cs.value = (O.tasks[id] || {}).crew || '';
+    });
+    wi.addEventListener('keydown', e => { if (e.key === 'Enter'){ wi.blur(); closePicker(); } });
+    f.append(lb, wi, dl);
+    pk.appendChild(f);
+    if (!CREWS.some(c => crewNames(c).length)) pk.appendChild(el('div', 'ahint', canEdit() ? 'Add names to the crews (Crews button) to pick people from a list.' : ''));
+    placePicker(pk, btn);
+    const first = pk.querySelector('select'); if (first) first.focus();
   }
 
 
@@ -936,7 +1192,7 @@
 
   // "+ Package" picker on a card (works without dragging: touch screens, keyboards)
   function openPicker(btn, o){
-    const pk = $('picker'); pk.textContent = '';
+    const pk = $('picker'); pk.textContent = ''; pk.classList.remove('form');
     pk.appendChild(el('div', 'ml', `Add to ${fmtShort(o.date)}`));
     const list = libPackages();
     if (!list.length) pk.appendChild(el('div', 'none', 'No packages in the library yet.'));
@@ -955,7 +1211,7 @@
   }
   // From the packages panel: tap a package, then pick the outage (dragging doesn't work on touch screens).
   function openOutagePicker(btn, p){
-    const pk = $('picker'); pk.textContent = '';
+    const pk = $('picker'); pk.textContent = ''; pk.classList.remove('form');
     pk.appendChild(el('div', 'ml', `Add ${p.name} to`));
     const up = outages().filter(o => o.date >= todayStr());
     if (!up.length) pk.appendChild(el('div', 'none', 'No upcoming outages.'));
@@ -975,7 +1231,7 @@
     pk.style.top = (r.bottom + 6 + pk.offsetHeight > innerHeight ? Math.max(8, r.top - 6 - pk.offsetHeight) : r.bottom + 6) + 'px';
     const f = pk.querySelector('button:not(:disabled)'); if (f) f.focus();
   }
-  function closePicker(){ $('picker').hidden = true; }
+  function closePicker(){ $('picker').hidden = true; $('picker').classList.remove('form'); }
   document.addEventListener('pointerdown', e => { if (!$('picker').hidden && !$('picker').contains(e.target)) closePicker(); }, true);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closePicker(); });
   window.addEventListener('scroll', closePicker, { passive: true });
@@ -1041,35 +1297,120 @@
     return sec;
   }
 
+  /* ---------- Crews (A–D on the DuPont rotation) ----------
+     One record per crew: crew:A → { names: [...] }. Used to assign tasks to a crew and a person. */
+  function openCrews(){
+    const box = $('crCols'); box.textContent = '';
+    for (const c of CREWS){
+      const w = el('div', 'crcol'), lb = el('label', '', `Crew ${c}`), ta = el('textarea');
+      ta.id = 'cr-' + c; lb.htmlFor = ta.id; ta.rows = 10; ta.spellcheck = false;
+      ta.value = crewNames(c).join('\n'); ta.placeholder = 'R. Dube\nK. Lavoie\n…'; ta.readOnly = !canEdit();
+      w.append(lb, ta); box.appendChild(w);
+    }
+    $('crSave').hidden = !canEdit(); $('crCancel').textContent = canEdit() ? 'Cancel' : 'Close';
+    $('crHelp').textContent = canEdit() ? 'One name per line, the way the shift sheet reads them. Tasks are assigned to a crew, then to someone on it.'
+      : 'Who is on each crew. View only.';
+    $('crewEd').hidden = false;
+    const f = box.querySelector('textarea'); if (f) f.focus();
+  }
+  $('crewBtn').addEventListener('click', openCrews);
+  $('crCancel').addEventListener('click', () => { $('crewEd').hidden = true; });
+  $('crewEd').addEventListener('keydown', e => { if (e.key === 'Escape') $('crewEd').hidden = true; });
+  $('crSave').addEventListener('click', () => {
+    for (const c of CREWS){
+      const names = [...new Set($('cr-' + c).value.split('\n').map(x => x.trim()).filter(Boolean))].slice(0, 60);
+      if (names.length) O.crews[c] = { names }; else delete O.crews[c];
+    }
+    saveO(); $('crewEd').hidden = true; render(); toast('Crews saved');
+  });
+
+  /* ---------- Word export ----------
+     One outage as a plain model; mm-outage-export.js lays it out (prep, resources, then each part of the
+     outage by area) and builds the .docx in the browser, so it works signed out and on a phone. */
+  function exportModel(o){
+    const due = plan().by[o.id] || [];
+    const tasks = Object.values(O.tasks).filter(t => t.outage === o.id).sort((a, b) => (a.at || 0) - (b.at || 0))
+      .map(t => ({ text: t.text, done: !!t.done, phase: t.phase || '', area: t.area || '', crew: t.crew || '', who: t.who || '' }));
+    const packages = Object.entries(O.pkgs).filter(([, k]) => k.outage === o.id).sort((a, b) => (a[1].at || 0) - (b[1].at || 0))
+      .map(([id, k]) => ({ name: k.name, area: k.area, phases: k.phases.map(ph => ({ title: ph.title,
+        steps: ph.steps.map(st => ({ title: st.title, who: st.who, hrs: st.hrs, lines: st.lines, subs: st.subs, done: !!O.pdone[`${id}:${st.id}`] })) })) }));
+    const manning = Object.fromEntries(SHIFTS.map(sh => [sh.k, Object.fromEntries(POS.map(pos => [pos, seat(o, sh.k, pos)]))]));
+    return {
+      machine: session && session.org ? session.org.name : 'PM1',
+      outage: { date: o.date, type: o.type || 'normal', shutdown: o.shutdown || null, onReel: o.onReel || null, hours: hoursOf(o) },
+      due: due.map(x => ({ name: x.p.name, section: x.p.section, due: x.due || null, changed: !!x.changed, accepted: !!x.accepted, declined: !!x.declined,
+        to: x.to ? x.to.date : null, deferred: x.deferred ? x.deferred.date : null, missed: x.missed ? x.missed.date : null,
+        flag: x.flag ? MM.condLabel(x.flag) : null, note: x.flag && x.it.conditionNote ? x.it.conditionNote : null })),
+      tasks, packages, positions: POS, shifts: SHIFTS, manning, crews: O.crews,
+    };
+  }
+  async function exportWord(o, btn){
+    if (btn) btn.disabled = true;
+    try {
+      const blob = await MMOutageExport.docx(exportModel(o));
+      const name = `${(session && session.org ? session.org.name : 'PM1').replace(/[^\w .-]+/g, '')} outage plan ${o.date}.docx`;
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 30000);
+      toast('Outage plan downloaded');
+    } catch (e) { toast('Couldn’t make the Word file: ' + (e && e.message ? e.message : e)); }
+    finally { if (btn) btn.disabled = false; }
+  }
+
   /* ---------- Schedule editor ---------- */
   let rows = [];
   function cadenceFrom(d){ let x = ANCHOR; if (d) { while (x <= d) x = addDays(x, CADENCE_DAYS); return x; } while (x < todayStr()) x = addDays(x, CADENCE_DAYS); return x; }
   function openEditor(){
     const list = outages(), today = todayStr();
     const first = !list.length;
-    rows = list.filter(o => o.date >= addDays(today, -RECENT_DAYS)).map(o => ({ id: o.id, date: o.date, type: o.type || 'normal' }));
+    rows = list.filter(o => o.date >= addDays(today, -RECENT_DAYS)).map(o => ({ id: o.id, date: o.date, type: o.type || 'normal', shutdown: o.shutdown || '', onReel: o.onReel || '' }));
     if (first){ let d = cadenceFrom(); for (let i = 0; i < PREFILL; i++){ rows.push({ id: null, date: d, type: 'normal' }); d = addDays(d, CADENCE_DAYS); } }
     $('edTitle').textContent = first ? 'Set up your outage schedule' : 'Outage schedule';
     $('edHelp').textContent = first
-      ? `Normal outages repeat every 6 weeks from Nov 11. Check these dates, change any that are different, and mark annual outages. You can change them later.`
-      : 'Change a date, mark an outage annual, or remove one. Removing an outage also removes its tasks, packages and manning. Older past outages aren’t shown here.';
+      ? `Normal outages repeat every 6 weeks from Nov 11. Check these dates, change any that are different, and mark annual outages. Add the planned shutdown and on-reel times when you know them. You can change all of it later.`
+      : 'Change a date or the planned shutdown and on-reel times, mark an outage annual, or remove one. Removing an outage also removes its tasks, packages and manning. Older past outages aren’t shown here.';
     $('edErr').textContent = '';
     drawRows(); $('editor').hidden = false;
     const f = $('edRows').querySelector('input'); if (f) f.focus();
+  }
+  // A typical length for a new outage's on-reel time: the nearest other outage that has both times.
+  function typicalHours(r){
+    const near = rows.filter(x => x !== r && x.shutdown && x.onReel).sort((a, b) => Math.abs(daysBetween(a.date, r.date)) - Math.abs(daysBetween(b.date, r.date)))[0];
+    return near ? hoursOf(near) : null;
   }
   function drawRows(){
     const box = $('edRows'); box.textContent = '';
     rows.forEach((r, i) => {
       const row = el('div', 'row');
       const d = el('input'); d.type = 'date'; d.value = r.date; d.required = true; d.setAttribute('aria-label', 'Outage date');
-      d.addEventListener('change', () => { r.date = d.value; wd.textContent = r.date ? fmt(r.date, { weekday: 'long' }) + (r.id ? '' : ' · new') : ''; });
+      d.addEventListener('change', () => {
+        // the shutdown and on-reel times move with the date
+        if (r.date && d.value){ const n = daysBetween(r.date, d.value); r.shutdown = shiftDays(r.shutdown, n); r.onReel = shiftDays(r.onReel, n); sd.value = r.shutdown; od.value = r.onReel; }
+        r.date = d.value; wd.textContent = r.date ? fmt(r.date, { weekday: 'long' }) + (r.id ? '' : ' · new') : '';
+      });
       const t = el('select'); t.setAttribute('aria-label', 'Outage type');
       [['normal', 'Normal'], ['annual', 'Annual']].forEach(([v, l]) => { const op = el('option', '', l); op.value = v; op.selected = r.type === v; t.appendChild(op); });
       t.addEventListener('change', () => { r.type = t.value; });
       const x = el('button', 'ib'); x.appendChild(MMIcons.el('x', 'sm')); x.title = 'Remove'; x.setAttribute('aria-label', 'Remove outage');
       x.addEventListener('click', () => { rows.splice(i, 1); drawRows(); });
       const wd = el('div', 'wd', r.date ? fmt(r.date, { weekday: 'long' }) + (r.id ? '' : ' · new') : '');
-      row.append(d, t, x, wd); box.appendChild(row);
+      // planned shutdown → on reel
+      const tm = el('div', 'tm');
+      const sd = el('input'), od = el('input'), du = el('span', 'du');
+      [sd, od].forEach(z => { z.type = 'datetime-local'; z.step = 900; });
+      sd.value = r.shutdown || ''; od.value = r.onReel || '';
+      sd.setAttribute('aria-label', 'Planned shutdown'); od.setAttribute('aria-label', 'Planned on reel');
+      const showDur = () => { const h = hoursOf(r); du.textContent = h != null ? hoursTxt(h) : (r.shutdown && r.onReel ? 'check times' : ''); du.classList.toggle('bad', !!(r.shutdown && r.onReel && h == null)); };
+      sd.addEventListener('change', () => {
+        r.shutdown = sd.value;
+        if (r.shutdown && !r.onReel){ const h = typicalHours(r); if (h){ r.onReel = addHours(r.shutdown, h); od.value = r.onReel; } }
+        showDur();
+      });
+      od.addEventListener('change', () => { r.onReel = od.value; showDur(); });
+      const l1 = el('label', '', 'Shutdown'), l2 = el('label', '', 'On reel');
+      l1.appendChild(sd); l2.appendChild(od);
+      tm.append(l1, l2, du); showDur();
+      row.append(d, t, x, wd, tm); box.appendChild(row);
     });
     if (!rows.length) box.appendChild(el('div', 'none', 'No outages. Add one below.'));
   }
@@ -1084,6 +1425,8 @@
     if (rows.some(r => !r.date)){ $('edErr').textContent = 'Every outage needs a date.'; return; }
     const dates = rows.map(r => r.date);
     if (new Set(dates).size !== dates.length){ $('edErr').textContent = 'Two outages have the same date.'; return; }
+    const badT = rows.find(r => r.shutdown && r.onReel && hoursOf(r) == null);
+    if (badT){ $('edErr').textContent = `${fmtShort(badT.date)}: on reel has to be after shutdown.`; return; }
     const shown = new Set(outages().filter(o => o.date >= addDays(todayStr(), -RECENT_DAYS)).map(o => o.id));
     const keep = new Set(rows.filter(r => r.id).map(r => r.id));
     const removed = [...shown].filter(id => !keep.has(id));
@@ -1097,10 +1440,13 @@
       for (const [k, t] of Object.entries(O.tasks)) if (t.outage === id) delete O.tasks[k];
       for (const [k, p] of Object.entries(O.pkgs)) if (p.outage === id){ delete O.pkgs[k]; for (const d of Object.keys(O.pdone)) if (d.startsWith(k + ':')) delete O.pdone[d]; }
       for (const k of Object.keys(O.man)) if (k.startsWith(id + ':')) delete O.man[k];
+      for (const k of Object.keys(O.dec)) if (k.startsWith(id + ':')) delete O.dec[k];
     }
     for (const r of rows){
       const id = r.id || uid();
-      O.outages[id] = Object.assign({}, O.outages[id] || {}, { date: r.date, type: r.type });
+      const o = Object.assign({}, O.outages[id] || {}, { date: r.date, type: r.type, shutdown: r.shutdown || null, onReel: r.onReel || null });
+      if (!o.shutdown) delete o.shutdown; if (!o.onReel) delete o.onReel;
+      O.outages[id] = o;
     }
     O.settings = Object.assign({}, O.settings || {}, { cadenceDays: CADENCE_DAYS, anchor: ANCHOR, setUp: true });
     saveO(); $('editor').hidden = true; render();
@@ -1150,7 +1496,7 @@
     return r;
   }
   function seedDemo(){
-    O = { settings: null, outages: {}, tasks: {}, pkgs: {}, pdone: {}, man: {} };
+    O = emptyO();
     const lib = TR.collect(tp);
     const rec = MMDemoOutages.build({ addDays, daysBetween, today: todayStr(), phasesOf: pid => lib[pid] ? libPhases(pid) : null,
       metaOf: pid => lib[pid] ? { name: lib[pid].data.name, ...(lib[pid].data.meta || {}) } : null });
@@ -1187,7 +1533,7 @@
     const prev = JSON.stringify(oRecords());
     seedDemo(); oStore.save(); render(); drawPanel();
     toast('Demo outages reset', { label: 'Undo', fn: () => {
-      O = { settings: null, outages: {}, tasks: {}, pkgs: {}, pdone: {}, man: {} };
+      O = emptyO();
       for (const [k, v] of Object.entries(JSON.parse(prev))) onO(k, v);
       oStore.save(); render(); drawPanel();
     } });
@@ -1224,6 +1570,6 @@
   })();
 })();
 </script>
-<script src="mm-nav.js?v=2026-11-09.0257"></script>
+<script src="mm-nav.js?v=2026-11-09.1516"></script>
 </body>
 </html>
