@@ -1,0 +1,36 @@
+# Report types Machine Manager knows. One entry per type. Every report, whoever writes it (the Sim Mill generator
+# today, a shift supervisor's form or the mill's MES later), goes through the same lifecycle (lifecycle.py):
+#
+#   generated -> submitted -> ingested -> extracted -> indexed        (failed, with the error, from any step; retry)
+#
+# generated / submitted happen where the report is written; ingested / extracted / indexed happen in the database
+# (public.mm_llm_ingest and public.mm_llm_process_reports, supabase/llm.sql), so a live job and a batch backfill share
+# them. The extractors named here are implemented in SQL (private.llm_extract_<name>); adding a report type means one
+# entry here, one producer, and an extractor only if it feeds a table.
+#
+#   cadence    shift (12 h: Day 06–18, Night 18–06) | day (the mill day, 06–06)
+#   id         the report id pattern: {machine}, {type_code}, {mill_day}, {shift_code}
+#   required   body fields that must be there (validated before submit, and again in SQL before extraction)
+#   extract    tables the body feeds
+#   index      the report's text goes into the documents search (and the embedder) under this document kind
+
+timezone: America/New_York
+mill_day_start: '06:00'
+
+types:
+  shift:
+    title: Shift Report
+    cadence: shift
+    id: '{machine}-SHIFT-{mill_day}-{shift_code}'
+    author: shift lead of the crew on shift
+    required: [grades, tons, sheet_on_pct, breaks, stops, notes, handover]
+    extract: [downtime]
+    index: shift_report
+  production:
+    title: Production Report (Quality / Uptime / Tonnage / OME)
+    cadence: day
+    id: '{machine}-PROD-{mill_day}'
+    author: production system (MES), reviewed by the production manager
+    required: [tons, saleable_tons, uptime_pct, minutes, breaks, grade_hours, quality, efficiency, shifts]
+    extract: [production_daily]
+    index: production_report

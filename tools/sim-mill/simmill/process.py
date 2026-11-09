@@ -10,6 +10,7 @@ import datetime as dt, math
 import numpy as np
 from .base import B, BT, md, SHIFT
 from . import engine as ENG
+from . import degrade
 from .base import (T0, H, HOUR, MIN, DAY, Y0, Y1, TODAY, TAG, T, MACHINE, GRADES, GRADE_IDS, GLABEL, full_tph, hidx, ts, D, DT,
                    PLANTS, BY_NAME, SECTION_NAME, us)
 from .model import grade_at, age_frac, piece_at, VIB_BASE, VIB_DANGER
@@ -161,6 +162,7 @@ def build(m, seed=3303):
         R[k] = VIB_BASE + o + vib.get(k, np.zeros(H))
     R['REEL_DRUM_DS_TEMP'] = 132 + 95 * (R['REEL_DRUM_DS_VIB'] - VIB_BASE) + 2 * np.sin((day - 200) / 365 * 2 * math.pi)
     R['BREAKS'] = st['breaks']
+    degrade.apply(R, m.get('developing', []), tt)            # developing failures (felts, pumps, syphons, bearings, drifts)
 
     # The engine drives the process tags (config/tags.yaml): its running level for the hour, plus the Python model's
     # deviation from its own grade median (clothing and plate wear, the planted faults). Hours the engine has no running
