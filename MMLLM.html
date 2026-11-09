@@ -246,13 +246,14 @@
   <div class="sheet about" role="dialog" aria-modal="true" aria-labelledby="aboutTitle">
     <div class="sheet-h">
       <div><h2 id="aboutTitle">About the model</h2>
-        <p>How mill data reaches the assistant: sources and reports, import, storage, the tools the model can call, and the models behind it.</p>
+        <p>How mill data reaches the assistant: sources and reports, import, storage, the tools the model can call, the models behind it, and the MCP server that opens the same tools to Claude.</p>
         <p class="live" id="aboutLive"></p></div>
       <button class="btn icon" type="button" id="aboutClose" aria-label="Close" data-ic="x" data-ic-size="sm"></button>
     </div>
     <div class="atabs" role="tablist" aria-label="About the model">
       <button type="button" role="tab" id="tabFlowBtn" aria-controls="tabFlow" aria-selected="true">Information flow</button>
       <button type="button" role="tab" id="tabSimBtn" aria-controls="tabSim" aria-selected="false" tabindex="-1">Sim Mill: data from The Paper Mill</button>
+      <button type="button" role="tab" id="tabMcpBtn" aria-controls="tabMcp" aria-selected="false" tabindex="-1">Use it from Claude (MCP)</button>
     </div>
     <div class="sheet-b">
     <div id="tabFlow" role="tabpanel" aria-labelledby="tabFlowBtn">
@@ -276,6 +277,7 @@
         <div class="rule"><b>Tables first, search second</b><span>Anything with rows and columns goes in a table and is answered with a query. Only narrative text (report findings, RCFA write-ups, manuals) is chunked and embedded for search.</span></div>
         <div class="rule"><b>Pi in summaries</b><span>The assistant gets daily or hourly Pi summaries for the tag and window it asks for, not raw points. The demo stores them; at the mill they’ll be read from the historian on demand.</span></div>
         <div class="rule"><b>Models are swappable</b><span>Prompts and tools live in this app, not in a vendor's features. The adapter maps one request format to each provider; embeddings record which model made them.</span></div>
+        <div class="rule"><b>One set of tools</b><span>The page’s assistant and the MCP server call the same read-only tools, defined once. Whatever client asks, the data, the access rules and the citations are the same.</span></div>
         <div class="rule"><b>Answers cite records</b><span>Statements carry the WO, report, RCFA, BUS day or Pi tag they came from in brackets, and the tools’ evidence is shown under each demo answer, so it can be checked before it goes on an outage plan.</span></div>
       </div>
     </div>
@@ -297,6 +299,25 @@
       </ol>
     </div>
 
+    <div id="tabMcp" role="tabpanel" aria-labelledby="tabMcpBtn" hidden>
+      <section class="intro">
+        <h3 class="sub-h">Use Machine Manager from Claude</h3>
+        <p>The <code>mm-mcp</code> edge function serves the assistant’s read-only tools over the Model Context Protocol (MCP). Add it to Claude as a custom connector and ask about the mill from any chat, on the web, the desktop app or your phone. Claude chooses the tools and writes the answer; the data, access rules and citations are the ones this page uses.</p>
+      </section>
+      <ol class="sm-steps">
+        <li><b>Add the connector.</b> On claude.ai (in a browser, including a phone’s browser; the mobile app can’t add connectors) go to <b>Settings → Connectors → Add custom connector</b>, name it <i>Machine Manager</i> and paste <code style="overflow-wrap:anywhere">https://rvsowoistaajjogtssdd.supabase.co/functions/v1/mm-mcp</code>. Leave sign-in and advanced settings blank. It then shows up in the Claude apps too.</li>
+        <li><b>Turn it on.</b> In a chat, open the tools menu and enable <i>Machine Manager</i>.</li>
+        <li><b>Ask.</b> For example: “What should we prioritize for the Nov 11 outage?”, “What actions are overdue?”, “Which repeat failures don’t have an RCFA?”. Claude starts with <code>list_orgs</code> and <code>machine_context</code> (positions, Pi tags, outages, last day of data).</li>
+      </ol>
+      <h3 class="rules-h">What it can do</h3>
+      <div class="rules">
+        <div class="rule"><b>20 read-only tools</b><span>list_orgs, machine_context, and every assistant tool: documents and records search, position history and life, outage scope, overdue actions, Bonvoy exceptions and reports, Pi daily and raw values, downtime, repeat stops, RCFA status, production, grade hours, shift reports and OME. Each takes an optional org (default Sim Mill).</span></div>
+        <div class="rule"><b>Who sees what</b><span>Without sign-in it reads only the public demo orgs (today: Sim Mill). With a user’s session token, row-level security adds that user’s own organizations. It never writes and never calls a model, so it has no daily limit.</span></div>
+        <div class="rule"><b>Charts</b><span>make_chart stays on this page. Through MCP, Claude gets the numbers and draws or describes the chart itself.</span></div>
+        <div class="rule"><b>Not yet</b><span>Sign-in through OAuth for private orgs, vendor reports and drawings as MCP resources, and ready-made prompts (outage brief, morning watch, RCFA draft).</span></div>
+      </div>
+    </div>
+
     </div>
   </div>
 </div>
@@ -305,7 +326,7 @@
 <script src="mm-cloud.js?v=2026-11-09.1700"></script>
 <script src="mm-llm-org.js?v=2026-11-09.1700"></script>
 <script>
-  const VERSION = 'v0.10.0';
+  const VERSION = 'v0.11.0';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
 
@@ -375,6 +396,8 @@
       how: 'Read-only and scoped to your organization: search_documents, search_records, position_history, outage_scope, overdue_actions, bonvoy_exceptions, bonvoy_report, pi_daily, pi_values, downtime_summary, downtime_events, repeat_stops, rcfa_status, position_life, production, grade_hours, shift_reports (what the crews wrote) and efficiency (OME). make_chart hands numbers to the page, which draws the chart with a PNG download. Nothing writes back.' },
     { id: 'adapt',  s: 'llm', name: 'Model adapter', d: 'One request format, more than one provider.', k: 'Claude · OpenAI', live: true,
       how: 'Translates messages and tool calls to each provider. Claude Sonnet 5.5 answers by default; the demo account can pick Claude Opus 5.5, which runs on its own API key. Switching model is a setting; the tools and prompts stay the same.' },
+    { id: 'mcp',    s: 'llm', name: 'MCP server', d: 'The same tools for Claude and other MCP clients.', k: 'Supabase Edge Function', live: true,
+      how: 'The mm-mcp function serves the read-only tools over the Model Context Protocol, plus list_orgs and machine_context, so Claude (web, desktop or phone) can query the mill without this page. No model runs here and nothing is written. Signed out it reads the public demo orgs only; row-level security decides the rest. See the "Use it from Claude" tab.' },
     { id: 'helper', s: 'llm', name: 'Helper model', d: 'Small, cheap model for ingest jobs.', k: 'extract · tag · summarise',
       how: 'Planned: a small model that runs on each upload to pull fields from vendor reports, suggest positions for free text and summarise chunks. Today rules and OCR do this part. Could be a local model if data must stay on site.' },
 
@@ -385,6 +408,8 @@
       how: 'Finds similar past issues and RCFAs, pulls recent trends and WOs for the position, and charts the trends that matter.', live: true },
     { id: 'ask',    s: 'out', name: 'Ask MM', d: 'Plain questions across everything, with citations and charts.', k: 'chat', live: true,
       how: 'Free questions, e.g. "how long did the last three felts run?", answered from tables first and documents second. Asked for a graph, it draws one with a PNG download. Open to the demo account today.' },
+    { id: 'claude', s: 'out', name: 'Claude connector', d: 'Ask about the mill from Claude, on any device.', k: 'custom connector', live: true,
+      how: 'Add the MCP server as a custom connector in Claude and turn it on in a chat. Claude picks the tools, so answers come from the same data and cite the same records; charts are drawn by Claude, not this page.' },
     { id: 'watch',  s: 'out', name: 'Morning watch', d: 'New exceptions, overdue actions, items due.', k: 'planned',
       how: 'Planned as a scheduled summary before the BUS meeting: what changed since yesterday and what needs an owner. Today it can be asked for, and the Bonvoy Report covers the Pi side.' },
     { id: 'rcfad',  s: 'out', name: 'RCFA draft', d: 'Timeline and evidence for a new RCFA.', k: 'planned',
@@ -400,6 +425,7 @@
     ['equip','tools'],['events','tools'],['records','tools'],['docs','tools'],['files','tools',1],['piconn','tools',1],
     ['tools','orch'],['orch','adapt'],['helper','adapt'],['helper','parse',1],['helper','tag',1],
     ['orch','outage'],['orch','trbl'],['orch','ask'],['orch','watch'],['orch','rcfad'],
+    ['tools','mcp'],['mcp','claude'],
   ];
 
   const flow = document.getElementById('flow'), wires = document.getElementById('wires'), detail = document.getElementById('detail');
@@ -792,16 +818,17 @@
     }
   })();
   // ---------- About: tabs ----------
-  const tabBtns = [document.getElementById('tabFlowBtn'), document.getElementById('tabSimBtn')];
+  const tabBtns = ['tabFlowBtn', 'tabSimBtn', 'tabMcpBtn'].map(id => document.getElementById(id));
   function showTab(i, focus){
     tabBtns.forEach((b, k) => { b.setAttribute('aria-selected', String(k === i)); b.tabIndex = k === i ? 0 : -1;
       document.getElementById(b.getAttribute('aria-controls')).hidden = k !== i; });
     if (focus) tabBtns[i].focus();
-    if (i === 0) requestAnimationFrame(draw); else drawSim();
+    document.querySelector('#about .sheet-b').scrollTop = 0;
+    if (i === 0) requestAnimationFrame(draw); else if (i === 1) drawSim();
   }
   tabBtns.forEach((b, i) => {
     b.addEventListener('click', () => showTab(i));
-    b.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft'){ e.preventDefault(); showTab((i + 1) % 2, true); } });
+    b.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft'){ e.preventDefault(); showTab((i + (e.key === 'ArrowRight' ? 1 : tabBtns.length - 1)) % tabBtns.length, true); } });
   });
 
   // ---------- About: Sim Mill flowchart (fixed layout, SVG; scrolls sideways on small screens) ----------
