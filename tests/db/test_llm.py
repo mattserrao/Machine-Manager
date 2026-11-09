@@ -135,4 +135,44 @@ check("anon can't read the demo org's mm_records", raises(lambda: anon.execute("
       or anon.execute("select count(*) from mm_records").fetchone()[0] == 0)
 admin.execute("select public.mm_llm_set_public(%s, false)", (name_a,)); admin.execute("select public.mm_llm_set_public(%s, false)", (name_b,))
 
+# ─── step 09: reports and their lifecycle ───
+ingest(svc, tok_a, "report_types", [{"type": "shift", "title": "Shift Report", "cadence": "shift", "required": ["stops", "notes"], "extract": ["downtime"]},
+                                     {"type": "production", "title": "Production Report", "cadence": "day", "required": ["tons", "efficiency"], "extract": ["production_daily"]}])
+stop = {"event_id": "R-1", "start": "2026-07-01T08:00-04:00", "end": "2026-07-01T10:30-04:00", "minutes": 150, "kind": "unplanned", "area": "Press",
+        "equipment": "Vacuum pump", "asset_no": "77", "position_id": "", "cause": "Vacuum pump failure", "wo_no": "W1", "comment": "vanes"}
+rep = lambda rid, rtype, body, day="2026-07-01": {"report_id": rid, "type": rtype, "machine": "PM1", "period_start": day + "T06:00-04:00",
+      "period_end": day + "T18:00-04:00", "mill_day": day, "shift": "Day", "crew": "B", "author": "Lead", "body": body, "text": "Vacuum pump down 2.5 h; couch vacuum fell off all week.", "status": "ingested"}
+ingest(svc, tok_a, "rcfa", [{"rcfa_id": "RC-9", "event_date": "2026-07-01", "asset_no": "77", "title": "Vacuum pump"}])
+ingest(svc, tok_a, "reports", [rep("S-1", "shift", {"stops": [stop], "notes": "x"}), rep("S-2", "shift", {"notes": "no stops field"}),
+                               rep("P-1", "production", {"tons": 700, "minutes": {"break": 30}, "efficiency": {"ome_pct": 81.5, "time_pct": 97}})])
+check("reports can't be processed without a token", raises(lambda: c.execute("select public.mm_llm_process_reports('nope', 10)").fetchone()) is not None)
+r = svc.execute("select public.mm_llm_process_reports(%s, 100)", (tok_a,)).fetchone()[0]
+check("processing: two extracted, one failed", r == {"picked": 3, "extracted": 2, "failed": 1}, str(r))
+st = dict(admin.execute("select report_id, status from llm.reports where org_id = %s", (A,)).fetchall())
+check("statuses after processing", st == {"S-1": "indexed", "S-2": "failed", "P-1": "indexed"}, str(st))
+check("a failed report says why", "stops" in admin.execute("select error from llm.reports where report_id = 'S-2'").fetchone()[0])
+d = admin.execute("select minutes, rcfa_id, report_id from llm.downtime where org_id = %s and event_id = 'R-1'", (A,)).fetchone()
+check("a shift report's stops land in downtime, with the RCFA found by equipment and day", d == (150, "RC-9", "S-1"), str(d))
+p = admin.execute("select tons, ome_pct, time_eff, report_id from llm.production_daily where org_id = %s and day = '2026-07-01'", (A,)).fetchone()
+check("a production report lands in production_daily", p == (700, 81.5, 97, "P-1"), str(p))
+ev = [r[0] for r in admin.execute("select to_status from llm.report_events where report_id = 'S-1' order by id").fetchall()]
+check("every status change is logged", ev == ["ingested", "extracted", "indexed"], str(ev))
+check("processing again picks nothing", svc.execute("select public.mm_llm_process_reports(%s, 100)", (tok_a,)).fetchone()[0]["picked"] == 0)
+ingest(svc, tok_a, "reports", [rep("S-1", "shift", {"stops": [dict(stop, minutes=160)], "notes": "x"})])
+svc.execute("select public.mm_llm_process_reports(%s, 100)", (tok_a,))
+check("a re-ingested report is extracted again (idempotent, no duplicates)",
+      admin.execute("select count(*), max(minutes) from llm.downtime where org_id = %s and report_id = 'S-1'", (A,)).fetchone() == (1, 160))
+as_user(c, u_a)
+check("a member reads their reports", c.execute("select count(*) from public.mm_llm_reports(%s, '2026-07-01', '2026-07-01')", (A,)).fetchone()[0] == 3)
+check("report search finds words in the text", c.execute("select count(*) from public.mm_llm_reports(%s, '2026-01-01', '2026-12-31', null, 'couch vacuum')", (A,)).fetchone()[0] == 3)
+check("a report with its lifecycle", len(c.execute("select events from public.mm_llm_report(%s, 'S-1')", (A,)).fetchone()[0]) >= 3)
+check("the pipeline status", ("shift", "failed") in [(r[0], r[3]) for r in c.execute("select * from public.mm_llm_report_status(%s)", (A,)).fetchall()])
+as_user(c, u_b)
+check("a non-member reads no reports", c.execute("select count(*) from public.mm_llm_reports(%s, '2026-01-01', '2026-12-31')", (A,)).fetchone()[0] == 0
+      and c.execute("select count(*) from llm.report_events").fetchone()[0] == 0)
+ingest(svc, tok_a, "reports", [], "reset")
+check("resetting reports clears what was extracted from them",
+      admin.execute("select count(*) from llm.downtime where org_id = %s and report_id is not null", (A,)).fetchone()[0] == 0
+      and admin.execute("select count(*) from llm.production_daily where org_id = %s and report_id is not null", (A,)).fetchone()[0] == 0)
+
 print(f"\n{len(failures)} failing" if failures else "\nall passed"); sys.exit(1 if failures else 0)

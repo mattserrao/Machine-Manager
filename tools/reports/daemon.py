@@ -50,7 +50,7 @@ def rows(outbox, root=None):
                         period_start=r['period_start'], period_end=r['period_end'], mill_day=r['mill_day'], shift=r.get('shift'),
                         crew=r.get('crew'), author=(r.get('author') or {}).get('name'), author_role=(r.get('author') or {}).get('role'),
                         source=r.get('source'), body=r['body'], text=r['text'], history=r.get('history', []),
-                        file_path=os.path.relpath(p, root or outbox).replace(os.sep, '/')))
+                        file_path=os.path.relpath(p, root or outbox).replace(os.sep, '/'), status='ingested', error=None))
     return out
 
 def push(target, outbox, root=None, log=print):
