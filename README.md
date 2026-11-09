@@ -1,7 +1,7 @@
 # Machine-Manager
 Various tools for machine management.
 
-Without signing in, every tool runs as a demo that saves only in your browser. Signed-in users share data through Supabase, scoped to their organization. A real organization (e.g. PM1) only ever sees what its own people add or load: the mill-data pages (Daily, Downtime / RCFA, Vendor Reports, Bonvoy Report, MM LLM) show a placeholder until its files are loaded, and the Ops Task Library starts empty (the example packages can be added on request). The demo account and signed-out visitors see the Sim Mill demo. `RAG.html` is a placeholder for uploading documents for the assistant to search. See [supabase/SETUP.md](supabase/SETUP.md) for adding people and how access works.
+Without signing in, every tool runs as a demo that saves only in your browser. Signed-in users share data through Supabase, scoped to their organization. A real organization (e.g. PM1) only ever sees what its own people add or load: the mill-data pages (Daily, Downtime / RCFA, Vendor Reports, Bonvoy Report, MM LLM) show a placeholder until its files are loaded, and the Ops Task Library starts empty (the example packages can be added on request). The demo account and signed-out visitors see the Sim Mill demo. `RAG.html` is a placeholder for uploading documents for the assistant to search. The MM LLM tools are also served to Claude as an MCP server (`mm-mcp`); the MM LLM page’s About → "Use it from Claude (MCP)" has the steps. See [supabase/SETUP.md](supabase/SETUP.md) for adding people and how access works.
 
 ## Layout
 
@@ -17,7 +17,7 @@ Without signing in, every tool runs as a demo that saves only in your browser. S
 | `mm-theme.js` | Light / dark / system appearance, picked at the bottom of the app menu; saved on the signed-in account (or this browser when signed out) |
 | `mm-icons.js` | The line-icon set used instead of emoji (`data-ic="name"` or `MMIcons.svg(name)`) |
 | `mm-ui.js`, `mm-nav.js`, `mm-config.js` | Small shared helpers, the app menu, the Supabase project |
-| `supabase/` | Database schema (`schema.sql`, MM LLM in `llm.sql`), migrations, the `mm-llm-ingest` edge function and setup notes |
+| `supabase/` | Database schema (`schema.sql`, MM LLM in `llm.sql`), migrations, the `mm-llm-ingest`, `mm-llm-ask` and `mm-mcp` (MCP server for Claude) edge functions and setup notes |
 | `tools/ingest/` | MM LLM importers, loader and answer-key check |
 | `tools/demo-data/`, `demo-data/` | The original scripted demo year (Demo Mill: kept, no longer published) |
 | `tools/sim-mill/`, `demo-data/sim-mill/` | Sim Mill: a data-generating model of The Paper Mill's mill (Python port of its sim), one modelled year, its answer key |

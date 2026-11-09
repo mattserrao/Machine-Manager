@@ -1,5 +1,5 @@
 // What each demo org's machine is. A real org's machine comes from its positions and tags below.
-const MACHINES: Record<string, string> = {
+export const MACHINES: Record<string, string> = {
   'Demo Mill': 'PM1 is a two-ply linerboard machine making 26#, 30# and 33# (lb/MSF): refiners (BP 1, BP 2 base ply; TP 1, TP 2 top ply), top and base ply formers, a 2-nip press with a tandem felt, three dryer sections (cans 1-10, 11-44, 45-74), calender and reel. Normal outages run about 14 h every 6 weeks; there is one annual outage a year.',
   'Sim Mill': 'PM1 is a recycled linerboard machine (The Paper Mill\'s mill) making 24#, 28#, 31# and 34 Super: pulper and stock prep, twin refiners (REF 1, REF 2), a fourdrinier, a 2-nip press (top and bottom felts on each), four uno-run dryer sections of 5 cans each (cans 1-20) with 5 felt rolls per section, reel and winder. Outages run 20 h every 6 weeks; there is no annual outage.',
 };
