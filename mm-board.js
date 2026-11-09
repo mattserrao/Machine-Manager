@@ -1981,8 +1981,8 @@ function pkgSummary(b){
     const EX = P.examples || [];
     const missing = EX.filter(x => !app.boards[x.id]);
     if (missing.length && (!cloud.on || (cloud.edit && !P.seedCloud))){
-      restore = el('button', 'lib-link', `Restore ${missing.length === EX.length ? 'the examples' : missing.length + ' missing example' + (missing.length > 1 ? 's' : '')}`);
-      restore.addEventListener('click', () => { seedExamples(true); toast('Examples restored'); });
+      restore = el('button', 'lib-link', missing.length === EX.length ? (cloud.on ? 'Add the example packages' : 'Restore the examples') : `Restore ${missing.length} missing example${missing.length > 1 ? 's' : ''}`);
+      restore.addEventListener('click', () => { seedExamples(true); toast(cloud.on ? 'Examples added' : 'Examples restored'); });
     }
     if (ex.length || restore || !q) section('Examples', ex, q ? el('div', 'lib-none', 'No matches.') : null, restore);
   }
@@ -2914,7 +2914,8 @@ function pkgSummary(b){
       try {
         await loadCloud(sess);
         saveStateEl.textContent = cloud.edit ? 'Saved' : 'View only';
-        if (cloud.edit && !app.seeded) seedExamples();
+        // a signed-in organization starts with only what it adds; pages with P.seedCloud set up an empty structure
+        if (cloud.edit && !app.seeded && P.seedCloud) seedExamples();
       } catch (e) {
         saveStateEl.textContent = 'Not loaded';
         toast(`Couldn’t load ${T.loadWhat}: ` + (e.message || e) + ' — reload to try again.');

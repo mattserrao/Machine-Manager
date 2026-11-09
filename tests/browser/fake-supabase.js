@@ -4,7 +4,7 @@
 (() => {
   const rows = new Map(), log = (window.__rpcLog = []);
   let clock = Date.parse('2026-11-07T12:00:00Z');
-  const ORG = 'org-pm1', clone = o => JSON.parse(JSON.stringify(o));
+  const ORG = window.__orgId || 'org-pm1', ORG_NAME = window.__orgName || 'PM1', clone = o => JSON.parse(JSON.stringify(o));
   const key = (t, id) => `${t}|${id}`;
   // Rows live in sessionStorage so they survive a reload of the page (like a real server would).
   let saved = null; try { saved = JSON.parse(sessionStorage.getItem('__fakeRows')); } catch (e) {}
@@ -34,7 +34,7 @@
       gte(k, v){ f.push(r => r[k] >= v); return api; }, limit(n){ q.limit = n; return api; }, range(a, b){ q.range = [a, b]; return api; },
       then(res, rej){
         Promise.resolve().then(() => {
-          if (table === 'memberships') return { data: [{ role: 'editor', org: { id: ORG, name: 'PM1' } }], error: null };
+          if (table === 'memberships') return { data: [{ role: 'editor', org: { id: ORG, name: ORG_NAME } }], error: null };
           let all = [...rows.values()].filter(r => f.every(fn => fn(r))).sort((a, b) => a.id < b.id ? -1 : 1);
           if (q.range) all = all.slice(q.range[0], q.range[1] + 1); else if (q.limit) all = all.slice(0, q.limit);
           return { data: clone(all), error: null };
@@ -52,6 +52,13 @@
       async rpc(name, args){
         if (name === 'mm_apply'){ log.push(clone(args)); const data = apply(args.p_tool, args.p_changes); persist(); return { data, error: null }; }
         if (name === 'mm_file_refs') return { data: [], error: null };
+        // MM LLM data pages: one public demo org (Sim Mill); PM1 has no data of its own. Every call is kept, so a
+        // test can check the real org never asks for the demo org's rows.
+        (window.__llmCalls = window.__llmCalls || []).push({ name, args: clone(args || {}) });
+        if (name === 'mm_llm_public_org') return { data: [{ id: 'org-sim', name: 'Sim Mill' }], error: null };
+        if (name === 'mm_llm_summary') return { data: args.p_org === 'org-sim' ? [{ source: 'BUS lines', n: 10, last_day: '2026-10-31' }] : [], error: null };
+        if (name === 'mm_llm_my_access') return { data: ORG === 'org-sim' ? [{ org_id: ORG, org_name: ORG_NAME, daily_limit: 40, used_today: 0 }] : [], error: null };
+        if (name === 'mm_llm_saved_answers' || name === 'mm_llm_my_answers') return { data: [], error: null };
         return { data: null, error: { message: 'unknown rpc ' + name } };
       },
       channel(){ const ch = { on(){ return ch; }, subscribe(cb){ setTimeout(() => cb('SUBSCRIBED'), 1); return ch; } }; return ch; },

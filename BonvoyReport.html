@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Bonvoy Report</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.2256"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2256">
-<link rel="stylesheet" href="mm-data.css?v=2026-11-08.2256">
-<script src="mm-icons.js?v=2026-11-08.2256"></script>
+<script src="mm-theme.js?v=2026-11-09.0050"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.0050">
+<link rel="stylesheet" href="mm-data.css?v=2026-11-09.0050">
+<script src="mm-icons.js?v=2026-11-09.0050"></script>
 <style>
   .dbar button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--r-sm);padding:5px 10px;cursor:pointer}
   .dbar button:hover{border-color:var(--line-strong)}
@@ -84,15 +84,15 @@
   <div id="body"><div class="dmsg">Loading…</div></div>
   <div id="ver"></div>
 </main>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2256"></script>
-<script src="mm-config.js?v=2026-11-08.2256"></script>
-<script src="mm-cloud.js?v=2026-11-08.2256"></script>
-<script src="mm-llm-org.js?v=2026-11-08.2256"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-09.0050"></script>
+<script src="mm-config.js?v=2026-11-09.0050"></script>
+<script src="mm-cloud.js?v=2026-11-09.0050"></script>
+<script src="mm-llm-org.js?v=2026-11-09.0050"></script>
 <script>
   // Each day's report: a summary, the flagged trends ranked by severity (sigma x hours x days in a row) with a 14-day trend
   // of the tag against its band, and the bearings above their fixed alarm limits. Written by MM LLM from the Bonvoy
   // exceptions and the Pi historian; for the demo the text is generated with the data (tools/sim-mill/simmill/bonvoy_report.py).
-  const VERSION = 'v0.1.1';
+  const VERSION = 'v0.2.0';
   document.getElementById('ver').textContent = 'Bonvoy Report ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
   const $ = id => document.getElementById(id), O = MMLLMOrg, esc = O.esc;
@@ -204,10 +204,13 @@
   (async () => {
     st = await O.resolve();
     if (st.error){ $('body').innerHTML = `<div class="dmsg">${esc(st.error)}</div>`; return; }
+    if (st.empty) return O.placeholder(st, { icon: 'monitor', title: 'No Bonvoy reports yet',
+      text: 'The Bonvoy Report will write up each day’s Pi trends that ran outside their limits, ranked, with likely causes and related work.',
+      needs: ['Pi historian tags', 'Bonvoy exception reports'] });
     O.picker($('org'), st, start);
     start();
   })();
 </script>
-<script src="mm-nav.js?v=2026-11-08.2256"></script>
+<script src="mm-nav.js?v=2026-11-09.0050"></script>
 </body>
 </html>

@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MM LLM</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-08.2256"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-08.2256">
-<script src="mm-icons.js?v=2026-11-08.2256"></script>
+<script src="mm-theme.js?v=2026-11-09.0050"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.0050">
+<script src="mm-icons.js?v=2026-11-09.0050"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1320px;margin:0 auto;padding:24px 20px 72px}
@@ -115,6 +115,8 @@
   .tile{padding:10px 12px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface)}
   .tile b{display:block;font-size:18px;font-weight:600;font-variant-numeric:tabular-nums}
   .tile span{font-size:12px;color:var(--muted)}
+  .ph{max-width:620px;padding:16px 18px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);font-size:13px;line-height:1.55;color:var(--ink-2)}
+  .ph h3{margin:0 0 6px;font-size:14px;font-weight:600;color:var(--ink)} .ph ul{margin:0 0 10px;padding-left:18px} .ph .note{margin:0;font-size:12px;color:var(--muted)}
   .examples{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface-2, var(--surface));margin:0 0 8px}
   .examples > summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:2px 10px;padding:12px 14px;border-radius:var(--r-lg)}
   .examples > summary::-webkit-details-marker{display:none}
@@ -174,6 +176,10 @@
      border:1px solid var(--line-strong);border-radius:var(--r);background:var(--surface);color:var(--ink)}
   .ask .row{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;margin:8px 0 0}
   .ask .row span{font-size:12px;color:var(--muted)}
+  .mpick{display:inline-flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+  .mpick button{font:inherit;font-size:12px;padding:5px 12px;border:0;background:var(--surface);color:var(--ink-2);cursor:pointer}
+  .mpick button + button{border-left:1px solid var(--line)}
+  .mpick button[aria-checked="true"]{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
   .ask .mine{margin:10px 0 0;display:flex;flex-wrap:wrap;gap:6px}
   .ask .mine button{font:inherit;font-size:12px;color:var(--ink-2);background:var(--surface);border:1px solid var(--line);border-radius:999px;
      padding:3px 10px;cursor:pointer;max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -288,12 +294,12 @@
     </div>
   </div>
 </div>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-08.2256"></script>
-<script src="mm-config.js?v=2026-11-08.2256"></script>
-<script src="mm-cloud.js?v=2026-11-08.2256"></script>
-<script src="mm-llm-org.js?v=2026-11-08.2256"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-09.0050"></script>
+<script src="mm-config.js?v=2026-11-09.0050"></script>
+<script src="mm-cloud.js?v=2026-11-09.0050"></script>
+<script src="mm-llm-org.js?v=2026-11-09.0050"></script>
 <script>
-  const VERSION = 'v0.8.0';
+  const VERSION = 'v0.9.0';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
 
@@ -466,6 +472,19 @@
     const chip = $('demoChip'), sub = $('demoSub');
     const qlist = $('qlist'), ans = $('ans'), narrow = matchMedia('(max-width:860px)'); let cur = null;
     const fail = msg => { chip.textContent = 'Unavailable'; sub.textContent = msg; };
+    // A real organization before its own data is loaded: say what the assistant will use, show nothing from the demo.
+    function placeholder(o){
+      $('demoTitle').textContent = o.name; chip.textContent = 'Your organization';
+      sub.textContent = 'Nothing here yet. MM LLM answers questions from your organization’s own files, and none are loaded for ' + o.name + ' yet.';
+      $('examples').hidden = true; $('tiles').textContent = '';
+      const box = mk('div', 'ph');
+      box.append(mk('h3', '', 'What it will use'));
+      const ul = mk('ul');
+      ['BUS daily sheet', 'Bonvoy (Pi exception) reports and the Pi historian', 'RCFA log and Teams / Planner actions', 'JDE work orders',
+       'Vendor reports, drawings and reference charts', 'Downtime and production records'].forEach(t => ul.append(mk('li', '', t)));
+      box.append(ul, mk('p', 'note', 'When those are loaded, this page shows what’s there and the assistant can answer from it. The demo data stays in the demo account.'));
+      $('tiles').after(box);
+    }
     if (!MMCloud.enabled) return fail('The demo data lives in Supabase, which isn’t set up for this copy of the site.');
     const db = MMCloud.client;
     let org = null, isDemo = true, s = null;
@@ -475,10 +494,9 @@
       if (error) throw error;
       if (s && s.org) {                         // a signed-in org with its own MM LLM data wins
         const { data } = await db.rpc('mm_llm_summary', { p_org: s.org.id });
-        if (data && data.some(r => r.n > 0)) {
-          org = { id: s.org.id, name: s.org.name };
-          isDemo = (pubs || []).some(p => p.id === org.id);   // e.g. the demo account, a viewer of Sim Mill
-        }
+        const demoOrg = (pubs || []).some(p => p.id === s.org.id);   // the demo account, a viewer of Sim Mill
+        if (data && data.some(r => r.n > 0)) { org = { id: s.org.id, name: s.org.name }; isDemo = demoOrg; }
+        else if (!demoOrg) return placeholder(s.org);   // a real org (e.g. PM1) never sees demo data
       }
       if (!org && pubs && pubs[0]){
         // public demo orgs (Sim Mill): ?org=<name> or the last one picked in this browser, else the first
@@ -738,10 +756,20 @@
       const ta = mk('textarea'); ta.id = 'askQ'; lab.htmlFor = 'askQ'; ta.maxLength = 1500;
       ta.placeholder = 'e.g. What should I watch on the dryer section going into the Nov 11 outage?';
       const go = mk('button', 'btn primary', 'Ask'); go.type = 'button';
+      // model: Sonnet (default) or Opus, remembered in this browser
+      let model = 'sonnet'; try { model = localStorage.getItem('mm-llm-model') === 'opus' ? 'opus' : 'sonnet'; } catch (e) {}
+      const pick = mk('div', 'mpick'); pick.setAttribute('role', 'radiogroup'); pick.setAttribute('aria-label', 'Model');
+      [['sonnet', 'Sonnet', 'Faster, the default'], ['opus', 'Opus', 'Larger model: slower, more thorough']].forEach(([v, t, tip]) => {
+        const b = mk('button', '', t); b.type = 'button'; b.title = tip; b.dataset.m = v; b.setAttribute('role', 'radio');
+        b.addEventListener('click', () => { model = v; try { localStorage.setItem('mm-llm-model', v); } catch (e) {} sync(); });
+        pick.append(b);
+      });
+      const sync = () => pick.querySelectorAll('button').forEach(b => b.setAttribute('aria-checked', String(b.dataset.m === model)));
+      sync();
       const left = mk('span'), row = mk('div', 'row'), mine = mk('div', 'mine');
       const setLeft = n => { left.textContent = `${n} question${n === 1 ? '' : 's'} left today · answers use only the demo data`; };
       setLeft(Math.max(0, access.daily_limit - access.used_today));
-      row.append(go, left); box.append(lab, ta, row, mine); $('askSlot').appendChild(box);
+      row.append(go, pick, left); box.append(lab, ta, row, mine); $('askSlot').appendChild(box);
       const showMine = (r, q) => {
         cur = 'ask'; qlist.querySelectorAll('.q').forEach(x => x.setAttribute('aria-pressed', 'false'));
         ans.textContent = ''; ans.append(mk('h3', '', q), mk('div', 'lbl', r.status === 'error' ? 'Error' : 'Model answer'), modelText(r.answer), ...chartsOf(r).map(chartBox), meta(r));
@@ -756,9 +784,9 @@
         const q = ta.value.trim(); if (!q) return ta.focus();
         go.disabled = true; go.textContent = 'Thinking…';
         try {
-          cur = 'ask'; ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', 'Searching the demo data… this usually takes 15–60 seconds.'));
+          cur = 'ask'; ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', `Searching the demo data with ${model === 'opus' ? 'Opus' : 'Sonnet'}… this usually takes ${model === 'opus' ? '30–90' : '15–60'} seconds.`));
           if (narrow.matches) ans.classList.add('open'), ans.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          const { data, error } = await db.functions.invoke('mm-llm-ask', { body: { question: q, org_id: org.id } });
+          const { data, error } = await db.functions.invoke('mm-llm-ask', { body: { question: q, org_id: org.id, model } });
           let r = data;
           if (error) { try { r = await error.context.json(); } catch { r = { error: error.message }; } }
           if (!r || r.error) { ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', (r && r.error) || 'No answer came back.')); return; }
@@ -876,6 +904,6 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   requestAnimationFrame(draw);
 </script>
-<script src="mm-nav.js?v=2026-11-08.2256"></script>
+<script src="mm-nav.js?v=2026-11-09.0050"></script>
 </body>
 </html>

@@ -1,8 +1,10 @@
 // Machine Manager — which organization's MM LLM data a page shows, and a few small helpers the data pages share
 // (Vendor Reports, Daily, Downtime / RCFA, MM LLM).
 //
-// Signed out: the public demo org (Sim Mill), or a dropdown if several are published, remembered in this browser.
-// Signed in: the signed-in org if it has MM LLM data, plus the public demo orgs. ?org=<name> in the URL picks one.
+// Signed out, or signed in to a demo org (the demo account): the public demo orgs (Sim Mill), with a dropdown if
+// several are published, remembered in this browser. ?org=<name> in the URL picks one.
+// Signed in to a real org (e.g. PM1): only that org. It never sees demo data; until its own data is loaded the
+// pages show a placeholder (st.empty, MMLLMOrg.placeholder).
 //
 //   const st = await MMLLMOrg.resolve();             // { db, s, orgs: [{ id, name, demo }], org } or { error }
 //   MMLLMOrg.picker(el, st, org => reload(org));     // a select when there's more than one org
@@ -29,10 +31,11 @@
     } catch (e) { return { error: 'Couldn’t reach the server: ' + (e.message || e) }; }
     const orgs = pubs.map(p => ({ id: p.id, name: p.name, demo: true }));
     if (s && s.org && !orgs.some(o => o.id === s.org.id)){
-      try {
-        const { data } = await db.rpc('mm_llm_summary', { p_org: s.org.id });
-        if (data && data.some(r => r.n > 0)) orgs.unshift({ id: s.org.id, name: s.org.name, demo: false });
-      } catch (e) {}
+      // a real organization: its own data only, never a demo org's
+      const own = { id: s.org.id, name: s.org.name, demo: false };
+      let has = false;
+      try { const { data } = await db.rpc('mm_llm_summary', { p_org: s.org.id }); has = !!(data && data.some(r => r.n > 0)); } catch (e) {}
+      return { db, s, orgs: [own], org: own, info: null, real: true, empty: !has };
     }
     if (!orgs.length) return { error: 'No organization with MM LLM data is published yet.', db, s };
     const want = new URLSearchParams(location.search).get('org') || (() => { try { return localStorage.getItem(KEY); } catch (e) { return null; } })();
@@ -124,5 +127,21 @@
     return data.signedUrl;
   }
 
-  window.MMLLMOrg = { resolve, choose, picker, rpc, today, table, bars, fileUrl, esc, num, day, time, DEMO };
+  // The page a real organization sees before its own data is loaded: what the page will show and what feeds it.
+  //   MMLLMOrg.placeholder(st, { title, text, needs: ['BUS daily sheet', …], links: [['DailyNotes.html', 'Notes board']] })
+  function placeholder(st, o){
+    const $ = id => document.getElementById(id);
+    document.querySelectorAll('.dbar > :not(.org):not(.grow):not(.nb)').forEach(e => { e.hidden = true; });
+    const org = $('org'); if (org) { org.textContent = ''; const b = document.createElement('b'); b.textContent = st.org.name; org.appendChild(b); }
+    const sub = $('sub'); if (sub) sub.hidden = true;
+    const body = $('body'); if (!body) return;
+    body.innerHTML = `<section class="ph"><div class="ph-i" aria-hidden="true">${window.MMIcons ? MMIcons.svg(o.icon || 'file') : ''}</div>
+      <h2>${esc(o.title || 'Nothing here yet')}</h2><p>${esc(o.text || '')}</p>
+      ${o.needs && o.needs.length ? `<p class="ph-l">It fills in from ${esc(st.org.name)}’s own:</p><ul>${o.needs.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}
+      <p class="ph-n">Nothing is shown until your organization’s files are loaded. The demo data lives in the demo account.</p>
+      ${o.links && o.links.length ? `<div class="ph-a">${o.links.map(([h, t]) => `<a class="btn" href="${esc(h)}">${esc(t)}</a>`).join('')}</div>` : ''}
+    </section>`;
+  }
+
+  window.MMLLMOrg = { resolve, placeholder, choose, picker, rpc, today, table, bars, fileUrl, esc, num, day, time, DEMO };
 })();

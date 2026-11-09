@@ -114,3 +114,10 @@ Check **Organization → Usage** in the dashboard monthly, and look closer if an
 
 - **Authentication → Sign In / Providers:** keep **Allow new users to sign up** off (accounts are created by you).
 - **Authentication → Password security:** turn on **leaked password protection** (blocks passwords known from data breaches; it's the one item the security advisor flags).
+
+## MM LLM: Sonnet or Opus (demo account)
+
+The demo account can pick Sonnet or Opus above the Ask box. `mm-llm-ask` uses `MM_LLM_MODEL` (default
+`claude-sonnet-5-5`) for Sonnet and `MM_LLM_MODEL_OPUS` (default `claude-opus-5-5`) for Opus. Opus uses the secret
+`ANTHROPIC_API_KEY_OPUS` when it is set, so its spend shows on its own key; without it, Opus shares `ANTHROPIC_API_KEY`.
+Add the key under **Edge Functions → Secrets** in the Supabase dashboard.
