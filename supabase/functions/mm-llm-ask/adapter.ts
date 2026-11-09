@@ -12,12 +12,11 @@ export interface Model {
 }
 
 // tier: 'default' (Sonnet unless MM_LLM_MODEL says otherwise) or 'opus', the larger model the demo account can pick.
-// Opus uses MM_LLM_MODEL_OPUS (default claude-opus-5-5) and its own key ANTHROPIC_API_KEY_OPUS when that secret is
-// set, so its spend shows separately; otherwise it shares ANTHROPIC_API_KEY.
+// Opus uses MM_LLM_MODEL_OPUS (default claude-opus-5-5) on the same ANTHROPIC_API_KEY; to give it a key of its own
+// later, pass a second secret's name as Anthropic's keyName here.
 export function makeModel(tier: 'default' | 'opus' = 'default'): Model {
   const provider = (Deno.env.get('MM_LLM_PROVIDER') ?? 'anthropic').toLowerCase();
-  if (tier === 'opus') return new Anthropic(Deno.env.get('MM_LLM_MODEL_OPUS') ?? 'claude-opus-5-5',
-    Deno.env.get('ANTHROPIC_API_KEY_OPUS') ? 'ANTHROPIC_API_KEY_OPUS' : 'ANTHROPIC_API_KEY');
+  if (tier === 'opus') return new Anthropic(Deno.env.get('MM_LLM_MODEL_OPUS') ?? 'claude-opus-5-5');
   if (provider === 'anthropic') return new Anthropic(Deno.env.get('MM_LLM_MODEL') ?? 'claude-sonnet-5-5');
   if (provider === 'openai') return new OpenAI(Deno.env.get('MM_LLM_MODEL') ?? '');
   throw new ModelError(`Unknown MM_LLM_PROVIDER "${provider}" (use anthropic or openai).`);
