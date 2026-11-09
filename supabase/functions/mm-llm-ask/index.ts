@@ -72,9 +72,10 @@ Deno.serve(async (req) => {
       for (const c of turn.calls) {
         if (c.name === 'make_chart') {          // drawn by the page; nothing to query
           const { chart, error } = checkChart(c.args);
-          if (chart) charts.push(chart);
-          trace.push({ tool: 'make_chart', args: chart ?? c.args, rows: chart ? 1 : 0, error });
-          results.push({ id: c.id, content: JSON.stringify(chart ? { ok: true, note: 'The page draws this chart under your answer and offers a PNG download. Do not redraw it in text.' } : { error }) });
+          const same = chart ? charts.findIndex((x) => x.title === chart.title) : -1;   // a redraw replaces the earlier version
+          if (chart) { if (same >= 0) charts[same] = chart; else charts.push(chart); }
+          trace.push({ tool: 'make_chart', args: chart ?? c.args, rows: chart ? 1 : 0, error, ...(same >= 0 ? { replaces: same } : {}) });
+          results.push({ id: c.id, content: JSON.stringify(chart ? { ok: true, note: 'The page draws this chart under your answer and offers a PNG download. Do not redraw it in text. To fix it, call make_chart again with the same title: that replaces it, so don\'t mention the redraw.' } : { error }) });
           continue;
         }
         const r = await runTool(db, org, c.name, c.args);

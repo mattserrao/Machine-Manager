@@ -32,8 +32,8 @@ export const DEFS: Def[] = [
     description: 'Bonvoy exception reports (Pi tags outside their 3-sigma limits for 3+ hours in a day). term = a Pi tag, asset name, asset number or position id; omit for all. Each row is one tag-day (period = the day covered; the report arrives the next morning).',
     parameters: { type: 'object', properties: { term: { type: 'string' }, from: date, to: date } },
     map: (a) => ({ p_term: a.term ?? null, p_from: a.from ?? null, p_to: a.to ?? null }) },
-  { name: 'pi_daily', rpc: 'mm_llm_pi_daily', maxRows: 120,
-    description: 'Daily average / min / max of a Pi tag (mill-local days), from hourly data.',
+  { name: 'pi_daily', rpc: 'mm_llm_pi_daily', maxRows: 200,
+    description: 'Daily average / min / max of a Pi tag (mill-local days), from hourly data. Up to 200 days per call; outage days show low averages (the machine was down).',
     parameters: { type: 'object', properties: { tag: { type: 'string' }, from: date, to: date }, required: ['tag', 'from', 'to'] },
     map: (a) => ({ p_tag: a.tag, p_from: a.from, p_to: a.to }) },
   { name: 'pi_values', rpc: 'mm_llm_pi_values', maxRows: 200,
@@ -69,23 +69,44 @@ export const DEFS: Def[] = [
     description: 'Production by day, week or month: tons, uptime %, sheet breaks, break / unplanned / planned / slowdown minutes, kWh/t, steam t/t.',
     parameters: { type: 'object', properties: { from: date, to: date, by: { type: 'string', enum: ['day', 'week', 'month'] } }, required: ['from', 'to'] },
     map: (a) => ({ p_from: a.from, p_to: a.to, p_by: a.by ?? 'day' }) },
+  // ---- step 08 ----
+  { name: 'grade_hours', rpc: 'mm_llm_grade_hours',
+    description: 'Hours run on each grade in a date range, with the share of run time. Use it to compare grades fairly: divide breaks, downtime or tons by the hours each grade ran (e.g. breaks per 100 h), not raw counts.',
+    parameters: { type: 'object', properties: { from: date, to: date }, required: ['from', 'to'] },
+    map: (a) => ({ p_from: a.from, p_to: a.to }) },
 ];
 
 // Not a database tool: the model hands over the numbers and the page draws the chart (with a PNG download).
 export const CHART: Tool = { name: 'make_chart',
-  description: 'Show a chart under the answer. Use it whenever the user asks for a graph, chart, plot or image (PNG): the page draws it from these numbers and offers a PNG download. Pass only numbers the other tools returned. One measure per chart (one unit); up to 4 series of equal length; labels = the x values in order (e.g. months).',
+  description: 'Show a chart under the answer. Use it whenever the user asks for a graph, chart, plot, trend, comparison or image (PNG): the page draws it from these numbers and offers a PNG download. Pass only numbers the other tools returned (you may align, average, normalise or project them, and say so in source). labels = the x values in order (dates, months, "Day 1".."Day 40" to overlay runs, "-10 d".."0 d" before events); up to 6 series, one value per label, null for a gap. Two different units: put the second on the right axis (series axis "right", unit_right). Add reference lines for limits (an alarm level, a target) and marks for events (an outage, a felt change, a route reading).',
   parameters: { type: 'object', properties: {
-    title: { type: 'string' }, type: { type: 'string', enum: ['bar', 'line'] }, unit: { type: 'string', description: 'e.g. min, h, t' },
+    title: { type: 'string' }, type: { type: 'string', enum: ['bar', 'line'] },
+    unit: { type: 'string', description: 'left axis unit, e.g. in/s, kWh/t, h' }, unit_right: { type: 'string', description: 'right axis unit, if any series uses it' },
     labels: { type: 'array', items: { type: 'string' } },
-    series: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' }, values: { type: 'array', items: { type: 'number' } } }, required: ['name', 'values'] } },
-    source: { type: 'string', description: 'where the numbers came from, e.g. "downtime_summary by month"' } },
+    series: { type: 'array', items: { type: 'object', properties: { name: { type: 'string' },
+      values: { type: 'array', items: { type: ['number', 'null'] } }, axis: { type: 'string', enum: ['left', 'right'] },
+      dashed: { type: 'boolean', description: 'e.g. a projection' } }, required: ['name', 'values'] } },
+    lines: { type: 'array', description: 'horizontal reference lines', items: { type: 'object', properties: { value: { type: 'number' }, label: { type: 'string' }, axis: { type: 'string', enum: ['left', 'right'] } }, required: ['value', 'label'] } },
+    marks: { type: 'array', description: 'vertical event markers at one of the labels', items: { type: 'object', properties: { at: { type: 'string' }, label: { type: 'string' } }, required: ['at', 'label'] } },
+    source: { type: 'string', description: 'where the numbers came from, e.g. "pi_daily PM1:REF_B_SE; projection at 1.4%/day"' } },
     required: ['title', 'type', 'labels', 'series'] } };
+const num = (v: any) => (v === null || v === undefined || v === '' ? null : Number(v));
 export function checkChart(a: any): { chart?: any; error?: string } {
-  const labels = Array.isArray(a?.labels) ? a.labels.slice(0, 60).map(String) : [];
-  const series = (Array.isArray(a?.series) ? a.series : []).slice(0, 4).map((x: any) => ({ name: String(x?.name ?? ''), values: (Array.isArray(x?.values) ? x.values : []).slice(0, labels.length).map((v: any) => Number(v)) }));
+  const labels = Array.isArray(a?.labels) ? a.labels.slice(0, 400).map(String) : [];
+  const series = (Array.isArray(a?.series) ? a.series : []).slice(0, 6).map((x: any) => ({ name: String(x?.name ?? '').slice(0, 60),
+    values: (Array.isArray(x?.values) ? x.values : []).slice(0, labels.length).map(num),
+    ...(x?.axis === 'right' ? { axis: 'right' } : {}), ...(x?.dashed ? { dashed: true } : {}) }));
   if (!labels.length || !series.length) return { error: 'make_chart needs labels and at least one series' };
-  if (series.some((x: any) => x.values.length !== labels.length || x.values.some((v: number) => !Number.isFinite(v)))) return { error: 'each series needs one number per label' };
-  return { chart: { title: String(a.title ?? '').slice(0, 120), type: a.type === 'line' ? 'line' : 'bar', unit: String(a.unit ?? '').slice(0, 20), labels, series, source: String(a.source ?? '').slice(0, 160) } };
+  if (series.some((x: any) => x.values.length !== labels.length)) return { error: 'each series needs one value per label (null for a gap)' };
+  if (series.some((x: any) => x.values.some((v: any) => v !== null && !Number.isFinite(v)) || !x.values.some((v: any) => v !== null))) return { error: 'values must be numbers or null, with at least one number per series' };
+  const lines = (Array.isArray(a?.lines) ? a.lines : []).slice(0, 4).filter((l: any) => Number.isFinite(Number(l?.value)))
+    .map((l: any) => ({ value: Number(l.value), label: String(l.label ?? '').slice(0, 40), ...(l.axis === 'right' ? { axis: 'right' } : {}) }));
+  const marks = (Array.isArray(a?.marks) ? a.marks : []).slice(0, 8).filter((m: any) => labels.includes(String(m?.at)))
+    .map((m: any) => ({ at: String(m.at), label: String(m.label ?? '').slice(0, 40) }));
+  const right = series.some((x: any) => x.axis === 'right');
+  return { chart: { title: String(a.title ?? '').slice(0, 120), type: a.type === 'line' ? 'line' : 'bar', unit: String(a.unit ?? '').slice(0, 20),
+    ...(right ? { unit_right: String(a.unit_right ?? '').slice(0, 20) } : {}), labels, series,
+    ...(lines.length ? { lines } : {}), ...(marks.length ? { marks } : {}), source: String(a.source ?? '').slice(0, 200) } };
 }
 export const TOOLS: Tool[] = [...DEFS.map(({ name, description, parameters }) => ({ name, description, parameters })), CHART];
 
@@ -97,12 +118,16 @@ export async function runTool(db: any, org: string, name: string, args: Record<s
   let rows = Array.isArray(data) ? data : [data];
   if (d.filter) rows = d.filter(rows, args);
   const total = rows.length, max = d.maxRows ?? 40;
-  rows = rows.slice(0, max);
+  rows = rows.slice(0, max).map(tidy);
   return { rows, total, truncated: total > max };
 }
 
+// Long float tails (averages of hourly values) cost tokens and add nothing: keep 4 significant figures.
+const tidy = (r: any) => { if (!r || typeof r !== 'object') return r; const o: any = {};
+  for (const k in r) { const v = r[k]; o[k] = typeof v === 'number' && !Number.isInteger(v) ? Number(v.toPrecision(4)) : v; } return o; };
+
 export function forModel(result: unknown): string {
   let s = JSON.stringify(result);
-  if (s.length > 14000) s = s.slice(0, 14000) + ' …(cut; narrow the query)';
+  if (s.length > 20000) s = s.slice(0, 20000) + ' …(cut; narrow the query)';
   return s;
 }

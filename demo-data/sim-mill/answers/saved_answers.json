@@ -1,0 +1,3134 @@
+{
+ "about": "Answers recorded from the live mm-llm-ask function (tools/ingest/ask_demo.py --snapshot): the model, its answer text, the charts it drew and the tools it called. The MM LLM page shows them to everyone.",
+ "answers": {
+  "F2-Q1": {
+   "question": "What should we prioritize for the Nov 11 outage?",
+   "answer": "**Priorities for Nov 11, ranked:**\n\n1. **Reel drum DS bearing, WO 26107259 (10 h).** It's the top priority, and the bearing is a risk until it's on site.\n   - Vibration is 0.426 in/s on Oct 31 [Bonvoy Report 2026-10-31], above the 0.4 Danger limit. It has climbed steadily from 0.31 on Oct 1.\n   - Bonvoy no longer flags it because its baseline moved up with the bearing. It is only on the watch list.\n   - It was deferred from Aug 19 because the 22238 CCK/W33 bearing wasn't in stores. The ETA is Nov 5.\n   - [Action: SM-0161], owned by Quentin Adeyemi, is 16 days overdue. Confirm delivery by Nov 5 and have the crew and tooling ready.\n   - If the bearing slips again, the machine keeps running at Danger level with no outage planned before Dec 23.\n   - Do the reel drum bearing inspection (WO 26108652) in the same window.\n\n2. **REF 1 and REF 2 plate changes, WO 26108715 and WO 26108722 (8 h each).** Neither has parts reserved, and only one Ridgeway set is on hand for two refiners.\n   - The REF 2 set installed Sep 30 is wearing fast. Specific energy hit 86.2 kWh/t on Oct 31, 4.5σ high, 12 days in a row, rising about 1.75% a day [Bonvoy Report 2026-10-31] [RR-FV-261026].\n   - REF 1 reaches its 84-day target on Nov 11 and is also starting to flag.\n   - The order for a second set, [Action: SM-0188], is 3 days overdue. Ridgeway's quote was requested Oct 21.\n   - If only one set arrives, use it on REF 2 and keep REF 1 running. I'd decide that after seeing the quote and delivery date.\n   - No RCFA is open on the early REF 2 wear. LC cleaner sand is worth checking.\n\n3. **Felts.** Both are due at target age, and parts are reserved.\n   - 2nd press top felt, WO 26108764: 42 days old on Nov 11.\n   - 1st press bottom felt, WO 26109100: 84 days old on Nov 11.\n   - Change the 2nd press HP shower nozzles (WO 26108561) at the same time. 22% of the nozzles were plugged in May, and that filled a felt early.\n\n4. **Couch roll seal strips, WO 26108099, and 2nd section PV fan belts, WO 26108106.** Neither has parts reserved. Reserve both or move them off the list.\n   - Couch roll RCFA actions SM-0008 and SM-0010 are 282 to 324 days overdue.\n\n5. **Scheduled inspections, parts reserved.** These include dryer cans, syphons and rotary joints, the MCC lineup, and the headbox slice.\n\n**Gaps:** four WOs have no parts reserved (the refiner plates, couch seals and PV fan belts), and the reel bearing is still in transit. The scope has about 130 estimated hours against a 20 h outage. That only works with parallel crews, so confirm crew assignments.",
+   "charts": [],
+   "tool_trace": [
+    {
+     "tool": "outage_scope",
+     "args": {
+      "outage": "OUT-2026-11-11"
+     },
+     "rows": 22
+    },
+    {
+     "tool": "bonvoy_report",
+     "args": {},
+     "rows": 1
+    },
+    {
+     "tool": "overdue_actions",
+     "args": {},
+     "rows": 6
+    },
+    {
+     "tool": "search_documents",
+     "args": {
+      "query": "Ridgeway plates field visit REF 2 wearing fast",
+      "limit": 3
+     },
+     "rows": 1
+    },
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:REEL_DRUM_DS_VIB",
+      "from": "2026-10-01",
+      "to": "2026-10-31"
+     },
+     "rows": 31
+    },
+    {
+     "tool": "position_life",
+     "args": {
+      "position": "p2-felt-top"
+     },
+     "rows": 12
+    },
+    {
+     "tool": "position_life",
+     "args": {
+      "position": "p1-felt-bottom"
+     },
+     "rows": 8
+    },
+    {
+     "tool": "search_documents",
+     "args": {
+      "query": "Ridgeway REF 2 plates findings recommendation set on hand",
+      "limit": 5
+     },
+     "rows": 1
+    },
+    {
+     "tool": "position_history",
+     "args": {
+      "term": "26107259"
+     },
+     "rows": 0
+    },
+    {
+     "tool": "position_history",
+     "args": {
+      "term": "ref-refb",
+      "from": "2026-09-15"
+     },
+     "rows": 28
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 19068,
+   "created_at": "2026-11-08T23:59:14+00:00",
+   "grading": []
+  },
+  "F1-Q1": {
+   "question": "Why did we change the 2nd press top felt early in May?",
+   "answer": "The 2nd press top felt was changed early because it filled up. The change was on May 19, not early May. It was an unplanned 7.5 h shut, and the felt had run 33 days against a 42-day target. [WO 26105208] [BUS 2026-05-19]\n\n**Symptoms that led to the change**\n- The Uhle vacuum had risen 4.6 inHg.\n- Press solids were down 1.8 points.\n- 4th section steam was at its limit on 34 Super.\n- The BUS sheet flagged the filling on May 4 [BUS 2026-05-04]. Several 4–5 break days \"mostly at the press\" were logged around then [BUS 2026-05-02, 2026-05-10, 2026-05-14].\n- Those symptoms are from the run record [MPF-40661] and the downtime entry [DT-260519-0335].\n\n**Root cause**\n- The RCFA says the HP shower nozzles were 22% plugged, so the felt wasn't being conditioned [RCFA-SM-26-008]. The Spraywell shower audit on May 13 found the plugging [SW-SA-260513].\n- Marlow did a used-felt analysis [MP-FA-260526]. I only saw its header, so I haven't checked its detailed findings.\n\n**Follow-ups**\n- Weekly press shower nozzle check by operations: completed [Action SM-0112].\n- Clean the HP shower supply strainer every outage: completed [Action SM-0111].\n- Add Uhle vacuum rate-of-rise to the Bonvoy watch list: still in progress and late, due 2026-07-15 [Action SM-0110].\n- The RCFA is still open with actions pending.\n\nThe felt installed after this one ran 50 days, longer than the 42-day target.",
+   "charts": [],
+   "tool_trace": [
+    {
+     "tool": "position_life",
+     "args": {
+      "position": "p2-felt-top"
+     },
+     "rows": 12
+    },
+    {
+     "tool": "position_history",
+     "args": {
+      "term": "p2-felt-top",
+      "from": "2026-04-15",
+      "to": "2026-05-31"
+     },
+     "rows": 20
+    },
+    {
+     "tool": "search_documents",
+     "args": {
+      "query": "2nd press top felt used felt analysis filled HP shower nozzles",
+      "limit": 5
+     },
+     "rows": 1
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 8254,
+   "created_at": "2026-11-08T23:59:14+00:00",
+   "grading": []
+  },
+  "H1": {
+   "question": "Overlay Uhle vacuum on the 2nd press top felt for the April felt against the two felts before it, by days on the machine.",
+   "answer": "The April felt's Uhle vacuum rose about twice as fast as the two felts before it. The chart is under this answer.\n\nI used `PM1:UHLE_P2T_VAC` daily averages. Day 1 is the day after install. I left days with a stop or outage as gaps, because their averages are dragged down by zero readings.\n\nThe three runs, from [position_life p2-felt-top]:\n- Jan 21 felt: 41 days, planned removal.\n- Mar 4 felt: 41 days, planned removal.\n- Apr 15 felt: removed early on May 19 after 33–34 days, for performance.\n\nHow they compare:\n- **Start:** all three begin near 9.3–9.4 inHg.\n- **Days 1–14:** they track each other closely. The April felt was at 9.998 on day 14, against 9.89 and 9.84 for the other two.\n- **Day 21:** the April felt was at 11.36, against 10.27 (Jan felt) and 10.16 (Mar felt).\n- **Day 33:** the April felt was at 14.36, against 11.07 and 11.03. The earlier felts only reached about 11.8–11.9 at day 41.\n- **Rise over the run:** the April felt climbed about 5 inHg. The Jan and Mar felts climbed about 2.4–2.5 inHg over 41 days. The felt record says \"up 4.6 inHg\".\n\nThe April felt's record gives these likely contributors:\n- Press solids dropped 1.8 points.\n- The 4th section was at its steam limit on 34 Super.\n- A Spraywell audit on May 13 found 22% of the HP shower nozzles plugged. The chart marks that date.\n\nI didn't check what caused the plugged nozzles. I also didn't check whether grade mix differed between the three runs.",
+   "charts": [
+    {
+     "title": "2nd press top felt – Uhle box vacuum by days on machine",
+     "type": "line",
+     "unit": "inHg",
+     "labels": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "16",
+      "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
+      "23",
+      "24",
+      "25",
+      "26",
+      "27",
+      "28",
+      "29",
+      "30",
+      "31",
+      "32",
+      "33",
+      "34",
+      "35",
+      "36",
+      "37",
+      "38",
+      "39",
+      "40",
+      "41",
+      "42"
+     ],
+     "series": [
+      {
+       "name": "Jan 21 felt (41 d)",
+       "values": [
+        null,
+        9.348,
+        9.405,
+        9.483,
+        9.497,
+        9.444,
+        9.572,
+        9.652,
+        9.56,
+        9.711,
+        9.62,
+        9.893,
+        9.745,
+        9.892,
+        9.932,
+        9.96,
+        9.941,
+        10.08,
+        null,
+        10.29,
+        10.27,
+        10.3,
+        10.39,
+        10.52,
+        null,
+        10.63,
+        10.62,
+        10.84,
+        10.81,
+        10.85,
+        10.96,
+        10.99,
+        11.07,
+        11.16,
+        11.2,
+        11.48,
+        11.47,
+        11.55,
+        11.62,
+        11.75,
+        11.84,
+        null
+       ]
+      },
+      {
+       "name": "Mar 4 felt (41 d)",
+       "values": [
+        null,
+        null,
+        9.39,
+        9.518,
+        9.457,
+        9.495,
+        null,
+        9.668,
+        9.526,
+        9.567,
+        9.66,
+        9.753,
+        9.839,
+        null,
+        9.869,
+        9.983,
+        null,
+        null,
+        10.26,
+        10.08,
+        10.16,
+        10.21,
+        10.42,
+        10.32,
+        10.5,
+        10.51,
+        10.66,
+        10.65,
+        10.86,
+        10.91,
+        10.97,
+        11,
+        11.03,
+        11.19,
+        11.31,
+        11.39,
+        11.42,
+        11.57,
+        11.61,
+        11.85,
+        11.91,
+        null
+       ]
+      },
+      {
+       "name": "Apr 15 felt (removed day 34)",
+       "values": [
+        null,
+        9.345,
+        9.482,
+        9.502,
+        9.4,
+        9.547,
+        9.591,
+        9.604,
+        9.642,
+        9.504,
+        9.713,
+        9.719,
+        9.798,
+        9.998,
+        10.05,
+        10.28,
+        10.58,
+        null,
+        10.99,
+        11.24,
+        11.36,
+        11.58,
+        11.85,
+        11.92,
+        12.45,
+        12.59,
+        12.79,
+        13.1,
+        13.41,
+        13.6,
+        13.9,
+        14,
+        14.36,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+       ]
+      }
+     ],
+     "marks": [
+      {
+       "at": "28",
+       "label": "Spraywell audit May 13 (Apr felt)"
+      }
+     ],
+     "source": "pi_daily PM1:UHLE_P2T_VAC daily averages; day = date minus install date; outage/stop days (min 0) left as gaps"
+    }
+   ],
+   "tool_trace": [
+    {
+     "tool": "position_life",
+     "args": {
+      "position": "p2-felt-top"
+     },
+     "rows": 12
+    },
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:UHLE_P2T_VAC",
+      "from": "2026-01-21",
+      "to": "2026-03-04"
+     },
+     "rows": 43
+    },
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:UHLE_P2T_VAC",
+      "from": "2026-03-04",
+      "to": "2026-04-15"
+     },
+     "rows": 43
+    },
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:UHLE_P2T_VAC",
+      "from": "2026-04-15",
+      "to": "2026-05-19"
+     },
+     "rows": 35
+    },
+    {
+     "tool": "make_chart",
+     "args": {
+      "title": "2nd press top felt – Uhle box vacuum by days on machine",
+      "type": "line",
+      "unit": "inHg",
+      "labels": [
+       "1",
+       "2",
+       "3",
+       "4",
+       "5",
+       "6",
+       "7",
+       "8",
+       "9",
+       "10",
+       "11",
+       "12",
+       "13",
+       "14",
+       "15",
+       "16",
+       "17",
+       "18",
+       "19",
+       "20",
+       "21",
+       "22",
+       "23",
+       "24",
+       "25",
+       "26",
+       "27",
+       "28",
+       "29",
+       "30",
+       "31",
+       "32",
+       "33",
+       "34",
+       "35",
+       "36",
+       "37",
+       "38",
+       "39",
+       "40",
+       "41",
+       "42"
+      ],
+      "series": [
+       {
+        "name": "Jan 21 felt (41 d)",
+        "values": [
+         null,
+         9.348,
+         9.405,
+         9.483,
+         9.497,
+         9.444,
+         9.572,
+         9.652,
+         9.56,
+         9.711,
+         9.62,
+         9.893,
+         9.745,
+         9.892,
+         9.932,
+         9.96,
+         9.941,
+         10.08,
+         null,
+         10.29,
+         10.27,
+         10.3,
+         10.39,
+         10.52,
+         null,
+         10.63,
+         10.62,
+         10.84,
+         10.81,
+         10.85,
+         10.96,
+         10.99,
+         11.07,
+         11.16,
+         11.2,
+         11.48,
+         11.47,
+         11.55,
+         11.62,
+         11.75,
+         11.84,
+         null
+        ]
+       },
+       {
+        "name": "Mar 4 felt (41 d)",
+        "values": [
+         null,
+         null,
+         9.39,
+         9.518,
+         9.457,
+         9.495,
+         null,
+         9.668,
+         9.526,
+         9.567,
+         9.66,
+         9.753,
+         9.839,
+         null,
+         9.869,
+         9.983,
+         null,
+         null,
+         10.26,
+         10.08,
+         10.16,
+         10.21,
+         10.42,
+         10.32,
+         10.5,
+         10.51,
+         10.66,
+         10.65,
+         10.86,
+         10.91,
+         10.97,
+         11,
+         11.03,
+         11.19,
+         11.31,
+         11.39,
+         11.42,
+         11.57,
+         11.61,
+         11.85,
+         11.91,
+         null
+        ]
+       },
+       {
+        "name": "Apr 15 felt (removed day 34)",
+        "values": [
+         null,
+         9.345,
+         9.482,
+         9.502,
+         9.4,
+         9.547,
+         9.591,
+         9.604,
+         9.642,
+         9.504,
+         9.713,
+         9.719,
+         9.798,
+         9.998,
+         10.05,
+         10.28,
+         10.58,
+         null,
+         10.99,
+         11.24,
+         11.36,
+         11.58,
+         11.85,
+         11.92,
+         12.45,
+         12.59,
+         12.79,
+         13.1,
+         13.41,
+         13.6,
+         13.9,
+         14,
+         14.36,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null
+        ]
+       }
+      ],
+      "marks": [
+       {
+        "at": "28",
+        "label": "Spraywell audit May 13 (Apr felt)"
+       }
+      ],
+      "source": "pi_daily PM1:UHLE_P2T_VAC daily averages; day = date minus install date; outage/stop days (min 0) left as gaps"
+     },
+     "rows": 1
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 27482,
+   "created_at": "2026-11-09T00:02:13+00:00",
+   "grading": []
+  },
+  "H5": {
+   "question": "Did the May 19 felt change fix the press? Chart the week before against the week after.",
+   "answer": "**Yes, the felt change fixed the press symptoms.** The felt in question is the 2nd press top felt, changed May 19 in a 7.5 h shut. The Uhle vacuum and press solids reset, and most of the other symptoms improved too. I compared May 12–18 with May 20–26 and left out the change day itself.\n\n- **Uhle vacuum:** it climbed steadily from 12.8 to 14.4 inHg before the change. After it, it held at about 9.5 inHg. The weekly average fell from about 13.6 to 9.5 inHg.\n- **Press exit solids:** they drifted down from 42.8% to 42.0% before the change. After it they held at about 44.0%. The weekly average rose from about 42.5% to 44.0%, which is about 1.5 points.\n- **4th section steam pressure:** the weekly average fell from about 126 to 117 psig. The pressure was creeping back up by May 25–26 (about 125–128 psig), though, so some of that headroom was already gone by the end of the week.\n- **Sheet breaks:** there were 22 in the week before and 5 in the week after. Four of the five came in the first four days after the change.\n- **Production:** output rose from about 686 to 729 t/day. Steam per ton fell from about 1.62 to 1.52 [production by day].\n\nThe cause was the felt filling at 3 weeks, not normal wear. The felt ran 33 days against a 42-day target. The RCFA recorded that 22% of the HP shower nozzles were plugged (Spraywell audit May 13) [RCFA-SM-26-008] [BUS 2026-05-20].\n\nTwo actions from that RCFA are done: the strainer cleaning every outage [Action: SM-0111] and the weekly nozzle check [Action: SM-0112]. The action to add Uhle vacuum rate-of-rise to the Bonvoy watch list (SM-0110) was still in progress and late against its July 15 due date.\n\nThe replacement felt then ran 50 days, longer than the 42-day target, which suggests the fix held [position_life p2-felt-top].\n\nTwo caveats. This is a one-week-versus-one-week comparison, and grade mix and break luck also move these numbers. The Uhle and solids steps are far larger than normal day-to-day variation, though.",
+   "charts": [
+    {
+     "title": "2nd press top felt: Uhle vacuum and press solids, 7 days before vs after May 19 change",
+     "type": "line",
+     "unit": "inHg",
+     "unit_right": "%",
+     "labels": [
+      "-7 d",
+      "-6 d",
+      "-5 d",
+      "-4 d",
+      "-3 d",
+      "-2 d",
+      "-1 d",
+      "+1 d",
+      "+2 d",
+      "+3 d",
+      "+4 d",
+      "+5 d",
+      "+6 d",
+      "+7 d"
+     ],
+     "series": [
+      {
+       "name": "P2 top Uhle vacuum (inHg)",
+       "values": [
+        12.79,
+        13.1,
+        13.41,
+        13.6,
+        13.9,
+        14,
+        14.36,
+        9.482,
+        9.45,
+        9.395,
+        9.421,
+        9.538,
+        9.571,
+        9.533
+       ]
+      },
+      {
+       "name": "Press exit solids (%)",
+       "values": [
+        42.79,
+        42.67,
+        42.6,
+        42.53,
+        42.37,
+        42.27,
+        42.04,
+        44.07,
+        44.1,
+        44.16,
+        43.95,
+        43.98,
+        43.93,
+        43.97
+       ],
+       "axis": "right"
+      }
+     ],
+     "marks": [
+      {
+       "at": "+1 d",
+       "label": "Felt changed May 19 (day 0, 7.5 h shut)"
+      }
+     ],
+     "source": "pi_daily PM1:UHLE_P2T_VAC and PM1:PRESS_SOLIDS, May 12-18 vs May 20-26 (May 19 omitted)"
+    },
+    {
+     "title": "4th section steam pressure and sheet breaks, before vs after May 19",
+     "type": "line",
+     "unit": "psig",
+     "unit_right": "breaks",
+     "labels": [
+      "-7 d",
+      "-6 d",
+      "-5 d",
+      "-4 d",
+      "-3 d",
+      "-2 d",
+      "-1 d",
+      "+1 d",
+      "+2 d",
+      "+3 d",
+      "+4 d",
+      "+5 d",
+      "+6 d",
+      "+7 d"
+     ],
+     "series": [
+      {
+       "name": "4th section steam pressure (psig)",
+       "values": [
+        121.8,
+        123.5,
+        121.9,
+        125.7,
+        130.2,
+        131.9,
+        128,
+        108.9,
+        112.6,
+        109.9,
+        116.6,
+        120,
+        127.8,
+        125.1
+       ]
+      },
+      {
+       "name": "Sheet breaks per day",
+       "values": [
+        3,
+        4,
+        7,
+        2,
+        1,
+        1,
+        4,
+        0,
+        0,
+        2,
+        2,
+        1,
+        0,
+        0
+       ],
+       "axis": "right"
+      }
+     ],
+     "marks": [
+      {
+       "at": "+1 d",
+       "label": "Felt changed May 19"
+      }
+     ],
+     "source": "pi_daily PM1:DRY4_STEAM_P; production by day, May 12-18 vs May 20-26"
+    }
+   ],
+   "tool_trace": [
+    {
+     "tool": "position_life",
+     "args": {
+      "position": "p2-felt-top",
+      "as_of": "2026-10-31"
+     },
+     "rows": 12
+    },
+    {
+     "tool": "search_records",
+     "args": {
+      "query": "felt change May 19",
+      "limit": 15
+     },
+     "rows": 5
+    },
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:UHLE_P2T_VAC",
+      "from": "2026-05-12",
+      "to": "2026-05-26"
+     },
+     "rows": 15
+    },
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:PRESS_SOLIDS",
+      "from": "2026-05-12",
+      "to": "2026-05-26"
+     },
+     "rows": 15
+    },
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:DRY4_STEAM_P",
+      "from": "2026-05-12",
+      "to": "2026-05-26"
+     },
+     "rows": 15
+    },
+    {
+     "tool": "production",
+     "args": {
+      "from": "2026-05-12",
+      "to": "2026-05-26",
+      "by": "day"
+     },
+     "rows": 15
+    },
+    {
+     "tool": "make_chart",
+     "args": {
+      "title": "2nd press top felt: Uhle vacuum and press solids, 7 days before vs after May 19 change",
+      "type": "line",
+      "unit": "inHg",
+      "unit_right": "%",
+      "labels": [
+       "-7 d",
+       "-6 d",
+       "-5 d",
+       "-4 d",
+       "-3 d",
+       "-2 d",
+       "-1 d",
+       "+1 d",
+       "+2 d",
+       "+3 d",
+       "+4 d",
+       "+5 d",
+       "+6 d",
+       "+7 d"
+      ],
+      "series": [
+       {
+        "name": "P2 top Uhle vacuum (inHg)",
+        "values": [
+         12.79,
+         13.1,
+         13.41,
+         13.6,
+         13.9,
+         14,
+         14.36,
+         9.482,
+         9.45,
+         9.395,
+         9.421,
+         9.538,
+         9.571,
+         9.533
+        ]
+       },
+       {
+        "name": "Press exit solids (%)",
+        "values": [
+         42.79,
+         42.67,
+         42.6,
+         42.53,
+         42.37,
+         42.27,
+         42.04,
+         44.07,
+         44.1,
+         44.16,
+         43.95,
+         43.98,
+         43.93,
+         43.97
+        ],
+        "axis": "right"
+       }
+      ],
+      "marks": [
+       {
+        "at": "+1 d",
+        "label": "Felt changed May 19 (day 0, 7.5 h shut)"
+       }
+      ],
+      "source": "pi_daily PM1:UHLE_P2T_VAC and PM1:PRESS_SOLIDS, May 12-18 vs May 20-26 (May 19 omitted)"
+     },
+     "rows": 1
+    },
+    {
+     "tool": "make_chart",
+     "args": {
+      "title": "4th section steam pressure and sheet breaks, before vs after May 19",
+      "type": "line",
+      "unit": "psig",
+      "unit_right": "breaks",
+      "labels": [
+       "-7 d",
+       "-6 d",
+       "-5 d",
+       "-4 d",
+       "-3 d",
+       "-2 d",
+       "-1 d",
+       "+1 d",
+       "+2 d",
+       "+3 d",
+       "+4 d",
+       "+5 d",
+       "+6 d",
+       "+7 d"
+      ],
+      "series": [
+       {
+        "name": "4th section steam pressure (psig)",
+        "values": [
+         121.8,
+         123.5,
+         121.9,
+         125.7,
+         130.2,
+         131.9,
+         128,
+         108.9,
+         112.6,
+         109.9,
+         116.6,
+         120,
+         127.8,
+         125.1
+        ]
+       },
+       {
+        "name": "Sheet breaks per day",
+        "values": [
+         3,
+         4,
+         7,
+         2,
+         1,
+         1,
+         4,
+         0,
+         0,
+         2,
+         2,
+         1,
+         0,
+         0
+        ],
+        "axis": "right"
+       }
+      ],
+      "marks": [
+       {
+        "at": "+1 d",
+        "label": "Felt changed May 19"
+       }
+      ],
+      "source": "pi_daily PM1:DRY4_STEAM_P; production by day, May 12-18 vs May 20-26"
+     },
+     "rows": 1
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 23839,
+   "created_at": "2026-11-09T00:04:39+00:00",
+   "grading": []
+  },
+  "H2": {
+   "question": "Chart REF 1 against REF 2 specific energy since the Sep 30 outage. At this rate, where will REF 2 be on Nov 11?",
+   "answer": "If the trend continues, REF 2 will be at about 92 kWh/t on Nov 11. That is roughly 30 kWh/t above REF 1 and about 34 above where REF 2 started on the new plates. This is a straight-line extrapolation, not a forecast.\n\n- **REF 1:** It is flat. It ran about 60–62 kWh/t from Oct 1 to Oct 31, with a daily average of 62.75 on Oct 31 [pi_daily PM1:REF_A_SE].\n- **REF 2:** It sat at about 57.5–58.7 kWh/t from Oct 1 to Oct 8, then began climbing. It averaged 60.5 on Oct 9 and 81.33 on Oct 31 [pi_daily PM1:REF_B_SE]. It is now about 19 kWh/t above REF 1.\n- **Rate and projection:** From Oct 12 to Oct 31 the climb averages about 0.97 kWh/t per day. The last 10 days are about 0.99 per day. Adding 11 days to the Oct 31 value of 81.3 gives about 92 on Nov 11.\n- **Plates:** The REF 2 plates were installed Sep 30 and are at 30 of 84 target days [position_life ref-refb]. The previous set was 85% worn at 12 weeks, against about 60% normal, per Ridgeway report RR-PL-260930-B. REF 2 specific energy has changed far more in 3 weeks than it did over the previous plate runs. Earlier sets were \"steady to the end\".\n\nI haven't yet checked work orders, BUS entries or the Bonvoy flags for REF 2, so I can't say what is causing the climb. I can pull those next if you want.",
+   "charts": [
+    {
+     "title": "REF 1 vs REF 2 specific energy since Sep 30 outage",
+     "type": "line",
+     "unit": "kWh/t",
+     "labels": [
+      "Oct 1",
+      "Oct 2",
+      "Oct 3",
+      "Oct 4",
+      "Oct 5",
+      "Oct 6",
+      "Oct 7",
+      "Oct 8",
+      "Oct 9",
+      "Oct 10",
+      "Oct 11",
+      "Oct 12",
+      "Oct 13",
+      "Oct 14",
+      "Oct 15",
+      "Oct 16",
+      "Oct 17",
+      "Oct 18",
+      "Oct 19",
+      "Oct 20",
+      "Oct 21",
+      "Oct 22",
+      "Oct 23",
+      "Oct 24",
+      "Oct 25",
+      "Oct 26",
+      "Oct 27",
+      "Oct 28",
+      "Oct 29",
+      "Oct 30",
+      "Oct 31",
+      "Nov 1",
+      "Nov 2",
+      "Nov 3",
+      "Nov 4",
+      "Nov 5",
+      "Nov 6",
+      "Nov 7",
+      "Nov 8",
+      "Nov 9",
+      "Nov 10",
+      "Nov 11"
+     ],
+     "series": [
+      {
+       "name": "REF 1 SE",
+       "values": [
+        59.95,
+        60.58,
+        59.91,
+        60.85,
+        60.23,
+        60.88,
+        60.58,
+        59.55,
+        60.55,
+        60.97,
+        60.85,
+        60.44,
+        60.49,
+        61.35,
+        61.7,
+        61.59,
+        60.48,
+        60.57,
+        60.88,
+        61.85,
+        61.78,
+        62,
+        62.15,
+        61.88,
+        61.8,
+        60.9,
+        61.49,
+        60.95,
+        61.42,
+        61.82,
+        62.75,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+       ]
+      },
+      {
+       "name": "REF 2 SE",
+       "values": [
+        58.26,
+        57.62,
+        57.56,
+        58.27,
+        57.47,
+        58.38,
+        58.32,
+        58.69,
+        60.5,
+        61.92,
+        62.12,
+        62.95,
+        63.89,
+        65.14,
+        66.11,
+        66.95,
+        66.8,
+        67.88,
+        68.93,
+        70.05,
+        71.44,
+        72.47,
+        74.39,
+        73.6,
+        74.54,
+        76.2,
+        77.15,
+        77.03,
+        77.83,
+        79.61,
+        81.33,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+       ]
+      },
+      {
+       "name": "REF 2 projection (~0.97/day)",
+       "values": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        81.33,
+        82.3,
+        83.3,
+        84.3,
+        85.2,
+        86.2,
+        87.2,
+        88.1,
+        89.1,
+        90.1,
+        91.1,
+        92
+       ],
+       "dashed": true
+      }
+     ],
+     "marks": [
+      {
+       "at": "Oct 8",
+       "label": "REF 2 starts climbing"
+      },
+      {
+       "at": "Nov 11",
+       "label": "Outage"
+      }
+     ],
+     "source": "pi_daily PM1:REF_A_SE and PM1:REF_B_SE daily averages; projection is a linear extrapolation of REF 2 from Oct 12–31"
+    }
+   ],
+   "tool_trace": [
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:REF_A_SE",
+      "from": "2026-09-30",
+      "to": "2026-10-31"
+     },
+     "rows": 32
+    },
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:REF_B_SE",
+      "from": "2026-09-30",
+      "to": "2026-10-31"
+     },
+     "rows": 32
+    },
+    {
+     "tool": "position_life",
+     "args": {
+      "position": "ref-refb"
+     },
+     "rows": 8
+    },
+    {
+     "tool": "make_chart",
+     "args": {
+      "title": "REF 1 vs REF 2 specific energy since Sep 30 outage",
+      "type": "line",
+      "unit": "kWh/t",
+      "labels": [
+       "Oct 1",
+       "Oct 2",
+       "Oct 3",
+       "Oct 4",
+       "Oct 5",
+       "Oct 6",
+       "Oct 7",
+       "Oct 8",
+       "Oct 9",
+       "Oct 10",
+       "Oct 11",
+       "Oct 12",
+       "Oct 13",
+       "Oct 14",
+       "Oct 15",
+       "Oct 16",
+       "Oct 17",
+       "Oct 18",
+       "Oct 19",
+       "Oct 20",
+       "Oct 21",
+       "Oct 22",
+       "Oct 23",
+       "Oct 24",
+       "Oct 25",
+       "Oct 26",
+       "Oct 27",
+       "Oct 28",
+       "Oct 29",
+       "Oct 30",
+       "Oct 31",
+       "Nov 1",
+       "Nov 2",
+       "Nov 3",
+       "Nov 4",
+       "Nov 5",
+       "Nov 6",
+       "Nov 7",
+       "Nov 8",
+       "Nov 9",
+       "Nov 10",
+       "Nov 11"
+      ],
+      "series": [
+       {
+        "name": "REF 1 SE",
+        "values": [
+         59.95,
+         60.58,
+         59.91,
+         60.85,
+         60.23,
+         60.88,
+         60.58,
+         59.55,
+         60.55,
+         60.97,
+         60.85,
+         60.44,
+         60.49,
+         61.35,
+         61.7,
+         61.59,
+         60.48,
+         60.57,
+         60.88,
+         61.85,
+         61.78,
+         62,
+         62.15,
+         61.88,
+         61.8,
+         60.9,
+         61.49,
+         60.95,
+         61.42,
+         61.82,
+         62.75,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null
+        ]
+       },
+       {
+        "name": "REF 2 SE",
+        "values": [
+         58.26,
+         57.62,
+         57.56,
+         58.27,
+         57.47,
+         58.38,
+         58.32,
+         58.69,
+         60.5,
+         61.92,
+         62.12,
+         62.95,
+         63.89,
+         65.14,
+         66.11,
+         66.95,
+         66.8,
+         67.88,
+         68.93,
+         70.05,
+         71.44,
+         72.47,
+         74.39,
+         73.6,
+         74.54,
+         76.2,
+         77.15,
+         77.03,
+         77.83,
+         79.61,
+         81.33,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null
+        ]
+       },
+       {
+        "name": "REF 2 projection (~0.97/day)",
+        "values": [
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         null,
+         81.33,
+         82.3,
+         83.3,
+         84.3,
+         85.2,
+         86.2,
+         87.2,
+         88.1,
+         89.1,
+         90.1,
+         91.1,
+         92
+        ],
+        "dashed": true
+       }
+      ],
+      "marks": [
+       {
+        "at": "Oct 8",
+        "label": "REF 2 starts climbing"
+       },
+       {
+        "at": "Nov 11",
+        "label": "Outage"
+       }
+      ],
+      "source": "pi_daily PM1:REF_A_SE and PM1:REF_B_SE daily averages; projection is a linear extrapolation of REF 2 from Oct 12–31"
+     },
+     "rows": 1
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 17198,
+   "created_at": "2026-11-08T23:59:14+00:00",
+   "grading": []
+  },
+  "O1": {
+   "question": "Chart the Nov 11 outage scope by parts status and list what isn't ready.",
+   "answer": "Five of the 22 work orders on the Nov 11 outage don't have parts in hand. That is 42 of the 148 estimated hours. The other 17 work orders (106 h) are reserved.\n\n**Not ready, with no parts reserved (4 WOs, 32 h):**\n- [WO 26108715] Change REF 1 refiner plates, 8 h.\n- [WO 26108722] Change REF 2 refiner plates, 8 h.\n- [WO 26108099] Rebuild couch roll seal strips, 8 h.\n- [WO 26108106] Replace 2nd section PV fan belts and sheaves, 8 h.\n\n**Not ready, parts on order (1 WO, 10 h):**\n- [WO 26107259] Change the reel drum DS bearing. This is a corrective job for an outer race defect found on the Keel route of Aug 12.\n  - The bearing (22238 CCK/W33) wasn't in stores, so the job was deferred from the Aug 19 outage.\n  - The ETA is Nov 5, so there is about a week of margin before the outage. If the bearing slips, the job slips again.\n\nAll five are priority 2. I didn't check the refiner plate orders or the supplier. Both plate changes and the other two reservations need an owner and a date before Nov 11. I'd chase the reel bearing and the refiner plates first. The plates are the most hours, and the bearing is a known defect that has already been deferred once.",
+   "charts": [
+    {
+     "title": "OUT-2026-11-11 scope by parts status (22 WOs)",
+     "type": "bar",
+     "unit": "WOs",
+     "unit_right": "h",
+     "labels": [
+      "Reserved",
+      "Not reserved",
+      "On order"
+     ],
+     "series": [
+      {
+       "name": "Work orders",
+       "values": [
+        17,
+        4,
+        1
+       ]
+      },
+      {
+       "name": "Estimated hours",
+       "values": [
+        106,
+        32,
+        10
+       ],
+       "axis": "right"
+      }
+     ],
+     "source": "outage_scope OUT-2026-11-11; counts and est_hours summed by parts_status"
+    }
+   ],
+   "tool_trace": [
+    {
+     "tool": "outage_scope",
+     "args": {
+      "outage": "OUT-2026-11-11"
+     },
+     "rows": 22
+    },
+    {
+     "tool": "make_chart",
+     "args": {
+      "title": "OUT-2026-11-11 scope by parts status (22 WOs)",
+      "type": "bar",
+      "unit": "WOs",
+      "unit_right": "h",
+      "labels": [
+       "Reserved",
+       "Not reserved",
+       "On order"
+      ],
+      "series": [
+       {
+        "name": "Work orders",
+        "values": [
+         17,
+         4,
+         1
+        ]
+       },
+       {
+        "name": "Estimated hours",
+        "values": [
+         106,
+         32,
+         10
+        ],
+        "axis": "right"
+       }
+      ],
+      "source": "outage_scope OUT-2026-11-11; counts and est_hours summed by parts_status"
+     },
+     "rows": 1
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 10099,
+   "created_at": "2026-11-08T23:59:14+00:00",
+   "grading": []
+  },
+  "O2": {
+   "question": "Write tomorrow's BUS line for REF 2 and say who should own it.",
+   "answer": "**Owner: Quentin Adeyemi.** He already owns [Action: SM-0188] to order the second plate set. It is 3 days late and shows only \"quote requested Oct 21\". Ridgeway's lead time is 10 days, and the outage is 11 days out. An order placed tomorrow would land on Nov 11, the outage day itself.\n\n**BUS line for Nov 1:**\n\n> **REF 2 – specific energy still climbing on Sep 30 plates; second plate set not yet ordered.** SE averaged 81.3 kWh/t on Oct 31 (max 86.2), up from 70.1 on Oct 20. That is about 1.75%/day and 12 days above its band [Bonvoy Report 2026-10-31]. Plates are 30 days into an 84-day target. Ridgeway says to order a second set now, since only one set is on hand for REF 1 and REF 2 [RR-FV-261026]. Order and confirm a delivery date for 34\" LC plates today. Owner: Q. Adeyemi [Action: SM-0188]. Reserve parts on WO 26108722 (REF 2) and WO 26108715 (REF 1), both \"parts not reserved\" for the Nov 11 outage. Operators: watch REF 2 SE and machine chest freeness (low, 16 h on Oct 31). Check LC cleaner rejects for sand (Ridgeway and Bonvoy both suggest this). If only one set arrives, decide at the Nov 11 outage which refiner gets it. Plan around REF 2 first, because it is wearing fastest.\n\nSupporting facts:\n- The previous REF 2 set came out at 83 days with bars 85% worn, against about 60% normal [RR-PL-260930-B]. This is the second set in a row to wear fast.\n- The latest plate gap check, WO 26108967, is complete.\n- No RCFA covers the plate wear. I would raise one if sand turns out to be the cause.\n\nI could not read the full Ridgeway field-visit text, only the snippets above. Confirm the 10-day lead time with Corinne Batista before the line goes out.",
+   "charts": [],
+   "tool_trace": [
+    {
+     "tool": "position_history",
+     "args": {
+      "term": "ref-refb",
+      "from": "2026-09-01"
+     },
+     "rows": 36
+    },
+    {
+     "tool": "bonvoy_report",
+     "args": {},
+     "rows": 1
+    },
+    {
+     "tool": "position_life",
+     "args": {
+      "position": "ref-refb"
+     },
+     "rows": 8
+    },
+    {
+     "tool": "search_documents",
+     "args": {
+      "query": "REF 2 plates wearing fast Ridgeway field visit",
+      "limit": 5
+     },
+     "rows": 1
+    },
+    {
+     "tool": "search_records",
+     "args": {
+      "query": "REF 2 refiner",
+      "limit": 25
+     },
+     "rows": 25
+    },
+    {
+     "tool": "outage_scope",
+     "args": {
+      "outage": "OUT-2026-11-11"
+     },
+     "rows": 22
+    },
+    {
+     "tool": "overdue_actions",
+     "args": {},
+     "rows": 6
+    },
+    {
+     "tool": "search_documents",
+     "args": {
+      "query": "Ridgeway REF 2 findings sand LC cleaner recommendation",
+      "limit": 8
+     },
+     "rows": 1
+    },
+    {
+     "tool": "position_history",
+     "args": {
+      "term": "RR-FV-261026"
+     },
+     "rows": 0
+    },
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:REF_B_SE",
+      "from": "2026-10-20",
+      "to": "2026-10-31"
+     },
+     "rows": 12
+    },
+    {
+     "tool": "search_documents",
+     "args": {
+      "query": "previous set 85% worn recommend second set order plate",
+      "limit": 8
+     },
+     "rows": 8
+    },
+    {
+     "tool": "search_documents",
+     "args": {
+      "query": "RR-PL-260930-B REF 2 plate report",
+      "limit": 5
+     },
+     "rows": 1
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 17105,
+   "created_at": "2026-11-08T23:59:14+00:00",
+   "grading": []
+  },
+  "H3": {
+   "question": "Did the 3rd section syphon differential warn us before each rotary joint leak? Show the 10 days before each one.",
+   "answer": "Partly. In two of the three leaks, the 3rd section syphon differential (DP) dropped for days beforehand. That signal isn't reliable, because the same kind of dip also happens with no leak. The leak days are 2026-01-06 [WO 26101981], 2026-06-23 [WO 26106125] and 2026-10-02 [WO 26108456]. The chart above shows the daily average for the 10 days before each.\n\n**Jan 6 leak:** The DP fell from about 4.2–4.3 psi to about 3.2 psi from Dec 31 onward. Bonvoy flagged it Low on Jan 4, 5 and 6, for 4, 13 and 9 hours [Bonvoy PM1:DRY3_DP 2026-01-04 to 01-06]. That was 2–3 days of warning, and the low reading had already lasted about a week.\n\n**Jun 23 leak:** This was the clearest warning. The DP went from about 4.2 psi on Jun 18 to 2.77 on Jun 20 and 2.48 on Jun 21. Bonvoy flagged it Low on Jun 20 to 23, for 11, 18, 14 and 14 hours, so there were 3–4 days of warning.\n\n**Oct 2 leak:** There was no useful warning. Bonvoy flagged only 3 hours on Sep 21, which was 11 days before the leak. The DP was about 3.2–3.4 psi on Sep 23–25, then recovered to about 4.1 psi. Bonvoy's next flags were Oct 1 and 2, for 11 and 3 hours. The outage on Sep 30 to Oct 1 distorts the last few days, so the 0.86 psi average on Sep 30 isn't real.\n\n**Why it isn't reliable:** Dips to about 3.2 psi also occurred with no leak, for example Jun 12–13 and Sep 23–25. The DP also shifts with grade, since Bonvoy's band changed between 24# and 31#/34 Super.\n\n**Open action:** The root cause review is not started and is due 2026-11-20 [Action: SM-0181]. A sustained DP drop to about 3 psi or lower for more than a day, on the same grade, is worth checking against the DS rotary joint seal. I only confirmed this against the three leaks above.",
+   "charts": [
+    {
+     "title": "3rd section syphon DP, 10 days before each rotary joint leak (daily avg)",
+     "type": "line",
+     "unit": "psi",
+     "labels": [
+      "-10 d",
+      "-9 d",
+      "-8 d",
+      "-7 d",
+      "-6 d",
+      "-5 d",
+      "-4 d",
+      "-3 d",
+      "-2 d",
+      "-1 d",
+      "Leak day"
+     ],
+     "series": [
+      {
+       "name": "Leak 2026-01-06",
+       "values": [
+        4.165,
+        4.245,
+        4.296,
+        3.759,
+        3.187,
+        3.255,
+        3.155,
+        3.677,
+        3.5,
+        3.097,
+        3.229
+       ]
+      },
+      {
+       "name": "Leak 2026-06-23",
+       "values": [
+        3.285,
+        3.87,
+        4.198,
+        4.265,
+        4.156,
+        4.282,
+        3.618,
+        2.766,
+        2.484,
+        2.962,
+        2.992
+       ]
+      },
+      {
+       "name": "Leak 2026-10-02 (outage 9/30-10/1)",
+       "values": [
+        4.209,
+        3.384,
+        3.221,
+        3.27,
+        4.14,
+        4.148,
+        3.936,
+        3.641,
+        0.8646,
+        2.756,
+        2.766
+       ]
+      }
+     ],
+     "source": "pi_daily PM1:DRY3_DP; leak dates from downtime feed (WO 26101981, 26106125, 26108456)"
+    }
+   ],
+   "tool_trace": [
+    {
+     "tool": "search_records",
+     "args": {
+      "query": "3rd section rotary joint leak",
+      "limit": 30
+     },
+     "rows": 10
+    },
+    {
+     "tool": "position_history",
+     "args": {
+      "term": "PM1:DRY3_DP"
+     },
+     "rows": 0
+    },
+    {
+     "tool": "downtime_events",
+     "args": {
+      "from": "2026-01-05",
+      "to": "2026-01-08",
+      "kind": "unplanned"
+     },
+     "rows": 1
+    },
+    {
+     "tool": "downtime_events",
+     "args": {
+      "from": "2026-06-22",
+      "to": "2026-06-26",
+      "kind": "unplanned"
+     },
+     "rows": 2
+    },
+    {
+     "tool": "downtime_events",
+     "args": {
+      "from": "2026-10-01",
+      "to": "2026-10-04",
+      "kind": "unplanned"
+     },
+     "rows": 1
+    },
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:DRY3_DP",
+      "from": "2025-12-24",
+      "to": "2026-01-08"
+     },
+     "rows": 16
+    },
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:DRY3_DP",
+      "from": "2026-06-11",
+      "to": "2026-06-25"
+     },
+     "rows": 15
+    },
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:DRY3_DP",
+      "from": "2026-09-20",
+      "to": "2026-10-04"
+     },
+     "rows": 15
+    },
+    {
+     "tool": "bonvoy_exceptions",
+     "args": {
+      "term": "PM1:DRY3_DP"
+     },
+     "rows": 11
+    },
+    {
+     "tool": "make_chart",
+     "args": {
+      "title": "3rd section syphon DP, 10 days before each rotary joint leak (daily avg)",
+      "type": "line",
+      "unit": "psi",
+      "labels": [
+       "-10 d",
+       "-9 d",
+       "-8 d",
+       "-7 d",
+       "-6 d",
+       "-5 d",
+       "-4 d",
+       "-3 d",
+       "-2 d",
+       "-1 d",
+       "Leak day"
+      ],
+      "series": [
+       {
+        "name": "Leak 2026-01-06",
+        "values": [
+         4.165,
+         4.245,
+         4.296,
+         3.759,
+         3.187,
+         3.255,
+         3.155,
+         3.677,
+         3.5,
+         3.097,
+         3.229
+        ]
+       },
+       {
+        "name": "Leak 2026-06-23",
+        "values": [
+         3.285,
+         3.87,
+         4.198,
+         4.265,
+         4.156,
+         4.282,
+         3.618,
+         2.766,
+         2.484,
+         2.962,
+         2.992
+        ]
+       },
+       {
+        "name": "Leak 2026-10-02 (outage 9/30-10/1)",
+        "values": [
+         4.209,
+         3.384,
+         3.221,
+         3.27,
+         4.14,
+         4.148,
+         3.936,
+         3.641,
+         0.8646,
+         2.756,
+         2.766
+        ]
+       }
+      ],
+      "source": "pi_daily PM1:DRY3_DP; leak dates from downtime feed (WO 26101981, 26106125, 26108456)"
+     },
+     "rows": 1
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 18885,
+   "created_at": "2026-11-08T23:59:14+00:00",
+   "grading": []
+  },
+  "F5-Q1": {
+   "question": "Which repeat failures don't have an RCFA?",
+   "answer": "Two repeat-failure groups have no RCFA at all, and a third is only partly covered. This covers 2025-11-01 to 2026-10-31, using the repeat-stops feed and the RCFA list.\n\n**No RCFA:**\n- **3rd section rotary joint (DS):** 3 stops, 8 h, from 2026-01-06 to 2026-10-02. All three were rotary joint leaks [WO 26101981, WO 26106125, WO 26108456].\n- **1st press bottom felt:** 2 stops, 4.8 h, from 2026-05-03 to 2026-07-20. Both were press felt blows [WO 26104858, WO 26106797].\n\n**Partly covered:**\n- **Headbox:** 2 stops, 6.6 h. RCFA-SM-26-010 covers the 2026-07-11 slime build-up. The 2026-06-24 side door blow-off [WO 26106139] has none. The two causes differ, so this may not be a true repeat. Even so, the door failure itself was never analysed.\n\n**Repeats that do have RCFAs:**\n- Pulper rotor: RCFA-SM-26-009, RCFA-SM-26-011 and RCFA-SM-26-012, all closed.\n- Dryer drive lineup: RCFA-SM-26-007 is closed. RCFA-SM-26-013 is open, with an action due 2026-11-05.\n- 2nd press drive: RCFA-SM-26-003 and RCFA-SM-26-006, both closed.\n\nTwo things to check on the covered repeats:\n- The pulper rotor and the dryer drive lineup both had rectifier faults (MCC DC bus down) in RCFA-SM-26-007, -009 and -012. That is a common cause across two machines areas, and each RCFA was handled separately.\n- Several other RCFAs are still open or overdue: RCFA-SM-25-001, RCFA-SM-26-002 and RCFA-SM-26-008. I didn't check these, since they aren't repeat-failure gaps.\n\nThe rotary joint is the strongest case for a new RCFA. It has three leaks in nine months and the most hours of the uncovered groups.",
+   "charts": [],
+   "tool_trace": [
+    {
+     "tool": "repeat_stops",
+     "args": {
+      "from": "2025-11-01",
+      "to": "2026-10-31"
+     },
+     "rows": 6
+    },
+    {
+     "tool": "rcfa_status",
+     "args": {},
+     "rows": 13
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 7105,
+   "created_at": "2026-11-08T23:59:14+00:00",
+   "grading": []
+  },
+  "H4": {
+   "question": "Is the reel drum bearing temperature following the vibration? Plot both since mid-July.",
+   "answer": "Yes. The bearing temperature has followed the vibration upward since mid-July, and it has not levelled off.\n\n- **Vibration:** The daily average went from about 0.059 in/s on Jul 15 to 0.426 on Oct 31. It first moved on Jul 21. It crossed the 0.40 Danger limit around Oct 21–22, so it is above Danger now. The Bonvoy watch list shows 0.426 [Bonvoy Report 2026-10-31].\n- **Temperature:** The daily average went from about 134°F to 168°F, a rise of about 34°F. It started climbing a couple of days after the vibration did, around Jul 23. It reached 166–168°F in the last week, with a peak of 169.5°F.\n- **Shape:** Both have risen steadily with no step changes. The temperature has not jumped ahead of the vibration or lagged far behind it. I have no temperature alarm limit from the tools, so I can't say how close 168°F is to one.\n\nThis is a trend match, not proof of cause. Two steadily rising lines will correlate whatever the cause. It does fit the known fault. The Aug 12 route found an outer race defect at 0.17 in/s [WO 26107259]. The bearing (22238 CCK/W33) wasn't in stores, so the change was deferred from the Aug 19 outage. It is now rescheduled for Nov 11 with parts ETA Nov 5, and the status is \"Waiting on parts\" [BUS 2026-10-31]. The expedite action is late: it was due Oct 15 [Action: SM-0161].\n\nBonvoy no longer flags this bearing because its baseline has moved up with the readings [Bonvoy Report 2026-10-31]. Don't read that as the problem easing. The BUS sheet already asks for a decision on whether to run or stop at Danger.\n\nI left outage and stop days out of the chart as gaps, because their averages were dragged down by the downtime. The 0.4 in/s Danger limit is on the right axis.",
+   "charts": [
+    {
+     "title": "Reel drum DS bearing: temperature vs vibration (daily avg), Jul 15 – Oct 31",
+     "type": "line",
+     "unit": "degF",
+     "unit_right": "in/s",
+     "labels": [
+      "07-15",
+      "07-16",
+      "07-17",
+      "07-18",
+      "07-19",
+      "07-20",
+      "07-21",
+      "07-22",
+      "07-23",
+      "07-24",
+      "07-25",
+      "07-26",
+      "07-27",
+      "07-28",
+      "07-29",
+      "07-30",
+      "07-31",
+      "08-01",
+      "08-02",
+      "08-03",
+      "08-04",
+      "08-05",
+      "08-06",
+      "08-07",
+      "08-08",
+      "08-09",
+      "08-10",
+      "08-11",
+      "08-12",
+      "08-13",
+      "08-14",
+      "08-15",
+      "08-16",
+      "08-17",
+      "08-18",
+      "08-19",
+      "08-20",
+      "08-21",
+      "08-22",
+      "08-23",
+      "08-24",
+      "08-25",
+      "08-26",
+      "08-27",
+      "08-28",
+      "08-29",
+      "08-30",
+      "08-31",
+      "09-01",
+      "09-02",
+      "09-03",
+      "09-04",
+      "09-05",
+      "09-06",
+      "09-07",
+      "09-08",
+      "09-09",
+      "09-10",
+      "09-11",
+      "09-12",
+      "09-13",
+      "09-14",
+      "09-15",
+      "09-16",
+      "09-17",
+      "09-18",
+      "09-19",
+      "09-20",
+      "09-21",
+      "09-22",
+      "09-23",
+      "09-24",
+      "09-25",
+      "09-26",
+      "09-27",
+      "09-28",
+      "09-29",
+      "09-30",
+      "10-01",
+      "10-02",
+      "10-03",
+      "10-04",
+      "10-05",
+      "10-06",
+      "10-07",
+      "10-08",
+      "10-09",
+      "10-10",
+      "10-11",
+      "10-12",
+      "10-13",
+      "10-14",
+      "10-15",
+      "10-16",
+      "10-17",
+      "10-18",
+      "10-19",
+      "10-20",
+      "10-21",
+      "10-22",
+      "10-23",
+      "10-24",
+      "10-25",
+      "10-26",
+      "10-27",
+      "10-28",
+      "10-29",
+      "10-30",
+      "10-31"
+     ],
+     "series": [
+      {
+       "name": "Temperature (degF)",
+       "values": [
+        134.2,
+        133.7,
+        133.2,
+        null,
+        134.6,
+        null,
+        134.1,
+        133.8,
+        136,
+        136.1,
+        136.7,
+        136.6,
+        138,
+        140,
+        138.8,
+        139.4,
+        139.2,
+        141.1,
+        140.9,
+        141.1,
+        142.5,
+        141.3,
+        142,
+        142.9,
+        142.9,
+        142.7,
+        144,
+        143.6,
+        144.1,
+        145.4,
+        146.3,
+        145.6,
+        146.6,
+        146.4,
+        146.4,
+        null,
+        null,
+        146.6,
+        147.6,
+        149.1,
+        148.1,
+        148.8,
+        150.2,
+        149.1,
+        150.2,
+        150.6,
+        150.3,
+        150.7,
+        151.2,
+        152.4,
+        151.9,
+        151.1,
+        152.1,
+        152.6,
+        null,
+        153.3,
+        153.7,
+        153.9,
+        null,
+        155.1,
+        154.9,
+        155.8,
+        156.4,
+        155.2,
+        155.7,
+        156.8,
+        157.2,
+        156.4,
+        157.1,
+        157.8,
+        157.5,
+        158.6,
+        158.3,
+        158,
+        159.4,
+        159.2,
+        159.1,
+        null,
+        null,
+        null,
+        160.3,
+        160.9,
+        160.6,
+        161.4,
+        161.4,
+        161.8,
+        162.8,
+        162.4,
+        162.8,
+        163.2,
+        163.8,
+        null,
+        null,
+        163.6,
+        163.9,
+        164.1,
+        164.7,
+        164.9,
+        164.7,
+        164.9,
+        164.8,
+        166.1,
+        165.9,
+        166.4,
+        167.3,
+        167.6,
+        167.3,
+        168.1,
+        168
+       ]
+      },
+      {
+       "name": "Vibration (in/s)",
+       "values": [
+        0.05904,
+        0.06054,
+        0.06471,
+        null,
+        0.058,
+        null,
+        0.07017,
+        0.07913,
+        0.08017,
+        0.08617,
+        0.09237,
+        0.099,
+        0.1073,
+        0.1077,
+        0.1088,
+        0.1132,
+        0.1222,
+        0.1263,
+        0.1262,
+        0.1351,
+        0.1358,
+        0.1405,
+        0.15,
+        0.1517,
+        0.1543,
+        0.1556,
+        0.1595,
+        0.1675,
+        0.171,
+        0.1725,
+        0.1772,
+        0.1835,
+        0.1837,
+        0.1872,
+        0.1933,
+        null,
+        null,
+        0.2029,
+        0.2076,
+        0.2124,
+        0.2115,
+        0.2148,
+        0.2209,
+        0.2223,
+        0.2274,
+        0.2311,
+        0.2347,
+        0.2413,
+        0.2402,
+        0.2455,
+        0.2478,
+        0.2524,
+        0.2564,
+        0.2595,
+        null,
+        0.2675,
+        0.2692,
+        0.278,
+        null,
+        0.2827,
+        0.2815,
+        0.284,
+        0.2904,
+        0.2953,
+        0.2965,
+        0.303,
+        0.3049,
+        0.3103,
+        0.3118,
+        0.3154,
+        0.3174,
+        0.3201,
+        0.3256,
+        0.3274,
+        0.3284,
+        0.3304,
+        0.3343,
+        null,
+        null,
+        null,
+        0.3492,
+        0.3518,
+        0.3503,
+        0.3592,
+        0.3585,
+        0.3607,
+        0.3643,
+        0.3675,
+        0.372,
+        0.3765,
+        0.3786,
+        null,
+        null,
+        0.3856,
+        0.3907,
+        0.391,
+        0.3981,
+        0.3974,
+        0.3994,
+        0.4001,
+        0.407,
+        0.4085,
+        0.4113,
+        0.416,
+        0.418,
+        0.4243,
+        0.421,
+        0.4227,
+        0.4259
+       ],
+       "axis": "right"
+      }
+     ],
+     "lines": [
+      {
+       "value": 0.4,
+       "label": "Vibration Danger limit 0.4 in/s",
+       "axis": "right"
+      }
+     ],
+     "marks": [
+      {
+       "at": "08-12",
+       "label": "Route finds outer race defect (WO 261072"
+      },
+      {
+       "at": "08-19",
+       "label": "Outage – bearing not in stores"
+      },
+      {
+       "at": "09-30",
+       "label": "Outage"
+      }
+     ],
+     "source": "pi_daily PM1:REEL_DRUM_DS_TEMP and PM1:REEL_DRUM_DS_VIB; outage/stop days where the average was dragged down (Jul 18, 20, Aug 19–20, Sep 7, 11, 30, Oct 1–2, 14–15) left as gaps"
+    }
+   ],
+   "tool_trace": [
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:REEL_DRUM_DS_TEMP",
+      "from": "2026-07-15",
+      "to": "2026-10-31"
+     },
+     "rows": 109
+    },
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:REEL_DRUM_DS_VIB",
+      "from": "2026-07-15",
+      "to": "2026-10-31"
+     },
+     "rows": 109
+    },
+    {
+     "tool": "bonvoy_report",
+     "args": {},
+     "rows": 1
+    },
+    {
+     "tool": "search_records",
+     "args": {
+      "query": "reel drum bearing",
+      "limit": 15
+     },
+     "rows": 15
+    },
+    {
+     "tool": "make_chart",
+     "args": {
+      "title": "Reel drum DS bearing: temperature vs vibration (daily avg), Jul 15 – Oct 31",
+      "type": "line"
+     },
+     "rows": 0
+    },
+    {
+     "tool": "make_chart",
+     "args": {
+      "title": "Reel drum DS bearing: temperature vs vibration (daily avg), Jul 15 – Oct 31",
+      "type": "line",
+      "unit": "degF",
+      "unit_right": "in/s",
+      "labels": [
+       "07-15",
+       "07-16",
+       "07-17",
+       "07-18",
+       "07-19",
+       "07-20",
+       "07-21",
+       "07-22",
+       "07-23",
+       "07-24",
+       "07-25",
+       "07-26",
+       "07-27",
+       "07-28",
+       "07-29",
+       "07-30",
+       "07-31",
+       "08-01",
+       "08-02",
+       "08-03",
+       "08-04",
+       "08-05",
+       "08-06",
+       "08-07",
+       "08-08",
+       "08-09",
+       "08-10",
+       "08-11",
+       "08-12",
+       "08-13",
+       "08-14",
+       "08-15",
+       "08-16",
+       "08-17",
+       "08-18",
+       "08-19",
+       "08-20",
+       "08-21",
+       "08-22",
+       "08-23",
+       "08-24",
+       "08-25",
+       "08-26",
+       "08-27",
+       "08-28",
+       "08-29",
+       "08-30",
+       "08-31",
+       "09-01",
+       "09-02",
+       "09-03",
+       "09-04",
+       "09-05",
+       "09-06",
+       "09-07",
+       "09-08",
+       "09-09",
+       "09-10",
+       "09-11",
+       "09-12",
+       "09-13",
+       "09-14",
+       "09-15",
+       "09-16",
+       "09-17",
+       "09-18",
+       "09-19",
+       "09-20",
+       "09-21",
+       "09-22",
+       "09-23",
+       "09-24",
+       "09-25",
+       "09-26",
+       "09-27",
+       "09-28",
+       "09-29",
+       "09-30",
+       "10-01",
+       "10-02",
+       "10-03",
+       "10-04",
+       "10-05",
+       "10-06",
+       "10-07",
+       "10-08",
+       "10-09",
+       "10-10",
+       "10-11",
+       "10-12",
+       "10-13",
+       "10-14",
+       "10-15",
+       "10-16",
+       "10-17",
+       "10-18",
+       "10-19",
+       "10-20",
+       "10-21",
+       "10-22",
+       "10-23",
+       "10-24",
+       "10-25",
+       "10-26",
+       "10-27",
+       "10-28",
+       "10-29",
+       "10-30",
+       "10-31"
+      ],
+      "series": [
+       {
+        "name": "Temperature (degF)",
+        "values": [
+         134.2,
+         133.7,
+         133.2,
+         null,
+         134.6,
+         null,
+         134.1,
+         133.8,
+         136,
+         136.1,
+         136.7,
+         136.6,
+         138,
+         140,
+         138.8,
+         139.4,
+         139.2,
+         141.1,
+         140.9,
+         141.1,
+         142.5,
+         141.3,
+         142,
+         142.9,
+         142.9,
+         142.7,
+         144,
+         143.6,
+         144.1,
+         145.4,
+         146.3,
+         145.6,
+         146.6,
+         146.4,
+         146.4,
+         null,
+         null,
+         146.6,
+         147.6,
+         149.1,
+         148.1,
+         148.8,
+         150.2,
+         149.1,
+         150.2,
+         150.6,
+         150.3,
+         150.7,
+         151.2,
+         152.4,
+         151.9,
+         151.1,
+         152.1,
+         152.6,
+         null,
+         153.3,
+         153.7,
+         153.9,
+         null,
+         155.1,
+         154.9,
+         155.8,
+         156.4,
+         155.2,
+         155.7,
+         156.8,
+         157.2,
+         156.4,
+         157.1,
+         157.8,
+         157.5,
+         158.6,
+         158.3,
+         158,
+         159.4,
+         159.2,
+         159.1,
+         null,
+         null,
+         null,
+         160.3,
+         160.9,
+         160.6,
+         161.4,
+         161.4,
+         161.8,
+         162.8,
+         162.4,
+         162.8,
+         163.2,
+         163.8,
+         null,
+         null,
+         163.6,
+         163.9,
+         164.1,
+         164.7,
+         164.9,
+         164.7,
+         164.9,
+         164.8,
+         166.1,
+         165.9,
+         166.4,
+         167.3,
+         167.6,
+         167.3,
+         168.1,
+         168
+        ]
+       },
+       {
+        "name": "Vibration (in/s)",
+        "values": [
+         0.05904,
+         0.06054,
+         0.06471,
+         null,
+         0.058,
+         null,
+         0.07017,
+         0.07913,
+         0.08017,
+         0.08617,
+         0.09237,
+         0.099,
+         0.1073,
+         0.1077,
+         0.1088,
+         0.1132,
+         0.1222,
+         0.1263,
+         0.1262,
+         0.1351,
+         0.1358,
+         0.1405,
+         0.15,
+         0.1517,
+         0.1543,
+         0.1556,
+         0.1595,
+         0.1675,
+         0.171,
+         0.1725,
+         0.1772,
+         0.1835,
+         0.1837,
+         0.1872,
+         0.1933,
+         null,
+         null,
+         0.2029,
+         0.2076,
+         0.2124,
+         0.2115,
+         0.2148,
+         0.2209,
+         0.2223,
+         0.2274,
+         0.2311,
+         0.2347,
+         0.2413,
+         0.2402,
+         0.2455,
+         0.2478,
+         0.2524,
+         0.2564,
+         0.2595,
+         null,
+         0.2675,
+         0.2692,
+         0.278,
+         null,
+         0.2827,
+         0.2815,
+         0.284,
+         0.2904,
+         0.2953,
+         0.2965,
+         0.303,
+         0.3049,
+         0.3103,
+         0.3118,
+         0.3154,
+         0.3174,
+         0.3201,
+         0.3256,
+         0.3274,
+         0.3284,
+         0.3304,
+         0.3343,
+         null,
+         null,
+         null,
+         0.3492,
+         0.3518,
+         0.3503,
+         0.3592,
+         0.3585,
+         0.3607,
+         0.3643,
+         0.3675,
+         0.372,
+         0.3765,
+         0.3786,
+         null,
+         null,
+         0.3856,
+         0.3907,
+         0.391,
+         0.3981,
+         0.3974,
+         0.3994,
+         0.4001,
+         0.407,
+         0.4085,
+         0.4113,
+         0.416,
+         0.418,
+         0.4243,
+         0.421,
+         0.4227,
+         0.4259
+        ],
+        "axis": "right"
+       }
+      ],
+      "lines": [
+       {
+        "value": 0.4,
+        "label": "Vibration Danger limit 0.4 in/s",
+        "axis": "right"
+       }
+      ],
+      "marks": [
+       {
+        "at": "08-12",
+        "label": "Route finds outer race defect (WO 261072"
+       },
+       {
+        "at": "08-19",
+        "label": "Outage – bearing not in stores"
+       },
+       {
+        "at": "09-30",
+        "label": "Outage"
+       }
+      ],
+      "source": "pi_daily PM1:REEL_DRUM_DS_TEMP and PM1:REEL_DRUM_DS_VIB; outage/stop days where the average was dragged down (Jul 18, 20, Aug 19–20, Sep 7, 11, 30, Oct 1–2, 14–15) left as gaps"
+     },
+     "rows": 1
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 31802,
+   "created_at": "2026-11-08T23:59:14+00:00",
+   "grading": []
+  },
+  "P1": {
+   "question": "If the reel drum bearing keeps rising, will it hit Danger before Nov 11?",
+   "answer": "**It already has.** The reel drum DS bearing (PM1:REEL_DRUM_DS_VIB) is above the Danger limit of 0.40 in/s, so the question now is whether to keep running.\n\n- **Where it is:** The daily average was 0.426 in/s on Oct 31, with a peak of 0.431. The daily peak first went over 0.40 on Oct 19, and the daily average first reached 0.40 on Oct 22. Keel's limits are Alert 0.15 and Danger 0.40 [KV-VR-261014].\n- **Why Bonvoy isn't flagging it:** Bonvoy's moving baseline has followed the bearing up. It shows only on the watch list [Bonvoy Report 2026-10-31].\n- **Trend:** The rise is steady, about 0.0025 to 0.0028 in/s per day. That is my fit to the daily averages from Oct 3 to Oct 31. It was 0.24 on Sep 1 and 0.35 on Oct 3. Extending the line is an extrapolation. It gives about 0.45 to 0.46 in/s by Nov 11.\n- **Cause:** An outer race defect (BPFO) was found on the Aug 12 route at 0.173 in/s [KV-VR-260812].\n- **Parts and timing:** The replacement bearing (22238 CCK/W33) was not in stores. It was deferred from the Aug 19 outage. It is on order with an ETA of Nov 5, and the change is planned for the Nov 11 outage [WO 26107259] [BUS 2026-10-31]. The expedite action is late, past its Oct 15 due date [Action: SM-0161].\n\nThe data doesn't show a limit above Danger or any failure point, so I can't say when it would actually fail. This same bearing failed in Nov 2025 with 2.8 h down, and that failure wasn't caught on the route [WO 26100945]. That is a reason not to assume it will hold.\n\nWhat I'd do:\n- Confirm the bearing arrives on Nov 5.\n- Ask Keel for an extra route or a spectrum check before Nov 11.\n- Set a stop trigger and have the run-or-stop decision made by the superintendent, as the BUS entry already asks.\n- Ask whether the change can be pulled forward if a short stop opens up.",
+   "charts": [],
+   "tool_trace": [
+    {
+     "tool": "pi_daily",
+     "args": {
+      "tag": "PM1:REEL_DRUM_DS_VIB",
+      "from": "2026-09-01",
+      "to": "2026-10-31"
+     },
+     "rows": 61
+    },
+    {
+     "tool": "position_history",
+     "args": {
+      "term": "PM1:REEL_DRUM_DS_VIB",
+      "from": "2026-09-01"
+     },
+     "rows": 0
+    },
+    {
+     "tool": "search_documents",
+     "args": {
+      "query": "reel drum bearing vibration alarm danger limit"
+     },
+     "rows": 8
+    },
+    {
+     "tool": "bonvoy_report",
+     "args": {},
+     "rows": 1
+    },
+    {
+     "tool": "search_documents",
+     "args": {
+      "query": "vibration route alarm limits Alert Danger in/s severity thresholds"
+     },
+     "rows": 8
+    },
+    {
+     "tool": "search_records",
+     "args": {
+      "query": "reel drum bearing",
+      "limit": 15
+     },
+     "rows": 15
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 13849,
+   "created_at": "2026-11-08T23:59:14+00:00",
+   "grading": []
+  },
+  "S1": {
+   "question": "Do we break more on 24# than on 34 Super? Chart it.",
+   "answer": "Yes, but by less than the raw counts suggest. 24# breaks about 7.2 times per 100 h run, and 34 Super about 5.2 times. That is roughly 39% more on 24#.\n\nRaw counts overstate the gap. 24# had 402 breaks and 34 Super had 101, but 24# ran 5,596 h against 1,950 h for 34 Super. I divided breaks by hours run for 1 Nov 2025 to 31 Oct 2026.\n\nBreaks per 100 h run:\n- 24#: 402 breaks in 5,596 h, so 7.18.\n- 28#: 16 breaks in 238 h, so 6.72. This is a small sample.\n- 31#: 59 breaks in 970 h, so 6.08.\n- 34 Super: 101 breaks in 1,950 h, so 5.18.\n\nThe gap between 24# and 34 Super is about 3 standard errors, using a simple Poisson count assumption. That is bigger than normal variation, so it is probably real. I haven't looked at causes, such as the time of year, felts or stock.\n\nTime lost per break is almost the same on every grade, about 0.77 h. 24# loses more total time only because it breaks more often.\n\n[Downtime summary by grade, 2025-11-01 to 2026-10-31] [Grade hours, same period]",
+   "charts": [
+    {
+     "title": "Sheet breaks per 100 h run, by grade (Nov 2025 – Oct 2026)",
+     "type": "bar",
+     "unit": "breaks/100 h",
+     "labels": [
+      "24#",
+      "28#",
+      "31#",
+      "34 Super"
+     ],
+     "series": [
+      {
+       "name": "Breaks per 100 h",
+       "values": [
+        7.18,
+        6.72,
+        6.08,
+        5.18
+       ]
+      }
+     ],
+     "source": "downtime_summary (break events) ÷ grade_hours, 2025-11-01 to 2026-10-31"
+    }
+   ],
+   "tool_trace": [
+    {
+     "tool": "downtime_summary",
+     "args": {
+      "from": "2025-11-01",
+      "to": "2026-10-31",
+      "group": "grade"
+     },
+     "rows": 12
+    },
+    {
+     "tool": "grade_hours",
+     "args": {
+      "from": "2025-11-01",
+      "to": "2026-10-31"
+     },
+     "rows": 4
+    },
+    {
+     "tool": "make_chart",
+     "args": {
+      "title": "Sheet breaks per 100 h run, by grade (Nov 2025 – Oct 2026)",
+      "type": "bar",
+      "unit": "breaks/100 h",
+      "labels": [
+       "24#",
+       "28#",
+       "31#",
+       "34 Super"
+      ],
+      "series": [
+       {
+        "name": "Breaks per 100 h",
+        "values": [
+         7.18,
+         6.72,
+         6.08,
+         5.18
+        ]
+       }
+      ],
+      "source": "downtime_summary (break events) ÷ grade_hours, 2025-11-01 to 2026-10-31"
+     },
+     "rows": 1
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 25067,
+   "created_at": "2026-11-09T00:02:13+00:00",
+   "grading": []
+  },
+  "S2": {
+   "question": "Is one crew breaking more than the others? Show it on a chart.",
+   "answer": "Crew B has the most breaks, but the gap isn't clear enough to blame them.\n\nBreaks from Nov 2025 to Oct 2026, 578 in total [downtime feed, by crew]:\n- **Crew B:** 164 breaks, 129.3 h.\n- **Crew C:** 147 breaks, 115 h.\n- **Crew D:** 145 breaks, 114.3 h.\n- **Crew A:** 122 breaks, 87.2 h, the fewest.\n\nIf breaks were spread evenly, each crew would have about 144. B is about 19 above that and A about 22 below. My rough chi-square check on those counts gives p ≈ 0.10, so this is within normal variation. C and D sit right on the average.\n\n- **Run hours:** I couldn't pull run hours per crew. I assumed the four crews run about equal hours. The planned downtime split is similar (A 80 h, C 83 h), which fits that. If B ran more hours, its excess shrinks further.\n- **Break length:** Time per break is about the same for every crew, 0.71 to 0.79 h. No crew is slower to recover.\n- **Unplanned stops:** These are few (5–6 per crew). Crew D has the most unplanned hours (29.7 h, 6 stops), but that's too few events to say much.\n\nB's lead over C and D is only 17–19 breaks, so I wouldn't act on it. To test it properly, I'd compare breaks per 100 h by crew, split by grade, since grade mix can differ between shifts. The tools I have don't give run hours by crew.",
+   "charts": [
+    {
+     "title": "Sheet breaks by crew, Nov 2025 – Oct 2026",
+     "type": "bar",
+     "unit": "breaks",
+     "unit_right": "h",
+     "labels": [
+      "Crew A",
+      "Crew B",
+      "Crew C",
+      "Crew D"
+     ],
+     "series": [
+      {
+       "name": "Breaks (count)",
+       "values": [
+        122,
+        164,
+        147,
+        145
+       ]
+      },
+      {
+       "name": "Break time (h)",
+       "values": [
+        87.2,
+        129.3,
+        115,
+        114.3
+       ],
+       "axis": "right"
+      }
+     ],
+     "lines": [
+      {
+       "value": 144.5,
+       "label": "Average if equal (144.5)"
+      }
+     ],
+     "source": "downtime_summary by crew, 2025-11-01 to 2026-10-31 (kind = break)"
+    }
+   ],
+   "tool_trace": [
+    {
+     "tool": "downtime_summary",
+     "args": {
+      "from": "2025-11-01",
+      "to": "2026-10-31",
+      "group": "crew"
+     },
+     "rows": 12
+    },
+    {
+     "tool": "production",
+     "args": {
+      "from": "2025-11-01",
+      "to": "2026-10-31",
+      "by": "month"
+     },
+     "rows": 12
+    },
+    {
+     "tool": "make_chart",
+     "args": {
+      "title": "Sheet breaks by crew, Nov 2025 – Oct 2026",
+      "type": "bar",
+      "unit": "breaks",
+      "unit_right": "h",
+      "labels": [
+       "Crew A",
+       "Crew B",
+       "Crew C",
+       "Crew D"
+      ],
+      "series": [
+       {
+        "name": "Breaks (count)",
+        "values": [
+         122,
+         164,
+         147,
+         145
+        ]
+       },
+       {
+        "name": "Break time (h)",
+        "values": [
+         87.2,
+         129.3,
+         115,
+         114.3
+        ],
+        "axis": "right"
+       }
+      ],
+      "lines": [
+       {
+        "value": 144.5,
+        "label": "Average if equal (144.5)"
+       }
+      ],
+      "source": "downtime_summary by crew, 2025-11-01 to 2026-10-31 (kind = break)"
+     },
+     "rows": 1
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 32827,
+   "created_at": "2026-11-09T00:02:13+00:00",
+   "grading": []
+  },
+  "S3": {
+   "question": "Make a monthly chart of tons and break hours. Which month hurt most, and why?",
+   "answer": "**May 2026 hurt most.** It had the most sheet breaks (73) and the most break time (52 h, about 3,130 min) of any month. Tons were 20,774, or 670 t/d, which is second-lowest per day after July (669 t/d). Break hours in the chart are break minutes from the production feed divided by 60. The downtime feed gives slightly different counts for some months, for example 52.2 h for May.\n\n**Why May:**\n- **Press-section breaks:** 24 breaks cost 28.8 h, 55% of the break time. They also ran longest, at 1.2 h each against 0.68 h for dryer breaks and 0.27 h for reel breaks. BUS flagged \"4–5 breaks in 24 h, mostly at the press\" on May 2, 10 and 14 [BUS 2026-05-14].\n- **Early felt change:** the 2nd press top felt filled at 3 weeks and was changed on May 19, a 7.5 h unplanned stop [WO 26105208]. Uhle vacuum had risen 4.6 inHg, and BUS had flagged the felt filling since May 4 [BUS 2026-05-04].\n- **Root cause:** RCFA-SM-26-008 finds plugged HP shower nozzles (22%), so the felt wasn't conditioned. The felt ran 50 days against a 42-day target [RCFA-SM-26-008].\n- **1st press bottom felt:** a felt blow on May 3 cost another 2.3 h [WO 26104858].\n- **Grade mix:** this doesn't explain it. May ran more 24# (69% of hours) and less 34 Super (17%) than April.\n\n**Still open:** RCFA-SM-26-008 is \"Open - actions pending\". Action SM-0110, adding Uhle vacuum rate-of-rise to the Bonvoy watch list, is late (due 2026-07-15) [Action: SM-0110].\n\n**Other bad months:**\n- July had 16.4 h of unplanned stops and 669 t/d.\n- March had 19.3 h of unplanned stops and the lowest uptime (94.7%).\n- February's 19,802 t is low only because the month is short.\n- Break hours also stayed high in June and July (43 h each).",
+   "charts": [
+    {
+     "title": "PM1 monthly tons and break hours",
+     "type": "bar",
+     "unit": "t",
+     "unit_right": "h",
+     "labels": [
+      "2025-11",
+      "2025-12",
+      "2026-01",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07",
+      "2026-08",
+      "2026-09",
+      "2026-10"
+     ],
+     "series": [
+      {
+       "name": "Tons",
+       "values": [
+        21325,
+        21670,
+        21131,
+        19802,
+        20977,
+        20829,
+        20774,
+        20666,
+        20744,
+        21485,
+        20459,
+        21510
+       ]
+      },
+      {
+       "name": "Break hours",
+       "values": [
+        25.7,
+        32.6,
+        43.6,
+        28.5,
+        33,
+        33.7,
+        52.2,
+        43.1,
+        44.6,
+        33.1,
+        37.5,
+        38.2
+       ],
+       "axis": "right"
+      }
+     ],
+     "source": "production break_min / 60 (break hours); tons from production by month"
+    }
+   ],
+   "tool_trace": [
+    {
+     "tool": "production",
+     "args": {
+      "from": "2025-11-01",
+      "to": "2026-10-31",
+      "by": "month"
+     },
+     "rows": 12
+    },
+    {
+     "tool": "downtime_summary",
+     "args": {
+      "from": "2025-11-01",
+      "to": "2026-10-31",
+      "group": "month"
+     },
+     "rows": 33
+    },
+    {
+     "tool": "downtime_events",
+     "args": {
+      "from": "2026-05-01",
+      "to": "2026-05-31",
+      "kind": "unplanned"
+     },
+     "rows": 2
+    },
+    {
+     "tool": "grade_hours",
+     "args": {
+      "from": "2026-05-01",
+      "to": "2026-05-31"
+     },
+     "rows": 4
+    },
+    {
+     "tool": "grade_hours",
+     "args": {
+      "from": "2026-04-01",
+      "to": "2026-04-30"
+     },
+     "rows": 4
+    },
+    {
+     "tool": "search_records",
+     "args": {
+      "query": "sheet break May 2026",
+      "limit": 15
+     },
+     "rows": 0
+    },
+    {
+     "tool": "downtime_summary",
+     "args": {
+      "from": "2026-05-01",
+      "to": "2026-05-31",
+      "group": "cause"
+     },
+     "rows": 6
+    },
+    {
+     "tool": "downtime_summary",
+     "args": {
+      "from": "2026-05-01",
+      "to": "2026-05-31",
+      "group": "area"
+     },
+     "rows": 8
+    },
+    {
+     "tool": "position_history",
+     "args": {
+      "term": "p2-felt-top",
+      "from": "2026-04-20",
+      "to": "2026-06-10"
+     },
+     "rows": 17
+    },
+    {
+     "tool": "make_chart",
+     "args": {
+      "title": "PM1 monthly tons and break hours",
+      "type": "bar",
+      "unit": "t",
+      "unit_right": "h",
+      "labels": [
+       "2025-11",
+       "2025-12",
+       "2026-01",
+       "2026-02",
+       "2026-03",
+       "2026-04",
+       "2026-05",
+       "2026-06",
+       "2026-07",
+       "2026-08",
+       "2026-09",
+       "2026-10"
+      ],
+      "series": [
+       {
+        "name": "Tons",
+        "values": [
+         21325,
+         21670,
+         21131,
+         19802,
+         20977,
+         20829,
+         20774,
+         20666,
+         20744,
+         21485,
+         20459,
+         21510
+        ]
+       },
+       {
+        "name": "Break hours",
+        "values": [
+         25.7,
+         32.6,
+         43.6,
+         28.5,
+         33,
+         33.7,
+         52.2,
+         43.1,
+         44.6,
+         33.1,
+         37.5,
+         38.2
+        ],
+        "axis": "right"
+       }
+      ],
+      "source": "production break_min / 60 (break hours); tons from production by month"
+     },
+     "rows": 1
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 15640,
+   "created_at": "2026-11-08T23:59:14+00:00",
+   "grading": []
+  },
+  "P2": {
+   "question": "When was the calender bottom roll last ground?",
+   "answer": "PM1 doesn't appear to have a calender, so I can't give you a grind date. I searched the documents, BUS sheets, work orders and actions for \"calender\". I also looked up the position id cal-bottom. All of them came back empty. The roll list (SM-DWG-101) and the press layout (SM-DWG-201) show no calender stack either.\n\nThe rolls that do have service records are the press rolls and the dryer felt rolls, serviced by Pellham Roll Service. The press rolls are p1-roll-top, p1-roll-bottom, p2-roll-top and p2-roll-bottom. For example, the 2nd press bottom roll was received by Pellham on 2026-10-02 [PR-RS-261009-p2bottom].\n\nIf you meant one of those rolls, tell me which and I'll pull its last grind. If a calender does exist under another name, give me that name or its asset number and I'll search again.",
+   "charts": [],
+   "tool_trace": [
+    {
+     "tool": "position_history",
+     "args": {
+      "term": "cal-bottom"
+     },
+     "rows": 0
+    },
+    {
+     "tool": "search_documents",
+     "args": {
+      "query": "calender bottom roll grind"
+     },
+     "rows": 8
+    },
+    {
+     "tool": "search_documents",
+     "args": {
+      "query": "calender"
+     },
+     "rows": 0
+    },
+    {
+     "tool": "search_records",
+     "args": {
+      "query": "calender",
+      "limit": 10
+     },
+     "rows": 0
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 6489,
+   "created_at": "2026-11-08T23:59:14+00:00",
+   "grading": []
+  },
+  "AC-Q1": {
+   "question": "What actions are overdue?",
+   "answer": "Six actions are overdue as of 2026-10-31. All six are still \"In progress\".\n\n**RCFA actions**\n- **SM-0008:** Add the Couch roll to a two-weekly route (RCFA-SM-25-001). Owner is Gloria Nakamura. It was due 2025-12-11 and is 324 days late.\n- **SM-0010:** Review the grease type and interval for the Couch roll (RCFA-SM-25-001). Owner is Gloria Nakamura. It was due 2026-01-22 and is 282 days late.\n- **SM-0045:** Install a wad detector camera at the breast roll (RCFA-SM-26-002). Owner is Fenna Gallagher. It was due 2026-04-30 and is 184 days late.\n- **SM-0110:** Add Uhle vacuum rate-of-rise to the Bonvoy watch list (RCFA-SM-26-008). Owner is Mei Fairbanks. It was due 2026-07-15 and is 108 days late.\n\n**Outage and reliability items (the most urgent, given the 11 Nov outage)**\n- **SM-0188:** Order a second set of 34\" LC refiner plates. REF 1 and REF 2 are both due Nov 11. Owner is Quentin Adeyemi. It was due 2026-10-28 and is 3 days late. Only one Ridgeway set is on hand and REF 2 is wearing fast. The quote was requested Oct 21.\n- **SM-0161:** Expedite the reel drum DS bearing (22238 CCK/W33), with an ETA of Nov 5 [WO 26107259]. Owner is Quentin Adeyemi. It was due 2026-10-15 and is 16 days late. The bearing was deferred from Aug 19 because it was not in stores.\n\nSM-0188 and SM-0161 are the two to chase first. Both are parts items with the Nov 11 outage 11 days away, and both are owned by Quentin Adeyemi. The two Couch roll actions are the oldest, and they trace back to the Nov 19 bearing failure.\n\nI can check the outage scope for parts status on these if you want.",
+   "charts": [],
+   "tool_trace": [
+    {
+     "tool": "overdue_actions",
+     "args": {},
+     "rows": 6
+    }
+   ],
+   "model": "claude-sonnet-5-5",
+   "provider": "anthropic",
+   "ms": 5692,
+   "created_at": "2026-11-08T23:59:14+00:00",
+   "grading": []
+  }
+ }
+}

@@ -7,8 +7,9 @@ Run by the scheduled task every week; it only does work when a new 6-week cycle 
   2. run.py --check + validate_ref.py   the generator's own checks, on the moved year
   3. tools/ingest/load.py --files --embed   replaces Sim Mill's rows, records (My Machine, Outage Planning, Consumables,
                                             task packages), original files (old ones pruned) and embeddings
-  4. tools/ingest/ask_demo.py          re-asks the demo questions so the saved answers match the new dates
-Afterwards commit demo-data/sim-mill/backbone and demo-data/sim-mill/answers/answer_key.json: the MM LLM page reads the
+  4. tools/ingest/ask_demo.py          re-asks the demo questions so the saved answers match the new dates, and
+                                            records them (with charts) in answers/saved_answers.json
+Afterwards commit demo-data/sim-mill/backbone, answers/answer_key.json and answers/saved_answers.json: the MM LLM page reads the
 questions from that file, and its "roll" block is how the next run knows which cycle is live.
 
 The ingest token comes from  select public.mm_llm_new_ingest_token('Sim Mill', 2);  (SQL editor, or the Supabase
@@ -42,7 +43,7 @@ def main():
     sh('tools/sim-mill/run.py', '--cycles', str(want))
     sh('tools/ingest/load.py', '--source', 'demo-data/sim-mill/out', '--backbone', 'demo-data/sim-mill/backbone',
        '--url', url, '--key', key, '--token', token, '--files', '--embed')
-    if not a.no_answers: sh('tools/ingest/ask_demo.py', '--token', token, '--key', 'demo-data/sim-mill/answers/answer_key.json')
+    if not a.no_answers: sh('tools/ingest/ask_demo.py', '--token', token, '--key', 'demo-data/sim-mill/answers/answer_key.json', '--snapshot', 'demo-data/sim-mill/answers/saved_answers.json')
     r = json.load(open(KEY))['roll']
     print(f"done: Sim Mill is on cycle {r['cycles']}, {r['start']} to {r['today']}. Commit demo-data/sim-mill/backbone and the answer key.")
     return 0
