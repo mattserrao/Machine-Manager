@@ -117,6 +117,7 @@
   .tile span{font-size:12px;color:var(--muted)}
   .ph{max-width:620px;padding:16px 18px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);font-size:13px;line-height:1.55;color:var(--ink-2)}
   .ph h3{margin:0 0 6px;font-size:14px;font-weight:600;color:var(--ink)} .ph ul{margin:0 0 10px;padding-left:18px} .ph .note{margin:0;font-size:12px;color:var(--muted)}
+  .live-ans{margin:0 0 16px;min-height:0}
   .examples{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface-2, var(--surface));margin:0 0 8px}
   .examples > summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;align-items:baseline;gap:2px 10px;padding:12px 14px;border-radius:var(--r-lg)}
   .examples > summary::-webkit-details-marker{display:none}
@@ -227,6 +228,7 @@
     <p class="demo-sub" id="demoSub">Loading what the assistant can see…</p>
     <div class="tiles" id="tiles"></div>
     <div id="askSlot"></div>
+    <div class="ans live-ans" id="liveAns" aria-live="polite" hidden></div>
     <details class="examples" id="examples">
       <summary><span class="ex-t">Example questions with LLM response</span><span class="ex-n" id="exCount"></span>
         <span class="ex-sub" id="exSub">Questions put to the model on this data, with its answers, charts and the evidence behind them.</span></summary>
@@ -302,7 +304,7 @@
 <script src="mm-cloud.js?v=2026-11-09.0050"></script>
 <script src="mm-llm-org.js?v=2026-11-09.0050"></script>
 <script>
-  const VERSION = 'v0.9.0';
+  const VERSION = 'v0.9.1';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
 
@@ -772,9 +774,9 @@
       const setLeft = n => { left.textContent = `${n} question${n === 1 ? '' : 's'} left today · answers use only the demo data`; };
       setLeft(Math.max(0, access.daily_limit - access.used_today));
       row.append(go, pick, left); box.append(lab, ta, row, mine); $('askSlot').appendChild(box);
+      const live = $('liveAns');   // live answers sit under the Ask box, outside the (collapsed) examples
       const showMine = (r, q) => {
-        cur = 'ask'; qlist.querySelectorAll('.q').forEach(x => x.setAttribute('aria-pressed', 'false'));
-        ans.textContent = ''; ans.append(mk('h3', '', q), mk('div', 'lbl', r.status === 'error' ? 'Error' : 'Model answer'), modelText(r.answer), ...chartsOf(r).map(chartBox), meta(r));
+        live.hidden = false; live.textContent = ''; live.append(mk('h3', '', q), mk('div', 'lbl', r.status === 'error' ? 'Error' : 'Model answer'), modelText(r.answer), ...chartsOf(r).map(chartBox), meta(r));
       };
       const addMine = r => {
         const b = mk('button', '', r.question); b.type = 'button'; b.title = r.question;
@@ -786,16 +788,16 @@
         const q = ta.value.trim(); if (!q) return ta.focus();
         go.disabled = true; go.textContent = 'Thinking…';
         try {
-          cur = 'ask'; ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', `Searching the demo data with ${model === 'opus' ? 'Opus' : 'Sonnet'}… this usually takes ${model === 'opus' ? '30–90' : '15–60'} seconds.`));
-          if (narrow.matches) ans.classList.add('open'), ans.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          live.hidden = false; live.textContent = ''; live.append(mk('h3', '', q), mk('p', 'demo-msg', `Searching the demo data with ${model === 'opus' ? 'Opus' : 'Sonnet'}… this usually takes ${model === 'opus' ? '30–90' : '15–60'} seconds.`));
+          live.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
           const { data, error } = await db.functions.invoke('mm-llm-ask', { body: { question: q, org_id: org.id, model } });
           let r = data;
           if (error) { try { r = await error.context.json(); } catch { r = { error: error.message }; } }
-          if (!r || r.error) { ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', (r && r.error) || 'No answer came back.')); return; }
+          if (!r || r.error) { live.textContent = ''; live.append(mk('h3', '', q), mk('p', 'demo-msg', (r && r.error) || 'No answer came back.')); return; }
           const rec = { ...r, question: q, tool_trace: r.trace, created_at: new Date().toISOString() };
           showMine(rec, q); addMine(rec); if (r.remaining != null) setLeft(r.remaining); ta.value = '';
         } catch (e) {
-          ans.textContent = ''; ans.append(mk('h3', '', q), mk('p', 'demo-msg', 'Something went wrong: ' + (e.message || e)));
+          live.textContent = ''; live.append(mk('h3', '', q), mk('p', 'demo-msg', 'Something went wrong: ' + (e.message || e)));
         } finally { go.disabled = false; go.textContent = 'Ask'; }
       };
       go.addEventListener('click', ask);

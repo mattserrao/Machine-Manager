@@ -61,6 +61,10 @@
         if (name === 'mm_llm_saved_answers' || name === 'mm_llm_my_answers') return { data: [], error: null };
         return { data: null, error: { message: 'unknown rpc ' + name } };
       },
+      functions: { invoke: async (name, { body }) => { (window.__invokes = window.__invokes || []).push({ name, body: clone(body) });
+        return { data: { id: 1, status: 'ok', answer: 'Six actions are overdue [Action: SM-0008].', model: body.model === 'opus' ? 'claude-opus-5-5' : 'claude-sonnet-5-5',
+          provider: 'anthropic', ms: 1200, remaining: 39, trace: [{ tool: 'overdue_actions', rows: 6 }],
+          charts: [{ title: 'Overdue by owner', type: 'bar', unit: 'actions', labels: ['A', 'B'], series: [{ name: 'Actions', values: [4, 2] }] }] }, error: null }; } },
       channel(){ const ch = { on(){ return ch; }, subscribe(cb){ setTimeout(() => cb('SUBSCRIBED'), 1); return ch; } }; return ch; },
       storage: { from: () => ({ list: async () => ({ data: [], error: null }), remove: async () => ({ error: null }),
         upload: async () => ({ error: null }), download: async () => ({ data: null, error: { message: 'none' } }) }) },

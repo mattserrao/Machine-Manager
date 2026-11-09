@@ -129,6 +129,15 @@ with sync_playwright() as p:
     pg.locator(".mpick button").filter(has_text="Opus").click()
     check("Demo account: the choice sticks", pg.evaluate("localStorage.getItem('mm-llm-model')") == "opus"
           and pg.locator(".mpick button[aria-checked='true']").inner_text() == "Opus")
+    check("Examples start collapsed", not pg.evaluate("document.getElementById('examples').open"))
+    pg.fill("#askQ", "What actions are overdue?"); pg.locator(".ask .btn.primary").click(); pg.wait_for_timeout(800)
+    live = pg.locator("#liveAns")
+    check("Live answer shows under the Ask box with the examples still collapsed", live.is_visible() and "Six actions are overdue" in live.inner_text()
+          and live.locator(".mchart").count() == 1 and not pg.evaluate("document.getElementById('examples').open"), live.inner_text()[:120])
+    check("Live answer sits between the Ask box and the examples", pg.evaluate(
+          "(() => { const a = document.querySelector('.ask'), l = document.getElementById('liveAns'), e = document.getElementById('examples');"
+          " return !!(a.compareDocumentPosition(l) & 4) && !!(l.compareDocumentPosition(e) & 4); })()"))
+    check("The question went to Opus", pg.evaluate("window.__invokes[0].body.model") == "opus")
     ctx.close()
     ctx, pg = open_page("Daily.html", [], org=("org-sim", "Sim Mill"))
     calls = pg.evaluate("window.__llmCalls || []")
