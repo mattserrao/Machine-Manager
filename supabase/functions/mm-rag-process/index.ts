@@ -4,15 +4,13 @@
 //            accepted (indexed next), needs_review (an editor decides on the RAG page) or rejected
 //   index  → chunks with a context header, tagged with machine positions; embeddings follow a few at a time
 // Each call does one job step (a parse step is at most PAGE_BATCH pages) so it stays inside the CPU limit, then, if
-// it did nothing else, embeds a few waiting chunks. pg_cron calls it every 15 s (migration 11); the RAG page also calls
+// it did nothing else, embeds a few waiting chunks (EMBED_BATCH). pg_cron calls it every 15 s (migration 11); the RAG page also calls
 // it right after an upload so work starts at once. Calls are safe to overlap: jobs are claimed with skip-locked.
 //
 //   POST {}  ->  { job?: { id, step, doc_id, result }, embedded }
 // Deployed with verify_jwt on (the anon key is enough): a call only drains the queue, and only members can add to it.
 // Secrets: ANTHROPIC_API_KEY (shared with mm-llm-ask). Model per org in llm.rag_settings (default claude-haiku-5-5).
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { getDocumentProxy } from 'npm:unpdf@1';
-import { PDFDocument } from 'npm:pdf-lib@1.17.1';
 import { PAGE_BATCH, MODEL_PAGE_CAP, PARSE_PROMPT, needsModel, garbleRate, splitModelPages, assessPrompt, parseJson,
          cleanAssessment, score, contextHeader, chunkPages, tagPositions, isPdf, type Page } from './rag.ts';
 
@@ -20,7 +18,7 @@ const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SE
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info',
                'Access-Control-Allow-Methods': 'POST, OPTIONS' };
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
-const EMBED_MODEL = 'gte-small';
+const EMBED_MODEL = 'gte-small', EMBED_BATCH = 3;   // 6 per call ran out of compute
 let embedder: any = null;
 const embed = async (text: string): Promise<number[]> => {
   // @ts-ignore Supabase.ai is provided by the Edge Runtime
@@ -65,6 +63,8 @@ async function parse(job: any, ctx: any) {
   if (error || !file) throw new Permanent(`The uploaded file is missing (${doc.file_path}).`);
   const bytes = new Uint8Array(await file.arrayBuffer());
   if (!isPdf(bytes)) throw new Permanent('This file is not a PDF.');
+  // The PDF libraries load only for a parse step, so embedding calls stay small (the runtime's memory and CPU limits).
+  const { getDocumentProxy } = await import('npm:unpdf@1');
   let pdf: any;
   try { pdf = await getDocumentProxy(bytes.slice()); }   // a copy: PDF.js takes over the buffer it is given
   catch (e) { const m = String((e as Error)?.message ?? e); throw new Permanent(/password/i.test(m) ? 'The PDF is password-protected.' : `The PDF can't be read: ${m.slice(0, 160)}`); }
@@ -82,6 +82,7 @@ async function parse(job: any, ctx: any) {
   }
   const hard = pages.filter((p) => needsModel(p.text)).slice(0, Math.max(0, MODEL_PAGE_CAP - modelPages));
   if (hard.length && apiKey()) {
+    const { PDFDocument } = await import('npm:pdf-lib@1.17.1');
     const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
     const sub = await PDFDocument.create();
     for (const p of await sub.copyPages(src, hard.map((h) => h.page - 1))) sub.addPage(p);
@@ -198,6 +199,6 @@ Deno.serve(async (req) => {
   if (error) return json({ error: error.message }, 500);
   const job = jobs?.[0];
   const result = job ? await runJob(job) : null;
-  const embedded = job ? 0 : await embedPending(6);   // embeddings only when there was no job, to stay inside the CPU limit
+  const embedded = job ? 0 : await embedPending(EMBED_BATCH);   // embeddings only when there was no job, to stay inside the CPU limit
   return json({ ...(job ? { job: { id: job.id, step: job.step, doc_id: job.doc_id, result } } : {}), embedded });
 });
