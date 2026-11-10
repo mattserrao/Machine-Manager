@@ -25,7 +25,7 @@ Built on `access()`. Returns `{ org, orgs, empty, real, error }`:
 - everyone else → the public demo orgs (a picker if there are several).
 - `offline` → `error`.
 
-Used by Daily, Downtime / RCFA, Vendor Reports, Bonvoy Report and MM LLM (which had its own copy of this logic).
+Used by the Daily Journal, Downtime / RCFA, Vendor Reports, Bonvoy Report and MM LLM (which had its own copy of this logic).
 
 ### 3. Save indicator: `MMCloud.saveIndicator(el, opts)` (mm-cloud.js)
 States shown: `saved` · `saving` · `viewonly` · `error` (Not saved) · `notloaded`. With several stores (Outage

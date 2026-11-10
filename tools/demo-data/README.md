@@ -32,4 +32,4 @@ python3 tools/demo-data/downtime_feed.py      # downtime feed (after structured.
 
 Bonvoy convention: a report covers one calendar day (`Period`) and arrives the next morning (`Report Date`). Storyline dates for Bonvoy flags are the Period.
 
-Next: phase 5 — load the Demo Mill organization in Supabase through the importers, and run the answer key.
+Loading: `tools/ingest/load.py` and `verify_answers.py` (see `tools/ingest/README.md`); CI loads this year and checks the answer key on every pull request. Demo Mill is kept but no longer public (Sim Mill is the demo).
