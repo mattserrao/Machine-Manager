@@ -20,6 +20,13 @@ import { systemPrompt } from './prompt.ts';
 const URL_ = Deno.env.get('SUPABASE_URL')!, ANON = Deno.env.get('SUPABASE_ANON_KEY')!, SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const DAILY_CAP = Number(Deno.env.get('MM_LLM_DAILY_CAP') ?? 300);   // all askers together, protects the model bill
 const MAX_STEPS = 10;
+// search_library embeds the query with the same model as the document chunks (gte-small, Supabase.ai in the runtime)
+let embedder: any = null;
+const embed = async (text: string): Promise<number[]> => {
+  // @ts-ignore Supabase.ai is provided by the Edge Runtime
+  embedder ??= new Supabase.ai.Session('gte-small');
+  return Array.from(await embedder.run(text, { mean_pool: true, normalize: true }) as number[]);
+};
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, apikey, content-type, x-client-info, x-mm-ingest-token',
                'Access-Control-Allow-Methods': 'POST, OPTIONS' };
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
@@ -79,7 +86,7 @@ Deno.serve(async (req) => {
           results.push({ id: c.id, content: JSON.stringify(chart ? { ok: true, note: 'The page draws this chart under your answer and offers a PNG download. Do not redraw it in text. To fix it, call make_chart again with the same title: that replaces it, so don\'t mention the redraw.' } : { error }) });
           continue;
         }
-        const r = await runTool(db, org, c.name, c.args);
+        const r = await runTool(db, org, c.name, c.args, { embed });
         trace.push({ tool: c.name, args: c.args, rows: (r as any).total ?? 0, error: (r as any).error ?? undefined });
         results.push({ id: c.id, content: forModel(r) });
       }

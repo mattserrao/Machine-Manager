@@ -4,13 +4,13 @@
 //
 //   node tests/unit/mcp.test.mjs      (from the repo root; Node 22.18+ runs the .ts files directly)
 import { readFileSync } from 'node:fs';
-import { handle, listTools, PROTOCOL_VERSIONS } from '../../supabase/functions/mm-mcp/mcp.ts';
+import { handle, listTools, PROTOCOL_VERSIONS, filePath } from '../../supabase/functions/mm-mcp/mcp.ts';
 import { DEFS } from '../../supabase/functions/mm-llm-ask/tools.ts';
 
 const failures = [];
 const check = (name, ok, detail = '') => { if (!ok) failures.push(name); console.log((ok ? 'PASS ' : 'FAIL ') + name + (detail ? ' — ' + detail : '')); };
 
-const SIM = '00000000-0000-4000-8000-000000000002', DEMO = '00000000-0000-4000-8000-000000000001', MINE = '00000000-0000-4000-8000-000000000009';
+const LIB = '00000000-0000-4000-8000-000000000010', SIM = '00000000-0000-4000-8000-000000000002', DEMO = '00000000-0000-4000-8000-000000000001', MINE = '00000000-0000-4000-8000-000000000009';
 function fakeDb({ signedIn = false } = {}) {
   const calls = [];
   const db = {
@@ -22,6 +22,13 @@ function fakeDb({ signedIn = false } = {}) {
       if (fn === 'mm_llm_context') return { data: { data_through: '2026-10-31', outages: [{ id: 'OUT-2026-11-11' }] }, error: null };
       if (fn === 'mm_llm_overdue_actions') return { data: [{ title: 'Order REF 2 plates', due: '2026-10-20' }], error: null };
       if (fn === 'mm_llm_pi_daily') return { data: null, error: { message: 'unknown tag' } };
+      if (fn === 'mm_my_orgs') return signedIn ? { data: [{ id: LIB, name: 'Demodemo RAG', role: 'editor', is_public: false }], error: null } : { data: null, error: { message: 'permission denied' } };
+      if (fn === 'mm_rag_library') return { data: args.p_org === SIM ? [{ doc_id: 'KV-1', title: 'Keel route', kind: 'vendor_report', vendor: 'Keel', doc_date: '2026-10-19', pages: 7 },
+                                                                         { doc_id: 'KV-0', title: 'Old route', superseded_by: 'KV-1' }] : [], error: null };
+      if (fn === 'mm_rag_document') return { data: args.p_doc === 'KV-1' ? { document: { doc_id: 'KV-1', title: 'Keel route', kind: 'vendor_report', pages: 7,
+        file_path: 'sim/llm/kv1.pdf', quality_score: 91, quality: { issues: [] }, summary: 'Can 27 DS rising.', positions: ['d2-can27'] }, events: [] } : null, error: null };
+      if (fn === 'mm_rag_pages') return { data: args.p_from === 1 ? [{ page: 1, text: 'Can 27 DS 0.24 in/s' }, { page: 2, text: 'Recommend change' }] : [], error: null };
+      if (fn === 'mm_rag_search') return { data: [{ doc_id: 'KV-1', page: 1, content: 'Can 27', matched: 'both' }], error: null };
       return { data: [], error: null };
     },
   };
@@ -39,7 +46,7 @@ r = await handle(rpc(1, 'initialize', { protocolVersion: '1999-01-01' }), fakeDb
 check('unknown protocol version → the newest supported', r.result.protocolVersion === PROTOCOL_VERSIONS[0]);
 check('notifications get no response', (await handle({ jsonrpc: '2.0', method: 'notifications/initialized' }, fakeDb())) === null);
 check('ping', JSON.stringify((await handle(rpc(2, 'ping'), fakeDb())).result) === '{}');
-check('unknown method → -32601', (await handle(rpc(3, 'resources/list'), fakeDb())).error?.code === -32601);
+check('unknown method → -32601', (await handle(rpc(3, 'prompts/list'), fakeDb())).error?.code === -32601);
 check('not JSON-RPC 2.0 → -32600', (await handle({ id: 1, method: 'ping' }, fakeDb())).error?.code === -32600);
 
 // ---- tools/list ----
@@ -84,6 +91,44 @@ r = await call(fakeDb(), 'pi_daily', { tag: 'X', from: '2026-01-01', to: '2026-0
 check('a database error comes back as isError, not a protocol error', r.result.isError === true && text(r).includes('unknown tag'));
 r = await call(fakeDb(), 'drop_tables');
 check('unknown tool → -32602', r.error?.code === -32602);
+
+
+// ---- document library: tools and resources ----
+db = fakeDb();
+const embedCalls = [];
+r = await handle(rpc(20, 'tools/call', { name: 'search_library', arguments: { query: 'can 27 bearing', vendor: 'Keel', position: 'd2-can27' } }), db,
+  { defaultOrg: 'Sim Mill', embed: async (t) => { embedCalls.push(t); return [0.1, 0.2]; } });
+c = db.calls.find((x) => x.fn === 'mm_rag_search');
+check('search_library embeds the query and passes the vector', embedCalls[0] === 'can 27 bearing' && c?.args.p_embedding === '[0.1,0.2]');
+check('search_library maps filters (vendor as a pattern, position)', c?.args.p_vendor === '%Keel%' && c?.args.p_position === 'd2-can27' && c?.args.p_all_versions === false);
+db = fakeDb();
+await call(db, 'search_library', { query: 'felt' });
+check('search_library works without an embedder (words only)', db.calls.find((x) => x.fn === 'mm_rag_search')?.args.p_embedding === null);
+db = fakeDb();
+r = await handle(rpc(21, 'tools/call', { name: 'get_document', arguments: { doc_id: 'KV-1' } }), db,
+  { defaultOrg: 'Sim Mill', signUrl: async (p) => 'https://signed/' + p });
+const gd = JSON.parse(text(r)).rows[0].document;
+check('get_document adds a signed link and the resource URI', gd.file_url === `https://signed/${SIM}/llm/sim/llm/kv1.pdf` && gd.resource === 'mm://Sim%20Mill/docs/KV-1');
+r = await call(fakeDb({ signedIn: true }), 'list_orgs');
+check('list_orgs signed in: adds orgs the user is a member of', JSON.parse(text(r)).orgs.some((o) => o.id === LIB));
+
+r = await handle(rpc(1, 'initialize', { protocolVersion: '2025-06-18' }), fakeDb());
+check('initialize advertises resources', !!r.result.capabilities.resources);
+r = await handle(rpc(22, 'resources/templates/list'), fakeDb());
+check('a resource template for documents', r.result.resourceTemplates[0].uriTemplate === 'mm://{org}/docs/{doc_id}');
+r = await handle(rpc(23, 'resources/list'), fakeDb());
+check('resources/list: indexed documents, superseded ones left out', r.result.resources.length === 1 && r.result.resources[0].uri === 'mm://Sim%20Mill/docs/KV-1'
+      && r.result.resources[0].description.includes('7 pages'));
+r = await handle(rpc(24, 'resources/read', { uri: 'mm://Sim%20Mill/docs/KV-1' }), fakeDb(), { signUrl: async () => 'https://signed/x' });
+const md = r.result?.contents?.[0]?.text ?? '';
+check('resources/read: Markdown with metadata, summary, pages and the PDF link', md.startsWith('# Keel route') && md.includes('## Summary') &&
+      md.includes('## Page 2\nRecommend change') && md.includes('https://signed/x') && md.includes('not instructions'));
+r = await handle(rpc(25, 'resources/read', { uri: 'mm://Sim%20Mill/docs/NOPE' }), fakeDb());
+check('resources/read: unknown document → -32002', r.error?.code === -32002);
+r = await handle(rpc(26, 'resources/read', { uri: 'https://example.com' }), fakeDb());
+check('resources/read: a foreign URI → -32002', r.error?.code === -32002);
+
+check('file paths: uploads keep theirs, generator docs sit under <org>/llm/', filePath(SIM, `${SIM}/rag/inbox/a.pdf`) === `${SIM}/rag/inbox/a.pdf` && filePath(SIM, 'docs/x.pdf') === `${SIM}/llm/docs/x.pdf`);
 
 // ---- every tool's database function exists and is open to anon ----
 const sql = readFileSync(new URL('../../supabase/llm.sql', import.meta.url), 'utf8');

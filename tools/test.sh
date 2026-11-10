@@ -9,6 +9,7 @@ node tests/unit/machine.test.js
 node tests/unit/outage_export.test.js
 node tests/unit/cloud_states.test.js
 node tests/unit/mcp.test.mjs
+node tests/unit/rag.test.mjs
 node tests/sync/sync_sim.js
 python3 tools/demo-data/backbone.py --check
 python3 tools/sim-mill/run.py --check
@@ -34,6 +35,7 @@ sleep 1
 python3 tests/browser/smoke.py http://localhost:8799/
 python3 tests/browser/boards.py http://localhost:8799/
 python3 tests/browser/signed_in.py http://localhost:8799/
+python3 tests/browser/rag.py http://localhost:8799/
 python3 tests/browser/theme.py http://localhost:8799/
 python3 tests/browser/outages_demo.py http://localhost:8799/
 python3 tests/browser/consumables_organizer.py http://localhost:8799/

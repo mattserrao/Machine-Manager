@@ -55,6 +55,7 @@
         // MM LLM data pages: one public demo org (Sim Mill); PM1 has no data of its own. Every call is kept, so a
         // test can check the real org never asks for the demo org's rows.
         (window.__llmCalls = window.__llmCalls || []).push({ name, args: clone(args || {}) });
+        if (window.__rpcHook){ const r = await window.__rpcHook(name, clone(args || {})); if (r !== undefined) return r; }   // a test's own answers
         if (name === 'mm_llm_public_org') return { data: [{ id: 'org-sim', name: 'Sim Mill' }], error: null };
         if (name === 'mm_llm_summary') return { data: args.p_org === 'org-sim' ? [{ source: 'BUS lines', n: 10, last_day: '2026-10-31' }] : [], error: null };
         if (name === 'mm_llm_my_access') return { data: ORG === 'org-sim' ? [{ org_id: ORG, org_name: ORG_NAME, daily_limit: 40, used_today: 0 }] : [], error: null };
@@ -66,8 +67,11 @@
           provider: 'anthropic', ms: 1200, remaining: 39, trace: [{ tool: 'overdue_actions', rows: 6 }],
           charts: [{ title: 'Overdue by owner', type: 'bar', unit: 'actions', labels: ['A', 'B'], series: [{ name: 'Actions', values: [4, 2] }] }] }, error: null }; } },
       channel(){ const ch = { on(){ return ch; }, subscribe(cb){ setTimeout(() => cb('SUBSCRIBED'), 1); return ch; } }; return ch; },
-      storage: { from: () => ({ list: async () => ({ data: [], error: null }), remove: async () => ({ error: null }),
-        upload: async () => ({ error: null }), download: async () => ({ data: null, error: { message: 'none' } }) }) },
+      storage: { from: () => ({ list: async () => ({ data: [], error: null }),
+        remove: async (paths) => { (window.__storage = window.__storage || []).push({ op: 'remove', paths }); return { error: null }; },
+        upload: async (path, file, opts) => { (window.__storage = window.__storage || []).push({ op: 'upload', path, size: file && file.size, opts: clone(opts || {}) }); return { error: null }; },
+        createSignedUrl: async (path) => ({ data: { signedUrl: 'https://signed.example/' + path }, error: null }),
+        download: async () => ({ data: null, error: { message: 'none' } }) }) },
     }),
   };
   window.__rows = () => clone([...rows.values()]);
