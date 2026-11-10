@@ -1,15 +1,15 @@
 # Machine-Manager
 Various tools for machine management.
 
-Without signing in you're looking at the demo: My Machine, Outage Planning, the Ops Task Library, the Consumables Tracker, the mill-data pages and MM LLM show the Sim Mill demo org read-only, and the Whiteboard and Daily notes save only in your browser. Signed-in users share data through Supabase, scoped to their organization. A real organization (e.g. PM1) only ever sees what its own people add or load: the mill-data pages (Daily, Downtime / RCFA, Vendor Reports, Bonvoy Report, MM LLM) show a placeholder until its files are loaded, and the Ops Task Library starts empty (the example packages can be added on request). The demo account and signed-out visitors see the Sim Mill demo. `RAG.html` is a placeholder for uploading documents for the assistant to search. The MM LLM tools are also served to Claude as an MCP server (`mm-mcp`); the MM LLM page’s About → "Use it from Claude (MCP)" has the steps. See [supabase/SETUP.md](supabase/SETUP.md) for adding people and how access works.
+Without signing in you're looking at the demo: My Machine, Outage Planning, the Ops Task Library, the Consumables Tracker, the mill-data pages and MM LLM show the Sim Mill demo org read-only, and the Whiteboard saves only in your browser. Signed-in users share data through Supabase, scoped to their organization. A real organization (e.g. PM1) only ever sees what its own people add or load: the mill-data pages (Daily, Downtime / RCFA, Vendor Reports, Bonvoy Report, MM LLM) show a placeholder until its files are loaded, and the Ops Task Library starts empty (the example packages can be added on request). The demo account and signed-out visitors see the Sim Mill demo. `RAG.html` is a placeholder for uploading documents for the assistant to search. The MM LLM tools are also served to Claude as an MCP server (`mm-mcp`); the MM LLM page’s About → "Use it from Claude (MCP)" has the steps. See [supabase/SETUP.md](supabase/SETUP.md) for adding people and how access works.
 
 ## Layout
 
 | File | What |
 |---|---|
-| `index.html`, `*.html` | One page per tool. `Daily.html` and `PM1LLM.html` only redirect to renamed pages. |
+| `index.html`, `*.html` | One page per tool. |
 | `mm-cloud.js` | Sign-in, who is looking (`access`), synced records (`openStore`), the save indicator and files for every tool. The app's named states are mapped in [docs/state-machines.md](docs/state-machines.md) |
-| `mm-board.js`, `mm-board*.css` | The board engine behind the Whiteboard, Ops Task Library, Consumables Tracker and Daily notes |
+| `mm-board.js`, `mm-board*.css` | The board engine behind the Whiteboard, Ops Task Library, Consumables Tracker |
 | `mm-machine.js`, `mm-demo.js` | The machine model shared by My Machine and Outage Planning, and its demo data |
 | `mm-demo-outages.js`, `mm-task-examples.js` | Outage Planning's demo outages, and the example task packages (Ops Task Library, and the outage demo) |
 | `mm-records.js` | Each tool's record ids |
@@ -23,7 +23,7 @@ Without signing in you're looking at the demo: My Machine, Outage Planning, the 
 | `tools/reports/` | The report lifecycle (registry, envelope, reconcile daemon) behind Sim Mill's shift and production reports |
 | `tools/demo-data/`, `demo-data/` | The original scripted demo year (Demo Mill: kept, no longer published) |
 | `tools/sim-mill/`, `demo-data/sim-mill/` | Sim Mill: a data-generating model of The Paper Mill's mill (Python port of its sim), one modelled year, its answer key |
-| `DailyJournal.html`, `Downtime.html`, `VendorReports.html` | The data pages: the mill day from its reports (Daily Journal; `Daily.html` redirects to it), downtime / RCFA, vendor reports by position and run (`mm-llm-org.js`, `mm-data.css`). `DailyNotes.html` is the old Daily notes board |
+| `DailyJournal.html`, `Downtime.html`, `VendorReports.html` | The data pages: the mill day from its reports (Daily Journal), downtime / RCFA, vendor reports by position and run (`mm-llm-org.js`, `mm-data.css`) |
 | `tests/`, `tools/` | Tests (run on every pull request) and helper scripts |
 
 After changing any shared file (`mm-*.js`, `mm-*.css`, `vendor/`), run `python3 tools/stamp.py` so browsers load the new versions together.

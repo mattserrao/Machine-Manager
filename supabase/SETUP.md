@@ -2,7 +2,7 @@
 
 Machine Manager runs in two modes:
 
-- **Demo**: anyone who isn't signed in. My Machine, Outage Planning, the Ops Task Library and the Consumables Tracker show the public demo org (**Sim Mill**) read-only; the mill-data pages and MM LLM show Sim Mill too; the other tools (Whiteboard, Daily notes) save to that browser only.
+- **Demo**: anyone who isn't signed in. My Machine, Outage Planning, the Ops Task Library and the Consumables Tracker show the public demo org (**Sim Mill**) read-only; the mill-data pages and MM LLM show Sim Mill too; the Whiteboard saves to that browser only.
 - **Signed in**: data lives in the Supabase project `machine-manager` and is shared live with everyone in the same organization.
 
 The schema (`schema.sql`) is already applied to the project. Re-running it is safe if it ever needs to be reapplied.

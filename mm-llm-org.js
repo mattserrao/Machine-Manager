@@ -128,10 +128,10 @@
   }
 
   // The page a real organization sees before its own data is loaded: what the page will show and what feeds it.
-  //   MMLLMOrg.placeholder(st, { title, text, needs: ['BUS daily sheet', …], links: [['DailyNotes.html', 'Notes board']] })
+  //   MMLLMOrg.placeholder(st, { title, text, needs: ['BUS daily sheet', …], links: [['Downtime.html', 'Downtime / RCFA']] })
   function placeholder(st, o){
     const $ = id => document.getElementById(id);
-    document.querySelectorAll('.dbar > :not(.org):not(.grow):not(.nb)').forEach(e => { e.hidden = true; });
+    document.querySelectorAll('.dbar > :not(.org):not(.grow)').forEach(e => { e.hidden = true; });
     const org = $('org'); if (org) { org.textContent = ''; const b = document.createElement('b'); b.textContent = st.org.name; org.appendChild(b); }
     const sub = $('sub'); if (sub) sub.hidden = true;
     const body = $('body'); if (!body) return;
