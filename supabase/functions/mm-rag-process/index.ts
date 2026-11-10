@@ -11,7 +11,7 @@
 // Deployed with verify_jwt on (the anon key is enough): a call only drains the queue, and only members can add to it.
 // Secrets: ANTHROPIC_API_KEY (shared with mm-llm-ask). Model per org in llm.rag_settings (default claude-haiku-5-5).
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { PAGE_BATCH, MODEL_PAGE_CAP, PARSE_PROMPT, needsModel, garbleRate, splitModelPages, assessPrompt, parseJson,
+import { PAGE_BATCH, MODEL_PAGE_CAP, PARSE_PROMPT, NOTES_PROMPT, isRefusal, needsModel, garbleRate, splitModelPages, assessPrompt, parseJson,
          cleanAssessment, score, contextHeader, chunkPages, tagPositions, isPdf, type Page } from './rag.ts';
 
 const sb = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, { auth: { persistSession: false } });
@@ -71,7 +71,7 @@ async function parse(job: any, ctx: any) {
   const n = pdf.numPages;
   if (!prog) await rpc('mm_rag_save_pages', { p_org: job.org_id, p_doc: job.doc_id, p_pages: [] });   // a fresh parse
   const start = prog?.next_page ?? 1, end = Math.min(n, start + PAGE_BATCH - 1);
-  let modelPages = prog?.model_pages ?? 0, inT = prog?.in ?? 0, outT = prog?.out ?? 0;
+  let modelPages = prog?.model_pages ?? 0, notesPages = prog?.notes_pages ?? 0, inT = prog?.in ?? 0, outT = prog?.out ?? 0;
 
   const pages: Page[] = [];
   for (let i = start; i <= end; i++) {
@@ -86,9 +86,15 @@ async function parse(job: any, ctx: any) {
     const src = await PDFDocument.load(bytes, { ignoreEncryption: true });
     const sub = await PDFDocument.create();
     for (const p of await sub.copyPages(src, hard.map((h) => h.page - 1))) sub.addPage(p);
-    const r = await claude(set.model, [
-      { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64(await sub.save()) } },
-      { type: 'text', text: PARSE_PROMPT }], Math.min(16000, 1500 * hard.length + 500));
+    const docBlock = { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64(await sub.save()) } };
+    const max = Math.min(16000, 1500 * hard.length + 500);
+    let r;
+    try { r = await claude(set.model, [docBlock, { type: 'text', text: PARSE_PROMPT }], max); }
+    catch (e) {
+      if (!isRefusal((e as Error).message)) throw e;
+      r = await claude(set.model, [docBlock, { type: 'text', text: NOTES_PROMPT }], max);   // a published text: notes, not a copy
+      notesPages += hard.length;
+    }
     inT += r.inT; outT += r.outT; modelPages += hard.length;
     const got = splitModelPages(r.text, hard.map((h) => h.page));
     for (const p of pages) {
@@ -99,7 +105,7 @@ async function parse(job: any, ctx: any) {
   for (const p of pages) p.garble = Number(garbleRate(p.text).toFixed(3));
   await rpc('mm_rag_add_pages', { p_org: job.org_id, p_doc: job.doc_id, p_pages: pages });
 
-  const usage = { next_page: end + 1, pages: n, model_pages: modelPages, in: inT, out: outT };
+  const usage = { next_page: end + 1, pages: n, model_pages: modelPages, notes_pages: notesPages, in: inT, out: outT };
   if (end < n) { await rpc('mm_rag_requeue', { p_job: job.id, p_progress: usage }); return `pages ${start}-${end} of ${n}`; }
   const src = modelPages === 0 ? 'text' : modelPages >= n ? 'model' : 'mixed';
   return await rpc('mm_rag_finish', { p_job: job.id, p_ok: true, p_to: 'parsed', p_doc_patch: { text_source: src }, p_usage: usage });

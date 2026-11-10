@@ -2,7 +2,7 @@
 // the assessment clean-up, the score and gate, chunking with a context header, and position tagging.
 //
 //   node tests/unit/rag.test.mjs      (from the repo root; Node 22.18+ runs the .ts file directly)
-import { garbleRate, needsModel, splitModelPages, parseJson, cleanAssessment, score, contextHeader, chunkPages, tagPositions,
+import { garbleRate, needsModel, splitModelPages, isRefusal, NOTES_PROMPT, NOTES_MARK, parseJson, cleanAssessment, score, contextHeader, chunkPages, tagPositions,
          isPdf, assessPrompt } from '../../supabase/functions/mm-rag-process/rag.ts';
 
 const failures = [];
@@ -24,6 +24,9 @@ const reply = 'Here you go\n=== PAGE 1 ===\n# Survey\nCaliper 2.1 mm\n=== PAGE 2
 const m = splitModelPages(reply, [4, 9]);
 check('transcribed pages map back to the original page numbers', m.get(4)?.startsWith('# Survey') && m.get(9)?.includes('| TS | 38 |') && m.size === 2);
 check('an unexpected extra page is ignored', splitModelPages('=== PAGE 3 ===\nx', [4, 9]).size === 0);
+
+check('a copyright refusal is recognised', isRefusal('Claude 400: Output blocked by content filtering policy') && !isRefusal('Claude 529: overloaded'));
+check('the notes prompt keeps the page markers and asks for own words', NOTES_PROMPT.includes('=== PAGE <n> ===') && NOTES_PROMPT.includes(NOTES_MARK) && /Do not copy/.test(NOTES_PROMPT));
 
 // ---- assessment ----
 check('JSON is found inside a fenced reply', parseJson('Sure:\n```json\n{"kind":"vendor_report","relevance":5}\n```')?.kind === 'vendor_report');
