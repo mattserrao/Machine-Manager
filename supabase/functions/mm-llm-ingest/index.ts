@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     const path = String(body.path ?? '');
     if (!path || path.includes('..') || path.startsWith('/') || path.length > 300) return json({ error: 'bad path' }, 400);
     const bytes = Uint8Array.from(atob(String(body.data ?? '')), (c) => c.charCodeAt(0));
-    if (bytes.length > 25 * 1024 * 1024) return json({ error: 'file over 25 MB' }, 413);
+    if (bytes.length > 30 * 1024 * 1024) return json({ error: 'file over 30 MB' }, 413);
     const { error } = await sb.storage.from('mm-files').upload(`${org}/llm/${path}`, bytes,
       { contentType: String(body.contentType ?? 'application/octet-stream'), upsert: true });
     return error ? json({ error: error.message }, 500) : json({ ok: true, path: `${org}/llm/${path}` });

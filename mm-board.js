@@ -168,7 +168,7 @@ window.MMBoard = { start(cfg){
           const { error } = await bucket().upload(path, a.blob, { contentType:a.type || 'application/octet-stream', upsert:true });
           if (error) throw error;
           a.path = path;
-        } catch (e) { toastSoft(`“${a.name}” didn’t upload${/size|large/i.test(e.message || '') ? ' (files are limited to 25 MB)' : ' — will retry'}.`); }
+        } catch (e) { toastSoft(`“${a.name}” didn’t upload${/size|large/i.test(e.message || '') ? ' (files are limited to 30 MB)' : ' — will retry'}.`); }
         finally { uploading.delete(a.id); }
       }
     }

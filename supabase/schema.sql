@@ -216,7 +216,7 @@ grant  execute on function public.mm_file_refs(uuid, text) to authenticated;
 
 -- Files for every other tool: private bucket "mm-files", kept under <org_id>/<tool>/...
 insert into storage.buckets (id, name, public, file_size_limit)
-values ('mm-files', 'mm-files', false, 26214400)          -- private, 25 MB per file
+values ('mm-files', 'mm-files', false, 31457280)          -- private, 30 MB per file
 on conflict (id) do update set public = false, file_size_limit = excluded.file_size_limit;
 
 drop policy if exists mm_files_read   on storage.objects;

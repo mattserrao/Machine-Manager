@@ -482,7 +482,7 @@
         const n = (name || file.name || 'file').replace(/[^\w.-]+/g, '_').slice(-100);
         const path = `${s.org.id}/${tool}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}-${n}`;
         const { error } = await bucket().upload(path, file, { contentType: file.type || 'application/octet-stream' });
-        if (error) throw new Error(/size|large/i.test(error.message) ? 'Files are limited to 25 MB.' : error.message);
+        if (error) throw new Error(/size|large/i.test(error.message) ? 'Files are limited to 30 MB.' : error.message);
         return path;
       },
       async download(path){ await need(); const { data, error } = await bucket().download(path); if (error) throw error; return data; },
