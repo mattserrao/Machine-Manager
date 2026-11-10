@@ -88,15 +88,21 @@ async function parse(job: any, ctx: any) {
     for (const p of await sub.copyPages(src, hard.map((h) => h.page - 1))) sub.addPage(p);
     const docBlock = { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: b64(await sub.save()) } };
     const max = Math.min(16000, 1500 * hard.length + 500);
-    let r;
+    let r: { text: string; inT: number; outT: number } | null = null;
+    let refused = false;
     try { r = await claude(set.model, [docBlock, { type: 'text', text: PARSE_PROMPT }], max); }
-    catch (e) {
-      if (!isRefusal((e as Error).message)) throw e;
-      r = await claude(set.model, [docBlock, { type: 'text', text: NOTES_PROMPT }], max);   // a published text: notes, not a copy
-      notesPages += hard.length;
+    catch (e) { if (!isRefusal((e as Error).message)) throw e; refused = true; }
+    let got = r ? splitModelPages(r.text, hard.map((h) => h.page)) : new Map<number, string>();
+    if (r) { inT += r.inT; outT += r.outT; }
+    // A published text: the transcript is refused outright, or comes back declined in words (few or no pages).
+    // Then ask for reading notes in Claude's own words instead of a copy.
+    if (refused || got.size < Math.ceil(hard.length / 2)) {
+      const n2 = await claude(set.model, [docBlock, { type: 'text', text: NOTES_PROMPT }], max);
+      inT += n2.inT; outT += n2.outT; notesPages += hard.length;
+      const notes = splitModelPages(n2.text, hard.map((h) => h.page));
+      for (const [k, v] of notes) if (!got.has(k)) got.set(k, v);
     }
-    inT += r.inT; outT += r.outT; modelPages += hard.length;
-    const got = splitModelPages(r.text, hard.map((h) => h.page));
+    modelPages += hard.length;
     for (const p of pages) {
       const t = got.get(p.page);
       if (t && t.replace(/\s/g, '').length > p.text.replace(/\s/g, '').length * 0.6) { p.text = t; p.text_source = 'model'; }
@@ -119,11 +125,12 @@ async function assess(job: any, ctx: any) {
   const chars = pages.map((p) => p.text.replace(/\s+/g, ' ').trim().length);
   const text = pages.map((p) => `--- page ${p.page} ---\n${p.text}`).join('\n').slice(0, 60000);
 
-  let m = null, modelOk = false, inT = 0, outT = 0;
+  let m = null, modelOk = false, inT = 0, outT = 0, modelNote = '';
   try {
-    const r = await claude(set.model, [{ type: 'text', text: assessPrompt(text, positions, doc.file_name ?? doc.title) }], 1500);
+    const r = await claude(set.model, [{ type: 'text', text: assessPrompt(text, positions, doc.file_name ?? doc.title) }], 3000);
     inT = r.inT; outT = r.outT; m = parseJson(r.text); modelOk = !!m;
-  } catch (e) { console.warn('assess model:', (e as Error).message); }
+    if (!m) { modelNote = 'reply was not JSON: ' + r.text.slice(0, 200); console.error('assess model:', modelNote); }
+  } catch (e) { modelNote = (e as Error).message.slice(0, 200); console.error('assess model:', modelNote); }
   const a = cleanAssessment(m, new Set(positions.map((p) => p.id)));
 
   let near = null;
@@ -149,7 +156,7 @@ async function assess(job: any, ctx: any) {
     positions: [...new Set([...(doc.positions ?? []), ...(a.positions ?? [])])], assets: a.assets, summary: a.summary,
     quality_score: g.score,
     quality: { signals: sig, model: a, reasons: g.reasons, review: g.review, issues: [...g.review, ...g.reasons, ...(a.issues ?? [])].slice(0, 12),
-               decision: g.decision, thresholds: { accept: set.accept_min, review: set.review_min } },
+               decision: g.decision, thresholds: { accept: set.accept_min, review: set.review_min }, ...(modelNote ? { model_note: modelNote } : {}) },
   };
   return await rpc('mm_rag_finish', { p_job: job.id, p_ok: true, p_to: g.decision, p_doc_patch: patch, p_usage: { in: inT, out: outT, model: set.model } });
 }

@@ -155,5 +155,15 @@ check("give up: the next failure fails the document at once", svc.execute("selec
 check("members can't call the worker helpers", raises(lambda: v.execute("select public.mm_rag_job_context(%s, %s)", (P, d3)).fetchone()) is not None
       and raises(lambda: v.execute("select public.mm_rag_requeue(1, '{}')").fetchone()) is not None)
 
+# ---- step 12: a job left running by a killed worker is taken back ----
+d4 = str(uuid.uuid4()); register(v, P, path(P, d4), sha(10), name="Stuck.pdf")
+j4 = svc.execute("select id from public.mm_rag_claim(5) where doc_id = %s", (d4,)).fetchone()[0]
+check("a job running for 1 minute is left alone", svc.execute("select count(*) from public.mm_rag_claim(5) where doc_id = %s", (d4,)).fetchone()[0] == 0)
+admin.execute("update llm.rag_jobs set started_at = now() - interval '6 minutes' where id = %s", (j4,))
+row = svc.execute("select id, attempts from public.mm_rag_claim(5) where doc_id = %s", (d4,)).fetchone()
+check("a job running for 6 minutes is taken back, counting the attempt", row == (j4, 2), row)
+admin.execute("update llm.rag_jobs set started_at = now() - interval '6 minutes', attempts = 3 where id = %s", (j4,))
+check("a job that died 3 times is not taken again", svc.execute("select count(*) from public.mm_rag_claim(5) where doc_id = %s", (d4,)).fetchone()[0] == 0)
+
 print(f"\n{len(failures)} failed" if failures else "\nall passed")
 sys.exit(1 if failures else 0)

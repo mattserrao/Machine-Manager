@@ -9,7 +9,7 @@ export type Assessment = {
   contains_instructions_to_ai?: boolean;
 };
 
-export const PAGE_BATCH = 10;          // pages parsed per worker call (keeps each call well inside the CPU limit)
+export const PAGE_BATCH = 5;           // pages parsed per worker call (10 scanned pages ran past the CPU limit)
 export const MODEL_PAGE_CAP = 60;      // most pages per document sent to Claude
 // Kinds where the date matters (a survey or audit is only useful with its date); manuals and papers often have none.
 export const DATED = ['vendor_report', 'inspection', 'rcfa'];

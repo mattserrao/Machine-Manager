@@ -24,5 +24,7 @@ safe to run again.
 
 | `11-rag-worker.sql` | Any time after step 10 (applied 2026-11-09) | What the RAG worker, page and MCP server need: `mm_my_orgs` (the signed-in user's orgs with role and public flag), `mm_rag_job_context`, `mm_rag_add_pages`, `mm_rag_requeue` (parse large PDFs in page batches), `mm_rag_give_up`, `mm_rag_chunks_to_embed` (service role); enables `pg_net`. Then deploy `mm-rag-process` and schedule it with pg_cron every 15 s (SQL in the file's header). Also in `../llm.sql`. |
 
+| `12-rag-reclaim.sql` | Any time after step 11 (applied 2026-11-09) | `mm_rag_claim` also takes back jobs left `running` for more than 5 minutes by a worker the runtime killed (CPU or wall-clock limit); the attempt counts, so a job that keeps dying fails after 3 tries. Also in `../llm.sql`. |
+
 After step 3, delete the empty `wb-files` bucket under **Storage** in the dashboard
 (Supabase doesn't allow deleting buckets from SQL).
