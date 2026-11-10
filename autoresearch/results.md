@@ -10,8 +10,8 @@ Answer model Sonnet 5.5 via `mm-llm-ask-dev` v1 (= live `mm-llm-ask`); judge Opu
 | 1 | ledger: 4 baseline answers re-run after the judge JSON fix | $0.49 |
 | 2 | **baseline, all 54** | **$4.94** (answers $3.88, judge $1.06) |
 | 3 | judge v2 check (3 questions) | $0.33 |
-| 4 | baseline v2 — **partial**: 31 of 54 scored, then the Anthropic API credit ran out | $2.61 |
-| | **Total so far** | **$8.52 of $50** |
+| 4 | **baseline v2, all 54** (paused for API credit at 31, then finished; incl. $0.06 re-run overlap in run 1 ledger) | **$5.10** |
+| | **Total so far** | **$11.08 of $50** |
 
 ## Judge v2 (Nov 10, user direction)
 Technical answers: wrong or missing citations are penalised heavily; short, fully cited, accurate answers score highest.
@@ -22,25 +22,29 @@ Technical answers: wrong or missing citations are penalised heavily; short, full
 - Concise: about 150 words for knowledge/calc, 220 for data/briefs; padding scores 0-1.
 - Question ids hidden from the judge; the runner keeps full responses so answers can be re-judged without paying for them again.
 - Check run 3 (3 questions, $0.33): pm02 90 (all 5 citations supported, docked for 323 words), pm04 78.3, sm13 48.3 (contradicted itself on action counts).
-- The v1 baseline below is **not comparable**; a v2 baseline is next.
+- The v1 baseline below is **not comparable** with v2.
 
-## Round 0 — baseline, judge v2 (run 4, PARTIAL)
-Stopped at 12:40 Nov 10: "credit balance is too low" on the Anthropic API. Papermaking and chem eng are complete except
-ce13 and ce15-18; **no Sim Mill questions scored yet**. The 23 unscored rows have score = null.
-Finish after credit is added: fresh tokens, then `eval_run.py --round 0 --label baseline-v2 --run-id 4 --only sm01 ... sm18 ce13 ce15 ce16 ce17 ce18` (~$2.5).
+## Round 0 — baseline, judge v2 (run 4, complete Nov 10)
+Paused at 31/54 when the API credit ran out; finished after credit was added (the 23 re-run into run 4).
+Score 0-100: correct 35%, cited 35%, complete 15%, concise 15%; any unsupported citation caps at 50.
 
-| Section | Train | Held-out | All | n |
-|---|---|---|---|---|
-| Papermaking | 81.1 | 80.1 | 80.8 | 18 |
-| Industrial / chem eng | 78.7 | 90.0 (1 q) | 79.6 | 13 |
-| **Scored so far** | | | **80.3** | 31 |
+| Section | Train (12) | Held-out (6) | All (18) |
+|---|---|---|---|
+| Papermaking | 81.1 | 80.1 | 80.8 |
+| Industrial / chem eng | 78.7 | 68.6 | 75.4 |
+| Sim Mill | 58.5 | 70.8 | 62.6 |
+| **All** | **72.8** | **73.2** | **72.9** |
 
-By criterion (0-3): **correct 2.90, cited 2.29, complete 2.72, concise 1.23**.
-- **No fabricated citations**: every checked citation in the 31 answers was supported by the tool output. The v1 judge's "never retrieved" flags were mostly its 700-character preview limit.
-- **Length is now the biggest loss**: answers run 280-500 words against 150; unrequested sections (worked examples, "checks on PM1", caveats).
-- **Uncited sub-claims**: one citation up top covering a whole list; extra advice with no source.
-- **Calc without lookup**: ce10 called no tools, so no citation (60).
-- Content misses: ce07 (scoops; condensate moving with the shell), pm15 (starch / calender sizing), pm17 (pumping and viscous shear).
+By criterion (0-3): correct 2.72, **cited 1.91**, complete 2.41, **concise 1.41**. By kind: data 61.1, premise 70.0, gap 73.9, calc 78.6, library 79.0.
+Average answer 287 words (target 150 / 220). Run cost $5.10.
+
+### What lost points
+1. **Uncited claims** (cited 1.91): one citation at the top or end covering a whole list or table; Sim Mill answers cite few records (sm06, sm10, sm14, sm17: no checkable citations). 7 of 54 answers had no checkable citation at all.
+2. **Length** (concise 1.41): 280-500 words with unrequested sections (worked examples, "checks on PM1", watch-outs, background).
+3. **Sim Mill briefs miss the second and third sources** (sm01 outage brief 28.3, sm03 REF projection 16.7, sm06 45, sm10 crews 45): wrong lead item, missing scope/parts status, Brightwater, RCFA threshold logic; sm10 used only May-Oct and named the wrong crew.
+4. **Calc without lookup** (ce10 60, ce15 60): right number, no tool call, no source.
+5. **Two unsupported citations**: sm03 cited a Pi tag it never queried ([Pi PM1:REF_A_SE]); sm09 cited a tool call as a source ([grade_hours 2025-11-01 to 2026-10-31]) — the dates were its query, not in the output. Checker edge case to decide: should citing a query you ran count?
+6. Content errors: ce17 (laminar limit 2,000, plug-flow friction direction wrong), sm18 ("nine outages", lists eight).
 
 ## Round 0 — baseline, judge v1.1 (Nov 10 2026, superseded)
 Score 0-100 (correct 40%, complete 25%, grounded 20%, useful 15%).
