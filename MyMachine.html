@@ -316,7 +316,7 @@
 
   const MM = window.MMMachine;                 // shared machine model (mm-machine.js)
   const RID = MMRecords.mymachine;             // record ids (mm-records.js)
-  const { DEFAULT_MACHINE, DEFAULT_REFINERS, DEFAULT_TARGET } = MM;
+  const { DEFAULT_MACHINE } = MM;
   const CAT_COLOR = { forming: 'var(--c-forming)', press: 'var(--c-press)', dryer: 'var(--c-dryer)', roll: 'var(--c-roll)', refiner: 'var(--c-refiner)' };
   const KIND_LABEL = { fabric: 'Fabric', roll: 'Roll', refiner: 'Refiner' };
 
@@ -388,7 +388,6 @@
 
   /* ---------- Dates ---------- */
   const { todayStr, parseDay, daysBetween, addDays, ord } = MM;
-  const pad = n => String(n).padStart(2, '0');
   function daysOn(id){ const it = S.items[id]; return it && it.installed ? Math.max(0, daysBetween(it.installed, todayStr())) : null; }
   const WARN_DAYS = MM.WARN_DAYS;
   const targetOf = id => MM.targetOf(S.items[id], id);

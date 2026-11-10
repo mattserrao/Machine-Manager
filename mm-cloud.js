@@ -1,7 +1,7 @@
 // Machine Manager — shared sign-in, data and file storage for every tool page.
 // Load after vendor/supabase-*.js and mm-config.js. Exposes window.MMCloud.
 //
-// Signed out  → demo mode. The demo tools (My Machine, Outage Planning, Consumables, Task Package Library) show the
+// Signed out  → demo mode. The demo tools (My Machine, Outage Planning, Consumables, Ops Task Library) show the
 //               public demo org (Sim Mill) read-only; the other tools keep their data in this browser only.
 // Signed in   → data lives in Supabase under the chosen org, shared live with its members.
 //

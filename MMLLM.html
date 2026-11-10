@@ -557,9 +557,9 @@
 
     let key;
     const KEYS = { 'Demo Mill': 'demo-data/answers/answer_key.json', 'Sim Mill': 'demo-data/sim-mill/answers/answer_key.json' };
-    try { key = await (await fetch(KEYS[org.name] || KEYS['Demo Mill'], { cache: 'no-cache' })).json(); }
-    catch (e) { $('qlist').appendChild(mk('p', 'demo-msg', 'The demo questions couldn’t be loaded.')); return; }
     if (!isDemo || !KEYS[org.name]) { $('qlist').appendChild(mk('p', 'demo-msg', 'Demo questions are written for the demo organizations (Demo Mill, Sim Mill).')); return; }
+    try { key = await (await fetch(KEYS[org.name], { cache: 'no-cache' })).json(); }
+    catch (e) { $('qlist').appendChild(mk('p', 'demo-msg', 'The demo questions couldn’t be loaded.')); return; }
 
     // Recorded answers (the model's real answers to these questions, with their charts), committed next to the key so
     // everyone sees them signed out too. A newer answer saved in the database (signed in) wins.

@@ -41,7 +41,10 @@ with sync_playwright() as p:
 
     pg.locator(".org-sec:has(.ft:text-is('Doctor blades')) .org-grid > .note").first.click(); pg.wait_for_timeout(600)
     check("clicking a card opens its editor", pg.locator("#edCons").is_visible())
-    pg.keyboard.press("Escape"); pg.wait_for_timeout(300)
+    n_errs = len(errs)
+    pg.locator("#edCons input").first.click(); pg.keyboard.press("Enter"); pg.wait_for_timeout(300)
+    check("Enter in a consumable field closes the editor", not pg.locator("#edCons").is_visible() and len(errs) == n_errs, str(errs[n_errs:]))
+    if pg.locator("#edCons").is_visible(): pg.keyboard.press("Escape"); pg.wait_for_timeout(300)
 
     # Move to another category through the menu
     card = pg.locator(".org-sec:has(.ft:text-is('Doctor blades')) .org-grid > .note").first

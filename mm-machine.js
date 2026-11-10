@@ -15,7 +15,6 @@
   const DEFAULT_TARGET = { refiner: { target: 12, unit: 'weeks' } };   // plate life
   const WARN_DAYS = 42; // 6 weeks
 
-  const clone = o => JSON.parse(JSON.stringify(o));
   const pad = n => String(n).padStart(2, '0');
   const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
   const todayStr = () => ymd(new Date());

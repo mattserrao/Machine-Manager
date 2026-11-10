@@ -1,5 +1,5 @@
 // Machine Manager — which organization's MM LLM data a page shows, and a few small helpers the data pages share
-// (Vendor Reports, Daily, Downtime / RCFA, MM LLM).
+// (Vendor Reports, Daily Journal, Downtime / RCFA, MM LLM).
 //
 // Signed out, or signed in to a demo org (the demo account): the public demo orgs (Sim Mill), with a dropdown if
 // several are published, remembered in this browser. ?org=<name> in the URL picks one.

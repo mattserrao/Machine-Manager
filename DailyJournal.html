@@ -65,7 +65,7 @@
   document.getElementById('ver').textContent = 'Daily Journal ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
   const $ = id => document.getElementById(id), O = MMLLMOrg, esc = O.esc;
-  let st, today, outages = [], shown = {};
+  let st, today, outages = [];
   const addDays = (d, n) => { const t = new Date(d + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
   const KIND = { planned: 'Planned', unplanned: 'Unplanned', break: 'Sheet break', slowdown: 'Slowdown' };
   const hhmm = ts => new Date(ts).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/New_York' });
@@ -123,7 +123,6 @@
         O.rpc(st, 'mm_llm_overdue_actions', { p_as_of: day })]);
     } catch (e) { body.innerHTML = `<div class="dmsg">${esc(e.message || e)}</div>`; return; }
     body.textContent = '';
-    shown = { day, reps };
     const prod = reps.find(r => r.type === 'production'), sd = reps.find(r => r.type === 'shift' && r.shift === 'Day'), sn = reps.find(r => r.type === 'shift' && r.shift === 'Night');
     const nx = outages.find(o => o.starts >= day);
     body.appendChild(div('dayh', `<h2>${new Date(day + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h2>
