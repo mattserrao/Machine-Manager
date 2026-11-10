@@ -32,6 +32,7 @@ def main():
     ap.add_argument('--only', nargs='*', default=[]); ap.add_argument('--workers', type=int, default=3)
     ap.add_argument('--round-cap', type=float, default=9.0)
     ap.add_argument('--run-id', type=int, default=None, help='add to (or redo questions in) an existing run instead of starting one')
+    ap.add_argument('--model', choices=['sonnet', 'opus'], default='sonnet', help='answer model (opus = claude-opus-5-5 on its own key)')
     ap.add_argument('--no-rag', action='store_true', help='withhold the document tools (library ablation); label it ablation-...')
     ap.add_argument('--rejudge-from', default=None, help='a runs/*.json file: re-judge its saved answers (judge cost only, no new answers)')
     a = ap.parse_args()
@@ -45,7 +46,8 @@ def main():
     if a.run_id: run_id = a.run_id; print(f"adding {len(qs)} questions to run {run_id}", flush=True)
     else:
         start = post(f'{url}/functions/v1/mm-llm-eval', key, tokens['Sim Mill'],
-                     {'action': 'start', 'round': a.round, 'label': a.label, 'change': a.change, 'sha': sha, 'split': a.split})
+                     {'action': 'start', 'round': a.round, 'label': a.label, 'change': a.change, 'sha': sha, 'split': a.split,
+                      'answer_model': 'claude-opus-5-5' if a.model == 'opus' else 'claude-sonnet-5-5'})
         if 'run_id' not in start: sys.exit(f"start failed: {start}")
         run_id = start['run_id']; print(f"run {run_id}: {len(qs)} questions, spent so far ${start['spent']:.2f} of ${start['budget']}", flush=True)
     lock, spent_round, out, stop = threading.Lock(), [0.0], {}, threading.Event()
@@ -57,7 +59,7 @@ def main():
             if q['id'] not in saved: return
             r = dict(saved[q['id']]['result']); r['usage'] = {}          # answer already paid for: judge cost only
         else:
-            r = post(f'{url}/functions/v1/mm-llm-ask-dev', key, t, {'question': q['question'], 'eval': True, **({'no_rag': True} if a.no_rag else {})})
+            r = post(f'{url}/functions/v1/mm-llm-ask-dev', key, t, {'question': q['question'], 'eval': True, **({'no_rag': True} if a.no_rag else {}), **({'model': 'opus'} if a.model == 'opus' else {})})
         if r.get('error') and 'answer' not in r: r = {'status': 'error', 'answer': r['error']}
         auto = grade(demo[q['ref']], r) if q.get('ref') and r.get('status') == 'ok' else []
         g = post(f'{url}/functions/v1/mm-llm-eval', key, t, {'action': 'judge', 'run_id': run_id, 'q': q, 'result': r, 'auto': auto})

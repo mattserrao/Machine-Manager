@@ -15,7 +15,28 @@ Answer model Sonnet 5.5 via `mm-llm-ask-dev` v1 (= live `mm-llm-ask`); judge Opu
 | 5 | **round 1, train (36)**: prompt change | **$3.60** |
 | 6 | **comparison: no library** (train 36, round-1 prompt, document tools withheld) | **$2.49** |
 | 7 | **round 3: playbooks** (train 36 + held-out Sim Mill 6) | **$5.08** |
-| | **Total so far** | **$22.24 of $50** |
+| 8 | **final: Opus 5.5 answering, all 54** (round-3 setup) | **$11.61** (answers $10.42) |
+| | **Total so far** | **$33.85 of $50** |
+
+## Final — Opus 5.5 answering (run 8, all 54, Nov 10)
+
+Same setup as round 3 (round-1 prompt + playbooks, library on); only the answering model changed from Sonnet 5.5 to Opus 5.5. Judge is still Opus 5.5 (Opus grading Opus — possible self-preference; treat small gains with caution).
+
+| | Sonnet r3 (run 7) | Opus (run 8) |
+|---|---|---|
+| Train overall (36) | 80.3 | 81.6 |
+| Papermaking train | 88.7 | 90.1 |
+| Chem/industrial train | 84.7 | 89.4 |
+| Sim Mill train | 67.5 | 65.4 |
+| Sim Mill held-out (6) | 80.5 | 67.2 |
+| Held-out overall (18) | — (baseline 73.2) | 81.3 |
+| Answer cost / question | $0.10 | $0.19 |
+| Avg time / answer | 11 s | 15 s |
+
+- Opus is better on the knowledge sections (ce +4.7, pm +1.4) and generalises: held-out ce 94.2, pm 82.5.
+- Opus is not better on Sim Mill data: same correctness (2.33/3), more tokens (85k in/question), and two unsupported citations (sm03, sm07). Held-out Sim Mill fell 80.5 → 67.2, within the ±30–50 per-question noise seen earlier on 6 questions.
+- Answers were no shorter (avg 250 words vs 247); concise stays the weakest criterion (1.56/3).
+- Verdict: about 1.3 points on train for ~2× the cost. Not worth it for the live tool; Sim Mill gains need better tools/ids, not a bigger model.
 
 ## Judge v2 (Nov 10, user direction)
 Technical answers: wrong or missing citations are penalised heavily; short, fully cited, accurate answers score highest.
