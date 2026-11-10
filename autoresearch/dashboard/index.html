@@ -48,7 +48,7 @@
     <div class="ar-card" id="tile-heldout">
       <div class="ar-tile-label">Held-out score, last checked</div>
       <div class="ar-big" data-draw="val" data-source="progress" data-field="heldout_latest" data-row="0" data-fmt="score">—</div>
-      <div class="ar-sub">Round <span data-draw="val" data-source="progress" data-field="heldout_round" data-row="0" data-fmt="int">—</span>, 18 questions never shown to the improver</div>
+      <div class="ar-sub">Round <span data-draw="val" data-source="progress" data-field="heldout_round" data-row="0" data-fmt="int">—</span>, <span data-draw="val" data-source="progress" data-field="heldout_n" data-row="0" data-fmt="int">—</span> questions never shown to the improver</div>
     </div>
     <div class="ar-card" id="tile-spend">
       <div class="ar-tile-label">API spend of the $50 budget</div>
@@ -170,7 +170,7 @@
       return [{ baseline_train: base.train_score, latest_train: last.train_score,
         change: Math.round((last.train_score - base.train_score) * 10) / 10,
         latest_round: last.round, latest_label: last.label,
-        heldout_latest: h ? h.heldout_score : null, heldout_round: h ? h.round : null }];
+        heldout_latest: h ? h.heldout_score : null, heldout_round: h ? h.round : null, heldout_n: h ? h.heldout_n : null }];
     },
   });
   dash.calc('budget_left', {

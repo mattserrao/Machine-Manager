@@ -14,7 +14,8 @@ Answer model Sonnet 5.5 via `mm-llm-ask-dev` v1 (= live `mm-llm-ask`); judge Opu
 | 4 | **baseline v2, all 54** (paused for API credit at 31, then finished; incl. $0.06 re-run overlap in run 1 ledger) | **$5.10** |
 | 5 | **round 1, train (36)**: prompt change | **$3.60** |
 | 6 | **comparison: no library** (train 36, round-1 prompt, document tools withheld) | **$2.49** |
-| | **Total so far** | **$17.17 of $50** |
+| 7 | **round 3: playbooks** (train 36 + held-out Sim Mill 6) | **$5.08** |
+| | **Total so far** | **$22.24 of $50** |
 
 ## Judge v2 (Nov 10, user direction)
 Technical answers: wrong or missing citations are penalised heavily; short, fully cited, accurate answers score highest.
@@ -26,6 +27,35 @@ Technical answers: wrong or missing citations are penalised heavily; short, full
 - Question ids hidden from the judge; the runner keeps full responses so answers can be re-judged without paying for them again.
 - Check run 3 (3 questions, $0.33): pm02 90 (all 5 citations supported, docked for 323 words), pm04 78.3, sm13 48.3 (contradicted itself on action counts).
 - The v1 baseline below is **not comparable** with v2.
+
+## Round 3 — Sim Mill playbooks (run 7, train + held-out Sim Mill, Nov 10)
+Change (`mm-llm-ask-dev` v5): a `get_playbook(kind)` tool with nine checklists (outage brief, why an event happened, trend /
+projection, comparing groups, repeat failures, writing an update, totals / rankings, fabric-felt-plate life, premise check);
+the prompt says to fetch it first for mill data questions and run every step. On top of the round-1 prompt.
+Round 2 (citable ids on summary tools) was skipped at the user's direction.
+
+| Section | Round 1 | Round 3 | Change |
+|---|---|---|---|
+| Papermaking train | 88.1 | 88.7 | +0.6 |
+| Chem / industrial eng train | 89.8 | 84.7 | −5.1 (ce02 alone 95 → 21.7: one library search missed the source; playbooks aren't used there) |
+| Sim Mill train | 68.5 | 67.5 | −1.0 |
+| **All train** | **82.1** | **80.3** | **−1.8** |
+| Sim Mill held-out (6) | — (baseline 70.8) | **80.5** | +9.7 vs baseline (rounds 1 + 3 together) |
+
+Sim Mill train criteria, round 1 → round 3: **complete 1.25 → 1.75**, correct 2.58 → 2.33, cited 2.00 → 1.92, concise 1.92 → 1.83.
+Playbook fetched on 17 of 18 Sim Mill answers. Sim Mill input tokens 46k → 77k per answer (+68%); slowest answer 42 s.
+
+What it shows:
+- **The playbooks do what they were for**: answers cover more of the must-have points (+0.50 on complete).
+- **But more sources brought more mistakes**: sm02 −48 (33 vs 34 felt days, one unsupported Pi citation), sm07 −38 (said
+  vibration was levelling off; chart lacked the Danger line). Gains: sm04 +55 and sm09 +33, mostly because the
+  tool-call citations that capped them at 50 in round 1 didn't recur this time.
+- **Run-to-run noise is now the limiting factor**: single questions swing ±30-50 between runs for reasons unrelated to the
+  change (ce02). With 12 questions per section, a ±1-5 point section change can't be called.
+
+Recommendation: **don't promote yet; keep on dev.** Measure noise (repeat round 1 and round 3 on the 12 Sim Mill train
+questions, ~$3) before deciding. Then fix the two failure modes the playbooks exposed: arithmetic / reading errors on
+pulled numbers, and the tool-call citations (round 2, citable ids).
 
 ## Comparison — no document library (run 6, train only, Nov 10)
 Same as round 1, but `mm-llm-ask-dev` v4 withholds the document tools (`search_library`, `get_document`, `get_document_page`,
