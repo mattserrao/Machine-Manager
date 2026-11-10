@@ -1,6 +1,5 @@
 // MM LLM orchestrator, DEV copy for autoresearch (branch autoresearch). Same as mm-llm-ask plus eval mode:
 //   ingest token + { eval: true }  ->  not saved to llm.answers, no daily cap, response adds usage and tool-result previews.
-//   Round 3 (playbooks.ts): get_playbook(kind) gives a checklist per kind of data question; the prompt says to call it first.
 //   + { no_rag: true } (eval only): the document tools are withheld for that answer, to measure what the library adds.
 // Experiments are deployed here first; the live mm-llm-ask changes only when a change is kept.
 //
@@ -22,7 +21,6 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { makeModel, setTools, ModelError } from './adapter.ts';
 import { TOOLS, runTool, forModel, checkChart } from './tools.ts';
 import { systemPrompt } from './prompt.ts';
-import { PLAYBOOK_TOOL, getPlaybook } from './playbooks.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!, ANON = Deno.env.get('SUPABASE_ANON_KEY')!, SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const DAILY_CAP = Number(Deno.env.get('MM_LLM_DAILY_CAP') ?? 300);   // all askers together, protects the model bill
@@ -38,8 +36,7 @@ const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers
                'Access-Control-Allow-Methods': 'POST, OPTIONS' };
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
 const svc = createClient(URL_, SERVICE, { auth: { persistSession: false } });
-const ALL_TOOLS = [...TOOLS, PLAYBOOK_TOOL];
-setTools(ALL_TOOLS);
+setTools(TOOLS);
 // The document library (RAG) and document search: withheld when an eval run asks for no_rag.
 const DOC_TOOLS = new Set(['search_library', 'get_document', 'get_document_page', 'list_documents', 'library_status', 'search_documents']);
 const NO_RAG_NOTE = '\n- The document library is unavailable for this answer: there are no document tools. Use the data tools; for technical knowledge say "The library has no source for this; from general engineering knowledge:" and give it uncited.';
@@ -116,7 +113,7 @@ Deno.serve(async (req) => {
   try {
     const m = makeModel(body.model === 'opus' ? 'opus' : 'default'); model = m.model; provider = m.provider;
     const noRag = evalMode && body.no_rag === true;
-    if (noRag) (m as any).tools = ALL_TOOLS.filter((t) => !DOC_TOOLS.has(t.name));
+    if (noRag) (m as any).tools = TOOLS.filter((t) => !DOC_TOOLS.has(t.name));
     const { data: ctx, error: e } = await db.rpc('mm_llm_context', { p_org: org });
     if (e) throw new Error(e.message);
     m.start(systemPrompt(orgName, ctx ?? {}) + (noRag ? NO_RAG_NOTE : ''), question);
@@ -132,12 +129,6 @@ Deno.serve(async (req) => {
           if (chart) { if (same >= 0) charts[same] = chart; else charts.push(chart); }
           trace.push({ tool: 'make_chart', args: chart ?? c.args, rows: chart ? 1 : 0, error, ...(same >= 0 ? { replaces: same } : {}) });
           results.push({ id: c.id, content: JSON.stringify(chart ? { ok: true, note: 'The page draws this chart under your answer and offers a PNG download. Do not redraw it in text. To fix it, call make_chart again with the same title: that replaces it, so don\'t mention the redraw.' } : { error }) });
-          continue;
-        }
-        if (c.name === 'get_playbook') {        // a checklist, not a source: never counts as something to cite
-          const pb = getPlaybook(String(c.args.kind ?? ''));
-          trace.push({ tool: 'get_playbook', args: c.args, rows: (pb as any).error ? 0 : 1, error: (pb as any).error });
-          results.push({ id: c.id, content: JSON.stringify(pb) });
           continue;
         }
         const r = (evalMode && body.no_rag === true && DOC_TOOLS.has(c.name)) ? { error: 'document tools are unavailable in this run' } : await runTool(db, org, c.name, c.args, { embed });
