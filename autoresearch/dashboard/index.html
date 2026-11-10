@@ -123,19 +123,19 @@
   // execute_sql answers with text that wraps a JSON array of rows; take the rows out.
   dash.loader('runs', { description: 'Takes the JSON rows out of the execute_sql answer text.', fn: ({ answer }) => {
     const text = typeof answer === 'string' ? answer : JSON.stringify(answer);
-    const m = text.match(/<untrusted-data-[^>]*>\s*([\s\S]*?)\s*<\/untrusted-data-/);
+    const m = text.match(/<untrusted-data-[0-9a-f-]+>\s*(\[[\s\S]*\])\s*<\/untrusted-data-/);
     if (!m) throw new Error(text.slice(0, 300));
     return JSON.parse(m[1]);
   } });
   dash.loader('questions', { description: 'Takes the JSON rows out of the execute_sql answer text.', fn: ({ answer }) => {
     const text = typeof answer === 'string' ? answer : JSON.stringify(answer);
-    const m = text.match(/<untrusted-data-[^>]*>\s*([\s\S]*?)\s*<\/untrusted-data-/);
+    const m = text.match(/<untrusted-data-[0-9a-f-]+>\s*(\[[\s\S]*\])\s*<\/untrusted-data-/);
     if (!m) throw new Error(text.slice(0, 300));
     return JSON.parse(m[1]);
   } });
   dash.loader('spend', { description: 'Takes the JSON rows out of the execute_sql answer text.', fn: ({ answer }) => {
     const text = typeof answer === 'string' ? answer : JSON.stringify(answer);
-    const m = text.match(/<untrusted-data-[^>]*>\s*([\s\S]*?)\s*<\/untrusted-data-/);
+    const m = text.match(/<untrusted-data-[0-9a-f-]+>\s*(\[[\s\S]*\])\s*<\/untrusted-data-/);
     if (!m) throw new Error(text.slice(0, 300));
     return JSON.parse(m[1]);
   } });
