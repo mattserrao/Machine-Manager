@@ -4,12 +4,13 @@
 //   POST { action: 'finish', run_id }                                            -> { ok, spent }
 // q = one question from autoresearch/questions.json; result = the mm-llm-ask-dev eval response; auto = deterministic misses.
 // The judge model and prompt are pinned (JUDGE_VERSION). Changing either means a new baseline.
+// v2 (Nov 10): citation-weighted rubric; the dev function's citation check is binding (any unsupported citation caps at 50).
 // Hard budget: MM_EVAL_BUDGET (default $50) over everything recorded in llm.eval_results; checked before every call.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!, SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const BUDGET = Number(Deno.env.get('MM_EVAL_BUDGET') ?? 50);
-const JUDGE_MODEL = 'claude-opus-5-5', JUDGE_VERSION = 'judge-v1.1';
+const JUDGE_MODEL = 'claude-opus-5-5', JUDGE_VERSION = 'judge-v2';
 // USD per million tokens (platform.claude.com pricing, Nov 2026). Cache reads 0.05x, 5-minute cache writes 1.25x.
 const PRICE: Record<string, { in: number; out: number }> = {
   'claude-sonnet-5-5': { in: 2, out: 10 }, 'claude-opus-5-5': { in: 4, out: 20 }, 'claude-haiku-5-5': { in: 0.1, out: 0.5 } };
@@ -22,24 +23,28 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
 const svc = createClient(URL_, SERVICE, { auth: { persistSession: false } });
 const key = () => (Deno.env.get('MM-LLM-OP') ?? '').replace(/[^\x21-\x7e]/g, '').replace(/^['"]+|['"]+$/g, '');
 
-const SYSTEM = `You grade answers from MM LLM, an assistant for a paper machine superintendent. You are strict, consistent and brief.
-You get: the question, its kind, an answer key (MUST points, NICE points, source documents, numeric tolerance), the assistant's answer,
-the charts it drew, a trace of the tools it called (with a preview of what each returned) and any automatic-check misses.
+const SYSTEM = `You grade answers from MM LLM, an assistant for a paper machine superintendent. These are technical answers: accuracy and
+citations matter most. A short, fully cited, accurate answer is the best answer. Be strict and consistent.
+You get: the question, an answer key (MUST points, NICE points, library sources, numeric tolerance), the answer and its word count,
+the charts it drew, the tools it called (with a preview of each result), a CITATION CHECK computed from the full tool outputs, and any
+automatic-check misses. The key is the truth; the trace is what the assistant actually saw.
 
-Judge only against the key and the trace. The key is the truth for this question; the trace is what the assistant actually saw.
-- must_hits: one true/false per MUST point, in order. True only if the answer states that point (wording may differ; numbers within
-  the tolerance, or within about 5% when none is given). A point the answer contradicts is false.
-- correct (0-3): 3 = nothing wrong; 2 = a minor slip; 1 = a material error; 0 = mostly wrong or invented. Penalise invented
-  numbers, dates, ids or names, and claims that contradict the key. For premise questions, missing the false premise caps this at 1.
-- grounded (0-3): are the answer's specific claims supported by the trace? For library and calc questions, did it find and cite a
-  real document ([DOC id p.N]) that it read? For gap questions (no library source exists), sound general knowledge stated plainly
-  as such is fine: 2 if correct and not dressed up with fake citations, 3 only if it also says the library lacked a source.
-  Citations to documents or records not in the trace score 0. Tool previews are cut to the first 700 characters: a claim you
-  can't see in a preview still counts as supported if the assistant called a tool that would return it (e.g. read that document
-  page); penalise only claims that contradict the trace or cite ids/pages it never retrieved.
-- useful (0-3): leads with the answer, right format and length, charts when asked, checks the premise, no padding.
-- notes: at most 40 words: the main thing it got wrong or missed, or "clean".
-Return only JSON: {"must_hits":[...], "correct":n, "grounded":n, "useful":n, "notes":"..."}`;
+- must_hits: one true/false per MUST point, in order. True only if the answer states it (wording may differ; numbers within the
+  tolerance, or about 5% when none is given). A point the answer contradicts is false.
+- correct (0-3): 3 = nothing wrong. Any wrong technical value, setting, formula, procedure step, date, id or name: at most 1.
+  Invented facts: 0. A false premise the answer misses: at most 1.
+- cited (0-3): every specific technical claim (a number, setting, spec, formula, procedure step, finding, date, id) needs an inline
+  citation to a source the assistant retrieved in this run. 3 = all of them cited; 2 = one minor claim uncited; 1 = several uncited,
+  or only a general citation at the end; 0 = no citations, or ANY citation the CITATION CHECK lists as unsupported (treat those as
+  fabricated). Citations the check marks unchecked: judge them against the trace.
+  Gap questions (the key lists no library source): 3 only if the answer says the library has no source for it and gives the answer
+  as general engineering knowledge, clearly labelled, with no invented citations; correct but unlabelled and uncited = 1.
+  Calc questions with a listed source: the formula must be cited to that source; otherwise at most 1.
+- concise (0-3): 3 = the answer comes first and covers only what was asked, within about 150 words for knowledge and calc questions
+  or about 220 words for data questions and briefs (charts don't count); 2 = somewhat long or one unrequested section; 1 = padded
+  (extra tables, tips, background; about twice the length needed); 0 = rambling.
+- notes: at most 40 words: the main error, uncited or fabricated citation, or missing point; or "clean".
+Return only JSON: {"must_hits":[...], "correct":n, "cited":n, "concise":n, "notes":"..."}`;
 
 function userMsg(q: any, r: any, auto: string[]) {
   const trace = (r.trace ?? []).map((t: any, i: number) => {
@@ -47,7 +52,9 @@ function userMsg(q: any, r: any, auto: string[]) {
     return t.preview ? `${head}\n   -> ${t.preview.replace(/\s+/g, ' ')}` : head;
   }).join('\n') || '(no tools called)';
   const charts = (r.charts ?? []).map((c: any) => `- "${c.title}": ${(c.series ?? []).length} series${(c.series ?? []).some((s: any) => s.axis === 'right') ? ', right axis' : ''}`).join('\n') || '(none)';
-  return `QUESTION (${q.id}, section ${q.section}, kind ${q.kind}): ${q.question}
+  const c = r.citations ?? { total: 0, supported: 0, unsupported: [], unchecked: 0 };
+  const words = String(r.answer ?? '').split(/\s+/).filter(Boolean).length;
+  return `QUESTION (kind: ${q.kind}${q.kind === 'gap' ? ', no library source' : ''}): ${q.question}
 
 KEY
 MUST:
@@ -56,7 +63,7 @@ NICE: ${q.nice?.length ? q.nice.join('; ') : '(none)'}
 Sources: ${q.sources?.length ? q.sources.join('; ') : '(none in the library: gap question)'}
 Tolerance: ${q.tolerance ?? '(none)'}
 
-ANSWER (status ${r.status}):
+ANSWER (status ${r.status}, ${words} words):
 ${r.answer ?? ''}
 
 CHARTS:
@@ -64,6 +71,8 @@ ${charts}
 
 TRACE:
 ${trace}
+
+CITATION CHECK: ${c.total} checked, ${c.supported} supported, ${c.unchecked} unchecked; UNSUPPORTED: ${c.unsupported.length ? c.unsupported.join(' | ') : '(none)'}
 
 AUTOMATIC CHECK MISSES: ${auto.length ? auto.join('; ') : '(none)'}`;
 }
@@ -86,10 +95,10 @@ async function judge(q: any, r: any, auto: string[]) {
   try { g = JSON.parse(m ? m[0] : text); } catch {        // unescaped quotes in notes, or cut short: read the fields one by one
     const num = (k: string) => { const x = text.match(new RegExp(`"${k}"\\s*:\\s*(\\d)`)); return x ? Number(x[1]) : null; };
     const hits = text.match(/"must_hits"\s*:\s*\[([^\]]*)\]/);
-    g = { must_hits: hits ? hits[1].split(',').map((s) => /true/i.test(s)) : null, correct: num('correct'), grounded: num('grounded'),
-          useful: num('useful'), notes: (text.match(/"notes"\s*:\s*"([\s\S]*)/)?.[1] ?? '').replace(/"\s*\}?\s*$/, '').slice(0, 400) };
-    if (!g.must_hits || g.correct === null || g.grounded === null) throw new Error('judge reply not JSON: ' + text.slice(0, 200));
-    if (g.useful === null) g.useful = 2;      // cut before "useful": neutral
+    g = { must_hits: hits ? hits[1].split(',').map((s) => /true/i.test(s)) : null, correct: num('correct'), cited: num('cited'),
+          concise: num('concise'), notes: (text.match(/"notes"\s*:\s*"([\s\S]*)/)?.[1] ?? '').replace(/"\s*\}?\s*$/, '').slice(0, 400) };
+    if (!g.must_hits || g.correct === null || g.cited === null) throw new Error('judge reply not JSON: ' + text.slice(0, 200));
+    if (g.concise === null) g.concise = 2;    // cut before "concise": neutral
   }
   return { g, usage: { in: j.usage?.input_tokens ?? 0, out: j.usage?.output_tokens ?? 0 } };
 }
@@ -127,9 +136,16 @@ Deno.serve(async (req) => {
   } else note = 'no answer: ' + String(r.answer ?? r.error ?? '').slice(0, 200);
   const hits: boolean[] = (g?.must_hits ?? []).slice(0, q.must.length).map(Boolean);
   while (hits.length < q.must.length) hits.push(false);
-  const crit = g ? { correct: clamp(g.correct), complete: Math.round(30 * hits.filter(Boolean).length / q.must.length) / 10,
-                     grounded: clamp(g.grounded), useful: clamp(g.useful) } : { correct: 0, complete: 0, grounded: 0, useful: 0 };
-  const score = Math.round(1000 * (0.40 * crit.correct + 0.25 * crit.complete + 0.20 * crit.grounded + 0.15 * crit.useful) / 3) / 10;
+  // v2: correct 35%, cited 35%, complete 15%, concise 15%. Any unsupported citation: cited = 0 and the score is capped at 50.
+  const cit = r.citations ?? { total: 0, supported: 0, unsupported: [], unchecked: 0 };
+  const fabricated = (cit.unsupported ?? []).length > 0;
+  const crit = g ? { correct: clamp(g.correct), cited: fabricated ? 0 : clamp(g.cited),
+                     complete: Math.round(30 * hits.filter(Boolean).length / q.must.length) / 10, concise: clamp(g.concise) }
+                 : { correct: 0, cited: 0, complete: 0, concise: 0 };
+  let score = Math.round(1000 * (0.35 * crit.correct + 0.35 * crit.cited + 0.15 * crit.complete + 0.15 * crit.concise) / 3) / 10;
+  if (fabricated) score = Math.min(score, 50);
+  (crit as any).citations = { total: cit.total, supported: cit.supported, unsupported: (cit.unsupported ?? []).length, unchecked: cit.unchecked,
+    list: (cit.unsupported ?? []).slice(0, 10) };
   const judgeCost = cost(JUDGE_MODEL, usage);
   const { error } = await svc.rpc('mm_eval_save', { p: {
     run_id: b.run_id, question_id: q.id, section: q.section, split: q.split, kind: q.kind, score, criteria: crit, must_hits: hits,

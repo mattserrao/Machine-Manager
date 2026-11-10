@@ -9,9 +9,21 @@ Answer model Sonnet 5.5 via `mm-llm-ask-dev` v1 (= live `mm-llm-ask`); judge Opu
 | 1 | smoke test (2 questions) | $0.15 |
 | 1 | ledger: 4 baseline answers re-run after the judge JSON fix | $0.49 |
 | 2 | **baseline, all 54** | **$4.94** (answers $3.88, judge $1.06) |
-| | **Total so far** | **$5.58 of $50** |
+| 3 | judge v2 check (3 questions) | $0.33 |
+| | **Total so far** | **$5.91 of $50** |
 
-## Round 0 — baseline (Nov 10 2026)
+## Judge v2 (Nov 10, user direction)
+Technical answers: wrong or missing citations are penalised heavily; short, fully cited, accurate answers score highest.
+- Weights: correct 35%, **cited 35%**, complete 15%, **concise 15%**.
+- `mm-llm-ask-dev` v2 checks every `[...]` citation against the full tool output of that run (DOC id + page must have been returned
+  or read; WO / RCFA / tag / date / report ids must appear in a tool result). **Any unsupported citation: cited = 0, score capped at 50.**
+- Uncited technical claims: cited at most 1-2. Gap questions: must say the library has no source and label general knowledge.
+- Concise: about 150 words for knowledge/calc, 220 for data/briefs; padding scores 0-1.
+- Question ids hidden from the judge; the runner keeps full responses so answers can be re-judged without paying for them again.
+- Check run 3 (3 questions, $0.33): pm02 90 (all 5 citations supported, docked for 323 words), pm04 78.3, sm13 48.3 (contradicted itself on action counts).
+- The v1 baseline below is **not comparable**; a v2 baseline is next.
+
+## Round 0 — baseline, judge v1.1 (Nov 10 2026)
 Score 0-100 (correct 40%, complete 25%, grounded 20%, useful 15%).
 
 | Section | Train (12) | Held-out (6) | All (18) |

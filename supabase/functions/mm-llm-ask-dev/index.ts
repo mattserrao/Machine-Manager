@@ -37,6 +37,40 @@ const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { sta
 const svc = createClient(URL_, SERVICE, { auth: { persistSession: false } });
 setTools(TOOLS);
 
+// Eval only: is every [citation] in the answer backed by what the tools returned in this run?
+//  [DOC <id> p.N] / p.N-M: the doc (id or its first 8+ characters) with that page in a returned row (search passage or page read);
+//  any other [..]: every id-like token in it (has a digit, 4+ chars: WO numbers, RCFA ids, tags, dates, report ids) appears in the
+//  tool output. Brackets with no such token (e.g. [Action: title]) are "unchecked".
+function checkCitations(answer: string, seen: string[]) {
+  const all = seen.join('\n').toLowerCase();
+  const pages = new Map<string, Set<number>>();                     // doc id -> pages seen
+  const walk = (o: any) => { if (!o || typeof o !== 'object') return; if (Array.isArray(o)) { o.forEach(walk); return; }
+    if (typeof o.doc_id === 'string') { const s = pages.get(o.doc_id) ?? new Set<number>(); if (Number.isFinite(Number(o.page))) s.add(Number(o.page)); pages.set(o.doc_id, s); }
+    for (const k in o) walk(o[k]); };
+  for (const s of seen) { try { walk(JSON.parse(s)); } catch { /* ignore */ } }
+  const out = { total: 0, supported: 0, unsupported: [] as string[], unchecked: 0 };
+  for (const m of answer.matchAll(/\[([^\[\]]{2,200})\]/g)) {
+    for (const part of m[1].split(/;\s*/)) {
+      const p = part.trim(); if (!p) continue;
+      const d = p.match(/^DOC\s+([0-9a-f][0-9a-f-]{7,35})(?:[,\s]+(?:pp?\.?\s*)?(\d+)(?:\s*[-–]\s*(\d+))?)?/i);
+      if (d) {
+        out.total++;
+        const id = [...pages.keys()].find((k) => k.toLowerCase().startsWith(d[1].toLowerCase()));
+        const want = d[2] ? Array.from({ length: Math.min(20, (Number(d[3] ?? d[2]) - Number(d[2])) + 1) }, (_, i) => Number(d[2]) + i) : [];
+        const ok = !!id && want.every((n) => pages.get(id)!.has(n));
+        if (ok) out.supported++; else out.unsupported.push(p.slice(0, 80));
+        continue;
+      }
+      const toks = (p.match(/[A-Za-z0-9][A-Za-z0-9:_\-.\/]*\d[A-Za-z0-9:_\-.\/]*/g) ?? []).map((t) => t.replace(/[.\-:]+$/, ''))
+        .filter((t) => t.length >= 4 && !/^pp?\.\d/i.test(t));
+      if (!toks.length) { out.unchecked++; continue; }
+      out.total++;
+      if (toks.every((t) => all.includes(t.toLowerCase()))) out.supported++; else out.unsupported.push(p.slice(0, 80));
+    }
+  }
+  return out;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
   if (req.method !== 'POST') return json({ error: 'POST only' }, 405);
@@ -70,7 +104,7 @@ Deno.serve(async (req) => {
   if ((today ?? 0) >= DAILY_CAP) return json({ error: 'The assistant has reached its daily limit for everyone. Try again tomorrow.' }, 429);
 
   // ---- answer ----
-  const t0 = Date.now(), trace: any[] = [], charts: any[] = [];
+  const t0 = Date.now(), trace: any[] = [], charts: any[] = [], seen: string[] = [];   // seen = full tool output (eval mode)
   let answer = '', status = 'ok', inT = 0, outT = 0, cacheR = 0, cacheW = 0, steps = 0, model = '', provider = '';
   try {
     const m = makeModel(body.model === 'opus' ? 'opus' : 'default'); model = m.model; provider = m.provider;
@@ -93,6 +127,8 @@ Deno.serve(async (req) => {
         }
         const r = await runTool(db, org, c.name, c.args, { embed });
         const content = forModel(r);
+        if (evalMode) seen.push(JSON.stringify(c.name === 'get_document_page' && Array.isArray((r as any).rows)   // page rows carry no doc id
+          ? { rows: (r as any).rows.map((x: any) => ({ doc_id: String(c.args.doc_id ?? ''), ...x })) } : r));
         trace.push({ tool: c.name, args: c.args, rows: (r as any).total ?? 0, error: (r as any).error ?? undefined,
                      ...(evalMode ? { preview: content.slice(0, 700) } : {}) });
         results.push({ id: c.id, content });
@@ -104,7 +140,7 @@ Deno.serve(async (req) => {
     answer = err instanceof ModelError ? err.message : `Something went wrong: ${(err as Error).message}`;
   }
   const ms = Date.now() - t0;
-  if (evalMode) return json({ answer, status, trace, charts, model, provider, ms,
+  if (evalMode) return json({ answer, status, trace, charts, model, provider, ms, citations: checkCitations(answer, seen),
     usage: { in: inT, out: outT, cache_read: cacheR, cache_write: cacheW, steps } }, status === 'ok' ? 200 : 502);
   const { data: id } = await svc.rpc('mm_llm_save_answer', { p_org: org, p_question_id: body.question_id ?? null, p_question: question,
     p_answer: answer, p_status: status, p_trace: trace, p_model: model, p_provider: provider, p_in: inT, p_out: outT, p_ms: ms, p_user: userId });

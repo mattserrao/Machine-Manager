@@ -32,11 +32,13 @@ def main():
     ap.add_argument('--only', nargs='*', default=[]); ap.add_argument('--workers', type=int, default=3)
     ap.add_argument('--round-cap', type=float, default=9.0)
     ap.add_argument('--run-id', type=int, default=None, help='add to (or redo questions in) an existing run instead of starting one')
+    ap.add_argument('--rejudge-from', default=None, help='a runs/*.json file: re-judge its saved answers (judge cost only, no new answers)')
     a = ap.parse_args()
     tokens = {'Sim Mill': os.environ['MM_TOKEN_SIM'], 'Demodemo RAG': os.environ['MM_TOKEN_RAG']}
     url, key = config()
     qs = json.loads((ROOT / 'autoresearch/questions.json').read_text())['questions']
     qs = [q for q in qs if (a.split == 'all' or q['split'] == a.split) and (not a.only or q['id'] in a.only)]
+    saved = {k: v for k, v in json.loads(Path(a.rejudge_from).read_text())['results'].items() if 'result' in v} if a.rejudge_from else None
     demo = {k['id']: k for k in json.loads((ROOT / 'demo-data/sim-mill/answers/answer_key.json').read_text())['questions']}
     sha = subprocess.run(['git', 'rev-parse', '--short', 'HEAD'], cwd=ROOT, capture_output=True, text=True).stdout.strip()
     if a.run_id: run_id = a.run_id; print(f"adding {len(qs)} questions to run {run_id}", flush=True)
@@ -50,16 +52,20 @@ def main():
     def one(q):
         if stop.is_set(): return
         t = tokens[q['org']]
-        r = post(f'{url}/functions/v1/mm-llm-ask-dev', key, t, {'question': q['question'], 'eval': True})
+        if saved is not None:
+            if q['id'] not in saved: return
+            r = dict(saved[q['id']]['result']); r['usage'] = {}          # answer already paid for: judge cost only
+        else:
+            r = post(f'{url}/functions/v1/mm-llm-ask-dev', key, t, {'question': q['question'], 'eval': True})
         if r.get('error') and 'answer' not in r: r = {'status': 'error', 'answer': r['error']}
         auto = grade(demo[q['ref']], r) if q.get('ref') and r.get('status') == 'ok' else []
         g = post(f'{url}/functions/v1/mm-llm-eval', key, t, {'action': 'judge', 'run_id': run_id, 'q': q, 'result': r, 'auto': auto})
         with lock:
             c = (g.get('answer_cost') or 0) + (g.get('judge_cost') or 0); spent_round[0] += c
-            out[q['id']] = {'q': q, 'answer': r.get('answer'), 'status': r.get('status'), 'usage': r.get('usage'), 'ms': r.get('ms'),
-                            'tools': [x.get('tool') for x in r.get('trace') or []], 'auto': auto, 'grade': g}
+            out[q['id']] = {'q': q, 'result': r, 'auto': auto, 'grade': g}       # full response kept so it can be re-judged
             print(f"{q['id']:5} {q['section']}/{q['split']:7} score {g.get('score', 'ERR'):>5}  ${c:.3f}  "
-                  f"{(r.get('ms') or 0)/1000:5.1f}s  {g.get('notes') or g.get('error') or ''}"[:200], flush=True)
+                  f"{(r.get('ms') or 0)/1000:5.1f}s  cites {(r.get('citations') or {}).get('supported','?')}/{(r.get('citations') or {}).get('total','?')}  "
+                  f"{g.get('notes') or g.get('error') or ''}"[:200], flush=True)
             if spent_round[0] >= a.round_cap or 'budget' in str(g.get('error', '')): stop.set()
 
     with cf.ThreadPoolExecutor(a.workers) as ex: list(ex.map(one, qs))
