@@ -11,6 +11,8 @@ export type Assessment = {
 
 export const PAGE_BATCH = 10;          // pages parsed per worker call (keeps each call well inside the CPU limit)
 export const MODEL_PAGE_CAP = 60;      // most pages per document sent to Claude
+// Kinds where the date matters (a survey or audit is only useful with its date); manuals and papers often have none.
+export const DATED = ['vendor_report', 'inspection', 'rcfa'];
 export const KINDS = ['vendor_report', 'manual', 'procedure', 'drawing', 'reference_chart', 'rcfa', 'inspection', 'other'];
 
 // ---------- page quality ----------
@@ -133,7 +135,7 @@ export function score(sig: Signals, m: Assessment, set: Settings) {
   if (m.relevance != null) { s -= [0, 50, 30, 10, 0, 0][m.relevance]; if (m.relevance <= 2) reasons.push('doesn\'t look like a mill document'); }
   if (m.readability != null) s -= [0, 30, 15, 5, 0, 0][m.readability];
   if (m.completeness != null) { s -= [0, 20, 10, 0, 0, 0][m.completeness]; if (m.completeness <= 2) reasons.push('looks incomplete'); }
-  if (!m.doc_date) { s -= 5; review.push('no date found'); }
+  if (!m.doc_date && DATED.includes(String(m.kind))) { s -= 5; review.push('no date found'); }   // reference material needs no date
   if (sig.has_positions_list && !(m.positions && m.positions.length)) { s -= 5; review.push('not linked to any machine position'); }
   if (m.contains_instructions_to_ai) review.push('the text contains instructions aimed at an AI assistant');
   if (sig.near_duplicate) review.push(`very similar to "${sig.near_duplicate.title || sig.near_duplicate.doc_id}" (possibly a new version)`);

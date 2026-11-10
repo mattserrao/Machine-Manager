@@ -46,6 +46,8 @@ let g = score(sig(), good, set);
 check('a clean, dated, linked mill document is accepted', g.decision === 'accepted' && g.score >= 95, JSON.stringify(g));
 g = score(sig(), { ...good, doc_date: undefined }, set);
 check('a missing date sends it to review even with a high score', g.decision === 'needs_review' && g.score >= 75 && g.review.includes('no date found'));
+g = score(sig(), { ...good, kind: 'manual', doc_date: undefined }, set);
+check('a manual or paper without a date is accepted (reference material)', g.decision === 'accepted', JSON.stringify(g));
 g = score(sig({ has_positions_list: false }), { ...good, positions: [] }, set);
 check('no positions needed when the org has none set up', g.decision === 'accepted', JSON.stringify(g));
 g = score(sig(), { ...good, contains_instructions_to_ai: true }, set);
