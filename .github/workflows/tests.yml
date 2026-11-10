@@ -30,6 +30,7 @@ jobs:
           psql -h localhost -U postgres -d mm_test -v ON_ERROR_STOP=1 -q -f tests/db/supabase-shim.sql -f supabase/schema.sql -f supabase/schema.sql -f supabase/llm.sql -f supabase/llm.sql
       - run: python tests/db/test_schema.py
       - run: python tests/db/test_llm.py
+      - run: python tests/db/test_rag.py
 
   answer-key:
     # Generate the demo year, load it through the importers into a fresh database, and check that the
