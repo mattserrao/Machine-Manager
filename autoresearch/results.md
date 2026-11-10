@@ -1,5 +1,6 @@
 # Autoresearch results
 
+Live dashboard: https://claude.ai/artifact/D6w2GtbieumDtkVueasZwj (reads the eval tables, updates itself each round).
 Ledger: `llm.eval_runs` / `llm.eval_results` (Supabase), per-answer detail in `autoresearch/runs/` (local, not committed).
 Answer model Sonnet 5.5 via `mm-llm-ask-dev` v1 (= live `mm-llm-ask`); judge Opus 5.5 `judge-v1.1` via `mm-llm-eval` v3.
 
