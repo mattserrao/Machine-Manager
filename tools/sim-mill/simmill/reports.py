@@ -19,8 +19,8 @@ Definitions (the Production Report):
 import datetime as dt, math, random, sys, os
 from zoneinfo import ZoneInfo
 import numpy as np
-from .base import (MACHINE, DAY, HOUR, MIN, H, Y0, TODAY, GRADES, GRADE_IDS, GLABEL, full_tph, hidx, ts, crews, LEAD_OF, NAME, PEOPLE,
-                   BY_NAME, BY_NO, SECTION_NAME, OUTAGES, NEXT_OUTAGE)
+from .base import (MACHINE, DAY, HOUR, H, Y0, TODAY, GRADES, GRADE_IDS, GLABEL, full_tph, hidx, crews, LEAD_OF, NAME, PEOPLE, BY_NAME, BY_NO,
+                   SECTION_NAME, OUTAGES)
 from .model import CAUSE_TEXT
 from . import degrade
 

@@ -10,7 +10,7 @@ Bonvoy Report page and the assistant's bonvoy_report tool read it.
 """
 import datetime as dt, json, os
 import numpy as np
-from .base import (PLANTS, D, DAY, HOUR, Y0, TODAY, TAG, BY_NAME, POS_NAME, MACHINE, OUTAGES, hidx, md, us)
+from .base import (PLANTS, D, DAY, Y0, TODAY, TAG, BY_NAME, POS_NAME, MACHINE, OUTAGES, hidx, md)
 from .model import piece_at, VIB_ALERT, VIB_DANGER
 
 REPORT_DAYS = 7          # one report per day for the most recent week

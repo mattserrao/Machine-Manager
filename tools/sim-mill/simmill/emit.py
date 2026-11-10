@@ -1,5 +1,5 @@
-"""Sim Mill writers: the files exactly as they'd arrive from the mill, in Demo Mill's layouts (so the same importers read
-them), plus the three new feeds: downtime events, daily production and position runs.
+"""Sim Mill writers: the files exactly as they'd arrive from the mill, in the layouts `tools/ingest/importers.py` reads,
+plus the three new feeds: downtime events, daily production and position runs.
 
     out/bus/BUS_PM1_<date>.xlsx            daily BUS sheet
     out/jde/WO_PM1_<monday>.csv            weekly JDE deltas, and WO_PM1_full_<today>.csv
@@ -12,13 +12,11 @@ them), plus the three new feeds: downtime events, daily production and position 
     out/positions/Position_runs_PM1_<today>.csv  NEW: every fabric, felt, plate and roll run (My Machine history)
     out/_truth/                              what the checks and the answer key read (never imported)
 """
-import csv, datetime as dt, json, math, os, shutil
+import datetime as dt, json, math, os
 import numpy as np
-from .base import B, BT, md, SHIFT
-from .base import (CFG, PLANTS, D, DAY, HOUR, MIN, T0, Y0, Y1, TODAY, H, OUTAGES, OUT_BY_ID, NEXT_OUTAGE, MACHINE, TAG, BY_NAME,
-                   BY_POS, POS_NAME, SECTION_NAME, GRADES, GRADE_IDS, GLABEL, NAME, LEAD_OF, crews, crew_at, next_outage, outage_on,
-                   section_name, us, hidx, ts, write_csv, full_tph)
-from .model import CAUSE_TEXT, grade_at
+from .base import (DAY, HOUR, MIN, Y0, TODAY, H, OUT_BY_ID, MACHINE, TAG, BY_NAME, POS_NAME, SECTION_NAME, GRADE_IDS, GLABEL, NAME, crews, next_outage,
+                   us, hidx, ts, write_csv)
+from .model import grade_at
 from .records import STATUS, WO_TYPE, CRAFT_LEAD
 from . import process as PR
 

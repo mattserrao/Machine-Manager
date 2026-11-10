@@ -1,5 +1,5 @@
 // Machine Manager — which organization's MM LLM data a page shows, and a few small helpers the data pages share
-// (Vendor Reports, Daily, Downtime / RCFA, MM LLM).
+// (Vendor Reports, Daily Journal, Downtime / RCFA, MM LLM).
 //
 // Signed out, or signed in to a demo org (the demo account): the public demo orgs (Sim Mill), with a dropdown if
 // several are published, remembered in this browser. ?org=<name> in the URL picks one.
@@ -15,7 +15,6 @@
   // A caption for each demo org. Its "today" comes from its data: Sim Mill's year is regenerated every 6 weeks, so the
   // last day loaded is the demo's today and the year runs back 364 days from it.
   const DEMO = {
-    'Demo Mill': { about: 'Fictional twin-wire linerboard machine (scripted year)' },
     'Sim Mill': { about: 'The Paper Mill’s recycled-board machine, one modelled year' },
   };
   const info = name => DEMO[name] ? { ...DEMO[name] } : null;
@@ -128,10 +127,10 @@
   }
 
   // The page a real organization sees before its own data is loaded: what the page will show and what feeds it.
-  //   MMLLMOrg.placeholder(st, { title, text, needs: ['BUS daily sheet', …], links: [['DailyNotes.html', 'Notes board']] })
+  //   MMLLMOrg.placeholder(st, { title, text, needs: ['BUS daily sheet', …], links: [['Downtime.html', 'Downtime / RCFA']] })
   function placeholder(st, o){
     const $ = id => document.getElementById(id);
-    document.querySelectorAll('.dbar > :not(.org):not(.grow):not(.nb)').forEach(e => { e.hidden = true; });
+    document.querySelectorAll('.dbar > :not(.org):not(.grow)').forEach(e => { e.hidden = true; });
     const org = $('org'); if (org) { org.textContent = ''; const b = document.createElement('b'); b.textContent = st.org.name; org.appendChild(b); }
     const sub = $('sub'); if (sub) sub.hidden = true;
     const body = $('body'); if (!body) return;

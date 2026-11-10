@@ -19,7 +19,7 @@ def check(name, ok, detail=""):
         failures.append(name)
 
 
-# What 02-copy-whiteboard.sql produces for two boards.
+# Two Whiteboard boards as they're stored in mm_records.
 WB_ROWS = [
     {"tool": "whiteboard", "id": "p:b-old", "data": {"name": "Outage plan", "meta": {}, "created": "2026-11-01T10:00:00Z", "sort": 1793527200000}},
     {"tool": "whiteboard", "id": "p:b-new", "data": {"name": "Test Board 1 (2)", "meta": {}, "created": "2026-11-05T10:00:00Z", "sort": 1793872800000}},

@@ -10,9 +10,9 @@ Measured values come from the model (Pi series, position runs, faults), so the d
 import datetime as dt, io, os, random
 from xml.sax.saxutils import escape
 import numpy as np
-from .base import B, BT, md, tx, SHIFT
-from .base import (CFG, PLANTS, D, DAY, HOUR, Y0, TODAY, OUTAGES, IN_YEAR, NEXT_OUTAGE, MACHINE, TAG, BY_NAME, BY_POS, POS_NAME,
-                   SECTION_NAME, GRADES, GRADE_IDS, GLABEL, NAME, VENDORS, hidx, us, ORD, write_csv)
+from .base import B, BT, md, tx
+from .base import (CFG, PLANTS, D, DAY, HOUR, Y0, TODAY, IN_YEAR, MACHINE, TAG, BY_NAME, POS_NAME, SECTION_NAME, GRADES, GRADE_IDS,
+                   GLABEL, NAME, VENDORS, hidx, us, ORD, write_csv)
 from .base import full_tph
 from .model import piece_at, ROUTES, CRITICAL, VIB_ALERT, VIB_DANGER, CAUSE_TEXT
 from .process import BY_G

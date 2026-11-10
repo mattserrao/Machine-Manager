@@ -1,13 +1,12 @@
 """Sim Mill records: work orders (JDE), Planner actions, BUS daily-sheet issues and RCFAs, all built from the model's
 year (stops, faults, position changes, outages) plus a seeded background of routine work.
 
-Same shapes and status logic as Demo Mill's structured.py, so the same importers read them.
+Same shapes and status logic the importers (tools/ingest/importers.py) expect.
 """
-import datetime as dt, random
-from .base import B, BT, md, tx, SHIFT
-from .base import (CFG, PLANTS, D, DT, DAY, HOUR, Y0, TODAY, OUTAGES, IN_YEAR, NEXT_OUTAGE, OUT_BY_ID, BY_NAME, POS_NAME, BY_POS,
-                   NAME, LEAD_OF, crews, crew_at, section_name, next_outage, us, ORD)
-from .model import CAUSE_TEXT, ROUTES, due_at_next_outage, piece_at, CRITICAL
+import random
+from .base import B, md, tx
+from .base import (PLANTS, D, DT, DAY, HOUR, Y0, TODAY, OUTAGES, NEXT_OUTAGE, OUT_BY_ID, BY_NAME, POS_NAME, LEAD_OF)
+from .model import CAUSE_TEXT, ROUTES, due_at_next_outage
 from . import degrade
 MODE = {x['id']: x for x in degrade.MODES}
 
@@ -112,7 +111,6 @@ def build(m, proc, seed=5505):
     ev, runs, faults = m['events'], m['runs'], m['faults']
     yr = lambda d: Y0 <= d <= TODAY
     wos, actions, issues, rcfas = [], [], [], []
-    owner_of = {'MECH': 'P05', 'MILL': 'P12', 'E&I': 'P06', 'INST': 'P14', 'OPS': 'P01'}
 
     # ─── PMs: weekly, every two weeks, monthly ───
     PMS = [('Operator rounds: stock prep', 'Pulper', 7, 'OPS', 1), ('Operator rounds: wet end', 'Headbox', 7, 'OPS', 1),
@@ -335,7 +333,6 @@ def build(m, proc, seed=5505):
     }
     TEMPL.update(degrade.RCFA_TEMPL)
     dev_of = {id(f['event']): f for f in m.get('developing', []) if f.get('event')}
-    aseq = [0]
     def act(title, bucket, owner, created, due, completed=None, **k):
         a = Action(title, bucket, owner, created, due, completed, **k); actions.append(a); return a
     for n, e in enumerate(m['rcfa_events'], 1):

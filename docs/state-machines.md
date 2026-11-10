@@ -16,7 +16,7 @@ looking", "is this saved" or "which org's data", use the owner listed here rathe
 | `demo-member` | signed in to a public demo org (the demo account) | the demo org | by role |
 | `member` | signed in to a real organization (PM1) | its own data only, **never** demo data | by role |
 
-Used by: Outage Planning, the board tools (Whiteboard, Ops Task Library, Consumables, Daily notes), the mill-data
+Used by: Outage Planning, the board tools (Whiteboard, Ops Task Library, Consumables), the mill-data
 pages through `MMLLMOrg.resolve`, MM LLM and the home page. Tested in `tests/unit/cloud_states.test.js`.
 
 ### 2. Which org's mill data: `MMLLMOrg.resolve()` (mm-llm-org.js)
@@ -25,7 +25,7 @@ Built on `access()`. Returns `{ org, orgs, empty, real, error }`:
 - everyone else → the public demo orgs (a picker if there are several).
 - `offline` → `error`.
 
-Used by Daily, Downtime / RCFA, Vendor Reports, Bonvoy Report and MM LLM (which had its own copy of this logic).
+Used by the Daily Journal, Downtime / RCFA, Vendor Reports, Bonvoy Report and MM LLM (which had its own copy of this logic).
 
 ### 3. Save indicator: `MMCloud.saveIndicator(el, opts)` (mm-cloud.js)
 States shown: `saved` · `saving` · `viewonly` · `error` (Not saved) · `notloaded`. With several stores (Outage

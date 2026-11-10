@@ -99,7 +99,6 @@ window.MMBoard = { start(cfg){
   })();
   let saveTimer = null, storageOk = true;
   function save(quiet){
-    libDirty = true;
     if (cloud.on) return cloudSave();
     clearTimeout(saveTimer);
     if (!quiet || !storageOk) saveStateEl.textContent = storageOk ? 'Saving…' : 'Not saved';
@@ -169,7 +168,7 @@ window.MMBoard = { start(cfg){
           const { error } = await bucket().upload(path, a.blob, { contentType:a.type || 'application/octet-stream', upsert:true });
           if (error) throw error;
           a.path = path;
-        } catch (e) { toastSoft(`“${a.name}” didn’t upload${/size|large/i.test(e.message || '') ? ' (files are limited to 25 MB)' : ' — will retry'}.`); }
+        } catch (e) { toastSoft(`“${a.name}” didn’t upload${/size|large/i.test(e.message || '') ? ' (files are limited to 30 MB)' : ' — will retry'}.`); }
         finally { uploading.delete(a.id); }
       }
     }
@@ -1864,14 +1863,13 @@ window.MMBoard = { start(cfg){
   // A library page of boards; each board is opened on its own. Frames group the cards, arrows give the
   // order, and the usual stacking rules hold (3 sub-cards per card, 4 levels).
   const libEl = $('library'), libGrid = $('libBody'), libSearch = $('libSearch'), pkgDlg = $('pkgDlg');
-  let libDirty = true, libQueued = false;
+  let libQueued = false;
   const AREAS = cfg.areas || [];
   const AREA_COLORS = cfg.areaColors || {};
   const areaColor = a => SHOW_COLORS ? (AREA_COLORS[(a || '').trim().toLowerCase()] || cfg.areaDefault || '#78716c') : 'var(--muted)';   // areas are named, not coloured
   const fmtHrs = h => { const v = Number(h); return isFinite(v) && v > 0 ? (Math.round(v * 100) / 100) + ' h' : ''; };
 
   function libChanged(){
-    libDirty = true;
     if (!LIB || libEl.hidden || libQueued) return;
     libQueued = true;
     requestAnimationFrame(() => { libQueued = false; if (!libEl.hidden) renderLibrary(); });
@@ -1941,7 +1939,6 @@ function pkgSummary(b){
   const pkgText = b => [b.name, b.meta && b.meta.area, b.meta && b.meta.desc, ...Object.values(b.notes).map(n => n.text + ' ' + (n.owner || '') + ' ' + (P.searchText ? P.searchText(n) : '')), ...b.frames.map(f => f.title)].join(' ').toLowerCase();
 
   function renderLibrary(){
-    libDirty = false;
     const q = libSearch.value.trim().toLowerCase();
     const all = app.order.map(id => app.boards[id]).filter(Boolean);
     const shown = all.filter(b => !q || pkgText(b).includes(q));
@@ -2487,7 +2484,6 @@ function pkgSummary(b){
         }
       }
     }
-    const [pw, ph] = PAPERS[po.paper];
     const paperName = $('pdOpts').querySelector('select[data-k=paper] option:checked').textContent.split(' (')[0];
     $('pdCount').textContent = po.kind === 'report' ? 'Report — dashed lines show about where pages break' : `${out.pages.length} page${out.pages.length > 1 ? 's' : ''}`;
     $('pdNote').textContent = `${paperName}, ${out.landscape ? 'landscape' : 'portrait'}`;
@@ -2827,7 +2823,7 @@ function pkgSummary(b){
     cfg, W, $, el, esc, uid, bid, inline, checklist, parseText, fmtDue, fmtHrs, toast, toastSoft, DEFAULT_W, COLORS,
     get B(){ return B; }, get app(){ return app; }, get cloud(){ return cloud; }, N,
     menu, mi, ms, showMenu, closeMenu, placeMenu, edText,
-    createNote, openEditor, paintEditor, render, save, checkpoint, newBoard, fitAll, centerOn, notesInFrame, worldRect, noteEl,
+    createNote, openEditor, closeEditor, paintEditor, render, save, checkpoint, newBoard, fitAll, centerOn, notesInFrame, worldRect, noteEl,
     ORG, catOf, placeIn,
   };
   P = (cfg.plugin && cfg.plugin(api)) || {};

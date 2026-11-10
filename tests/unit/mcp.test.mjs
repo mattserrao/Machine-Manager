@@ -10,14 +10,14 @@ import { DEFS } from '../../supabase/functions/mm-llm-ask/tools.ts';
 const failures = [];
 const check = (name, ok, detail = '') => { if (!ok) failures.push(name); console.log((ok ? 'PASS ' : 'FAIL ') + name + (detail ? ' — ' + detail : '')); };
 
-const LIB = '00000000-0000-4000-8000-000000000010', SIM = '00000000-0000-4000-8000-000000000002', DEMO = '00000000-0000-4000-8000-000000000001', MINE = '00000000-0000-4000-8000-000000000009';
+const LIB = '00000000-0000-4000-8000-000000000010', SIM = '00000000-0000-4000-8000-000000000002', OTHER = '00000000-0000-4000-8000-000000000001', MINE = '00000000-0000-4000-8000-000000000009';
 function fakeDb({ signedIn = false } = {}) {
   const calls = [];
   const db = {
     calls,
     rpc: async (fn, args = {}) => {
       calls.push({ fn, args });
-      if (fn === 'mm_llm_public_org') return { data: [{ id: DEMO, name: 'Demo Mill' }, { id: SIM, name: 'Sim Mill' }], error: null };
+      if (fn === 'mm_llm_public_org') return { data: [{ id: OTHER, name: 'Other Mill' }, { id: SIM, name: 'Sim Mill' }], error: null };
       if (fn === 'mm_llm_my_access') return signedIn ? { data: [{ org_id: MINE, org_name: 'PM1' }], error: null } : { data: null, error: { message: 'permission denied' } };
       if (fn === 'mm_llm_context') return { data: { data_through: '2026-10-31', outages: [{ id: 'OUT-2026-11-11' }] }, error: null };
       if (fn === 'mm_llm_overdue_actions') return { data: [{ title: 'Order REF 2 plates', due: '2026-10-20' }], error: null };
@@ -62,8 +62,8 @@ check('tool input schemas are objects', tools.every((t) => t.inputSchema.type ==
 let db = fakeDb();
 r = await call(db, 'list_orgs');
 const orgs = JSON.parse(text(r)).orgs;
-check('list_orgs signed out: the public orgs only', orgs.map((o) => o.name).join() === 'Demo Mill,Sim Mill');
-check('list_orgs describes each demo machine', orgs.every((o) => o.machine && o.machine.includes('PM1')));
+check('list_orgs signed out: the public orgs only', orgs.map((o) => o.name).join() === 'Other Mill,Sim Mill');
+check('list_orgs describes a known demo machine', orgs.find((o) => o.name === 'Sim Mill')?.machine?.includes('PM1') && orgs.find((o) => o.name === 'Other Mill')?.machine === null);
 r = await call(fakeDb({ signedIn: true }), 'list_orgs');
 check('list_orgs signed in: adds the user\'s own org', JSON.parse(text(r)).orgs.some((o) => o.id === MINE));
 
@@ -75,17 +75,17 @@ check('arguments map to the database function', c?.args.p_as_of === '2026-10-31'
 check('result names the org and carries the rows', JSON.parse(text(r)).org === 'Sim Mill' && JSON.parse(text(r)).rows.length === 1 && !r.result.isError);
 
 db = fakeDb();
-await call(db, 'overdue_actions', { org: 'demo mill' });
-check('org by name, any case', db.calls.find((x) => x.fn === 'mm_llm_overdue_actions')?.args.p_org === DEMO);
+await call(db, 'overdue_actions', { org: 'other mill' });
+check('org by name, any case', db.calls.find((x) => x.fn === 'mm_llm_overdue_actions')?.args.p_org === OTHER);
 db = fakeDb();
 await call(db, 'overdue_actions', { org: MINE });
 check('an unlisted org id is passed through (RLS decides)', db.calls.find((x) => x.fn === 'mm_llm_overdue_actions')?.args.p_org === MINE);
 r = await call(fakeDb(), 'overdue_actions', { org: 'Nowhere Mill' });
-check('unknown org name → tool error listing the readable orgs', r.result.isError && text(r).includes('Demo Mill, Sim Mill'));
+check('unknown org name → tool error listing the readable orgs', r.result.isError && text(r).includes('Other Mill, Sim Mill'));
 
-r = await call(fakeDb(), 'machine_context', { org: 'Demo Mill' });
+r = await call(fakeDb(), 'machine_context', { org: 'Sim Mill' });
 const ctx = JSON.parse(text(r));
-check('machine_context: machine text plus the database context', ctx.org === 'Demo Mill' && ctx.machine.includes('linerboard') && ctx.data_through === '2026-10-31');
+check('machine_context: machine text plus the database context', ctx.org === 'Sim Mill' && ctx.machine.includes('linerboard') && ctx.data_through === '2026-10-31');
 
 r = await call(fakeDb(), 'pi_daily', { tag: 'X', from: '2026-01-01', to: '2026-01-31' });
 check('a database error comes back as isError, not a protocol error', r.result.isError === true && text(r).includes('unknown tag'));

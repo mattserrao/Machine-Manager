@@ -1,11 +1,11 @@
 """Load mill files into the MM LLM tables of one organization.
 
     # into Supabase (rows, originals and embeddings all through the mm-llm-ingest edge function)
-    MM_INGEST_TOKEN=... python3 tools/ingest/load.py --source demo-data/out --backbone demo-data/backbone \\
+    MM_INGEST_TOKEN=... python3 tools/ingest/load.py --source demo-data/sim-mill/out --backbone demo-data/sim-mill/backbone \\
         --url https://<project>.supabase.co --key <publishable key> [--files] [--embed]
 
     # into a local Postgres (tests)
-    python3 tools/ingest/load.py --source demo-data/out --backbone demo-data/backbone --dsn "host=... dbname=..." --token <token>
+    python3 tools/ingest/load.py --source demo-data/sim-mill/out --backbone demo-data/sim-mill/backbone --dsn "host=... dbname=..." --token <token>
 
     --dry-run   parse everything and print row counts, send nothing
     --only t,u  replace just these tables (e.g. --only downtime,production_daily); everything else is left alone
@@ -44,7 +44,7 @@ def collect(source, backbone_dir, log=print):
             m = __import__('re').search(r'WO (\d+)', a['description']); src = wo.get(m.group(1)) if m else None
         if src and not a['asset_no']: a['asset_no'], a['position_id'] = src['asset_no'], src['position_id']
     t['pi_series'] = I.pi_series(os.path.join(source, 'pi'))
-    # step 05: downtime events, daily production and position runs (Demo Mill has downtime only, from tools/demo-data/downtime_feed.py)
+    # step 05: downtime events, daily production and position runs
     dtp = g('downtime/*.csv'); t['downtime'] = I.downtime_files(dtp, tg); files.update({p: 'downtime' for p in dtp})
     prp = g('production/*.csv'); t['production_daily'] = I.production_files(prp); files.update({p: 'production' for p in prp})
     # step 09: reports (Shift, Production, ...) and their types; the database extracts downtime and production from them

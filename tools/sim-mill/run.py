@@ -10,7 +10,7 @@ The year is written for Nov 1 2025 - Oct 31 2026 (the base year). Rolling moves 
 the outage grid, weekdays and the planted faults keep their places; the answer key (answers/answer_key.base.json) is
 rendered to answers/answer_key.json with its dates moved the same way. out/_truth/roll.json says which cycle was built.
 
-Then load it like Demo Mill (an ingest token for the 'Sim Mill' org):
+Then load it (an ingest token for the 'Sim Mill' org):
     python3 tools/ingest/load.py --source demo-data/sim-mill/out --backbone demo-data/sim-mill/backbone --url ... --key ... [--files] [--embed]
 """
 import argparse, collections, csv, datetime as dt, glob, json, os, shutil, sys, tempfile, time
@@ -27,7 +27,7 @@ elif '--cycles' in sys.argv: os.environ['SIM_SHIFT_CYCLES'] = sys.argv[sys.argv.
 from simmill import base, model, process, records, emit, docs, mm_records, bonvoy_report, reports
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'reports'))
 import daemon as report_daemon
-from simmill.base import Y0, TODAY, DATA, PLANTS, MACHINE, D, B, BT, md
+from simmill.base import Y0, TODAY, DATA, PLANTS, MACHINE, B, md
 
 def generate(out, seed=model.SEED, log=print):
     t0 = time.time()

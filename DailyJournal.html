@@ -5,17 +5,16 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Daily Journal</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-10.0023"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-10.0023">
-<link rel="stylesheet" href="mm-data.css?v=2026-11-10.0023">
-<script src="mm-icons.js?v=2026-11-10.0023"></script>
+<script src="mm-theme.js?v=2026-11-10.0305"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-10.0305">
+<link rel="stylesheet" href="mm-data.css?v=2026-11-10.0305">
+<script src="mm-icons.js?v=2026-11-10.0305"></script>
 <style>
   .dbar button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:var(--r-sm);padding:5px 10px;cursor:pointer}
   .dbar button:hover{border-color:var(--line-strong)}
   .dayh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin:0 0 12px}
   .dayh h2{margin:0;font-size:20px;font-weight:600}
   .dayh span{font-size:13px;color:var(--muted)}
-  a.nb{font-size:12px;color:var(--accent);text-decoration:none}
   .ome{display:grid;grid-template-columns:minmax(150px,200px) 1fr;gap:12px;align-items:stretch;margin:0 0 4px}
   .ome .big{padding:12px 14px;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface-2)}
   .ome .big b{display:block;font-size:30px;font-weight:600;font-variant-numeric:tabular-nums}
@@ -51,21 +50,20 @@
     <button id="toToday" type="button">Today</button>
     <span class="grow"></span>
     <span class="pipe" id="pipe"></span>
-    <a class="nb" href="DailyNotes.html">Notes board</a>
   </div>
   <div id="body"><div class="dmsg">Loading…</div></div>
   <div id="ver"></div>
 </main>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-10.0023"></script>
-<script src="mm-config.js?v=2026-11-10.0023"></script>
-<script src="mm-cloud.js?v=2026-11-10.0023"></script>
-<script src="mm-llm-org.js?v=2026-11-10.0023"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-10.0305"></script>
+<script src="mm-config.js?v=2026-11-10.0305"></script>
+<script src="mm-cloud.js?v=2026-11-10.0305"></script>
+<script src="mm-llm-org.js?v=2026-11-10.0305"></script>
 <script>
   const VERSION = 'v1.0.0';
   document.getElementById('ver').textContent = 'Daily Journal ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
   const $ = id => document.getElementById(id), O = MMLLMOrg, esc = O.esc;
-  let st, today, outages = [], shown = {};
+  let st, today, outages = [];
   const addDays = (d, n) => { const t = new Date(d + 'T12:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
   const KIND = { planned: 'Planned', unplanned: 'Unplanned', break: 'Sheet break', slowdown: 'Slowdown' };
   const hhmm = ts => new Date(ts).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/New_York' });
@@ -123,7 +121,6 @@
         O.rpc(st, 'mm_llm_overdue_actions', { p_as_of: day })]);
     } catch (e) { body.innerHTML = `<div class="dmsg">${esc(e.message || e)}</div>`; return; }
     body.textContent = '';
-    shown = { day, reps };
     const prod = reps.find(r => r.type === 'production'), sd = reps.find(r => r.type === 'shift' && r.shift === 'Day'), sn = reps.find(r => r.type === 'shift' && r.shift === 'Night');
     const nx = outages.find(o => o.starts >= day);
     body.appendChild(div('dayh', `<h2>${new Date(day + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h2>
@@ -166,13 +163,12 @@
     if (st.error){ $('body').innerHTML = `<div class="dmsg">${esc(st.error)}</div>`; return; }
     if (st.empty) return O.placeholder(st, { icon: 'book', title: 'The Daily Journal isn’t set up yet',
       text: 'The Daily Journal shows one mill day at a time, built from its reports: the Production Report (tons, uptime, quality and OME), both Shift Reports with the shift leads’ notes, stops and handover, the morning BUS sheet, Bonvoy flags and the actions due.',
-      needs: ['Shift Reports (each 12 h shift)', 'Production Reports (each mill day)', 'BUS daily sheet', 'Bonvoy (Pi exception) reports', 'Teams / Planner actions'],
-      links: [['DailyNotes.html', 'Open the notes board']] });
+      needs: ['Shift Reports (each 12 h shift)', 'Production Reports (each mill day)', 'BUS daily sheet', 'Bonvoy (Pi exception) reports', 'Teams / Planner actions'] });
     O.reportLinks(st);
     O.picker($('org'), st, start);
     start();
   })();
 </script>
-<script src="mm-nav.js?v=2026-11-10.0023"></script>
+<script src="mm-nav.js?v=2026-11-10.0305"></script>
 </body>
 </html>

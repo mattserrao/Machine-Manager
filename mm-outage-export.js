@@ -36,7 +36,6 @@
     if (/start|run.?up|run in|sheet on|thread/.test(t)) return 'startup';
     return 'day';
   }
-  const pad = n => String(n).padStart(2, '0');
   const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const DOW = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const dParts = s => { const [y, m, d] = s.slice(0, 10).split('-').map(Number); return { y, m, d, dow: new Date(y, m - 1, d).getDay() }; };

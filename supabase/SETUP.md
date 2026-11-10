@@ -2,7 +2,7 @@
 
 Machine Manager runs in two modes:
 
-- **Demo**: anyone who isn't signed in. Each tool saves to that browser only. Nothing is sent to the server.
+- **Demo**: anyone who isn't signed in. My Machine, Outage Planning, the Ops Task Library and the Consumables Tracker show the public demo org (**Sim Mill**) read-only; the mill-data pages and MM LLM show Sim Mill too; the Whiteboard saves to that browser only.
 - **Signed in**: data lives in the Supabase project `machine-manager` and is shared live with everyone in the same organization.
 
 The schema (`schema.sql`) is already applied to the project. Re-running it is safe if it ever needs to be reapplied.
@@ -37,7 +37,7 @@ They work, but everyone on a shared login appears as the same person in the chan
 - **Organizations** keep mills or customers apart. Every row and file belongs to one organization, and the database refuses access to anyone who isn't a member. This is enforced by row-level security, not by the web page.
 - **Every tool uses the same sign-in.** Sign in from the account box on the home page or on any tool. Signing in or out in one tab updates the others.
 - **Moving demo data:** the first time someone signs in to an organization that has nothing yet, My Machine and the Whiteboard offer to copy what they'd saved in that browser while in demo mode.
-- **Every tool's data is in one table, `mm_records`**, one row per record (`tool` says which tool), and every tool's files are in the private `mm-files` bucket under `<organization id>/<tool>/`. Files are limited to 25 MB each. No database changes are needed to add a tool. Record ids for each tool are listed in `mm-records.js`.
+- **Every tool's data is in one table, `mm_records`**, one row per record (`tool` says which tool), and every tool's files are in the private `mm-files` bucket under `<organization id>/<tool>/`. Files are limited to 30 MB each. No database changes are needed to add a tool. Record ids for each tool are listed in `mm-records.js`.
 - **Saving:** each record has a version number. A save only goes through if nobody changed that record since you loaded it; if someone did, you get their version and a short notice, so nothing is silently overwritten. Each change in a save stands on its own: one bad change is reported and skipped, the rest still save. Other people's changes appear live.
 - **Whiteboard, Ops Task Library, Consumables Tracker** share one board engine (`mm-board.js`) and store each board, card, arrow and frame as its own record (tools `whiteboard`, `task-packages`, `consumables`). Attachments go to `mm-files` under `<organization id>/<tool>/<board id>/`. The five example task packages are added once per organization, the first time an editor opens the tool; the Consumables Tracker starts an organization with one empty PM1 board.
 - **My Machine** stores the machine setup and each fabric, roll and refiner position as separate records, so two people updating different positions never collide. **Outage Planning** reads My Machine and the Ops Task Library and keeps its own outages, tasks and manning.
@@ -54,7 +54,7 @@ read its rows; nobody writes to them from the web page.
 
 1. In the **SQL Editor**, create a short-lived ingest token for the organization:
    ```sql
-   select public.mm_llm_new_ingest_token('Demo Mill', 3);   -- org name, hours it stays valid
+   select public.mm_llm_new_ingest_token('Sim Mill', 3);   -- org name, hours it stays valid
    ```
    Copy the token it returns; only a hash is stored.
 2. Run the loader (see `tools/ingest/`) with that token. It sends everything through the `mm-llm-ingest` edge
@@ -65,9 +65,9 @@ read its rows; nobody writes to them from the web page.
 A load replaces that organization's MM LLM rows.
 
 **Public demo:** an organization's MM LLM data can be made readable by anyone, signed in or not:
-`select public.mm_llm_set_public('Demo Mill', true);` (`false` makes it members-only again). The **Demo Mill**
-(fictional data) is public, and the MM LLM page loads it for anyone who isn't signed in, or whose organization
-has no MM LLM data yet. Only the `llm` tables and the `<org>/llm/` files of a public org are opened this way;
+`select public.mm_llm_set_public('Sim Mill', true);` (`false` makes it members-only again). **Sim Mill**
+(the generated model mill, fictional) is the only public org and the demo for anyone who isn't signed in. A real organization never sees demo data:
+its mill-data pages show placeholders until its own files are loaded. Only the `llm` tables and the `<org>/llm/` files of a public org are opened this way;
 every other table and file stays members-only. Never make an organization with real mill data public.
 
 **Asking the assistant** (the `mm-llm-ask` edge function, `supabase/functions/mm-llm-ask/`). Three tiers:
@@ -79,13 +79,16 @@ every other table and file stays members-only. Never make an organization with r
 | On the asking list | The same, plus an Ask box for their own questions (daily limit) |
 
 - Add someone to the asking list in the SQL Editor:
-  `select public.mm_llm_grant_query('demodemo@gmail.com', 'Demo Mill', 40);` (a limit of `0` removes them).
-  The demo account is a **viewer** in the Demo Mill only, so its questions can only read the fictional data.
+  `select public.mm_llm_grant_query('demodemo@gmail.com', 'Sim Mill', 40);` (a limit of `0` removes them).
+  The demo account is a **viewer** in Sim Mill (plus the private `Demodemo RAG` org for upload tests), so its
+  questions only read fictional data.
 - The function runs the tools with the asker's own session, so row-level security applies. Every answer is saved
   to `llm.answers` with the tools it called.
 - Model settings live in **Edge Functions → Secrets**: `ANTHROPIC_API_KEY` (default provider), or
   `MM_LLM_PROVIDER=openai` with `OPENAI_API_KEY` and `MM_LLM_MODEL`. `MM_LLM_MODEL` also overrides the Anthropic
   model (default `claude-sonnet-5-5`); `MM_LLM_DAILY_CAP` limits answers per day for everyone (default 300).
+  The demo account's Opus option uses `MM_LLM_MODEL_OPUS` (default `claude-opus-5-5`) on the key in the secret
+  `MM-LLM-OP`.
   Paste the key itself from the provider's console. The masked "••••" value shown after saving is not the key.
 - Refresh the saved answers to the demo questions: create an ingest token (as above), then run
   `python3 tools/ingest/ask_demo.py --token <token>`, and delete the token.

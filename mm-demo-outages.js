@@ -1,4 +1,5 @@
-// Machine Manager — sample data for Operations Outage Planning in demo mode (signed out).
+// Machine Manager — sample data for Operations Outage Planning when signed out and the server can't be reached (otherwise
+// signed-out visitors see the Sim Mill demo org, read-only).
 // Outages sit on the 6-week grid (anchored Nov 11, 2026) counting from today, so the demo always shows:
 //   · the last outage, finished: tasks done, a package worked through, full manning
 //   · the next outage, mid-planning: tasks, two packages with the prep steps ticked, manning filled

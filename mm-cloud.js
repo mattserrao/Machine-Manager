@@ -1,7 +1,7 @@
 // Machine Manager — shared sign-in, data and file storage for every tool page.
 // Load after vendor/supabase-*.js and mm-config.js. Exposes window.MMCloud.
 //
-// Signed out  → demo mode. The demo tools (My Machine, Outage Planning, Consumables, Task Package Library) show the
+// Signed out  → demo mode. The demo tools (My Machine, Outage Planning, Consumables, Ops Task Library) show the
 //               public demo org (Sim Mill) read-only; the other tools keep their data in this browser only.
 // Signed in   → data lives in Supabase under the chosen org, shared live with its members.
 //
@@ -482,7 +482,7 @@
         const n = (name || file.name || 'file').replace(/[^\w.-]+/g, '_').slice(-100);
         const path = `${s.org.id}/${tool}/${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}-${n}`;
         const { error } = await bucket().upload(path, file, { contentType: file.type || 'application/octet-stream' });
-        if (error) throw new Error(/size|large/i.test(error.message) ? 'Files are limited to 25 MB.' : error.message);
+        if (error) throw new Error(/size|large/i.test(error.message) ? 'Files are limited to 30 MB.' : error.message);
         return path;
       },
       async download(path){ await need(); const { data, error } = await bucket().download(path); if (error) throw error; return data; },

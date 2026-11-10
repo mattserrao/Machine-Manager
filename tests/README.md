@@ -2,8 +2,8 @@
 
 | Folder | What | Needs |
 |---|---|---|
-| `db/` | `supabase/schema.sql` against plain Postgres (with `supabase-shim.sql` standing in for Supabase): access rules, version checks, one bad change never blocking a batch, races, deadlocks | Postgres, `psycopg` |
-| `unit/` | `mm-machine.js`, `mm-demo.js`, `mm-records.js`; the named states in `mm-cloud.js` (`cloud_states.test.js`); the MCP server protocol handler (`mcp.test.mjs`, Node 22.18+) | Node |
+| `db/` | `supabase/schema.sql` and `llm.sql` against plain Postgres (with `supabase-shim.sql` standing in for Supabase): access rules, version checks, one bad change never blocking a batch, races, deadlocks (`test_schema.py`); MM LLM tools and RLS (`test_llm.py`); the RAG lifecycle (`test_rag.py`) | Postgres, `psycopg` |
+| `unit/` | `mm-machine.js`, `mm-demo.js`, `mm-records.js`; the named states in `mm-cloud.js` (`cloud_states.test.js`); the MCP server protocol handler (`mcp.test.mjs`, Node 22.18+); the Word outage export (`outage_export.test.js`); the RAG worker's parsing, quality check and chunking (`rag.test.mjs`) | Node |
 | `sync/` | `mm-cloud.js` sync with several simulated browsers: conflicts, offline, retries, catch-up, paging | Node |
 | `browser/` | Every page loads cleanly; the board tools used end to end; signed in against a fake Supabase (`fake-supabase.js`); stored-XSS check | Python, Playwright |
 | `browser/visual.py` + `compare.py` | Screenshots of the board tools in fixed states, to compare before and after a change (not run in CI) | Python, Playwright, Pillow |

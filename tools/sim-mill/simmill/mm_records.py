@@ -11,9 +11,9 @@ an outage come from what the model actually changed (past outages) or what is du
 Machine and the assistant agree. Every date follows the 6-week roll (base.SHIFT).
 """
 import datetime as dt, json, os, random, subprocess
-from .base import B, BT, md, tx, SHIFT
-from .base import CFG, PLANTS, D, DAY, HOUR, TODAY, OUTAGES, NEXT_OUTAGE, POS_NAME, MACHINE, NAME, HERE, crews
-from .model import piece_at, due_at_next_outage
+from .base import B, BT, md, tx
+from .base import CFG, PLANTS, DAY, HOUR, TODAY, OUTAGES, NEXT_OUTAGE, POS_NAME, MACHINE, HERE, crews
+from .model import due_at_next_outage
 
 def _day(t): return t.date().isoformat() if t else ''
 def _ms(t): return int(t.replace(tzinfo=dt.timezone.utc).timestamp() * 1000)

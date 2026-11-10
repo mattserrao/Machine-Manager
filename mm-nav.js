@@ -12,8 +12,8 @@
     { href: 'Downtime.html', name: 'Downtime / RCFA', sub: 'Mill data', ic: 'alert' },
     { href: 'VendorReports.html', name: 'Vendor Reports', sub: 'Mill data', ic: 'file' },
     { href: 'BonvoyReport.html', name: 'Bonvoy Report', sub: 'Mill data', ic: 'monitor' },
-    { href: 'MMLLM.html', name: 'MM LLM', sub: 'Planned', ic: 'message' },
-    { href: 'RAG.html', name: 'RAG', sub: 'Placeholder', ic: 'upload' },
+    { href: 'MMLLM.html', name: 'MM LLM', sub: 'Assistant', ic: 'message' },
+    { href: 'RAG.html', name: 'RAG', sub: 'Assistant', ic: 'upload' },
     { href: 'http://10.15.212.124:8000', name: 'FieldAgent', sub: 'Mill network', external: true, ic: 'network' },
   ];
 
@@ -63,7 +63,7 @@
     menu.className = 'mmnav-menu'; menu.hidden = true; menu.setAttribute('role', 'menu'); menu.id = 'mmnavMenu';
     btn.setAttribute('aria-controls', menu.id);
     APPS.forEach((a, i) => {
-      if (i === 1 || (a.sub === 'Planned' && APPS[i - 1].sub !== 'Planned') || a.external) menu.appendChild(document.createElement('hr'));
+      if (i === 1 || (a.sub === 'Assistant' && APPS[i - 1].sub !== 'Assistant') || a.external) menu.appendChild(document.createElement('hr'));
       let el;
       if (isCurrent(a)){
         el = document.createElement('div'); el.className = 'cur'; el.setAttribute('aria-disabled', 'true'); el.setAttribute('aria-current', 'page');

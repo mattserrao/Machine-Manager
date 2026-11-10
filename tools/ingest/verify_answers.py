@@ -1,17 +1,16 @@
 """Check that the loaded data can answer every demo question: runs each answer-key check through the tool functions.
 
     # local Postgres: runs as a signed-in viewer of the org, so row-level security applies
-    python3 tools/ingest/verify_answers.py --dsn "host=... dbname=..." --org "Demo Mill"
+    python3 tools/ingest/verify_answers.py --dsn "host=... dbname=..." --org "Sim Mill"
 
     # live project: print one SQL query (paste in the SQL editor or run with the Supabase MCP); one row per check
-    python3 tools/ingest/verify_answers.py --emit-sql --org "Demo Mill"
+    python3 tools/ingest/verify_answers.py --emit-sql --org "Sim Mill"
 """
 import argparse, json, os, sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-KEYS = {'Demo Mill': os.path.join(ROOT, 'demo-data', 'answers', 'answer_key.json'),
-        'Sim Mill': os.path.join(ROOT, 'demo-data', 'sim-mill', 'answers', 'answer_key.json')}
-KEY = KEYS['Demo Mill']
+KEYS = {'Sim Mill': os.path.join(ROOT, 'demo-data', 'sim-mill', 'answers', 'answer_key.json')}
+KEY = KEYS['Sim Mill']
 
 def checks():
     for q in json.load(open(KEY))['questions']:
@@ -47,7 +46,7 @@ def run_local(dsn, org_name):
     return fails
 
 if __name__ == '__main__':
-    ap = argparse.ArgumentParser(); ap.add_argument('--dsn'); ap.add_argument('--org', default='Demo Mill'); ap.add_argument('--emit-sql', action='store_true')
+    ap = argparse.ArgumentParser(); ap.add_argument('--dsn'); ap.add_argument('--org', default='Sim Mill'); ap.add_argument('--emit-sql', action='store_true')
     ap.add_argument('--key', help='answer key (default: the org\'s own, demo-data/... )')
     a = ap.parse_args()
     KEY = a.key or KEYS.get(a.org, KEY)
