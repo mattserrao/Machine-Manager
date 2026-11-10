@@ -8,12 +8,11 @@ stops, breaks and slowdowns (hour-weighted, like a historian's hourly average).
 """
 import datetime as dt, math
 import numpy as np
-from .base import B, BT, md, SHIFT
+from .base import B, BT
 from . import engine as ENG
 from . import degrade
-from .base import (T0, H, HOUR, MIN, DAY, Y0, Y1, TODAY, TAG, T, MACHINE, GRADES, GRADE_IDS, GLABEL, full_tph, hidx, ts, D, DT,
-                   PLANTS, BY_NAME, SECTION_NAME, us)
-from .model import grade_at, age_frac, piece_at, VIB_BASE, VIB_DANGER
+from .base import (H, HOUR, MIN, DAY, Y0, Y1, TAG, GRADES, GRADE_IDS, GLABEL, full_tph, hidx, ts, D, DT, PLANTS, BY_NAME, SECTION_NAME, us)
+from .model import grade_at, age_frac, VIB_BASE, VIB_DANGER
 
 GI = {g: i for i, g in enumerate(GRADE_IDS)}
 # running values by grade (reference medians; the dryer sections split the game's 3rd-section steam over four)
@@ -45,7 +44,7 @@ def machine_state(m):
     on = np.ones(H); sheet = np.ones(H); slow = np.ones(H); stock = np.ones(H); grade = np.zeros(H, dtype=int); brk = np.zeros(H)
     for h in range(H):
         grade[h] = GI[grade_at(m['sched'], ts(h) + MIN * 30)]
-    y0 = dt.datetime.combine(Y0, dt.time(0)); n = 0
+    y0 = dt.datetime.combine(Y0, dt.time(0))
     for e in m['events']:
         a, b = e['start'], e['end']
         h0, h1 = max(0, int(hidx(a))), min(H - 1, int(hidx(b - MIN)))

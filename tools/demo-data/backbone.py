@@ -263,7 +263,6 @@ def validate(data):
         import yaml
     except ImportError:
         return errs + ['pip install pyyaml to check storylines']
-    assets = {e['asset_no']: e for e in data['equipment.csv']}
     names = {e['name'] for e in data['equipment.csv']}
     positions = {e['position_id'] for e in data['equipment.csv'] if e['position_id']}
     tags = {t['tag'] for t in data['pi_tags.csv']}

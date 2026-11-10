@@ -13,7 +13,7 @@
 Built from demo-data/backbone/ and the `records:` in tools/demo-data/storylines/. Seeded: the CSVs come out
 byte-identical every run. Everyone and every company is fictional.
 """
-import csv, os, sys, math, random, shutil, tempfile, datetime as dt
+import csv, os, sys, random, shutil, tempfile, datetime as dt
 from collections import defaultdict
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -633,7 +633,6 @@ def write_all(data, out):
         write_csv(os.path.join(out, 'teams', f'Planner_PM1_{m.isoformat()}.csv'), PLANNER_COLS,
                   [action_row(a, m) for a in data['actions'] if a.created <= m])
     # RCFA log as of today
-    akey = {a.key: a for a in data['actions'] if a.key}
     rows = []
     for r in data['rcfas']:
         a = BY_NAME[r['asset']]

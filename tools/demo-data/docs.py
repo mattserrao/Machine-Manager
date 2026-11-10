@@ -15,7 +15,7 @@ and refiner specific energy are read from the Pi series; RCFA timelines, WO numb
 phase 2 exports. A few documents are deliberately messy for the ingest path: scanned pages with no text layer
 (they need OCR) and one rotated page.
 """
-import csv, io, json, math, os, random, shutil, sys, tempfile, datetime as dt
+import csv, io, json, os, random, shutil, sys, tempfile, datetime as dt
 from xml.sax.saxutils import escape
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -235,7 +235,7 @@ def vendor_reports(pi, rnd, add):
 
     # ---- Halden trial: start-up and end-of-trial (S06) ----
     v = VENDORS['V-HF']
-    prev = pi.avg('PM1:FORM_BASE_COUCH_VAC', D('2025-09-29')); trial = sum(pi.avg('PM1:FORM_BASE_COUCH_VAC', D('2025-12-18') + k * DAY) for k in range(7)) / 7
+    trial = sum(pi.avg('PM1:FORM_BASE_COUCH_VAC', D('2025-12-18') + k * DAY) for k in range(7)) / 7
     nxt = sum(pi.avg('PM1:FORM_BASE_COUCH_VAC', D('2026-01-29') + k * DAY) for k in range(7)) / 7
     add(kind='trial_report', id='HF-TR-251210', vendor='V-HF', date=D('2025-12-10'), story='S06',
         title='Halden Felt Co. - Trial start-up report: PF-3315 on PM1 base ply', positions=['form-bottom'],
@@ -404,7 +404,6 @@ def rcfa_docs(add, out_root):
     plan = {r['Task ID']: r for r in read(os.path.join(DATA_OUT, 'teams', 'Planner_PM1_2026-10-31.csv'))}
     wo = {r['key']: r['wo_no'] for r in read(os.path.join(DATA_OUT, '_truth', 'wo_keys.csv')) if r['key']}
     down = read(os.path.join(DATA_OUT, '_truth', 'downtime.csv'))
-    by_name = {p['name']: k for k, p in PEOPLE.items()}
     for r in log:
         rid = r['RCFA ID']; ev = dt.datetime.strptime(r['Event Date'], '%m/%d/%Y').date()
         det = RCFA_DETAIL.get(rid, {})
@@ -419,7 +418,7 @@ def rcfa_docs(add, out_root):
         timeline.append(f"{r['Opened']} - RCFA opened, lead {r['Lead']}")
         if r['Closed']: timeline.append(f"{r['Closed']} - Last action completed; RCFA closed")
         whys = det.get('whys') or [(f"Why did the {r['Title'].lower()} happen?", r['Root Cause'] + '.'),
-                                   (f"Why did that happen?", r['Contributing Factors'] + '.'),
+                                   ("Why did that happen?", r['Contributing Factors'] + '.'),
                                    ('Why was it not caught earlier?', 'No check or alarm in the PM program or shift rounds covered it.')]
         add(kind='rcfa', id=rid, vendor='', date=ev, story={'RCFA-2026-02': 'S03', 'RCFA-2026-03': 'S02'}.get(rid, ''),
             positions=[BY_NAME[r['Asset']]['position_id']] if BY_NAME[r['Asset']]['position_id'] else [], docx=True,

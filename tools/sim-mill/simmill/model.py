@@ -10,11 +10,11 @@ New for a realistic year: per-position life (fabrics, felts, plates, press and f
 five planted faults (config/plants.yaml), RCFA trigger rule. Everything is seeded: one seed, one year.
 """
 import datetime as dt, math, random
-from .base import B, BT, md, tx, SHIFT
+from .base import B, tx, SHIFT
 from . import engine as ENG
 from . import degrade
-from .base import (CFG, PLANTS, CATALOG, D, DT, DAY, HOUR, MIN, T0, T_END, Y0, TODAY, OUTAGES, IN_YEAR, NEXT_OUTAGE,
-                   GRADES, full_tph, POS_NAME, BY_NAME, crew_at, ORD)
+from .base import (CFG, PLANTS, CATALOG, D, DT, DAY, HOUR, MIN, T0, T_END, Y0, TODAY, OUTAGES, NEXT_OUTAGE, GRADES,
+                   full_tph, crew_at)
 
 SEED = 20251101
 

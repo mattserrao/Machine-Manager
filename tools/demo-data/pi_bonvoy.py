@@ -150,7 +150,6 @@ def build(truth):
     rng = np.random.default_rng(SEED)
     grade, on, sheet, stops, breaks = machine_state(truth)
     g = grade; is33 = g == 2
-    hod = np.arange(H) % 24
     R, DOWN = {}, {}
     mean = lambda tag: float(TAG[tag]['mean']) if TAG[tag]['mean'] != 'by grade' else 0.0
 
@@ -184,7 +183,6 @@ def build(truth):
     R['PM1:DRY3_STEAM_P'] = d3
     for k in ('PM1:DRY1_STEAM_P', 'PM1:DRY2_STEAM_P', 'PM1:DRY3_STEAM_P'): DOWN[k] = 8
     pv = np.full(H, 62.0)
-    summer = window('2026-06-01T00:00', '2026-09-01T00:00')
     s05_days = {dt.datetime.fromisoformat(x['start']).date() for x in truth if x['story'] == 'S05'}
     for day in sorted(s05_days):
         long = day.isoformat() in S05['long_days']

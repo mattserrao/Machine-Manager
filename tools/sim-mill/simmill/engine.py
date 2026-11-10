@@ -11,7 +11,7 @@ The engine runs once for the base year; the 6-week roll moves its times with eve
 import csv, datetime as dt, gzip, json, os
 import numpy as np
 import yaml
-from .base import HERE, SHIFT, T0, H, HOUR, hidx
+from .base import HERE, SHIFT, H, hidx
 
 DIR = os.path.join(HERE, 'engine')
 TAGMAP = yaml.safe_load(open(os.path.join(HERE, 'config', 'tags.yaml')))

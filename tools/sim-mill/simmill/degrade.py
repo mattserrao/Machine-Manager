@@ -14,8 +14,8 @@ reading). They end with a calibration, never a stop, and teach the reader that n
 Everything here has its own random stream, so adding or tuning a mode never changes the engine's year, the planted
 faults F1–F5 (whose tags are left alone) or any other draw.
 """
-import datetime as dt, random
-from .base import CFG, DAY, HOUR, MIN, T0, T_END, Y0, OUTAGES, PLANTS, DT, D, BY_NAME, B
+import random
+from .base import DAY, HOUR, T0, T_END, OUTAGES, BY_NAME
 
 # Tags the planted faults own: nothing developing touches them, so F1–F5 and their answer key stay exact.
 PLANTED_TAGS = {'UHLE_P2T_VAC', 'REEL_DRUM_DS_VIB', 'REEL_DRUM_DS_TEMP', 'REF_B_SE', 'REF_B_KW', 'DRY3_DP'}

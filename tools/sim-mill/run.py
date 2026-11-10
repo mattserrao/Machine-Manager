@@ -27,7 +27,7 @@ elif '--cycles' in sys.argv: os.environ['SIM_SHIFT_CYCLES'] = sys.argv[sys.argv.
 from simmill import base, model, process, records, emit, docs, mm_records, bonvoy_report, reports
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'reports'))
 import daemon as report_daemon
-from simmill.base import Y0, TODAY, DATA, PLANTS, MACHINE, D, B, BT, md
+from simmill.base import Y0, TODAY, DATA, PLANTS, MACHINE, B, md
 
 def generate(out, seed=model.SEED, log=print):
     t0 = time.time()
