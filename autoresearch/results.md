@@ -10,7 +10,8 @@ Answer model Sonnet 5.5 via `mm-llm-ask-dev` v1 (= live `mm-llm-ask`); judge Opu
 | 1 | ledger: 4 baseline answers re-run after the judge JSON fix | $0.49 |
 | 2 | **baseline, all 54** | **$4.94** (answers $3.88, judge $1.06) |
 | 3 | judge v2 check (3 questions) | $0.33 |
-| | **Total so far** | **$5.91 of $50** |
+| 4 | baseline v2 — **partial**: 31 of 54 scored, then the Anthropic API credit ran out | $2.61 |
+| | **Total so far** | **$8.52 of $50** |
 
 ## Judge v2 (Nov 10, user direction)
 Technical answers: wrong or missing citations are penalised heavily; short, fully cited, accurate answers score highest.
@@ -23,7 +24,25 @@ Technical answers: wrong or missing citations are penalised heavily; short, full
 - Check run 3 (3 questions, $0.33): pm02 90 (all 5 citations supported, docked for 323 words), pm04 78.3, sm13 48.3 (contradicted itself on action counts).
 - The v1 baseline below is **not comparable**; a v2 baseline is next.
 
-## Round 0 — baseline, judge v1.1 (Nov 10 2026)
+## Round 0 — baseline, judge v2 (run 4, PARTIAL)
+Stopped at 12:40 Nov 10: "credit balance is too low" on the Anthropic API. Papermaking and chem eng are complete except
+ce13 and ce15-18; **no Sim Mill questions scored yet**. The 23 unscored rows have score = null.
+Finish after credit is added: fresh tokens, then `eval_run.py --round 0 --label baseline-v2 --run-id 4 --only sm01 ... sm18 ce13 ce15 ce16 ce17 ce18` (~$2.5).
+
+| Section | Train | Held-out | All | n |
+|---|---|---|---|---|
+| Papermaking | 81.1 | 80.1 | 80.8 | 18 |
+| Industrial / chem eng | 78.7 | 90.0 (1 q) | 79.6 | 13 |
+| **Scored so far** | | | **80.3** | 31 |
+
+By criterion (0-3): **correct 2.90, cited 2.29, complete 2.72, concise 1.23**.
+- **No fabricated citations**: every checked citation in the 31 answers was supported by the tool output. The v1 judge's "never retrieved" flags were mostly its 700-character preview limit.
+- **Length is now the biggest loss**: answers run 280-500 words against 150; unrequested sections (worked examples, "checks on PM1", caveats).
+- **Uncited sub-claims**: one citation up top covering a whole list; extra advice with no source.
+- **Calc without lookup**: ce10 called no tools, so no citation (60).
+- Content misses: ce07 (scoops; condensate moving with the shell), pm15 (starch / calender sizing), pm17 (pumping and viscous shear).
+
+## Round 0 — baseline, judge v1.1 (Nov 10 2026, superseded)
 Score 0-100 (correct 40%, complete 25%, grounded 20%, useful 15%).
 
 | Section | Train (12) | Held-out (6) | All (18) |
