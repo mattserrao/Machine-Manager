@@ -1,6 +1,6 @@
 # MM LLM — Autoresearch (self-improvement loop)
 
-Status: **plan, waiting for approval** (Nov 10 2026). Branch `autoresearch`. Nothing deployed, no database changes, no API rounds run yet.
+Status: **baseline done** (Nov 10 2026), $5.58 of $50 spent. Branch `autoresearch`. Live: migration 14 (eval tables), `mm-llm-ask-dev` v1, `mm-llm-eval` v3. Sim Mill weekly roll paused. Results: `results.md`.
 
 ## Goal
 Make MM LLM answer better, measurably, by improving tools, the RAG library, a memory file and the harness one change at a time. Every change is scored the same way, and the results are charted at the end.
