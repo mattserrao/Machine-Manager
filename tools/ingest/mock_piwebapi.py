@@ -1,10 +1,10 @@
-"""Mock PI Web API for the MM LLM demo: serves the generated Pi series (demo-data/out/pi) with the same request
+"""Mock PI Web API for the MM LLM demo: serves the generated Pi series (Sim Mill: demo-data/sim-mill/out/pi) with the same request
 and response shapes as AVEVA PI Web API, so the orchestrator's Pi tool can later point at the real server by
 changing only the base URL (plus mill network / VPN access and credentials).
 
-    python3 tools/demo-data/mock_piwebapi.py                 # http://localhost:8811/piwebapi
-    python3 tools/demo-data/mock_piwebapi.py --port 9000 --data demo-data/out/pi
-    python3 tools/demo-data/mock_piwebapi.py --selftest      # run the self-test against the generated data
+    python3 tools/ingest/mock_piwebapi.py                 # http://localhost:8811/piwebapi
+    python3 tools/ingest/mock_piwebapi.py --port 9000 --data demo-data/sim-mill/out/pi
+    python3 tools/ingest/mock_piwebapi.py --selftest      # run the self-test against the generated data
 
 Endpoints (GET):
     /piwebapi                                         links
@@ -18,9 +18,9 @@ Endpoints (GET):
     /piwebapi/streams/{webId}/summary?startTime=...&endTime=...&summaryType=Average&summaryType=Maximum&summaryDuration=1d
     /piwebapi/streamsets/recorded?webId=...&webId=...&startTime=...&endTime=...
 
-Times accept ISO 8601 (with Z/offset, or local mill time without one) and PI relative times: * (demo "now",
-Oct 31 2026 23:00), t (today 00:00), y (yesterday 00:00), with offsets like *-7d, t-12h, *-30m. Responses use
-UTC timestamps, like the real API. Data is hourly averages, with 1-minute data inside the storyline windows.
+Times accept ISO 8601 (with Z/offset, or local mill time without one) and PI relative times: * (the data's "now",
+its last hour, from points.json), t (today 00:00), y (yesterday 00:00), with offsets like *-7d, t-12h, *-30m. Responses use
+UTC timestamps, like the real API. Data is hourly averages, with 1-minute data where the generator wrote it.
 """
 import base64, csv, hashlib, json, math, os, re, sys, threading, datetime as dt
 from http.server import ThreadingHTTPServer, BaseHTTPRequestHandler
@@ -226,8 +226,8 @@ def serve(folder, port):
 
 
 def selftest(folder):
-    """Round-trips the API against the CSVs. Returns a list of problems."""
-    import urllib.request
+    """Round-trips the API against the CSVs (any generated year: it reads the tags from the data). Returns problems."""
+    import glob, urllib.request, urllib.error
     errs = []
     def need(ok, msg):
         if not ok: errs.append('mock PI Web API: ' + msg)
@@ -236,30 +236,20 @@ def selftest(folder):
     th = threading.Thread(target=srv.serve_forever, daemon=True); th.start()
     get = lambda p: json.loads(urllib.request.urlopen(f'http://localhost:{port}{p}', timeout=10).read())
     try:
+        f = sorted(glob.glob(os.path.join(folder, 'hourly', '*.csv')))[-1]
+        rows = list(csv.DictReader(open(f))); tags = [c for c in rows[0] if c != 'Timestamp']
         ds = get('/piwebapi/dataservers')['Items']; need(ds and ds[0]['Name'] == SERVER, 'dataservers')
-        pts = get(f"/piwebapi/dataservers/{ds[0]['WebId']}/points?nameFilter=PM1:*")['Items']; need(len(pts) == 39, f'{len(pts)} points')
-        p = get('/piwebapi/points?path=%5C%5CMILLPI01%5CPM1:DRY2_C27_DS_VIB'); w = p['WebId']
-        need(p['EngineeringUnits'] == 'in/s', 'point units')
-        rec = get(f'/piwebapi/streams/{w}/recorded?startTime=2026-09-22T00:00&endTime=2026-09-22T23:00')['Items']
-        need(len(rec) == 24, f'{len(rec)} hourly items for Sep 22')
-        hourly = {r['Timestamp']: r['PM1:DRY2_C27_DS_VIB'] for r in csv.DictReader(open(os.path.join(folder, 'hourly', 'PM1_hourly_2026-09.csv')))}
-        need(abs(rec[14]['Value'] - float(hourly['2026-09-22T14:00'])) < 1e-9, 'recorded value differs from the CSV')
-        need(rec[0]['Timestamp'] == '2026-09-22T04:00:00Z', f"UTC timestamp {rec[0]['Timestamp']}")
-        mins = get(f'/piwebapi/streams/{w}/recorded?startTime=2026-10-20T00:00&endTime=2026-10-20T01:00')['Items']
-        need(len(mins) == 61, f'{len(mins)} minute items inside the S01 window')
-        it = get(f'/piwebapi/streams/{w}/interpolated?startTime=2026-10-20T00:00&endTime=2026-10-20T06:00&interval=1h')['Items']
-        need(len(it) == 7 and all(x['Good'] for x in it), 'interpolated')
-        sm = get(f'/piwebapi/streams/{w}/summary?startTime=2026-10-19T00:00&endTime=2026-10-20T00:00&summaryType=Average&summaryType=Maximum')['Items']
-        need([x['Type'] for x in sm] == ['Average', 'Maximum'] and .2 < sm[0]['Value']['Value'] < .3, f'summary {sm}')
-        days = get(f'/piwebapi/streams/{w}/summary?startTime=*-7d&endTime=*&summaryType=Average&summaryDuration=1d')['Items']
-        need(len(days) == 7, f'{len(days)} daily summaries for *-7d')
-        last = get(f'/piwebapi/streams/{w}/recorded?startTime=*-7d&endTime=*')['Items']
-        need(len(last) == 169, f'{len(last)} hourly items for *-7d..*')
-        spd = get('/piwebapi/points?path=%5C%5CMILLPI01%5CPM1:SPEED')['WebId']
-        down = get(f'/piwebapi/streams/{spd}/value?time=2026-10-07T12:00')
-        need(down['Value'] == 0, f"speed during the annual outage {down['Value']}")
-        ss = get(f'/piwebapi/streamsets/recorded?webId={w}&webId={spd}&startTime=t-2h&endTime=t')['Items']
-        need(len(ss) == 2 and len(ss[1]['Items']) == 3, 'streamsets/recorded')
+        pts = get(f"/piwebapi/dataservers/{ds[0]['WebId']}/points?nameFilter=*")['Items']
+        need({p['Name'] for p in pts} >= set(tags), f'{len(pts)} points for {len(tags)} tags in the CSV')
+        tag = tags[0]; w = get('/piwebapi/points?path=' + urllib.request.quote(f'\\\\{SERVER}\\{tag}'))['WebId']
+        r0 = rows[len(rows) // 2]; t0 = r0['Timestamp']
+        rec = get(f'/piwebapi/streams/{w}/recorded?startTime={t0}&endTime={t0}')['Items']
+        need(rec and abs(rec[0]['Value'] - float(r0[tag])) < 1e-9, f'{tag} at {t0}: recorded value differs from the CSV')
+        need(rec and rec[0]['Timestamp'].endswith('Z'), 'UTC timestamps')
+        it = get(f'/piwebapi/streams/{w}/interpolated?startTime=*-6h&endTime=*&interval=1h')['Items']
+        need(len(it) == 7, f'{len(it)} interpolated items for *-6h..*')
+        sm = get(f'/piwebapi/streams/{w}/summary?startTime=*-7d&endTime=*&summaryType=Average&summaryDuration=1d')['Items']
+        need(len(sm) == 7, f'{len(sm)} daily summaries for *-7d')
         try:
             urllib.request.urlopen(f'http://localhost:{port}/piwebapi/points?path=%5C%5CMILLPI01%5CNOPE', timeout=5); need(False, 'unknown point should 404')
         except urllib.error.HTTPError as e:
@@ -268,15 +258,14 @@ def selftest(folder):
         srv.shutdown()
     return errs
 
-
 if __name__ == '__main__':
     args = sys.argv[1:]
-    folder = args[args.index('--data') + 1] if '--data' in args else os.path.join(ROOT, 'demo-data', 'out', 'pi')
+    folder = args[args.index('--data') + 1] if '--data' in args else os.path.join(ROOT, 'demo-data', 'sim-mill', 'out', 'pi')
     if '--selftest' in args:
         e = selftest(folder)
         for x in e: print('FAIL', x)
         sys.exit(1 if e else print('mock PI Web API ok'))
     port = int(args[args.index('--port') + 1]) if '--port' in args else 8811
     srv, _ = serve(folder, port)
-    print(f'Mock PI Web API on http://localhost:{port}/piwebapi  (data: {folder}, demo now: Oct 31 2026 23:00)')
+    print(f'Mock PI Web API on http://localhost:{port}/piwebapi  (data: {folder}, now: {_.a.now:%b %d %Y %H:%M})')
     srv.serve_forever()

@@ -21,7 +21,6 @@ Without signing in you're looking at the demo: My Machine, Outage Planning, the 
 | `supabase/` | Database schema (`schema.sql`, MM LLM in `llm.sql`), migrations, the `mm-llm-ingest`, `mm-llm-ask` and `mm-mcp` (MCP server for Claude) edge functions and setup notes |
 | `tools/ingest/` | MM LLM importers, loader and answer-key check |
 | `tools/reports/` | The report lifecycle (registry, envelope, reconcile daemon) behind Sim Mill's shift and production reports |
-| `tools/demo-data/`, `demo-data/` | The original scripted demo year (Demo Mill: kept, no longer published) |
 | `tools/sim-mill/`, `demo-data/sim-mill/` | Sim Mill: a data-generating model of The Paper Mill's mill (Python port of its sim), one modelled year, its answer key |
 | `DailyJournal.html`, `Downtime.html`, `VendorReports.html` | The data pages: the mill day from its reports (Daily Journal), downtime / RCFA, vendor reports by position and run (`mm-llm-org.js`, `mm-data.css`) |
 | `tests/`, `tools/` | Tests (run on every pull request) and helper scripts |

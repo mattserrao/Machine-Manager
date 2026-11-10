@@ -1,5 +1,5 @@
-"""Sim Mill writers: the files exactly as they'd arrive from the mill, in Demo Mill's layouts (so the same importers read
-them), plus the three new feeds: downtime events, daily production and position runs.
+"""Sim Mill writers: the files exactly as they'd arrive from the mill, in the layouts `tools/ingest/importers.py` reads,
+plus the three new feeds: downtime events, daily production and position runs.
 
     out/bus/BUS_PM1_<date>.xlsx            daily BUS sheet
     out/jde/WO_PM1_<monday>.csv            weekly JDE deltas, and WO_PM1_full_<today>.csv

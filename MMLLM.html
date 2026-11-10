@@ -556,8 +556,8 @@
     $('aboutLive').textContent = 'Answering with Claude Sonnet 5.5 by default; the demo account can switch to Claude Opus 5.5. Both go through the model adapter, so swapping models is a setting, not a rewrite.';
 
     let key;
-    const KEYS = { 'Demo Mill': 'demo-data/answers/answer_key.json', 'Sim Mill': 'demo-data/sim-mill/answers/answer_key.json' };
-    if (!isDemo || !KEYS[org.name]) { $('qlist').appendChild(mk('p', 'demo-msg', 'Demo questions are written for the demo organizations (Demo Mill, Sim Mill).')); return; }
+    const KEYS = { 'Sim Mill': 'demo-data/sim-mill/answers/answer_key.json' };
+    if (!isDemo || !KEYS[org.name]) { $('qlist').appendChild(mk('p', 'demo-msg', 'Demo questions are written for the demo organization (Sim Mill).')); return; }
     try { key = await (await fetch(KEYS[org.name], { cache: 'no-cache' })).json(); }
     catch (e) { $('qlist').appendChild(mk('p', 'demo-msg', 'The demo questions couldn’t be loaded.')); return; }
 

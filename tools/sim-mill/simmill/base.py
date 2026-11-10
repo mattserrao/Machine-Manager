@@ -103,7 +103,7 @@ def outage_index_at(t):
         if o['end'] <= t: i = o['idx']
     return i
 
-DUPONT = 'NNNNOOODDDONNNOOODDDDOOOOOOO'   # 28-day cycle per crew; crews offset by 7 days (same rotation as Demo Mill)
+DUPONT = 'NNNNOOODDDONNNOOODDDDOOOOOOO'   # 28-day cycle per crew; crews offset by 7 days
 
 def crews(d):
     k = (d - B('2025-11-03')).days

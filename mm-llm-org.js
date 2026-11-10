@@ -15,7 +15,6 @@
   // A caption for each demo org. Its "today" comes from its data: Sim Mill's year is regenerated every 6 weeks, so the
   // last day loaded is the demo's today and the year runs back 364 days from it.
   const DEMO = {
-    'Demo Mill': { about: 'Fictional twin-wire linerboard machine (scripted year)' },
     'Sim Mill': { about: 'The Paper Mill’s recycled-board machine, one modelled year' },
   };
   const info = name => DEMO[name] ? { ...DEMO[name] } : null;

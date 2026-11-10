@@ -20,9 +20,9 @@
 --   report_events                    extracted -> indexed | failed; downtime and production_daily rows keep report_id (step 09)
 --
 -- Access: members of an org can read its rows (RLS, same rule as mm_records), and anyone can read a public demo
--- org's rows (mm_llm_set_public; the Demo Mill is one). Nobody writes from the web page:
+-- org's rows (mm_llm_set_public; Sim Mill is one). Nobody writes from the web page:
 -- imports go through the mm-llm-ingest edge function and mm_llm_ingest(), guarded by an ingest token an admin creates in the SQL editor
--- (select public.mm_llm_new_ingest_token('Demo Mill', 6);). Tokens are stored hashed and expire.
+-- (select public.mm_llm_new_ingest_token('Sim Mill', 6);). Tokens are stored hashed and expire.
 --
 -- Tools (what the orchestrator calls; security invoker, so RLS applies to the signed-in user):
 --   mm_llm_search_docs, mm_llm_search_docs_vec, mm_llm_search_records, mm_llm_position_history, mm_llm_outage_scope,
@@ -166,8 +166,8 @@ create table if not exists llm.position_runs (
   reason text, condition text, vendor text, style text, serial text, comment text, source_file text,
   primary key (org_id, position_id, installed));
 
--- Public demo organizations (llm.public_orgs; e.g. Demo Mill, all fictional data): anyone, signed in or not, can read their MM LLM
--- rows and files. Set with  select public.mm_llm_set_public('Demo Mill', true);  in the SQL editor.
+-- Public demo organizations (llm.public_orgs; e.g. Sim Mill, all fictional data): anyone, signed in or not, can read their MM LLM
+-- rows and files. Set with  select public.mm_llm_set_public('Sim Mill', true);  in the SQL editor.
 -- The list itself is public (it only names the demo orgs), so the lookup below needs no elevated rights.
 create table if not exists llm.public_orgs (
   org_id uuid primary key references public.orgs(id) on delete cascade, name text not null,

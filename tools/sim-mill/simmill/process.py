@@ -198,7 +198,7 @@ def build(m, seed=3303):
     return dict(OUT=OUT, R=R, grade=grade, on=on, sheet=sheet, state=st, engine_cover=src)
 
 
-# ═════════════════════════ Bonvoy (same rule as Demo Mill's pi_bonvoy.py) ═════════════════════════
+# ═════════════════════════ Bonvoy (Pi tags outside 3-sigma) ═════════════════════════
 BONVOY_TAGS = [t for t in TAG if TAG[t]['short'] not in ('SPEED', 'PROD', 'BREAKS')]
 
 def eligible_mask(sheet, on):

@@ -25,7 +25,7 @@ year:
   end: 2026-11-01
 
 outages:
-  anchor: 2026-11-11            # the 6-week grid, as Demo Mill and Outage Planning
+  anchor: 2026-11-11            # the 6-week grid, as Outage Planning
   cadence_days: 42
   start_hour: 6
   hours: 20

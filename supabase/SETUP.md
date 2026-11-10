@@ -66,8 +66,7 @@ A load replaces that organization's MM LLM rows.
 
 **Public demo:** an organization's MM LLM data can be made readable by anyone, signed in or not:
 `select public.mm_llm_set_public('Sim Mill', true);` (`false` makes it members-only again). **Sim Mill**
-(the generated model mill, fictional) is the only public org and the demo for anyone who isn't signed in; the
-**Demo Mill** (the older scripted year) is kept but no longer public. A real organization never sees demo data:
+(the generated model mill, fictional) is the only public org and the demo for anyone who isn't signed in. A real organization never sees demo data:
 its mill-data pages show placeholders until its own files are loaded. Only the `llm` tables and the `<org>/llm/` files of a public org are opened this way;
 every other table and file stays members-only. Never make an organization with real mill data public.
 

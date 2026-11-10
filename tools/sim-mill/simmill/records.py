@@ -1,7 +1,7 @@
 """Sim Mill records: work orders (JDE), Planner actions, BUS daily-sheet issues and RCFAs, all built from the model's
 year (stops, faults, position changes, outages) plus a seeded background of routine work.
 
-Same shapes and status logic as Demo Mill's structured.py, so the same importers read them.
+Same shapes and status logic the importers (tools/ingest/importers.py) expect.
 """
 import random
 from .base import B, md, tx
