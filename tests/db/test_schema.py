@@ -24,9 +24,12 @@ def connect():
     return psycopg.connect(DSN, autocommit=True)
 
 
-def as_user(c, uid):
+def as_user(c, uid, client_id=None):
+    """Act as a user; with client_id, through an OAuth client's token (e.g. the MCP connector) instead of a session."""
     c.execute("reset role")
     c.execute("select set_config('request.jwt.sub', %s, false)", (str(uid) if uid else "",))
+    claims = {"sub": str(uid), "role": "authenticated", "client_id": client_id} if client_id else {}
+    c.execute("select set_config('request.jwt.claims', %s, false)", (json.dumps(claims) if claims else "",))
     c.execute("set role authenticated" if uid else "set role anon")
 
 
@@ -78,6 +81,21 @@ as_user(c, ed_b)
 check("another org's editor can't read PM1", c.execute("select count(*) from mm_records where org_id = %s", (A,)).fetchone()[0] == 0)
 r = apply(c, A, "mymachine", [{"id": "evil", "data": {}, "base": None}])
 check("another org's editor can't write PM1", not r[0]["ok"] and "error" in r[0])
+
+# ───────── OAuth clients (MCP connector) are read-only ─────────
+as_user(c, ed, client_id="mcp-test-client")
+check("OAuth client of an editor can read", c.execute("select count(*) from mm_records where org_id = %s", (A,)).fetchone()[0] >= 1)
+r = apply(c, A, "mymachine", [{"id": "oauth-new", "data": {}, "base": None}])
+check("OAuth client of an editor can't insert", not r[0]["ok"] and "error" in r[0], json.dumps(r[0])[:120])
+r = apply(c, A, "mymachine", [{"id": "machine", "data": {"name": "oauth"}, "base": 2}])
+check("OAuth client of an editor can't update", not r[0]["ok"])
+check("OAuth client fails editor checks, passes viewer ones",
+      c.execute("select private.has_org_role(%s, 'editor'), private.has_org_role(%s), private.has_org_role_path(%s, 'editor')",
+                (A, A, str(A))).fetchone() == (False, True, False))
+as_user(c, users["ad@a"], client_id="mcp-test-client")
+check("OAuth client of an admin fails admin checks", c.execute("select private.has_org_role(%s, 'admin')", (A,)).fetchone()[0] is False)
+as_user(c, ed)
+check("the editor's own session still writes", apply(c, A, "mymachine", [{"id": "after-oauth", "data": {}, "base": None}])[0]["ok"])
 check("…and nothing was written", admin.execute("select count(*) from mm_records where id = 'evil'").fetchone()[0] == 0)
 as_user(c, None)
 check("anon can't read tables", raises(lambda: c.execute("select count(*) from mm_records").fetchone()) is not None)

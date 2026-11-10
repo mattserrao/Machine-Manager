@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connected apps</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<script src="mm-theme.js?v=2026-11-10.1128"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-10.1128">
+<link rel="stylesheet" href="mm-data.css?v=2026-11-10.1128">
+<script src="mm-icons.js?v=2026-11-10.1128"></script>
+<style>
+  /* Connected apps: the sign-in page for MCP apps (Claude's custom connector and others). Supabase Auth's OAuth server
+     sends the user here with ?authorization_id=…; they approve or deny. Without one, it lists the apps the account has
+     approved, with Disconnect, and how to add the connector. */
+  .ca{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+  .ca .panel h2{margin:0 0 6px}
+  .ca p{margin:0 0 10px;font-size:13.5px;line-height:1.55;color:var(--ink-2)}
+  .ask{border:1px solid var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  .who{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;font-size:13px;color:var(--muted);margin:0 0 12px}
+  .who b{color:var(--ink);font-weight:600}
+  .lnk{background:none;border:0;padding:0;font:inherit;color:var(--accent);cursor:pointer;text-decoration:underline}
+  .kv{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;font-size:13px;margin:0 0 12px}
+  .kv dt{color:var(--muted)} .kv dd{margin:0;color:var(--ink);overflow-wrap:anywhere}
+  .can{margin:0 0 14px;padding-left:18px;font-size:13px;line-height:1.6;color:var(--ink-2)}
+  .can .no{color:var(--muted)}
+  .acts{display:flex;gap:8px;flex-wrap:wrap}
+  .apps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+  .apps li{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:var(--r-md,8px);font-size:13px}
+  .apps .nm{flex:1;min-width:0}
+  .apps small{display:block;color:var(--muted)}
+  .url{display:flex;gap:8px;align-items:center;margin:0 0 10px}
+  .url code{flex:1;min-width:0;overflow-wrap:anywhere;font-size:12.5px;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+  ol.steps{margin:0;padding-left:18px;font-size:13px;line-height:1.6;color:var(--ink-2)}
+  .ca code{overflow-wrap:anywhere}
+  .err{color:#b42318}
+</style>
+</head>
+<body>
+<header class="mm-top">
+  <div class="bar brand">
+    <button class="logo mmnav" type="button" aria-label="Switch app" aria-haspopup="menu" aria-expanded="false" title="Switch app"></button>
+    <div><h1>Connected apps</h1><p>Sign-in for Claude and other MCP apps</p></div>
+  </div>
+  <div id="acct"></div>
+</header>
+<main class="data">
+  <div class="ca">
+    <section class="panel ask" id="ask" hidden></section>
+    <section class="panel" id="mine"><h2>Your connected apps</h2><div id="apps"><div class="dmsg">Loading…</div></div></section>
+    <section class="panel">
+      <h2>Connect Claude</h2>
+      <p>Add Machine Manager to Claude as a custom connector with this address. Claude asks you to sign in here once, then
+        reads your organizations' mill data and document library with the same access you have, read-only.</p>
+      <div class="url"><code id="me"></code><button class="btn sm" type="button" id="copy">Copy</button></div>
+      <ol class="steps">
+        <li>On claude.ai (a phone's browser works): Settings → Connectors → Add custom connector.</li>
+        <li>Name it “Machine Manager (signed in)”, paste the address, leave the OAuth fields blank, and add it.</li>
+        <li>Choose Connect: this page opens; check the account and Approve.</li>
+      </ol>
+      <p style="margin-top:10px">The public demo needs no sign-in: <code id="pub"></code></p>
+    </section>
+  </div>
+  <div id="ver"></div>
+</main>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-10.1128"></script>
+<script src="mm-config.js?v=2026-11-10.1128"></script>
+<script src="mm-cloud.js?v=2026-11-10.1128"></script>
+<script>
+  const VERSION = 'v0.1.0';
+  document.getElementById('ver').textContent = 'Connected apps ' + VERSION;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+  const cfg = window.MM_CONFIG || {};
+  const MCP = (cfg.supabaseUrl || '').replace(/\/+$/, '') + '/functions/v1/mm-mcp';
+  $('me').textContent = MCP + '/me'; $('pub').textContent = MCP;
+  $('copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(MCP + '/me'); $('copy').textContent = 'Copied'; } catch (e) { $('copy').textContent = 'Select and copy'; }
+    setTimeout(() => { $('copy').textContent = 'Copy'; }, 1800);
+  });
+
+  const authId = new URLSearchParams(location.search).get('authorization_id');
+  const ask = $('ask');
+  const say = (el, html) => { el.innerHTML = html; el.hidden = false; };
+  const host = u => { try { return new URL(u).host; } catch (e) { return u || ''; } };
+
+  async function main(){
+    if (!window.MMCloud || !MMCloud.enabled){
+      if (authId) say(ask, '<h2>Can’t sign in here</h2><p class="err">The sign-in service isn’t configured on this page.</p>');
+      $('apps').innerHTML = '<div class="dmsg">Sign-in isn’t available.</div>'; return;
+    }
+    MMCloud.mountAccount($('acct'), { compact: true });
+    const s = await MMCloud.session();
+    if (!s){
+      const signIn = '<div class="acts"><button class="btn primary" type="button" data-signin>Sign in</button></div>';
+      if (authId) say(ask, '<h2>Sign in to connect an app</h2><p>An app is asking to use Machine Manager as you. Sign in with your Machine Manager account to see what it asks for; nothing is shared until you approve.</p>' + signIn);
+      $('apps').innerHTML = '<div class="dmsg">Sign in to see the apps connected to your account.</div>';
+      document.querySelectorAll('[data-signin]').forEach(b => b.addEventListener('click', () => MMCloud.openSignIn()));
+      return;
+    }
+    if (authId) await consent(s);
+    listApps();
+  }
+
+  async function consent(s){
+    const cl = MMCloud.client;
+    say(ask, '<div class="dmsg">Loading the request…</div>');
+    const { data: d, error } = await cl.auth.oauth.getAuthorizationDetails(authId);
+    if (error || !d){ say(ask, `<h2>This request can’t be used</h2><p class="err">${esc(error ? error.message : 'Unknown request')}</p><p>Start the connection again from the app.</p>`); return; }
+    if (!d.authorization_id && d.redirect_url){ location.assign(d.redirect_url); return; }   // approved before: straight back
+    let pub = [];
+    try { const r = await cl.rpc('mm_llm_public_org'); pub = (r.data || []).map(o => o.name); } catch (e) { /* public list is optional */ }
+    const own = s.orgs.map(o => `${esc(o.name)} <span class="no">(${esc(o.role)})</span>`);
+    const reads = [...own, ...pub.filter(n => !s.orgs.some(o => o.name === n)).map(n => `${esc(n)} <span class="no">(public demo)</span>`)];
+    const scopes = String(d.scope || '').split(/\s+/).filter(Boolean);
+    const name = d.client?.name || d.client?.client_name || 'An app';
+    say(ask, `
+      <h2>Connect ${esc(name)}?</h2>
+      <div class="who">Signed in as <b>${esc(s.user.email)}</b> · <button class="lnk" type="button" id="switch">Use a different account</button></div>
+      <dl class="kv">
+        <dt>App</dt><dd>${esc(name)}${d.client?.client_uri ? ' · ' + esc(host(d.client.client_uri)) : ''}</dd>
+        <dt>Returns to</dt><dd>${esc(host(d.redirect_uri))}</dd>
+        ${scopes.length ? `<dt>Account details</dt><dd>${esc(scopes.join(', '))}</dd>` : ''}
+      </dl>
+      <p>If you approve, it can read, as you:</p>
+      <ul class="can">${reads.length ? reads.map(r => `<li>${r}</li>`).join('') : '<li class="no">No organizations yet</li>'}
+        <li class="no">It can’t change, upload or delete anything, and can’t ask live MM LLM questions.</li></ul>
+      <div class="acts"><button class="btn primary" type="button" id="ok">Approve</button><button class="btn" type="button" id="no">Deny</button></div>
+      <p class="err" id="askErr" style="margin-top:8px"></p>`);
+    $('switch').addEventListener('click', async () => { await MMCloud.signOut(); location.reload(); });
+    const decide = async (approve) => {
+      $('ok').disabled = $('no').disabled = true;
+      const fn = approve ? cl.auth.oauth.approveAuthorization : cl.auth.oauth.denyAuthorization;
+      const { data, error } = await fn.call(cl.auth.oauth, authId, { skipBrowserRedirect: true });
+      if (error || !data?.redirect_url){ $('askErr').textContent = error ? error.message : 'No answer from the sign-in service.'; $('ok').disabled = $('no').disabled = false; return; }
+      ask.innerHTML = `<h2>${approve ? 'Connected' : 'Not connected'}</h2><p>Returning to ${esc(name)}…</p>`;
+      location.assign(data.redirect_url);
+    };
+    $('ok').addEventListener('click', () => decide(true));
+    $('no').addEventListener('click', () => decide(false));
+  }
+
+  async function listApps(){
+    const cl = MMCloud.client;
+    const { data, error } = await cl.auth.oauth.listGrants();
+    if (error){ $('apps').innerHTML = `<div class="dmsg">${esc(error.message)}</div>`; return; }
+    const grants = Array.isArray(data) ? data : (data?.grants || []);
+    if (!grants.length){ $('apps').innerHTML = '<div class="dmsg">No apps are connected to this account.</div>'; return; }
+    $('apps').innerHTML = '<ul class="apps">' + grants.map(g => {
+      const id = g.client?.client_id || g.client_id, nm = g.client?.name || g.client?.client_name || g.client_name || id;
+      const when = g.granted_at || g.created_at;
+      return `<li><span class="nm">${esc(nm)}<small>${when ? 'Connected ' + esc(new Date(when).toLocaleDateString()) : ''}${g.scopes ? ' · ' + esc([].concat(g.scopes).join(', ')) : ''}</small></span>
+        <button class="btn sm danger" type="button" data-rm="${esc(id)}">Disconnect</button></li>`;
+    }).join('') + '</ul>';
+    $('apps').querySelectorAll('[data-rm]').forEach(b => b.addEventListener('click', async () => {
+      if (!b.classList.contains('armed')){ b.classList.add('armed'); b.textContent = 'Confirm'; return; }
+      b.disabled = true;
+      const { error } = await cl.auth.oauth.revokeGrant({ clientId: b.dataset.rm });
+      if (error){ b.disabled = false; b.textContent = 'Failed'; return; }
+      listApps();
+    }));
+  }
+
+  main().catch(e => say(ask, `<h2>Something went wrong</h2><p class="err">${esc(e.message || e)}</p>`));
+</script>
+<script src="mm-nav.js?v=2026-11-10.1128"></script>
+</body>
+</html>

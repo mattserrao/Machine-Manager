@@ -8,6 +8,9 @@ create table if not exists auth.users (id uuid primary key default gen_random_uu
 create or replace function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.sub', true),'')::uuid $$;
 grant usage on schema auth to authenticated, anon;
 grant execute on function auth.uid() to authenticated, anon;
+-- The token's claims (request.jwt.claims, as PostgREST sets it); tests set client_id here to act as an OAuth client.
+create or replace function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
+grant execute on function auth.jwt() to authenticated, anon;
 create schema if not exists storage;
 create table if not exists storage.buckets (id text primary key, name text, public boolean, file_size_limit bigint);
 create table if not exists storage.objects (id uuid primary key default gen_random_uuid(), bucket_id text, name text);

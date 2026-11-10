@@ -7,7 +7,7 @@ from playwright.sync_api import sync_playwright
 
 BASE = sys.argv[1]
 PAGES = ["index.html", "MyMachine.html", "OperationsOutagePlanning.html", "Whiteboard.html", "TaskPackageLibrary.html",
-         "ConsumablesTracker.html", "VendorReports.html", "MMLLM.html", "DailyJournal.html", "Downtime.html", "BonvoyReport.html", "RAG.html"]
+         "ConsumablesTracker.html", "VendorReports.html", "MMLLM.html", "DailyJournal.html", "Downtime.html", "BonvoyReport.html", "RAG.html", "ConnectedApps.html"]
 failures = []
 def check(name, ok, detail=""):
     print(("PASS " if ok else "FAIL ") + name + (f" — {detail}" if detail else ""))

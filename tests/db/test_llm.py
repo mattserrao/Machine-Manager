@@ -16,8 +16,9 @@ def raises(fn):
     except Exception as e: return e
 
 admin = psycopg.connect(DSN, autocommit=True)
-def as_user(c, uid):
+def as_user(c, uid, client_id=None):
     c.execute("reset role"); c.execute("select set_config('request.jwt.sub', %s, false)", (str(uid) if uid else "",))
+    c.execute("select set_config('request.jwt.claims', %s, false)", (json.dumps({"sub": str(uid), "client_id": client_id}) if client_id else "",))
     c.execute("set role authenticated" if uid else "set role anon")
 def ingest(c, tok, table, rows, mode="upsert"):
     return c.execute("select public.mm_llm_ingest(%s, %s, %s::jsonb, %s)", (tok, table, json.dumps(rows), mode)).fetchone()[0]
@@ -84,6 +85,9 @@ admin.execute("select public.mm_llm_grant_query('asker@t', %s, 5)", (name_a,))
 admin.execute("insert into llm.answers (org_id, question_id, question, answer, asked_by) values (%s, 'S01-Q1', 'q?', 'a.', %s)", (A, u_q))
 as_user(c, u_q); r = c.execute("select org_id, daily_limit, used_today, can_ask from public.mm_llm_my_access()").fetchall()
 check("an allowed user sees their access and today's count", r == [(A, 5, 1, True)], str(r))
+as_user(c, u_q, client_id="mcp-test-client")
+check("through an OAuth client (MCP connector) the same user can't ask live questions", c.execute("select count(*) from public.mm_llm_my_access()").fetchone()[0] == 0)
+check("an OAuth client still reads the public org's answers", c.execute("select count(*) from llm.answers where org_id = %s", (A,)).fetchone()[0] == 1)
 as_user(c, u_b); check("a user without access gets no row", c.execute("select count(*) from public.mm_llm_my_access()").fetchone()[0] == 0)
 check("any signed-in user reads the public org's answers", c.execute("select count(*) from llm.answers where org_id = %s", (A,)).fetchone()[0] == 1)
 check("anon can't read answers", raises(lambda: anon.execute("select count(*) from llm.answers").fetchone()) is not None)

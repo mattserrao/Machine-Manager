@@ -6,6 +6,7 @@
 import { readFileSync } from 'node:fs';
 import { handle, listTools, PROTOCOL_VERSIONS, filePath } from '../../supabase/functions/mm-mcp/mcp.ts';
 import { DEFS } from '../../supabase/functions/mm-llm-ask/tools.ts';
+import * as A from '../../supabase/functions/mm-mcp/auth.ts';
 
 const failures = [];
 const check = (name, ok, detail = '') => { if (!ok) failures.push(name); console.log((ok ? 'PASS ' : 'FAIL ') + name + (detail ? ' — ' + detail : '')); };
@@ -138,6 +139,33 @@ for (const fn of ['mm_llm_context', 'mm_llm_public_org', ...DEFS.map((d) => d.rp
   const open = fn === 'mm_llm_public_org' || anonLoop.includes(`'${fn}(`) || new RegExp(`grant execute on function public\\.${fn}\\([^)]*\\) to anon`).test(sql);
   check(`${fn} is defined and granted to anon`, defined && open);
 }
+
+// ---- sign-in (auth.ts): routes, protected-resource metadata, the 401 challenge, token claims ----
+const SB = 'https://ref.supabase.co';
+const rt = (p) => JSON.stringify(A.route(p));
+check('route: public endpoint', rt('/mm-mcp') === '{"kind":"mcp","signedIn":false}' && rt('/functions/v1/mm-mcp/') === rt('/mm-mcp'));
+check('route: signed-in endpoint', rt('/mm-mcp/me') === '{"kind":"mcp","signedIn":true}' && rt('/functions/v1/mm-mcp/me/') === rt('/mm-mcp/me'));
+check('route: metadata, both spellings', rt('/mm-mcp/me/.well-known/oauth-protected-resource') === '{"kind":"metadata","signedIn":true}'
+  && rt('/mm-mcp/.well-known/oauth-protected-resource/me') === rt('/mm-mcp/me/.well-known/oauth-protected-resource')
+  && rt('/mm-mcp/.well-known/oauth-protected-resource') === '{"kind":"metadata","signedIn":false}');
+check('route: anything else is unknown', ['/mm-mcp/meh', '/other', '/mm-mcp/me/x', '/mm-mcpx'].every((p) => A.route(p).kind === 'unknown'));
+const prm = A.metadata(SB + '/', true);
+check('metadata names this resource and Supabase Auth', prm.resource === SB + '/functions/v1/mm-mcp/me' && prm.authorization_servers[0] === SB + '/auth/v1'
+  && prm.bearer_methods_supported.includes('header'));
+const ch = A.challenge(SB);
+check('401 challenge points at the metadata', ch.startsWith('Bearer ') && ch.includes(`resource_metadata="${SB}/functions/v1/mm-mcp/me/.well-known/oauth-protected-resource"`) && !ch.includes('error='));
+const ch2 = A.challenge(SB, 'token "expired"');
+check('401 challenge for a bad token says invalid_token, quotes escaped', ch2.includes('error="invalid_token"') && ch2.includes('error_description="token expired"'));
+check('bearer() reads the token', A.bearer('Bearer abc.def') === 'abc.def' && A.bearer('bearer x') === 'x' && A.bearer('Basic x') === null && A.bearer(null) === null);
+const now = 1_800_000_000, good = { iss: SB + '/auth/v1', role: 'authenticated', sub: 'u1', exp: now + 60, client_id: 'c1' };
+check('claims: a current user token passes', A.checkClaims(good, SB, now) === null);
+check('claims: expired, other issuer, anon and missing are refused', A.checkClaims({ ...good, exp: now }, SB, now) === 'token expired'
+  && A.checkClaims({ ...good, iss: 'https://evil/auth/v1' }, SB, now) !== null && A.checkClaims({ ...good, role: 'anon' }, SB, now) !== null
+  && A.checkClaims(null, SB, now) !== null);
+
+// ---- migration 13: the database keeps OAuth clients read-only ----
+const allSql = readFileSync('supabase/schema.sql', 'utf8') + readFileSync('supabase/llm.sql', 'utf8');
+check('schema: OAuth clients fail editor checks', /and \(p_min = 'viewer' or not private\.is_oauth_client\(\)\)/.test(allSql) && (allSql.match(/not private\.is_oauth_client\(\)/g) || []).length >= 4);
 
 console.log(failures.length ? `\n${failures.length} FAILED` : '\nall passed');
 process.exit(failures.length ? 1 : 0);

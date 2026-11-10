@@ -98,13 +98,35 @@ assistant, for any MCP client (Claude, MCP Inspector …), at `https://<project>
 
 - Deploy: `supabase functions deploy mm-mcp --no-verify-jwt` (it checks callers itself). No secrets needed;
   `MM_MCP_DEFAULT_ORG` optionally names the org used when a call doesn't give one (default `Sim Mill`).
-- No sign-in: the anon key, so only the public demo orgs. With `Authorization: Bearer <user session token>`:
-  that user's session, so row-level security adds their own orgs. It never writes and never calls a model.
+- Two addresses. `/mm-mcp`: no sign-in, the anon key, so only the public demo orgs (a pasted
+  `Authorization: Bearer <user session token>` still works there). `/mm-mcp/me`: signed in with OAuth (below);
+  row-level security adds the account's own orgs. It never calls a model.
 - Tools: `list_orgs`, `machine_context` (positions, Pi tags, outages, last day of data), and every tool in
   `mm-llm-ask/tools.ts` except `make_chart`, each with an optional `org` (name or id).
 - Try it: add the URL as a custom connector in Claude, or `npx @modelcontextprotocol/inspector` with transport
   **Streamable HTTP**. Unit tests: `node tests/unit/mcp.test.mjs`.
-- Not yet: sign-in through OAuth (so private orgs need a pasted session token), documents as resources, prompts.
+- Not yet: prompts (outage brief, morning watch, RCFA draft).
+
+**MCP sign-in (OAuth).** Supabase Auth is the authorization server; `mm-mcp/me` is the protected resource
+(`supabase/functions/mm-mcp/auth.ts`). Claude (or any MCP client) finds the sign-in from the 401 on `/me`, registers
+itself, sends the person to the site's **Connected apps** page (`ConnectedApps.html`) to sign in and approve, and gets a
+Supabase access token for that account. One-time setup, in the dashboard:
+
+1. **Authentication → OAuth Server:** enable it; **Authorization path** `/ConnectedApps.html`; turn on **Allow dynamic
+   client registration** (Claude's connector registers itself; nobody gets a token without a person approving on the
+   Connected apps page).
+2. **Authentication → URL Configuration:** the **Site URL** must be the site's address with the repo folder,
+   `https://mattserrao.github.io/Machine-Manager`, since the authorization path is added to it.
+3. Run `migrations/13-oauth-read-only.sql` (connected apps are read-only; see below), then redeploy `mm-mcp`
+   (`supabase functions deploy mm-mcp --no-verify-jwt`; it now includes `auth.ts`).
+4. In Claude: add a custom connector **Machine Manager (signed in)** with
+   `https://<project>.supabase.co/functions/v1/mm-mcp/me`, leave the OAuth fields blank, choose **Connect**.
+
+Connected apps get the account's read access only. Their tokens carry a `client_id` claim, and the database turns
+every editor or admin check off for them (`private.is_oauth_client`), refuses their RAG uploads and gives them no live
+MM LLM questions. People see and disconnect their apps on the Connected apps page (also in the app menu). If you'd
+rather not allow dynamic registration, register one client for Claude under OAuth Server → Clients (redirect URI
+`https://claude.ai/api/mcp/auth_callback`) and paste its client id in the connector's advanced settings.
 
 ## Updating the database
 
