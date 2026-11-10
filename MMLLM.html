@@ -96,6 +96,14 @@
   .sm-key i.new{border:1.5px solid var(--accent)} .sm-key i.chk{border:1px dashed var(--warn-line)}
   .sm-steps{margin:18px 0 0;padding:0 0 0 18px;font-size:13px;line-height:1.55;color:var(--ink-2)}
   .sm-steps li{margin:0 0 6px} .sm-steps code{font:12px var(--mono)}
+  /* ---- Testing tab: score tables ---- */
+  .ar-t{border-collapse:collapse;margin:14px 0 0;font-size:13px;min-width:min(640px,100%)}
+  .ar-t th,.ar-t td{padding:6px 12px;border-bottom:1px solid var(--line);text-align:left}
+  .ar-t th{font-weight:600;color:var(--muted);font-size:12px}
+  .ar-t td.n,.ar-t th.n{text-align:right;font-variant-numeric:tabular-nums}
+  .ar-t tr.kept td{font-weight:600}
+  .ar-t tr.cmp td{color:var(--muted)}
+  .ar-wrap{overflow-x:auto}
 
   /* ---- Narrower screens: columns stack, wires hide, a down-arrow joins each stage ---- */
   @media (max-width:980px){
@@ -254,6 +262,7 @@
       <button type="button" role="tab" id="tabFlowBtn" aria-controls="tabFlow" aria-selected="true">Information flow</button>
       <button type="button" role="tab" id="tabSimBtn" aria-controls="tabSim" aria-selected="false" tabindex="-1">Sim Mill: data from The Paper Mill</button>
       <button type="button" role="tab" id="tabMcpBtn" aria-controls="tabMcp" aria-selected="false" tabindex="-1">Use it from Claude (MCP)</button>
+      <button type="button" role="tab" id="tabTestBtn" aria-controls="tabTest" aria-selected="false" tabindex="-1">Testing and tuning</button>
     </div>
     <div class="sheet-b">
     <div id="tabFlow" role="tabpanel" aria-labelledby="tabFlowBtn">
@@ -316,6 +325,39 @@
         <div class="rule"><b>Who sees what</b><span>Without sign-in it reads only the public demo orgs (today: Sim Mill). Signed in (OAuth, on <code>/mm-mcp/me</code>), row-level security adds that account’s own organizations and document libraries. A connected app is read-only even for an editor: the database refuses its changes and uploads, and it can’t ask live questions. It never calls a model, so it has no daily limit.</span></div>
         <div class="rule"><b>Charts</b><span>make_chart stays on this page. Through MCP, Claude gets the numbers and draws or describes the chart itself.</span></div>
         <div class="rule"><b>Not yet</b><span>Ready-made prompts (outage brief, morning watch, RCFA draft), and uploading a document from Claude.</span></div>
+      </div>
+    </div>
+
+    <div id="tabTest" role="tabpanel" aria-labelledby="tabTestBtn" hidden>
+      <section class="intro">
+        <h3 class="sub-h">How the assistant was tested and tuned (Nov 2026)</h3>
+        <p>A fixed set of questions was asked, every answer was graded, and one change was tried at a time on a test copy of the assistant. Only what raised the score was kept. The model itself isn’t retrained: the tuning changes its instructions, tools and document library. One prompt change lifted the score from <b>72.8 to 82.1</b>; the document library is what the knowledge answers depend on.</p>
+      </section>
+      <ol class="sm-steps">
+        <li><b>Questions.</b> 54 questions, 18 in each of three sections: papermaking knowledge, industrial and chemical engineering, and Sim Mill data (outage briefs, trends, felt life, repeat failures, questions with a false premise). Each section has 12 training questions and 6 held back to check that gains carry over.</li>
+        <li><b>Answers.</b> Claude Sonnet 5.5 answers through the same tools this page uses, on a test copy of the assistant (<code>mm-llm-ask-dev</code>). Every bracketed citation is checked against what the tools actually returned.</li>
+        <li><b>Grading.</b> Claude Opus 5.5 scores each answer 0–100: correct 35%, cited 35%, complete 15%, concise 15%. A citation to a record or page the tools never returned caps the answer at 50. Short, fully cited, accurate answers score highest.</li>
+        <li><b>Record and repeat.</b> Every answer, score and cost is stored (<code>llm.eval_runs</code>, <code>llm.eval_results</code>). A change is proposed, approved with a cost estimate, deployed to the test copy and re-run. The total budget was capped at $50; $33.85 was spent.</li>
+      </ol>
+      <h3 class="rules-h">Results: mean score on the 36 training questions</h3>
+      <div class="ar-wrap"><table class="ar-t">
+        <thead><tr><th>Run</th><th class="n">Papermaking</th><th class="n">Chem / industrial</th><th class="n">Sim Mill data</th><th class="n">All</th></tr></thead>
+        <tbody>
+          <tr><td>Baseline</td><td class="n">81.1</td><td class="n">78.7</td><td class="n">58.5</td><td class="n">72.8</td></tr>
+          <tr class="kept"><td>Round 1: cite every claim, stay short (kept)</td><td class="n">88.1</td><td class="n">89.8</td><td class="n">68.5</td><td class="n">82.1</td></tr>
+          <tr class="cmp"><td>Comparison: no document library</td><td class="n">27.3</td><td class="n">39.5</td><td class="n">67.4</td><td class="n">44.7</td></tr>
+          <tr><td>Round 3: checklists for mill data (not kept)</td><td class="n">88.7</td><td class="n">84.7</td><td class="n">67.5</td><td class="n">80.3</td></tr>
+          <tr class="cmp"><td>Comparison: Opus 5.5 answering</td><td class="n">90.1</td><td class="n">89.4</td><td class="n">65.4</td><td class="n">81.6</td></tr>
+        </tbody>
+      </table></div>
+      <h3 class="rules-h">What it showed</h3>
+      <div class="rules">
+        <div class="rule"><b>The library matters most</b><span>Without the document library, knowledge answers fell by 50–60 points and gave wrong settings, not just uncited ones. More PDFs help only where a question shows a gap.</span></div>
+        <div class="rule"><b>Clear rules pay off</b><span>Citing each claim right after it, citing only what a tool returned, and labelling general knowledge raised every section by 7–11 points for $3.60 of testing.</span></div>
+        <div class="rule"><b>A bigger model adds little</b><span>Opus 5.5 scored about 1 point higher for twice the cost. It was better on knowledge questions and no better on mill data.</span></div>
+        <div class="rule"><b>Mill data is the weak spot</b><span>Sim Mill answers score 65–68: numbers misread from tool results, citations of a tool instead of a record, and second sources left out. Next: give the summary tools record ids to cite.</span></div>
+        <div class="rule"><b>Scores are noisy</b><span>The same question can score 30–50 points apart between runs, so changes of a few points per section can’t be called yet.</span></div>
+        <div class="rule"><b>What’s live</b><span>The test copy runs the round-1 rules. This page’s assistant moves to them once that change is approved. Full write-up: <code>autoresearch/results.md</code> in the repository.</span></div>
       </div>
     </div>
 
@@ -819,7 +861,7 @@
     }
   })();
   // ---------- About: tabs ----------
-  const tabBtns = ['tabFlowBtn', 'tabSimBtn', 'tabMcpBtn'].map(id => document.getElementById(id));
+  const tabBtns = ['tabFlowBtn', 'tabSimBtn', 'tabMcpBtn', 'tabTestBtn'].map(id => document.getElementById(id));
   function showTab(i, focus){
     tabBtns.forEach((b, k) => { b.setAttribute('aria-selected', String(k === i)); b.tabIndex = k === i ? 0 : -1;
       document.getElementById(b.getAttribute('aria-controls')).hidden = k !== i; });
