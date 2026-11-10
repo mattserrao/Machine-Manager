@@ -1,0 +1,278 @@
+<meta name="dash-one-writer">
+<style>
+  .ar { display: grid; gap: var(--cds-gap-lg); font-family: var(--font-anthropic-sans); color: var(--color-fg); }
+  .ar-title { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0; }
+  .ar-lede { font-size: var(--cds-font-size-body); margin: var(--cds-gap-xs) 0 0; color: var(--color-fg); max-width: 60rem; }
+  .ar-muted { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+  .ar-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); gap: var(--cds-gap-md); }
+  .ar-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-width: 0; }
+  .ar-tile-label { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .ar-big { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: 2.1rem; line-height: 1.1; font-variant-numeric: tabular-nums; margin: var(--cds-gap-xs) 0; }
+  .ar-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+  .ar-good { color: var(--color-ok); } .ar-bad { color: var(--color-bad); }
+  .ar-h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-xs); }
+  .ar-chart { position: relative; min-height: 260px; }
+  .ar-chart svg text { fill: var(--cds-text-secondary); font-size: var(--cds-font-size-caption); font-family: var(--font-anthropic-sans); }
+  .ar-chart .ar-end { font-variant-numeric: tabular-nums; }
+  .ar-legend { display: flex; flex-wrap: wrap; gap: var(--cds-gap-md); margin-top: var(--cds-gap-xs); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+  .ar-sw { display: inline-block; width: .7em; height: .7em; border-radius: 2px; margin-right: .35em; background: var(--sw, currentColor); vertical-align: -.05em; }
+  .ar-tip { position: absolute; pointer-events: none; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); box-shadow: var(--cds-shadow-popover); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; white-space: nowrap; z-index: 2; }
+  .ar-tip b { font-weight: var(--cds-font-weight-medium); }
+  .ar-scroll { overflow-x: auto; }
+  .ar-table { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+  .ar-table th { text-align: left; font-weight: var(--cds-font-weight-medium); color: var(--color-fg-muted); border-bottom: 1px solid var(--color-border-line); padding: var(--cds-pad-xs) var(--cds-pad-sm); white-space: nowrap; }
+  .ar-table td { border-bottom: 1px solid var(--color-border-line); padding: var(--cds-pad-xs) var(--cds-pad-sm); vertical-align: top; }
+  .ar-table td.ar-num, .ar-table th.ar-num { text-align: right; white-space: nowrap; }
+  .ar-table td.ar-wide { min-width: 16rem; }
+  .ar-table td.ar-note { min-width: 18rem; color: var(--color-fg-muted); }
+  .ar-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: var(--cds-gap-md); }
+  [data-dash-source-state=refreshing] { opacity: .5; }
+  details.ar-card summary { cursor: pointer; font-weight: var(--cds-font-weight-medium); }
+  details.ar-card ul { margin: var(--cds-gap-sm) 0 0; padding-left: 1.2rem; font-size: var(--cds-font-size-caption); }
+</style>
+
+<div class="ar">
+  <header id="summary">
+    <h1 class="ar-title">MM LLM Autoresearch</h1>
+    <p class="ar-lede">Train score <b data-draw="val" data-source="progress" data-field="latest_train" data-row="0" data-fmt="score">—</b> after round <span data-draw="val" data-source="progress" data-field="latest_round" data-row="0" data-fmt="int">—</span> (<span data-draw="val" data-source="progress" data-field="latest_label" data-row="0" data-fmt="text">—</span>), <b data-draw="val" data-source="progress" data-field="change" data-row="0" data-fmt="signed">—</b> points on the baseline's <span data-draw="val" data-source="progress" data-field="baseline_train" data-row="0" data-fmt="score">—</span>.</p>
+    <p class="ar-muted">Sonnet 5.5 answers through mm-llm-ask-dev; Opus 5.5 grades with judge v2 (correct 35%, cited 35%, complete 15%, concise 15%; any citation not found in the tool output caps an answer at 50). Updates itself as each round is recorded.</p>
+  </header>
+
+  <section class="ar-tiles" id="tiles">
+    <div class="ar-card" id="tile-train">
+      <div class="ar-tile-label">Train score, latest round</div>
+      <div class="ar-big" data-draw="val" data-source="progress" data-field="latest_train" data-row="0" data-fmt="score">—</div>
+      <div class="ar-sub"><span data-draw="val" data-source="progress" data-field="change" data-row="0" data-fmt="signed">—</span> vs baseline</div>
+    </div>
+    <div class="ar-card" id="tile-heldout">
+      <div class="ar-tile-label">Held-out score, last checked</div>
+      <div class="ar-big" data-draw="val" data-source="progress" data-field="heldout_latest" data-row="0" data-fmt="score">—</div>
+      <div class="ar-sub">Round <span data-draw="val" data-source="progress" data-field="heldout_round" data-row="0" data-fmt="int">—</span>, 18 questions never shown to the improver</div>
+    </div>
+    <div class="ar-card" id="tile-spend">
+      <div class="ar-tile-label">API spend of the $50 budget</div>
+      <div class="ar-big" data-draw="val" data-source="spend" data-field="spent" data-row="0" data-fmt="usd">—</div>
+      <div class="ar-sub"><span data-draw="val" data-source="budget_left" data-field="left" data-row="0" data-fmt="usd">—</span> left</div>
+    </div>
+    <div class="ar-card" id="tile-rounds">
+      <div class="ar-tile-label">Scored runs (judge v2)</div>
+      <div class="ar-big" data-draw="val" data-source="spend" data-field="rounds" data-row="0" data-fmt="int">—</div>
+      <div class="ar-sub">Baseline plus improvement rounds</div>
+    </div>
+  </section>
+
+  <section class="ar-two">
+    <div class="ar-card" id="chart-score">
+      <h2 class="ar-h2">Train score by round</h2>
+      <p class="ar-muted">Mean score (0-100) on the 36 train questions, overall and by section.</p>
+      <div class="ar-chart" data-draw="scoreChart" data-source="runs"></div>
+      <div class="ar-legend"><span><i class="ar-sw" data-draw="sw" data-i="0"></i>All train</span><span><i class="ar-sw" data-draw="sw" data-i="1"></i>Papermaking</span><span><i class="ar-sw" data-draw="sw" data-i="2"></i>Chem / industrial eng</span><span><i class="ar-sw" data-draw="sw" data-i="3"></i>Sim Mill</span></div>
+    </div>
+    <div class="ar-card" id="chart-criteria">
+      <h2 class="ar-h2">What the judge rewards, by round</h2>
+      <p class="ar-muted">Train average of each criterion (0-3).</p>
+      <div class="ar-chart" data-draw="critChart" data-source="runs"></div>
+      <div class="ar-legend"><span><i class="ar-sw" data-draw="sw" data-i="0"></i>Correct</span><span><i class="ar-sw" data-draw="sw" data-i="1"></i>Cited</span><span><i class="ar-sw" data-draw="sw" data-i="2"></i>Complete</span><span><i class="ar-sw" data-draw="sw" data-i="3"></i>Concise</span></div>
+    </div>
+  </section>
+
+  <section class="ar-card" id="run-log">
+    <h2 class="ar-h2">Run log</h2>
+    <p class="ar-muted">One row per scored run. Held-out is run on the baseline, every third round and the final round.</p>
+    <div class="ar-scroll">
+      <table class="ar-table" data-source="runs" data-row-key="run_id">
+        <thead><tr>
+          <th data-field="round" class="ar-num">Round</th><th data-field="label">Run</th><th data-field="change">Change tested</th>
+          <th data-field="split">Questions</th><th data-field="train_score" class="ar-num">Train</th><th data-field="heldout_score" class="ar-num">Held-out</th>
+          <th data-field="pm_train" class="ar-num">Paper</th><th data-field="ce_train" class="ar-num">Eng</th><th data-field="sm_train" class="ar-num">Sim Mill</th>
+          <th data-field="unsupported_cites" class="ar-num">Bad cites</th><th data-field="cost" class="ar-num">Cost</th><th data-field="started">Started</th>
+        </tr></thead>
+        <tbody data-draw="runRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="ar-card" id="questions">
+    <h2 class="ar-h2">Train questions: baseline vs latest</h2>
+    <p class="ar-muted">Lowest latest score first. Held-out questions are shown only as an average, so they stay unseen while the model is being improved.</p>
+    <div class="ar-scroll">
+      <table class="ar-table" data-source="questions" data-row-key="question_id">
+        <thead><tr>
+          <th data-field="question_id">Id</th><th data-field="question">Question</th><th data-field="baseline" class="ar-num">Baseline</th>
+          <th data-field="latest" class="ar-num">Latest</th><th data-field="change" class="ar-num">Change</th><th data-field="words" class="ar-num">Words</th>
+          <th data-field="unsupported_cites" class="ar-num">Bad cites</th><th data-field="judge_note">Judge's note on the latest answer</th>
+        </tr></thead>
+        <tbody data-draw="qRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <details class="ar-card" id="rubric">
+    <summary>How answers are scored</summary>
+    <ul>
+      <li>Correct (35%): any wrong value, setting, step, date or id scores 1 at most; invented facts score 0.</li>
+      <li>Cited (35%): every specific claim needs an inline citation to something a tool returned in that run. Each citation is checked by code against the full tool output; one that isn't found counts as fabricated, sets Cited to 0 and caps the answer at 50.</li>
+      <li>Complete (15%): share of the answer key's must-have points covered.</li>
+      <li>Concise (15%): leads with the answer, about 150 words for knowledge and calculation questions, 220 for data questions and briefs.</li>
+      <li>Questions: 54 in three sections (papermaking, industrial / chemical engineering, Sim Mill data), 12 train and 6 held-out each.</li>
+    </ul>
+  </details>
+</div>
+
+<script>
+  // execute_sql answers with text that wraps a JSON array of rows; take the rows out.
+  dash.loader('runs', { description: 'Takes the JSON rows out of the execute_sql answer text.', fn: ({ answer }) => {
+    const text = typeof answer === 'string' ? answer : JSON.stringify(answer);
+    const m = text.match(/<untrusted-data-[^>]*>\s*([\s\S]*?)\s*<\/untrusted-data-/);
+    if (!m) throw new Error(text.slice(0, 300));
+    return JSON.parse(m[1]);
+  } });
+  dash.loader('questions', { description: 'Takes the JSON rows out of the execute_sql answer text.', fn: ({ answer }) => {
+    const text = typeof answer === 'string' ? answer : JSON.stringify(answer);
+    const m = text.match(/<untrusted-data-[^>]*>\s*([\s\S]*?)\s*<\/untrusted-data-/);
+    if (!m) throw new Error(text.slice(0, 300));
+    return JSON.parse(m[1]);
+  } });
+  dash.loader('spend', { description: 'Takes the JSON rows out of the execute_sql answer text.', fn: ({ answer }) => {
+    const text = typeof answer === 'string' ? answer : JSON.stringify(answer);
+    const m = text.match(/<untrusted-data-[^>]*>\s*([\s\S]*?)\s*<\/untrusted-data-/);
+    if (!m) throw new Error(text.slice(0, 300));
+    return JSON.parse(m[1]);
+  } });
+
+  dash.calc('progress', {
+    inputs: ['runs'],
+    title: 'Latest round vs baseline',
+    description: 'Baseline is the first scored run; latest is the last run with train questions; held-out is the last run that included them.',
+    fn: (runs) => {
+      const train = runs.filter((r) => r.train_score != null);
+      if (!train.length) return [];
+      const base = train[0], last = train[train.length - 1];
+      const held = runs.filter((r) => r.heldout_score != null);
+      const h = held[held.length - 1];
+      return [{ baseline_train: base.train_score, latest_train: last.train_score,
+        change: Math.round((last.train_score - base.train_score) * 10) / 10,
+        latest_round: last.round, latest_label: last.label,
+        heldout_latest: h ? h.heldout_score : null, heldout_round: h ? h.round : null }];
+    },
+  });
+  dash.calc('budget_left', {
+    inputs: ['spend'],
+    title: 'Budget left',
+    description: 'The $50 budget the user set, minus everything recorded so far.',
+    fn: (spend) => spend.length ? [{ left: Math.round((50 - spend[0].spent) * 100) / 100 }] : [],
+  });
+</script>
+
+<script>
+  const fmt = {
+    score: (v) => d3.format('.1f')(v),
+    signed: (v) => (v > 0 ? '+' : v < 0 ? '−' : '±') + d3.format('.1f')(Math.abs(v)),
+    usd: (v) => '$' + d3.format(',.2f')(v),
+    int: (v) => d3.format('d')(v),
+    text: (v) => String(v),
+  };
+  window.arFmt = fmt;
+
+  dash.draw('val', (el) => {
+    const d = dash.data(el.dataset.source);
+    const row = d.status === 'ok' && Array.isArray(d.data) ? d.data[0] : null;
+    const v = row ? row[el.dataset.field] : null;
+    el.classList.remove('ar-good', 'ar-bad');
+    if (v == null) { el.textContent = '—'; return; }
+    el.textContent = (fmt[el.dataset.fmt] || fmt.text)(v);
+    if (el.dataset.fmt === 'signed') el.classList.add(v >= 0 ? 'ar-good' : 'ar-bad');
+  });
+
+  dash.draw('sw', (el) => { el.style.setProperty('--sw', dash.colors[+el.dataset.i] || 'currentColor'); });
+
+  // A line chart of runs, one line per series, with end labels and a tooltip.
+  window.arLines = (el, series, yDomain, yFmt) => {
+    const d = dash.data('runs');
+    el.replaceChildren();
+    if (d.status === 'error') { el.textContent = 'Failed to load'; return; }
+    if (d.status !== 'ok') { el.textContent = '—'; return; }
+    const rows = d.data.filter((r) => series.some((s) => r[s.key] != null));
+    if (!rows.length) { el.textContent = 'No scored runs yet'; return; }
+    const W = Math.max(260, el.clientWidth), H = 240;
+    const labels = rows.map((r) => 'R' + r.round);
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('role', 'img').attr('aria-label', series.map((s) => s.name).join(', ') + ' by round');
+    const y0 = d3.scaleLinear().domain(yDomain).nice();
+    const probe = svg.append('text').text(yFmt(y0.domain()[1]));
+    const left = probe.node().getComputedTextLength() + 10; probe.remove();
+    const m = { t: 10, r: 72, b: 24, l: left };
+    const x = d3.scalePoint().domain(labels).range([m.l, W - m.r]).padding(rows.length === 1 ? 0.5 : 0.1);
+    const y = y0.range([H - m.b, m.t]);
+    svg.append('g').attr('transform', `translate(${m.l},0)`).call(d3.axisLeft(y).ticks(5).tickSize(-(W - m.l - m.r)).tickFormat(yFmt))
+      .call((g) => { g.select('.domain').remove(); g.selectAll('line').style('stroke', 'var(--cds-chart-grid)'); });
+    svg.append('g').attr('transform', `translate(0,${H - m.b})`).call(d3.axisBottom(x).tickSize(0).tickPadding(8))
+      .call((g) => g.select('.domain').style('stroke', 'var(--cds-chart-axis)'));
+    const ends = [];
+    series.forEach((s, i) => {
+      const pts = rows.map((r, j) => ({ x: x(labels[j]), v: r[s.key] })).filter((p) => p.v != null);
+      const c = dash.colors[i];
+      svg.append('path').datum(pts).attr('fill', 'none').style('stroke', c).attr('stroke-width', i === 0 ? 2.5 : 1.5)
+        .attr('d', d3.line().x((p) => p.x).y((p) => y(p.v)).curve(d3.curveLinear));
+      svg.append('g').selectAll('circle').data(pts).join('circle').attr('cx', (p) => p.x).attr('cy', (p) => y(p.v)).attr('r', i === 0 ? 4 : 3).style('fill', c);
+      const last = pts[pts.length - 1]; if (last) ends.push({ y: y(last.v), x: last.x, t: yFmt(last.v), c });
+    });
+    ends.sort((a, b) => a.y - b.y);
+    for (let k = 1; k < ends.length; k++) if (ends[k].y - ends[k - 1].y < 13) ends[k].y = ends[k - 1].y + 13;
+    svg.append('g').selectAll('text').data(ends).join('text').attr('class', 'ar-end').attr('x', (e) => e.x + 8).attr('y', (e) => e.y + 4)
+      .text((e) => e.t).style('fill', (e) => e.c);
+    const tip = d3.select(el).append('div').attr('class', 'ar-tip').style('display', 'none');
+    svg.on('pointermove', (ev) => {
+      const [px] = d3.pointer(ev);
+      let j = 0, best = Infinity;
+      labels.forEach((l, k) => { const dd = Math.abs(x(l) - px); if (dd < best) { best = dd; j = k; } });
+      const r = rows[j];
+      tip.style('display', null).replaceChildren();
+      tip.append('div').append('b').text(`Round ${r.round} · ${r.label}`);
+      series.forEach((s, i) => { if (r[s.key] != null) tip.append('div').style('color', dash.colors[i]).text(`${s.name}: ${yFmt(r[s.key])}`); });
+      const tx = Math.min(x(labels[j]) + 12, W - 180);
+      tip.style('left', Math.max(0, tx) + 'px').style('top', '8px');
+    }).on('pointerleave', () => tip.style('display', 'none'));
+  };
+
+  dash.draw('scoreChart', (el) => window.arLines(el, [
+    { key: 'train_score', name: 'All train' }, { key: 'pm_train', name: 'Papermaking' },
+    { key: 'ce_train', name: 'Chem / industrial eng' }, { key: 'sm_train', name: 'Sim Mill' },
+  ], [40, 100], (v) => d3.format('.1f')(v)));
+
+  dash.draw('critChart', (el) => window.arLines(el, [
+    { key: 'correct', name: 'Correct' }, { key: 'cited', name: 'Cited' },
+    { key: 'complete', name: 'Complete' }, { key: 'concise', name: 'Concise' },
+  ], [0, 3], (v) => d3.format('.2f')(v)));
+
+  const num = (v, f) => (v == null ? '—' : f(v));
+  dash.draw('runRows', (tb) => {
+    const d = dash.data('runs');
+    tb.replaceChildren();
+    if (d.status !== 'ok') return;
+    d.data.slice().reverse().forEach((r) => {
+      const tr = tb.insertRow();
+      const cells = [[r.round, 'ar-num'], [r.label], [r.change, 'ar-wide'], [r.split],
+        [num(r.train_score, fmt.score), 'ar-num'], [num(r.heldout_score, fmt.score), 'ar-num'],
+        [num(r.pm_train, fmt.score), 'ar-num'], [num(r.ce_train, fmt.score), 'ar-num'], [num(r.sm_train, fmt.score), 'ar-num'],
+        [r.unsupported_cites, 'ar-num'], [fmt.usd(r.cost), 'ar-num'], [r.started]];
+      cells.forEach(([v, cls]) => { const td = tr.insertCell(); td.textContent = v == null ? '—' : String(v); if (cls) td.className = cls; });
+    });
+  });
+
+  dash.draw('qRows', (tb) => {
+    const d = dash.data('questions');
+    tb.replaceChildren();
+    if (d.status !== 'ok') return;
+    d.data.forEach((r) => {
+      const tr = tb.insertRow();
+      const cells = [[r.question_id], [r.question, 'ar-wide'], [num(r.baseline, fmt.score), 'ar-num'], [num(r.latest, fmt.score), 'ar-num'],
+        [num(r.change, fmt.signed), 'ar-num'], [r.words, 'ar-num'], [r.unsupported_cites, 'ar-num'], [r.judge_note, 'ar-note']];
+      cells.forEach(([v, cls], k) => {
+        const td = tr.insertCell(); td.textContent = v == null ? '—' : String(v); if (cls) td.className = cls;
+        if (k === 4 && r.change != null && r.change !== 0) td.classList.add(r.change > 0 ? 'ar-good' : 'ar-bad');
+        if (k === 6 && r.unsupported_cites > 0) td.classList.add('ar-bad');
+      });
+    });
+  });
+</script>
