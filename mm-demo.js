@@ -1,4 +1,5 @@
-// Machine Manager — sample data for My Machine in demo mode (signed out).
+// Machine Manager — sample data for My Machine when signed out and the server can't be reached (otherwise signed-out visitors
+// see the Sim Mill demo org, read-only). Also what the home page shows in that case.
 // Dates are laid out on the 6-week outage grid (anchored Nov 11, 2026, same as Outage Planning) counting
 // back from today, so the ages stay realistic whenever the demo is opened.
 (() => {
