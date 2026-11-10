@@ -11,7 +11,8 @@ Answer model Sonnet 5.5 via `mm-llm-ask-dev` v1 (= live `mm-llm-ask`); judge Opu
 | 2 | **baseline, all 54** | **$4.94** (answers $3.88, judge $1.06) |
 | 3 | judge v2 check (3 questions) | $0.33 |
 | 4 | **baseline v2, all 54** (paused for API credit at 31, then finished; incl. $0.06 re-run overlap in run 1 ledger) | **$5.10** |
-| | **Total so far** | **$11.08 of $50** |
+| 5 | **round 1, train (36)**: prompt change | **$3.60** |
+| | **Total so far** | **$14.68 of $50** |
 
 ## Judge v2 (Nov 10, user direction)
 Technical answers: wrong or missing citations are penalised heavily; short, fully cited, accurate answers score highest.
@@ -23,6 +24,30 @@ Technical answers: wrong or missing citations are penalised heavily; short, full
 - Question ids hidden from the judge; the runner keeps full responses so answers can be re-judged without paying for them again.
 - Check run 3 (3 questions, $0.33): pm02 90 (all 5 citations supported, docked for 323 words), pm04 78.3, sm13 48.3 (contradicted itself on action counts).
 - The v1 baseline below is **not comparable** with v2.
+
+## Round 1 — prompt: citations + length (run 5, train only, Nov 10)
+Change (`mm-llm-ask-dev` v3, prompt.ts only): cite every number / setting / step / id inline right after it; cite only records,
+tags, dates or pages a tool returned; never cite a tool call; label gap answers "The library has no source for this; from general
+engineering knowledge"; search and cite the formula before a calculation; lead with the answer, ~150 / ~220 words, no extra sections.
+
+| Train (12 each) | Baseline | Round 1 | Change |
+|---|---|---|---|
+| Papermaking | 81.1 | 88.1 | +7.0 |
+| Industrial / chem eng | 78.7 | 89.8 | +11.1 |
+| Sim Mill | 58.5 | 68.5 | +10.0 |
+| **All train** | **72.8** | **82.1** | **+9.3** |
+
+By criterion (0-3), baseline → round 1: correct 2.72 → 2.83, **cited 1.97 → 2.61**, complete 2.38 → 2.20, concise 1.28 → 1.58.
+25 questions up, 5 level, 6 down. Biggest gains: sm03 +40, ce07 +40, sm10 +38, sm01 +23, ce10 +23 (now looks up and cites the formula).
+Cost $3.60; average input tokens unchanged (33k).
+
+Still losing points:
+1. **Tool-call citations** still happen despite the rule: sm04 `[outage_scope OUT-2026-11-11]` (-35, capped at 50) and sm09 `[downtime_summary, 2025-11-01 to 2026-10-31]`. Both are the only "fabricated" flags, and both are real queries the model ran.
+2. **Still long**: most answers 200-400 words against 150/220.
+3. **Sim Mill completeness fell** (1.50 → 1.25): shorter briefs drop the second and third sources (sm01 rotary joint and reel bearing history, sm03 plate sets on hand, sm05 REF 1 comparison).
+4. One-run noise not measured; the +9.3 with 25 up / 6 down is very unlikely to be chance (sign test p < 0.001).
+
+Recommendation: **keep** (promote to live after a held-out check).
 
 ## Round 0 — baseline, judge v2 (run 4, complete Nov 10)
 Paused at 31/54 when the API credit ran out; finished after credit was added (the 23 re-run into run 4).
