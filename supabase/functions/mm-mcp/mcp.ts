@@ -7,7 +7,7 @@
 import { DEFS, runTool, forModel } from '../mm-llm-ask/tools.ts';
 import { MACHINES } from '../mm-llm-ask/prompt.ts';
 
-export const SERVER = { name: 'machine-manager', title: 'Machine Manager', version: '0.2.0' };
+export const SERVER = { name: 'machine-manager', title: 'Machine Manager', version: '0.3.0' };
 export const PROTOCOL_VERSIONS = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05'];   // newest first
 
 export const INSTRUCTIONS = `Machine Manager holds a year of data for PM1, a paper machine, for each organization: Pi trends, \

@@ -46,7 +46,16 @@
   const session = { user: { id: 'user-1', email: 'matt@example.com', user_metadata: window.__userMeta || {} } };
   window.supabase = {
     createClient: () => ({
-      auth: { getSession: async () => ({ data: { session } }), signOut: async () => ({}), signInWithPassword: async () => ({}),
+      auth: { getSession: async () => ({ data: { session: window.__signedOut ? null : session } }), signOut: async () => ({}), signInWithPassword: async () => ({}),
+        // Supabase's OAuth server (ConnectedApps.html). window.__oauth = { details, grants }; calls go to window.__oauthLog (and sessionStorage '__oauthLog').
+        oauth: (() => { const o = () => window.__oauth || {}, lg = (x) => { (window.__oauthLog = window.__oauthLog || []).push(x); try { sessionStorage.setItem('__oauthLog', JSON.stringify(window.__oauthLog)); } catch (e) {} };
+          return {
+            getAuthorizationDetails: async (id) => { lg({ op: 'details', id }); return o().details ? { data: clone(o().details), error: null } : { data: null, error: { message: 'authorization not found' } }; },
+            approveAuthorization: async (id, opt) => { lg({ op: 'approve', id, opt: clone(opt || {}) }); return { data: { redirect_url: o().approveTo || 'about:blank#code=abc' }, error: null }; },
+            denyAuthorization: async (id, opt) => { lg({ op: 'deny', id, opt: clone(opt || {}) }); return { data: { redirect_url: 'about:blank#error=access_denied' }, error: null }; },
+            listGrants: async () => ({ data: clone(o().grants || []), error: null }),
+            revokeGrant: async ({ clientId }) => { lg({ op: 'revoke', clientId }); o().grants = (o().grants || []).filter(g => g.client.client_id !== clientId); return { data: {}, error: null }; },
+          }; })(),
         updateUser: async ({ data }) => { session.user.user_metadata = Object.assign({}, session.user.user_metadata, data); window.__metaSaved = session.user.user_metadata; return { data: { user: session.user }, error: null }; } },
       from: query,
       async rpc(name, args){

@@ -98,6 +98,13 @@
       MMTheme.onChange(sync); sync();
       set.append(lb, seg); menu.appendChild(set);
     }
+    // Sign-in for Claude and other MCP apps, and disconnecting them.
+    if (!/ConnectedApps\.html$/.test(location.pathname)){
+      const ca = document.createElement('a'); ca.href = 'ConnectedApps.html'; ca.setAttribute('role', 'menuitem'); ca.className = 'mmnav-ca';
+      if (window.MMIcons) ca.appendChild(MMIcons.el('lock', 'sm'));
+      const n = document.createElement('span'); n.className = 'nm'; n.textContent = 'Connected apps'; ca.appendChild(n);
+      menu.appendChild(ca);
+    }
     // Phones hide the floating version footer; show it at the bottom of this menu instead.
     const ver = document.createElement('div'); ver.className = 'mmnav-ver'; menu.appendChild(ver);
     document.body.appendChild(menu);

@@ -1,6 +1,6 @@
 """The tools signed in, against tests/browser/fake-supabase.js (no network).
 
-Checks that the Whiteboard reads the records migration 02 writes, saves through mm_apply with the
+Checks that the Whiteboard reads its stored records, saves through mm_apply with the
 board tools' record ids, and that My Machine and Outage Planning load and save cleanly.
 
     python3 tests/browser/signed_in.py http://localhost:8000/

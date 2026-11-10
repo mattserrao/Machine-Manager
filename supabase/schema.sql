@@ -50,14 +50,22 @@ create index if not exists memberships_user_idx on public.memberships(user_id);
 create schema if not exists private;
 grant usage on schema private to authenticated;
 
--- True if the signed-in user has at least p_min role in p_org.
+-- True when the request carries an OAuth access token: a third-party client (e.g. an MCP connector in Claude) that the
+-- user approved through Supabase's OAuth server, rather than the user's own session. Those tokens are read-only here:
+-- every editor / admin check below fails for them, and RAG uploads refuse them.
+create or replace function private.is_oauth_client()
+returns boolean language sql stable set search_path = '' as $$
+  select coalesce((select auth.jwt()) ->> 'client_id', '') <> '';
+$$;
+
+-- True if the signed-in user has at least p_min role in p_org (only 'viewer' for an OAuth client).
 -- security definer so policies can call it without recursing into memberships' own policy.
 create or replace function private.has_org_role(p_org uuid, p_min public.org_role default 'viewer')
 returns boolean language sql stable security definer set search_path = '' as $$
   select exists (
     select 1 from public.memberships m
     where m.org_id = p_org and m.user_id = (select auth.uid()) and m.role >= p_min
-  );
+  ) and (p_min = 'viewer' or not private.is_oauth_client());
 $$;
 
 -- Same check for storage paths, whose first folder is the org id as text.
@@ -66,7 +74,7 @@ returns boolean language sql stable security definer set search_path = '' as $$
   select exists (
     select 1 from public.memberships m
     where m.org_id::text = p_org and m.user_id = (select auth.uid()) and m.role >= p_min
-  );
+  ) and (p_min = 'viewer' or not private.is_oauth_client());
 $$;
 
 alter table public.orgs        enable row level security;
@@ -86,6 +94,8 @@ create policy memberships_read on public.memberships for select to authenticated
 revoke all on public.orgs, public.memberships from anon;
 grant select on public.orgs, public.memberships to authenticated;
 
+revoke execute on function private.is_oauth_client() from public;
+grant  execute on function private.is_oauth_client() to authenticated, anon;
 revoke execute on function private.has_org_role(uuid, public.org_role) from public, anon;
 grant  execute on function private.has_org_role(uuid, public.org_role) to authenticated;
 revoke execute on function private.has_org_role_path(text, public.org_role) from public, anon;

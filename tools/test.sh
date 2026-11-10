@@ -9,6 +9,7 @@ node tests/unit/machine.test.js
 node tests/unit/outage_export.test.js
 node tests/unit/cloud_states.test.js
 node tests/unit/mcp.test.mjs
+node tests/unit/mcp_http.test.mjs
 node tests/unit/rag.test.mjs
 node tests/sync/sync_sim.js
 python3 tools/sim-mill/run.py --check
@@ -32,5 +33,6 @@ python3 tests/browser/rag.py http://localhost:8799/
 python3 tests/browser/theme.py http://localhost:8799/
 python3 tests/browser/outages_demo.py http://localhost:8799/
 python3 tests/browser/consumables_organizer.py http://localhost:8799/
+python3 tests/browser/connected_apps.py http://localhost:8799/
 python3 tests/browser/demo_sim_mill.py http://localhost:8799/
 echo "All tests passed."

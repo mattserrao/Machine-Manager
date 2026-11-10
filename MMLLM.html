@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MM LLM</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-10.0305"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-10.0305">
-<script src="mm-icons.js?v=2026-11-10.0305"></script>
+<script src="mm-theme.js?v=2026-11-10.1128"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-10.1128">
+<script src="mm-icons.js?v=2026-11-10.1128"></script>
 <style>
   /* shared look: mm-theme.css */
   main{max-width:1320px;margin:0 auto;padding:24px 20px 72px}
@@ -306,27 +306,28 @@
       </section>
       <ol class="sm-steps">
         <li><b>Add the connector.</b> On claude.ai (in a browser, including a phone’s browser; the mobile app can’t add connectors) go to <b>Settings → Connectors → Add custom connector</b>, name it <i>Machine Manager</i> and paste <code style="overflow-wrap:anywhere">https://rvsowoistaajjogtssdd.supabase.co/functions/v1/mm-mcp</code>. Leave sign-in and advanced settings blank. It then shows up in the Claude apps too.</li>
+        <li><b>For your own organizations, sign in.</b> Add a second connector, <i>Machine Manager (signed in)</i>, with <code style="overflow-wrap:anywhere">https://rvsowoistaajjogtssdd.supabase.co/functions/v1/mm-mcp/me</code>. Choose <b>Connect</b>: Machine Manager’s <a href="ConnectedApps.html">Connected apps</a> page opens, you sign in and approve, and Claude reads what your account can read. Disconnect it there any time.</li>
         <li><b>Turn it on.</b> In a chat, open the tools menu and enable <i>Machine Manager</i>.</li>
         <li><b>Ask.</b> For example: “What should we prioritize for the Nov 11 outage?”, “What actions are overdue?”, “Which repeat failures don’t have an RCFA?”. Claude starts with <code>list_orgs</code> and <code>machine_context</code> (positions, Pi tags, outages, last day of data).</li>
       </ol>
       <h3 class="rules-h">What it can do</h3>
       <div class="rules">
-        <div class="rule"><b>20 read-only tools</b><span>list_orgs, machine_context, and every assistant tool: documents and records search, position history and life, outage scope, overdue actions, Bonvoy exceptions and reports, Pi daily and raw values, downtime, repeat stops, RCFA status, production, grade hours, shift reports and OME. Each takes an optional org (default Sim Mill).</span></div>
-        <div class="rule"><b>Who sees what</b><span>Without sign-in it reads only the public demo orgs (today: Sim Mill). With a user’s session token, row-level security adds that user’s own organizations. It never writes and never calls a model, so it has no daily limit.</span></div>
+        <div class="rule"><b>25 read-only tools</b><span>list_orgs, machine_context, and every assistant tool: the document library (search, pages, list, status), documents and records search, position history and life, outage scope, overdue actions, Bonvoy exceptions and reports, Pi daily and raw values, downtime, repeat stops, RCFA status, production, grade hours, shift reports and OME. Each takes an optional org (default Sim Mill).</span></div>
+        <div class="rule"><b>Who sees what</b><span>Without sign-in it reads only the public demo orgs (today: Sim Mill). Signed in (OAuth, on <code>/mm-mcp/me</code>), row-level security adds that account’s own organizations and document libraries. A connected app is read-only even for an editor: the database refuses its changes and uploads, and it can’t ask live questions. It never calls a model, so it has no daily limit.</span></div>
         <div class="rule"><b>Charts</b><span>make_chart stays on this page. Through MCP, Claude gets the numbers and draws or describes the chart itself.</span></div>
-        <div class="rule"><b>Not yet</b><span>Sign-in through OAuth for private orgs, vendor reports and drawings as MCP resources, and ready-made prompts (outage brief, morning watch, RCFA draft).</span></div>
+        <div class="rule"><b>Not yet</b><span>Ready-made prompts (outage brief, morning watch, RCFA draft), and uploading a document from Claude.</span></div>
       </div>
     </div>
 
     </div>
   </div>
 </div>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-10.0305"></script>
-<script src="mm-config.js?v=2026-11-10.0305"></script>
-<script src="mm-cloud.js?v=2026-11-10.0305"></script>
-<script src="mm-llm-org.js?v=2026-11-10.0305"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-10.1128"></script>
+<script src="mm-config.js?v=2026-11-10.1128"></script>
+<script src="mm-cloud.js?v=2026-11-10.1128"></script>
+<script src="mm-llm-org.js?v=2026-11-10.1128"></script>
 <script>
-  const VERSION = 'v0.11.0';
+  const VERSION = 'v0.12.0';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
   MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
 
@@ -397,7 +398,7 @@
     { id: 'adapt',  s: 'llm', name: 'Model adapter', d: 'One request format, more than one provider.', k: 'Claude · OpenAI', live: true,
       how: 'Translates messages and tool calls to each provider. Claude Sonnet 5.5 answers by default; the demo account can pick Claude Opus 5.5, which runs on its own API key. Switching model is a setting; the tools and prompts stay the same.' },
     { id: 'mcp',    s: 'llm', name: 'MCP server', d: 'The same tools for Claude and other MCP clients.', k: 'Supabase Edge Function', live: true,
-      how: 'The mm-mcp function serves the read-only tools over the Model Context Protocol, plus list_orgs and machine_context, so Claude (web, desktop or phone) can query the mill without this page. No model runs here and nothing is written. Signed out it reads the public demo orgs only; row-level security decides the rest. See the "Use it from Claude" tab.' },
+      how: 'The mm-mcp function serves the read-only tools over the Model Context Protocol, plus list_orgs and machine_context, so Claude (web, desktop or phone) can query the mill without this page. No model runs here and nothing is written. Signed out it reads the public demo orgs only; signed in through OAuth (/mm-mcp/me) it reads what the account can, read-only. See the "Use it from Claude" tab.' },
     { id: 'helper', s: 'llm', name: 'Helper model', d: 'Small, cheap model for ingest jobs.', k: 'extract · tag · summarise',
       how: 'Planned: a small model that runs on each upload to pull fields from vendor reports, suggest positions for free text and summarise chunks. Today rules and OCR do this part. Could be a local model if data must stay on site.' },
 
@@ -922,6 +923,6 @@
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
   requestAnimationFrame(draw);
 </script>
-<script src="mm-nav.js?v=2026-11-10.0305"></script>
+<script src="mm-nav.js?v=2026-11-10.1128"></script>
 </body>
 </html>

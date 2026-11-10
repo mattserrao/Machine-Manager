@@ -743,7 +743,7 @@ language sql stable security invoker set search_path = '' as $$
   from llm.query_access q
   left join llm.public_orgs p on p.org_id = q.org_id
   left join public.orgs o on o.id = q.org_id
-  where q.user_id = (select auth.uid());
+  where q.user_id = (select auth.uid()) and not private.is_oauth_client();   -- connected apps can't spend live questions
 $$;
 revoke execute on function public.mm_llm_my_access() from public, anon;
 grant execute on function public.mm_llm_my_access() to authenticated;
@@ -1234,7 +1234,7 @@ end $$;
 -- Any member may upload a PDF to their own private org's inbox. Public demo orgs can't take uploads.
 create or replace function private.rag_can_upload_path(p_org text)
 returns boolean language sql stable security definer set search_path = '' as $$
-  select private.has_org_role_path(p_org) and not private.llm_is_public_path(p_org);
+  select private.has_org_role_path(p_org) and not private.llm_is_public_path(p_org) and not private.is_oauth_client();
 $$;
 revoke execute on function private.rag_can_upload_path(text) from public;
 grant execute on function private.rag_can_upload_path(text) to authenticated;
@@ -1277,6 +1277,7 @@ returns jsonb language plpgsql security definer set search_path = '' as $$
 declare v_uid uuid := (select auth.uid()); v_set llm.rag_settings; v_doc text; v_dup record; v_today bigint;
 begin
   if v_uid is null or not private.has_org_role(p_org) then raise exception 'Sign in as a member of this organization to upload.'; end if;
+  if private.is_oauth_client() then raise exception 'Connected apps (OAuth) have read-only access; upload from the RAG page.'; end if;
   if private.llm_is_public(p_org) then raise exception 'This is a public demo organization; uploads are turned off here.'; end if;
   if p_path !~ ('^' || p_org::text || '/rag/inbox/[0-9a-f-]{36}\.pdf$') then raise exception 'Upload path must be <org>/rag/inbox/<uuid>.pdf'; end if;
   if p_sha256 !~ '^[0-9a-f]{64}$' then raise exception 'sha256 must be 64 hex characters'; end if;

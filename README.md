@@ -18,6 +18,7 @@ Without signing in you're looking at the demo: My Machine, Outage Planning, the 
 | `mm-theme.js` | Light / dark / system appearance, picked at the bottom of the app menu; saved on the signed-in account (or this browser when signed out) |
 | `mm-icons.js` | The line-icon set used instead of emoji (`data-ic="name"` or `MMIcons.svg(name)`) |
 | `mm-ui.js`, `mm-nav.js`, `mm-config.js` | Small shared helpers, the app menu, the Supabase project |
+| `ConnectedApps.html` | Sign-in and approval for Claude and other MCP apps (OAuth consent), and disconnecting them; linked from the app menu |
 | `supabase/` | Database schema (`schema.sql`, MM LLM in `llm.sql`), migrations, the `mm-llm-ingest`, `mm-llm-ask` and `mm-mcp` (MCP server for Claude) edge functions and setup notes |
 | `tools/ingest/` | MM LLM importers, loader and answer-key check |
 | `tools/reports/` | The report lifecycle (registry, envelope, reconcile daemon) behind Sim Mill's shift and production reports |

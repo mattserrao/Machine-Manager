@@ -14,9 +14,11 @@ def check(name, ok, detail=""):
 def raises(fn):
     try: fn(); return None
     except Exception as e: return e
-def conn(uid=None, role=None):
+def conn(uid=None, role=None, client_id=None):
+    """client_id: act through an OAuth client's token (e.g. the MCP connector) instead of the user's session."""
     c = psycopg.connect(DSN, autocommit=True)
     c.execute("select set_config('request.jwt.sub', %s, false)", (str(uid) if uid else "",))
+    if client_id: c.execute("select set_config('request.jwt.claims', %s, false)", (json.dumps({"sub": str(uid), "client_id": client_id}),))
     c.execute(f"set role {role or ('authenticated' if uid else 'anon')}")
     return c
 
@@ -49,6 +51,8 @@ check("not a non-PDF", raises(lambda: upload(v, f"{P}/rag/inbox/{uuid.uuid4()}.e
 check("not into a public demo org", raises(lambda: upload(v, path(Q))) is not None)
 o = conn(outsider)
 check("not into someone else's org", raises(lambda: upload(o, path(P))) is not None)
+vo = conn(viewer, client_id="mcp-test-client")
+check("not through an OAuth client (connected apps are read-only)", raises(lambda: upload(vo, path(P))) is not None)
 
 # ---- register ----
 d1 = str(uuid.uuid4())
@@ -61,6 +65,8 @@ check("the same file again returns the existing document", r2["duplicate"] and r
 check("registering in a public org is refused", raises(lambda: register(v, Q, path(Q), sha(2))) is not None)
 check("a non-member can't register", raises(lambda: register(o, P, path(P), sha(3))) is not None)
 check("anon can't register", raises(lambda: register(conn(), P, path(P), sha(4))) is not None)
+e = raises(lambda: register(vo, P, path(P), sha(8)))
+check("an OAuth client can't register an upload", e is not None and "read-only" in str(e), str(e)[:100])
 check("a path in another org is refused", raises(lambda: register(v, P, path(Q), sha(5))) is not None)
 check("a bad hash is refused", raises(lambda: register(v, P, path(P), "abc")) is not None)
 check("an oversized file is refused", raises(lambda: register(v, P, path(P), sha(6), size=31 * 1048576)) is not None)
