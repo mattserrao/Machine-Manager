@@ -34,8 +34,9 @@ const verifier = createClient(URL_, ANON, { auth: { persistSession: false, autoR
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
-  const r = route(new URL(req.url).pathname);
-  if (r.kind === 'unknown') return json({ error: 'Not found' }, 404);
+  // Any path that isn't /me or metadata is the public endpoint, as before (so the existing connector never breaks).
+  const found = route(new URL(req.url).pathname);
+  const r = found.kind === 'unknown' ? { kind: 'mcp' as const, signedIn: false } : found;
   if (r.kind === 'metadata') return json(metadata(URL_, r.signedIn));
 
   // /me: a valid Supabase token for a signed-in user, or 401 (which starts the client's OAuth sign-in). The public

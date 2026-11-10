@@ -78,7 +78,7 @@ check('public endpoint passes a token through unchecked, as before', r.status ==
 r = await send('/mm-mcp/me', { method: 'GET', token: 'good' });
 check('/me GET (no SSE stream): 405 after sign-in', r.status === 405);
 r = await send('/mm-mcp/nope');
-check('unknown path: 404', r.status === 404);
+check('an unknown path is the public endpoint (the old connector never breaks)', r.status === 200);
 r = await send('/mm-mcp/me', { method: 'OPTIONS' });
 check('CORS preflight needs no token', r.status === 200);
 
