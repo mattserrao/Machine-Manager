@@ -1205,7 +1205,7 @@ create table if not exists llm.rag_settings (
   accept_min int not null default 75,       -- score at or above: indexed without review
   review_min int not null default 40,       -- below this: rejected
   max_mb int not null default 30,
-  daily_pages int not null default 500,     -- pages uploaded per org per day
+  daily_mb int not null default 100,        -- MB uploaded per org per day
   model text not null default 'claude-haiku-5-5');
 
 -- Vector index (when pgvector is installed): semantic search stops scanning every chunk.
@@ -1248,7 +1248,7 @@ create policy mm_rag_upload on storage.objects for insert to authenticated
 create or replace function private.rag_settings(p_org uuid) returns llm.rag_settings
 language sql stable security definer set search_path = '' as $$
   select coalesce((select s from llm.rag_settings s where s.org_id = p_org),
-                  row(p_org, 75, 40, 30, 500, 'claude-haiku-5-5')::llm.rag_settings);
+                  row(p_org, 75, 40, 30, 100, 'claude-haiku-5-5')::llm.rag_settings);
 $$;
 revoke execute on function private.rag_settings(uuid) from public;
 
@@ -1274,7 +1274,7 @@ create or replace function public.mm_rag_register(p_org uuid, p_path text, p_fil
   p_size bigint, p_pages int, p_kind text default null, p_vendor text default null, p_doc_date date default null,
   p_positions text[] default '{}')
 returns jsonb language plpgsql security definer set search_path = '' as $$
-declare v_uid uuid := (select auth.uid()); v_set llm.rag_settings; v_doc text; v_dup record; v_today int;
+declare v_uid uuid := (select auth.uid()); v_set llm.rag_settings; v_doc text; v_dup record; v_today bigint;
 begin
   if v_uid is null or not private.has_org_role(p_org) then raise exception 'Sign in as a member of this organization to upload.'; end if;
   if private.llm_is_public(p_org) then raise exception 'This is a public demo organization; uploads are turned off here.'; end if;
@@ -1288,10 +1288,10 @@ begin
     where d.org_id = p_org and d.sha256 = p_sha256 and d.status not in ('rejected', 'failed');
   if found then return jsonb_build_object('doc_id', v_dup.doc_id, 'status', v_dup.status, 'title', v_dup.title, 'duplicate', true); end if;
 
-  select coalesce(sum(d.pages), 0) into v_today from llm.documents d
+  select coalesce(sum(d.file_size), 0) into v_today from llm.documents d
     where d.org_id = p_org and d.source = 'upload' and d.imported_at > now() - interval '1 day';
-  if v_today + p_pages > v_set.daily_pages then
-    raise exception 'Daily page limit reached (% pages a day). Try again tomorrow.', v_set.daily_pages; end if;
+  if v_today + p_size > v_set.daily_mb::bigint * 1048576 then
+    raise exception 'Daily upload limit reached (% MB a day). Try again tomorrow.', v_set.daily_mb; end if;
 
   v_doc := substring(p_path from '([0-9a-f-]{36})\.pdf$');
   insert into llm.documents (org_id, doc_id, kind, vendor, doc_date, title, file_path, mime, positions, pages,
