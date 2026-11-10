@@ -1,0 +1,878 @@
+{
+ "about": "Build autoresearch/questions.json: three sections, 18 questions each, 12 train + 6 held-out.",
+ "questions": [
+  {
+   "id": "pm01",
+   "section": "pm",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "What start-up sequence is recommended for a new press felt?",
+   "must": [
+    "square the felt, tradeline parallel to CD; stretch roll snug",
+    "jog to inspect and centre (at dead-weight load if it can't jog with the nip open)",
+    "raise tension to the running range",
+    "lube shower on and crawl at dead-weight load until uniformly wet",
+    "then normal load and full Uhle box vacuum; run 15-20 min before tailing",
+    "start-up HP shower no more than 200 psi (150 ideal)"
+   ],
+   "nice": [],
+   "sources": [
+    "09275f87-d36f-41a5-af70-b22e0d0c57c7 p2-3"
+   ]
+  },
+  {
+   "id": "pm02",
+   "section": "pm",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "What lube and high-pressure shower settings are recommended for press felts?",
+   "must": [
+    "lube: 15-25 psi, continuous, 0.04-0.08 gpm per inch, 3-6 in spacing, 90-120 degree fan, single coverage",
+    "HP: 175-250 psi, continuous, 0.05-0.10 gpm per inch, oscillating",
+    "oscillation rate (in/min) = felt speed (fpm) x nozzle size (in) / felt length (ft)"
+   ],
+   "nice": [],
+   "sources": [
+    "09275f87-d36f-41a5-af70-b22e0d0c57c7 p4"
+   ]
+  },
+  {
+   "id": "pm03",
+   "section": "pm",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "Our forming fabric keeps walking toward one side. What should we check?",
+   "must": [
+    "guide roll location (between stationary rolls, not beside the stretch roll) and alignment: the fabric guides toward the side it touches first",
+    "low or uneven tension; low friction (polyamide CD yarns ~30% less friction; water at the guide roll)",
+    "wrap angle: at least 25 degrees on a fourdrinier",
+    "guide palm sensitivity",
+    "flatbox misalignment; drilled suction box covers matching the fabric twill (slotted covers fix it)"
+   ],
+   "nice": [],
+   "sources": [
+    "59151609-8cbd-461a-874e-aaeb006dfc27 p2-4"
+   ]
+  },
+  {
+   "id": "pm04",
+   "section": "pm",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "A doctor blade is wearing much faster at one end. What causes that and how do we fix it?",
+   "must": [
+    "the doctor is misaligned, not parallel to the roll axis",
+    "shim or move the bearings and brackets to align it parallel to the axis"
+   ],
+   "nice": [],
+   "sources": [
+    "5d797427-af61-43ca-9fb8-4f8bcd8261ee p1"
+   ]
+  },
+  {
+   "id": "pm05",
+   "section": "pm",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "We have a CD moisture streak at the reel. Give me a troubleshooting checklist.",
+   "must": [
+    "locate with a FLIR / thermal image",
+    "scanner (dirty, mapping, edge sensing)",
+    "steambox and rewet shower (mapping, actuators, air lines, plugged nozzles)",
+    "dryer can build-up (doctoring; brass or abrasive blades need a safety review: fire risk)",
+    "dryer felt and wet felt permeability; sleeve or roll cover failure; wire permeability",
+    "headbox: plugged header holes, warped slice lip (check with a Teflon, not metal, feeler gauge), apron"
+   ],
+   "nice": [],
+   "sources": [
+    "dcf8af26-db8b-4545-b1a6-80cb9239b6c5 p1-2"
+   ]
+  },
+  {
+   "id": "pm06",
+   "section": "pm",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "How should edge trim squirt nozzles be set up in the forming section?",
+   "must": [
+    "ruby nozzles with laminar jets; check the cut with a stroboscope",
+    "for 0.4-0.5 mm jets filter to 200 um or finer, pre-filter about 50 um",
+    "water about 50-60 C (warmer than the air)",
+    "tilt 15-40 degrees from vertical in MD to cut bounce-back and fibre mist",
+    "single jets are enough up to about 500 m/min; nozzle distance is secondary to jet quality"
+   ],
+   "nice": [],
+   "sources": [
+    "dcdb0d87-3ad5-4f05-8bb0-5454dea7c99c p3-5"
+   ]
+  },
+  {
+   "id": "pm07",
+   "section": "pm",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "How do we take a press exit solids sample?",
+   "must": [
+    "at the next wet end break, crew briefed, own SOP/JHA",
+    "machine at normal conditions (load, showers, vacuum, steambox)",
+    "narrow tail 3-4 in if possible; poly wand; never break the plane of the press, keep clear of ingoing nips",
+    "tennis-ball sized sample sealed at once in a labelled 1-gallon zip bag; record the operating parameters"
+   ],
+   "nice": [],
+   "sources": [
+    "bb3f776f-3519-4875-88bc-e6524716d692 p2"
+   ]
+  },
+  {
+   "id": "pm08",
+   "section": "pm",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "How much Uhle box slot area does a press felt need, and how should the vacuum be sized?",
+   "must": [
+    "slot area depends only on machine speed: about 1 in total slot width at 2,500 fpm; no more than about 2 ms dwell",
+    "airflow = slot area x vacuum factor of 15-20 cfm per square inch",
+    "two boxes per felt only where cleaning needs it, not for extra dewatering"
+   ],
+   "nice": [],
+   "sources": [
+    "56ec08f5-d829-4786-b810-b1a7de9c7f74 p5-6"
+   ]
+  },
+  {
+   "id": "pm09",
+   "section": "pm",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "How can I tell if a low-vacuum forming table element is pulling too hard?",
+   "must": [
+    "pulsing vacuum piping, whitewater pouring from its separator",
+    "one element can take 10-30% of headbox flow (confirm with a drainage study)",
+    "valves left wide open put full header vacuum on early elements: aggressive dewatering, poor formation, sheet sealing",
+    "maximum vacuum is set by elevation: water no higher than 2 in below the outlet (a tape measure)"
+   ],
+   "nice": [],
+   "sources": [
+    "56ec08f5-d829-4786-b810-b1a7de9c7f74 p3"
+   ]
+  },
+  {
+   "id": "pm10",
+   "section": "pm",
+   "split": "train",
+   "kind": "gap",
+   "org": "Demodemo RAG",
+   "question": "What is press crushing, and how do we stop it?",
+   "must": [
+    "crushing: water can't escape the nip fast enough, hydraulic pressure disrupts the wet web (mottled, crushed sheet)",
+    "causes: too much water/too low solids into the nip, too high first-nip load, filled or wet felt, low Uhle vacuum",
+    "fixes: reduce first-nip load, better felt conditioning/dewatering, more nip void volume (grooved / blind-drilled covers), raise couch solids"
+   ],
+   "nice": [],
+   "sources": []
+  },
+  {
+   "id": "pm11",
+   "section": "pm",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "What does the breast roll shower do, and what water should it use?",
+   "must": [
+    "outside the forming fabric, aimed at the centre of the breast roll",
+    "fills the fabric void volume to slow drainage just after the slice",
+    "white water, to avoid thermal and pH shock"
+   ],
+   "nice": [],
+   "sources": [
+    "a1b709c1-b90f-4687-ad80-b9fb21515901 p4"
+   ]
+  },
+  {
+   "id": "pm12",
+   "section": "pm",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "How do we measure forming fabric tension with a Tensometer safely and correctly?",
+   "must": [
+    "reads tension in PLI",
+    "keep away from ingoing nips (about 2 ft minimum from a roll), never on top of a roll",
+    "long side of the frame in MD; do not touch the frame",
+    "measure near a support on slack webs; apply gently"
+   ],
+   "nice": [],
+   "sources": [
+    "d08922bf-54ab-4869-b4c6-b7c0d251f22a p4-7"
+   ]
+  },
+  {
+   "id": "pm13",
+   "section": "pm",
+   "split": "heldout",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "How can you tell by eye that a shower nozzle is worn out?",
+   "must": [
+    "a good nozzle has a laminar zone before the jet breaks up",
+    "if the stream disperses immediately, replace the nozzle",
+    "some nozzles (e.g. self-purging) never have a laminar zone"
+   ],
+   "nice": [],
+   "sources": [
+    "a1b709c1-b90f-4687-ad80-b9fb21515901 p3"
+   ]
+  },
+  {
+   "id": "pm14",
+   "section": "pm",
+   "split": "heldout",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "Why do most mills use disc refiners rather than conical refiners?",
+   "must": [
+    "lower no-load energy",
+    "higher consistency, loading and speed",
+    "more versatile plate design",
+    "wear is self-correcting",
+    "smaller footprint"
+   ],
+   "nice": [],
+   "sources": [
+    "01a335fe-bfba-4f11-b32c-df2de03d8521 p1"
+   ]
+  },
+  {
+   "id": "pm15",
+   "section": "pm",
+   "split": "heldout",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "In two-ply kraft linerboard, how is the furnish usually split between the base and the top liner?",
+   "must": [
+    "base: high-yield kraft (about 55-60% yield), hot-stock refined",
+    "top: lower-yield, well-refined unbleached kraft (sometimes bleached) for appearance and printability",
+    "internal starch for stiffness; top liner lightly sized at the calender"
+   ],
+   "nice": [],
+   "sources": [
+    "30d870b7-8b32-475a-9f65-e8f3bd87bd7b p1"
+   ]
+  },
+  {
+   "id": "pm16",
+   "section": "pm",
+   "split": "heldout",
+   "kind": "calc",
+   "org": "Demodemo RAG",
+   "question": "What is specific edge load? Work it out for a refiner at 363 kW net, 30 km/rev bar edge length and 600 rpm.",
+   "must": [
+    "SEL = net power / (bar edge length x rev/s): refining intensity, in Ws/m",
+    "separate from specific energy (amount of refining, net kWh/t or hpd/t)",
+    "answer about 1.2 Ws/m"
+   ],
+   "nice": [],
+   "sources": [
+    "573e2f9c-afca-42a5-b4a6-10980694ab2e p23-24, p41"
+   ],
+   "tolerance": "1.2 +/- 0.05 Ws/m"
+  },
+  {
+   "id": "pm17",
+   "section": "pm",
+   "split": "heldout",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "What drives refiner no-load power, and why does it matter?",
+   "must": [
+    "no-load = pumping and viscous shear; it does no refining",
+    "scales with speed cubed and plate diameter to about the 4.3 power; groove depth and hydraulic section ratio matter",
+    "not the rotor mass",
+    "reduced-diameter plates can save 30-150 hp (e.g. 46 to 40 in about 150 hp)"
+   ],
+   "nice": [],
+   "sources": [
+    "573e2f9c-afca-42a5-b4a6-10980694ab2e p29, p32-33"
+   ]
+  },
+  {
+   "id": "pm18",
+   "section": "pm",
+   "split": "heldout",
+   "kind": "gap",
+   "org": "Demodemo RAG",
+   "question": "What is the difference between ring crush (RCT) and short-span compression (SCT/STFI), and which better predicts box performance?",
+   "must": [
+    "SCT: very short span (about 0.7 mm) so the strip can't buckle, measures intrinsic compressive strength",
+    "RCT: strip formed into a ring in a holder; affected by buckling and caliper, more operator-sensitive",
+    "SCT (with caliper) correlates better with ECT and box compression (McKee)"
+   ],
+   "nice": [],
+   "sources": []
+  },
+  {
+   "id": "ce01",
+   "section": "ce",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "What are the pump affinity laws, and how do you work out hydraulic pump power?",
+   "must": [
+    "flow ~ speed; head ~ speed squared; power ~ speed cubed",
+    "hydraulic hp = differential psi x gpm / 1714 (kW = kPa x L/min / 60,000)"
+   ],
+   "nice": [],
+   "sources": [
+    "2324ca0e-e2cb-4ac4-8f6c-1c90e2a03701 p3"
+   ]
+  },
+  {
+   "id": "ce02",
+   "section": "ce",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "What pipe velocity is acceptable from the pressure screen to the headbox?",
+   "must": [
+    "7-14 ft/s (2.1-4.3 m/s)"
+   ],
+   "nice": [],
+   "sources": [
+    "2324ca0e-e2cb-4ac4-8f6c-1c90e2a03701 p3"
+   ]
+  },
+  {
+   "id": "ce03",
+   "section": "ce",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "How is headbox jet velocity related to the head behind the slice?",
+   "must": [
+    "Bernoulli: Vj = sqrt(2gH), or K x sqrt(H) with a unit constant",
+    "H is total head: pressure plus velocity head plus elevation, not just the transmitter reading"
+   ],
+   "nice": [],
+   "sources": [
+    "a58b3808-c123-425c-8a4d-636b917678f9 p2",
+    "2324ca0e-e2cb-4ac4-8f6c-1c90e2a03701 p5"
+   ]
+  },
+  {
+   "id": "ce04",
+   "section": "ce",
+   "split": "train",
+   "kind": "calc",
+   "org": "Demodemo RAG",
+   "question": "Roughly what jet speed does a headbox at 12 psig give?",
+   "must": [
+    "V = 732.3 x sqrt(psig) ft/min",
+    "about 2,540 ft/min (neglecting velocity and elevation head)"
+   ],
+   "nice": [],
+   "sources": [
+    "2324ca0e-e2cb-4ac4-8f6c-1c90e2a03701 p5"
+   ],
+   "tolerance": "2,537 +/- 40 ft/min"
+  },
+  {
+   "id": "ce05",
+   "section": "ce",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "Why do dryer cans with stationary syphons need a differential pressure, and how much?",
+   "must": [
+    "steam side must be higher than the condensate side to push condensate out",
+    "about 0.1-0.2 bar for stationary syphons",
+    "too little and the can floods; cascade reuses the blow-through and flash steam"
+   ],
+   "nice": [],
+   "sources": [
+    "f2d6b892-8f3a-49f6-bfb1-8f6beada12e7 p2-3"
+   ]
+  },
+  {
+   "id": "ce06",
+   "section": "ce",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "What happens in the dryer steam system on a sheet break, and what should the controls do?",
+   "must": [
+    "condensation and steam use drop at once (no sheet cooling the cans)",
+    "hard to hold the group differential",
+    "drop pressures to a break set point, automatically if possible"
+   ],
+   "nice": [],
+   "sources": [
+    "f2d6b892-8f3a-49f6-bfb1-8f6beada12e7 p3"
+   ]
+  },
+  {
+   "id": "ce07",
+   "section": "ce",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "How does condensate behave inside a dryer can as speed rises?",
+   "must": [
+    "above about 350 m/min it moves with the shell",
+    "above about 500 m/min it rims: a 6-10 mm ring on the shell, which insulates",
+    "below rimming speed scoops are used and cannot flood"
+   ],
+   "nice": [],
+   "sources": [
+    "f2d6b892-8f3a-49f6-bfb1-8f6beada12e7 p3, p5"
+   ]
+  },
+  {
+   "id": "ce08",
+   "section": "ce",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "Why do most paper machines feed superheated steam to the first dryers?",
+   "must": [
+    "steam arrives superheated (about 10 C above saturation, ~165 C) at the main distributor",
+    "pressure reductions alone barely lower the temperature",
+    "reaching low can temperatures needs steam cooling (desuperheating); low pressure is not low temperature"
+   ],
+   "nice": [],
+   "sources": [
+    "f2d6b892-8f3a-49f6-bfb1-8f6beada12e7 p6-10"
+   ]
+  },
+  {
+   "id": "ce09",
+   "section": "ce",
+   "split": "train",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "How much seal water should a liquid ring vacuum pump get, and how should it be controlled?",
+   "must": [
+    "each model has a standard flow; +/-10-20% has little effect",
+    "too little loses vacuum, too much adds horsepower",
+    "orifice or nozzle at a controlled supply pressure with local gauges (a linear regulating valve lets it be retuned as vane-cone clearance grows)",
+    "clean once-through water best; recirculated cooling-tower water means frequent rebuilds"
+   ],
+   "nice": [],
+   "sources": [
+    "56ec08f5-d829-4786-b810-b1a7de9c7f74 p7",
+    "a92ccac2-eca7-4b0a-a2cc-bd07d3da9fa5 p2-3"
+   ]
+  },
+  {
+   "id": "ce10",
+   "section": "ce",
+   "split": "train",
+   "kind": "calc",
+   "org": "Demodemo RAG",
+   "question": "A refiner takes 900 gpm at 4% consistency and draws 487 hp net. What are the throughput and net specific energy?",
+   "must": [
+    "t/d = gpm x 6 x consistency (fraction) = 216 short t/d",
+    "net specific energy = 487 / 216 = about 2.3 hpd/t"
+   ],
+   "nice": [],
+   "sources": [
+    "573e2f9c-afca-42a5-b4a6-10980694ab2e p25, p41"
+   ],
+   "tolerance": "216 t/d; 2.25 +/- 0.05 hpd/t"
+  },
+  {
+   "id": "ce11",
+   "section": "ce",
+   "split": "train",
+   "kind": "gap",
+   "org": "Demodemo RAG",
+   "question": "What is the saturation temperature of steam at 10 barg, and roughly how much latent heat does it give up?",
+   "must": [
+    "10 barg = about 11 bar abs, saturation about 184 C",
+    "latent heat about 2,000 kJ/kg"
+   ],
+   "nice": [],
+   "sources": [],
+   "tolerance": "184 +/- 2 C; 1,950-2,050 kJ/kg"
+  },
+  {
+   "id": "ce12",
+   "section": "ce",
+   "split": "train",
+   "kind": "gap",
+   "org": "Demodemo RAG",
+   "question": "What is NPSH, and how do I tell if a whitewater pump is cavitating?",
+   "must": [
+    "NPSH available must exceed NPSH required with margin",
+    "signs: gravel-like noise, vibration, unsteady discharge pressure/flow, lost head, pitted impeller eye",
+    "causes: low suction level, hot liquid (vapour pressure), blocked suction; distinguish from entrained air"
+   ],
+   "nice": [],
+   "sources": []
+  },
+  {
+   "id": "ce13",
+   "section": "ce",
+   "split": "heldout",
+   "kind": "calc",
+   "org": "Demodemo RAG",
+   "question": "A rectangular weir with end contractions has a 2 ft opening and 0.5 ft of head. What flow is that?",
+   "must": [
+    "Q = 3.33 x (L - 0.2H) x H^1.5 ft3/s",
+    "about 2.24 ft3/s (about 1,000 gpm)"
+   ],
+   "nice": [],
+   "sources": [
+    "2324ca0e-e2cb-4ac4-8f6c-1c90e2a03701 p4"
+   ],
+   "tolerance": "2.24 +/- 0.05 ft3/s"
+  },
+  {
+   "id": "ce14",
+   "section": "ce",
+   "split": "heldout",
+   "kind": "calc",
+   "org": "Demodemo RAG",
+   "question": "How much vacuum airflow does one Uhle box need on a 300-inch machine at 2,500 fpm?",
+   "must": [
+    "about 1 in total slot width at 2,500 fpm, so about 300 in2 of slot",
+    "x 15-20 cfm/in2 = about 4,500-6,000 cfm"
+   ],
+   "nice": [],
+   "sources": [
+    "56ec08f5-d829-4786-b810-b1a7de9c7f74 p5"
+   ],
+   "tolerance": "4,500-6,000 cfm"
+  },
+  {
+   "id": "ce15",
+   "section": "ce",
+   "split": "heldout",
+   "kind": "calc",
+   "org": "Demodemo RAG",
+   "question": "What hydraulic power does a pump need for 1,500 gpm at 60 psi differential?",
+   "must": [
+    "hp = psi x gpm / 1714",
+    "about 52.5 hydraulic hp (motor power higher by pump efficiency)"
+   ],
+   "nice": [],
+   "sources": [
+    "2324ca0e-e2cb-4ac4-8f6c-1c90e2a03701 p3"
+   ],
+   "tolerance": "52.5 +/- 1 hp"
+  },
+  {
+   "id": "ce16",
+   "section": "ce",
+   "split": "heldout",
+   "kind": "calc",
+   "org": "Demodemo RAG",
+   "question": "If we slow a refiner from 900 to 720 rpm, how much does its no-load power change?",
+   "must": [
+    "no-load ~ speed cubed",
+    "(720/900)^3 = 0.51, so about 49% less no-load"
+   ],
+   "nice": [],
+   "sources": [
+    "573e2f9c-afca-42a5-b4a6-10980694ab2e p33"
+   ],
+   "tolerance": "0.51 +/- 0.01"
+  },
+  {
+   "id": "ce17",
+   "section": "ce",
+   "split": "heldout",
+   "kind": "gap",
+   "org": "Demodemo RAG",
+   "question": "How do you decide whether pipe flow is laminar or turbulent, and how is pulp stock different?",
+   "must": [
+    "Reynolds number = rho V D / mu",
+    "below about 2,300 laminar, above about 4,000 turbulent",
+    "pulp suspensions are non-Newtonian: plug flow, then mixed, then turbulent; head loss curve has a hump/dip"
+   ],
+   "nice": [],
+   "sources": []
+  },
+  {
+   "id": "ce18",
+   "section": "ce",
+   "split": "heldout",
+   "kind": "gap",
+   "org": "Demodemo RAG",
+   "question": "How does a thermocompressor work in a dryer steam system?",
+   "must": [
+    "high-pressure motive steam through a nozzle entrains low-pressure blow-through / flash steam",
+    "recompresses it to an intermediate pressure to reuse in the dryers",
+    "keeps the differential for condensate removal; alternative to a cascade"
+   ],
+   "nice": [],
+   "sources": []
+  },
+  {
+   "id": "sm01",
+   "section": "sm",
+   "split": "train",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "What should we prioritize for the Nov 11 outage?",
+   "must": [
+    "Lead with the reel drum DS bearing: Bonvoy has flagged it since Jul 21, the Keel route confirmed an outer race defect on Aug 12 (0.17 in/s), it missed the Aug 19 outage because the bearing (22238 CCK/W33) wasn't in stores, and it read 0.39 in/s on the Oct 14 route (Danger is 0.40); the WO is in the Nov 11 scope waiting on parts, ETA Nov 5. Then both refiner plate changes (REF 1 due, REF 2 early because its plates are wearing fast) with only one Ridgeway set on hand, the 3rd section DS rotary joint replacement Brightwater recommends after three seal failures, and the two jobs with parts not reserved (couch roll seal strips, 2nd section PV fan belts)."
+   ],
+   "nice": [],
+   "sources": [],
+   "ref": "F2-Q1"
+  },
+  {
+   "id": "sm02",
+   "section": "sm",
+   "split": "train",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "Why did we change the 2nd press top felt early in May?",
+   "must": [
+    "It filled in about three weeks: Uhle box vacuum climbed from late April (Bonvoy flagged it from May 10), press solids fell and the 4th section steam hit its limit on 34 Super, holding speed back. The Spraywell audit on May 13 found 22% of the 2nd press top HP shower nozzles plugged and the supply strainer packed. The felt came out on May 19 after 34 days (target 42) in a 7.5 h shut; Marlow's analysis found 71% fill. RCFA-SM-26-016 is still open: the action to add Uhle vacuum rate of rise to Bonvoy is overdue."
+   ],
+   "nice": [],
+   "sources": [],
+   "ref": "F1-Q1"
+  },
+  {
+   "id": "sm03",
+   "section": "sm",
+   "split": "train",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "Chart REF 1 against REF 2 specific energy since the Sep 30 outage. At this rate, where will REF 2 be on Nov 11?",
+   "must": [
+    "REF 1 holds steady at about 61\u201363 kWh/t. REF 2 ran with it until about Oct 8, then climbed about 1.4% a day to about 81 kWh/t on Oct 31 (daily average). Carried on, that is roughly 92\u201395 kWh/t by Nov 11: an extrapolation, not a forecast. Both plate sets are due on Nov 11 and there is one Ridgeway set on hand, so the second set needs ordering now (that action is overdue). Chart: two lines from Oct 1, the projection dashed, the outage marked."
+   ],
+   "nice": [],
+   "sources": [],
+   "ref": "H2"
+  },
+  {
+   "id": "sm04",
+   "section": "sm",
+   "split": "train",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "Chart the Nov 11 outage scope by parts status and list what isn't ready.",
+   "must": [
+    "22 work orders: 17 with parts reserved, 4 not reserved and 1 on order. Not ready: change REF 1 and REF 2 refiner plates (one set on hand for two changes), rebuild the couch roll seal strips, replace the 2nd section PV fan belts and sheaves (all four at status 30, parts not reserved), and the reel drum DS bearing change (status 45, bearing on order, ETA Nov 5). Chart: WO count by parts status."
+   ],
+   "nice": [],
+   "sources": [],
+   "ref": "O1"
+  },
+  {
+   "id": "sm05",
+   "section": "sm",
+   "split": "train",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "Write tomorrow's BUS line for REF 2 and say who should own it.",
+   "must": [
+    "Area: Refiners \u00b7 Position: REF 2 \u00b7 Issue: specific energy climbing about 1.4%/day on the Sep 30 plates, about 81 kWh/t against 62 on REF 1; Ridgeway suspects sand carry-over \u00b7 Action: order the second 34\" LC plate set today so both refiners can be changed on Nov 11 (one set on hand) \u00b7 Owner: Quentin Adeyemi, who has the overdue plate order action (due Oct 28); Tobias Renner owns the current BUS item. WOs: the two Nov 11 plate changes, parts not reserved."
+   ],
+   "nice": [],
+   "sources": [],
+   "ref": "O2"
+  },
+  {
+   "id": "sm06",
+   "section": "sm",
+   "split": "train",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "Which repeat failures don't have an RCFA?",
+   "must": [
+    "The 3rd section DS rotary joint: three steam leaks (Jan 6, Jun 23, Oct 2), about 8 h down in all, each under the 3 h RCFA threshold and more than 60 days apart, so none triggered an RCFA. Bonvoy saw the 3rd section syphon differential drop for days before each one. Brightwater's Oct 14 survey says the joint is misaligned on its bracket and seal kits alone will keep failing: replace and re-align it at the next outage. (The headbox slime stops and the forming fabric stops repeat too, but each has RCFAs.)"
+   ],
+   "nice": [],
+   "sources": [],
+   "ref": "F5-Q1"
+  },
+  {
+   "id": "sm07",
+   "section": "sm",
+   "split": "train",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "Is the reel drum bearing temperature following the vibration? Plot both since mid-July.",
+   "must": [
+    "Yes. Both were flat until late July and have climbed together since: vibration from about 0.06 to about 0.43 in/s on Oct 31 (past Danger at 0.40) and DS bearing temperature from about 134 to about 168 \u00b0F. Neither has levelled off, which fits the outer race defect the Keel route found on Aug 12 getting worse. The change is in the Nov 11 scope with the bearing on order. Chart: vibration on the left axis, temperature on the right, the 0.40 Danger line marked."
+   ],
+   "nice": [],
+   "sources": [],
+   "ref": "H4"
+  },
+  {
+   "id": "sm08",
+   "section": "sm",
+   "split": "train",
+   "kind": "premise",
+   "org": "Sim Mill",
+   "question": "If the reel drum bearing keeps rising, will it hit Danger before Nov 11?",
+   "must": [
+    "It already has. Daily average vibration crossed the 0.40 in/s Danger level around Oct 22 and was about 0.43 on Oct 31, still rising. The change (outer race defect found on the Aug 12 Keel route) is in the Nov 11 scope, waiting on the 22238 CCK/W33 bearing (ETA Nov 5; the expedite action is overdue). Until then: closer checks on the bearing and a plan for an unplanned change if it gets worse."
+   ],
+   "nice": [],
+   "sources": [],
+   "ref": "P1"
+  },
+  {
+   "id": "sm09",
+   "section": "sm",
+   "split": "train",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "Do we break more on 24# than on 34 Super? Chart it.",
+   "must": [
+    "Yes, but by less than the raw counts suggest. 24# has 402 of the 578 breaks (70%), but it also ran 64% of the hours (about 5,600 h). Per 100 h run: 24# 7.2, 28# 6.7 (only 238 h, so a small sample), 31# 6.1 and 34 Super 5.2. So 24# breaks about 40% more often per hour than 34 Super. Chart: breaks per 100 h by grade."
+   ],
+   "nice": [],
+   "sources": [],
+   "ref": "S1"
+  },
+  {
+   "id": "sm10",
+   "section": "sm",
+   "split": "train",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "Is one crew breaking more than the others? Show it on a chart.",
+   "must": [
+    "B has the most breaks (164) and A the fewest (122), with C 147 and D 145. On DuPont 12 the four crews work the same hours, so the counts compare directly. B against A alone is a real-looking gap (about 2.5 standard deviations), but across all four crews the spread is close to what chance gives (chi-square p about 0.1). Worth watching, not proof of a crew problem; grade mix on each crew's shifts is the next thing to check. Chart: breaks by crew."
+   ],
+   "nice": [],
+   "sources": [],
+   "ref": "S2"
+  },
+  {
+   "id": "sm11",
+   "section": "sm",
+   "split": "train",
+   "kind": "premise",
+   "org": "Sim Mill",
+   "question": "When was the calender bottom roll last ground?",
+   "must": [
+    "Sim Mill's PM1 has no calender: the sheet goes from the 4th dryer section straight to the reel. There's no calender roll in My Machine, the work orders or the vendor reports. The rolls with grind history are the press rolls, the couch roll and the reel and winder drums, if one of those was meant."
+   ],
+   "nice": [],
+   "sources": [],
+   "ref": "P2"
+  },
+  {
+   "id": "sm12",
+   "section": "sm",
+   "split": "train",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "What actions are overdue?",
+   "must": [
+    "Eleven, oldest first. Nine are RCFA actions: MCC room cooling (RCFA-SM-26-007, due Apr 20), the wad detector camera (RCFA-SM-26-006, due Apr 30), Uhle vacuum rate-of-rise shift checks for the 1st press bottom felt (RCFA-SM-26-015) and on Bonvoy (RCFA-SM-26-016, the 2nd press top felt), hood exhaust fan belts on the monthly PM (RCFA-SM-26-017), the felt design review (RCFA-SM-26-014), the grease reviews for the pulper rotor and the dryer drive lineup (RCFA-SM-26-013, -026) and the shower strainer on the outage clean list (RCFA-SM-26-024). Two are for the Nov 11 outage: expediting the reel drum bearing (due Oct 15) and ordering the second set of refiner plates (due Oct 28)."
+   ],
+   "nice": [],
+   "sources": [],
+   "ref": "AC-Q1"
+  },
+  {
+   "id": "sm13",
+   "section": "sm",
+   "split": "heldout",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "What happened to the bottom forming fabric in February, and is the follow-up done?",
+   "must": [
+    "Feb 9: a wad off the headbox approach put a 5-inch hole at the TS; fabric changed with the spare",
+    "about 9.5 h unplanned down",
+    "RCFA-SM-26-006",
+    "its action, a wad detector camera at the breast roll (due Apr 30), is still open/overdue"
+   ],
+   "nice": [],
+   "sources": []
+  },
+  {
+   "id": "sm14",
+   "section": "sm",
+   "split": "heldout",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "What has cost us the most downtime since August 1, apart from planned outages?",
+   "must": [
+    "press sheet breaks: about 68 h from 56 breaks",
+    "then dryer breaks about 31 h (46)",
+    "then bearing failures about 14 h (2 events); reel breaks about 10 h (36)"
+   ],
+   "nice": [],
+   "sources": []
+  },
+  {
+   "id": "sm15",
+   "section": "sm",
+   "split": "heldout",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "How did OME compare across August, September and October?",
+   "must": [
+    "OME about 79.9%, 79.3%, 81.0%",
+    "tons about 21,160 / 20,310 / 20,680",
+    "breaks about 37 / 49 / 50"
+   ],
+   "nice": [],
+   "sources": []
+  },
+  {
+   "id": "sm16",
+   "section": "sm",
+   "split": "heldout",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "How long did the last three 2nd press top felts run against target, and where is the current one?",
+   "must": [
+    "May 19 to Jul 8: 50 days",
+    "Jul 8 to Aug 19: 41 days; Aug 19 to Sep 30: 41 days",
+    "target 42 days; current felt in Sep 30, 30 days on Oct 31"
+   ],
+   "nice": [],
+   "sources": []
+  },
+  {
+   "id": "sm17",
+   "section": "sm",
+   "split": "heldout",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "Where did most of our October sheet breaks happen?",
+   "must": [
+    "press section: 19 breaks, about 23 h - the large majority of break time",
+    "reel 12 (about 3 h); dryer sections 4-7 each"
+   ],
+   "nice": [],
+   "sources": []
+  },
+  {
+   "id": "sm18",
+   "section": "sm",
+   "split": "heldout",
+   "kind": "premise",
+   "org": "Sim Mill",
+   "question": "Why did this year's annual outage run long?",
+   "must": [
+    "premise is false: Sim Mill has no annual outage",
+    "outages are 20 h every 6 weeks",
+    "offers what the data does show (e.g. outage overruns or the next outage)"
+   ],
+   "nice": [],
+   "sources": []
+  }
+ ]
+}
