@@ -13,6 +13,12 @@ import { handle } from './mcp.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!, ANON = Deno.env.get('SUPABASE_ANON_KEY')!;
 const DEFAULT_ORG = Deno.env.get('MM_MCP_DEFAULT_ORG') ?? 'Sim Mill';
+let embedder: any = null;   // search_library: gte-small query embeddings, the same model as the document chunks
+const embed = async (text: string): Promise<number[]> => {
+  // @ts-ignore Supabase.ai is provided by the Edge Runtime
+  embedder ??= new Supabase.ai.Session('gte-small');
+  return Array.from(await embedder.run(text, { mean_pool: true, normalize: true }) as number[]);
+};
 const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Expose-Headers': 'mcp-session-id',
   'Access-Control-Allow-Headers': 'authorization, apikey, content-type, accept, mcp-protocol-version, mcp-session-id, last-event-id',
   'Access-Control-Allow-Methods': 'POST, GET, DELETE, OPTIONS' };
@@ -27,6 +33,11 @@ Deno.serve(async (req) => {
 
   const auth = req.headers.get('Authorization');
   const db = createClient(URL_, ANON, { auth: { persistSession: false }, ...(auth?.startsWith('Bearer ') ? { global: { headers: { Authorization: auth } } } : {}) });
-  const out = await handle(msg, db, { defaultOrg: DEFAULT_ORG });
+  // Links to a document's original PDF: a short-lived signed URL, under the caller's own storage access.
+  const signUrl = async (path: string) => {
+    const { data } = await db.storage.from('mm-files').createSignedUrl(path, 3600);
+    return data?.signedUrl ?? null;
+  };
+  const out = await handle(msg, db, { defaultOrg: DEFAULT_ORG, embed, signUrl });
   return out ? json(out) : new Response(null, { status: 202, headers: cors });
 });

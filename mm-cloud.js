@@ -33,12 +33,14 @@
       try {
         const { data: { session: s } } = await client.auth.getSession();
         if (!s) { cached = null; return null; }
-        const { data: rows, error } = await client.from('memberships').select('role, org:orgs(id, name)').eq('user_id', s.user.id);
+        const { data: rows, error } = await client.from('memberships').select('role, created_at, org:orgs(id, name)').eq('user_id', s.user.id);
         if (error) throw error;
-        const orgs = (rows || []).filter(r => r.org).map(r => ({ id: r.org.id, name: r.org.name, role: r.role }))
+        const orgs = (rows || []).filter(r => r.org).map(r => ({ id: r.org.id, name: r.org.name, role: r.role, since: r.created_at }))
           .sort((a, b) => a.name.localeCompare(b.name));
+        // No saved choice: the org the account joined first (a later side org, e.g. a RAG test org, never takes over).
+        const first = orgs.slice().sort((a, b) => String(a.since).localeCompare(String(b.since)))[0];
         const want = lsGet(ORG_KEY);
-        cached = { user: s.user, orgs, org: orgs.find(o => o.id === want) || orgs[0] || null };
+        cached = { user: s.user, orgs, org: orgs.find(o => o.id === want) || first || null };
         // appearance follows the account (mm-theme.js)
         if (window.MMTheme) MMTheme.fromAccount((s.user.user_metadata || {}).mm_theme);
         return cached;

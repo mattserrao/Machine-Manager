@@ -22,5 +22,7 @@ safe to run again.
 
 | `10-rag.sql` | Any time after step 09 (applied 2026-11-09) | Drop-in documents for the RAG: `llm.documents` gains a lifecycle (`uploaded → parsed → needs_review / accepted → indexed`, or `rejected` / `failed`), SHA-256, uploader, quality score and versions; new `llm.doc_pages`, `llm.document_events`, `llm.rag_jobs`, `llm.rag_settings`; HNSW index on chunk embeddings; storage policy so any member uploads PDFs to `<org>/rag/inbox/` of a **private** org (public demo orgs refuse uploads); `mm_rag_register`, `mm_rag_review` (editors), read tools `mm_rag_library`, `mm_rag_status`, `mm_rag_document`, `mm_rag_pages`, `mm_rag_search` (hybrid, RRF); worker functions for the service role; `mm_llm_documents` lists indexed documents only. Daily upload limit 100 MB per org, 30 MB per file. Admin, done: `mm_add_member('Demodemo RAG', 'demodemo@gmail.com', 'editor')` (private org for upload tests). Also in `../llm.sql`. |
 
+| `11-rag-worker.sql` | Any time after step 10 (**not applied yet**) | What the RAG worker, page and MCP server need: `mm_my_orgs` (the signed-in user's orgs with role and public flag), `mm_rag_job_context`, `mm_rag_add_pages`, `mm_rag_requeue` (parse large PDFs in page batches), `mm_rag_give_up`, `mm_rag_chunks_to_embed` (service role); enables `pg_net`. Then deploy `mm-rag-process` and schedule it with pg_cron every 15 s (SQL in the file's header). Also in `../llm.sql`. |
+
 After step 3, delete the empty `wb-files` bucket under **Storage** in the dashboard
 (Supabase doesn't allow deleting buckets from SQL).

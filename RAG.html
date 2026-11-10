@@ -5,26 +5,60 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>RAG</title>
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<script src="mm-theme.js?v=2026-11-09.1700"></script>
-<link rel="stylesheet" href="mm-theme.css?v=2026-11-09.1700">
-<link rel="stylesheet" href="mm-data.css?v=2026-11-09.1700">
-<script src="mm-icons.js?v=2026-11-09.1700"></script>
+<script src="mm-theme.js?v=2026-11-10.0023"></script>
+<link rel="stylesheet" href="mm-theme.css?v=2026-11-10.0023">
+<link rel="stylesheet" href="mm-data.css?v=2026-11-10.0023">
+<script src="mm-icons.js?v=2026-11-10.0023"></script>
 <style>
-  /* RAG (placeholder): where documents will be uploaded for the assistant to search */
-  .rag{max-width:860px;margin:0 auto}
-  .rag-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:0 0 6px}
+  /* RAG: the document library. Drop PDFs into your organization's private library; each one is read (scans by Claude),
+     checked for quality, and indexed so MM LLM and MCP agents can search it and cite the page. */
+  .rag{max-width:1040px;margin:0 auto}
+  .rag-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 6px}
   .rag-h h2{margin:0;font-size:18px;font-weight:600}
-  .rag-p{margin:0 0 18px;font-size:13px;color:var(--muted);line-height:1.55;max-width:700px}
-  .drop{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:34px 20px;border:1.5px dashed var(--line-strong);
-        border-radius:var(--r-lg);background:var(--surface);color:var(--muted);font-size:13px}
+  .rag-h .sp{flex:1}
+  .rag-p{margin:0 0 14px;font-size:13px;color:var(--muted);line-height:1.55;max-width:760px}
+  .drop{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;padding:28px 20px;border:1.5px dashed var(--line-strong);
+        border-radius:var(--r-lg);background:var(--surface);color:var(--muted);font-size:13px;transition:background .15s,border-color .15s}
+  .drop.over{border-color:var(--accent);background:var(--accent-soft)}
   .drop .ic{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
   .drop b{color:var(--ink);font-size:14px;font-weight:600}
-  .drop .btn[disabled]{opacity:.55;cursor:not-allowed}
+  .drop.off{opacity:.75}
   .types{font-size:12px;color:var(--muted)}
-  .docs{margin-top:18px}
-  .docs h3{margin:0 0 8px;font-size:14px;font-weight:600}
-  .how{margin-top:18px}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:4px}
+  .meta select,.meta input{font:inherit;font-size:12px;padding:4px 6px;border:1px solid var(--line-strong);border-radius:6px;background:var(--bg);color:var(--ink)}
+  .ups{margin-top:10px;display:flex;flex-direction:column;gap:4px;font-size:12.5px}
+  .ups div{display:flex;gap:8px;align-items:center}
+  .ups .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .counts{display:flex;gap:6px;flex-wrap:wrap}
+  .st{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:600;white-space:nowrap;background:var(--surface-2,#eee);color:var(--ink-2)}
+  .st.indexed{background:#e3f4e8;color:#1f6b35}.st.needs_review{background:#fff2d6;color:#7a5200}.st.rejected,.st.failed{background:#fde4e4;color:#8a1f1f}
+  .st.uploaded,.st.parsed,.st.accepted,.st.assessed{background:#e5eefc;color:#1d4f9a}
+  [data-theme="dark"] .st.indexed{background:#173523;color:#8fe0a7}[data-theme="dark"] .st.needs_review{background:#3a2c08;color:#f3cf7a}
+  [data-theme="dark"] .st.rejected,[data-theme="dark"] .st.failed{background:#3c1616;color:#f5a3a3}
+  [data-theme="dark"] .st.uploaded,[data-theme="dark"] .st.parsed,[data-theme="dark"] .st.accepted{background:#14284a;color:#9ec3ff}
+  .q{font-variant-numeric:tabular-nums;font-weight:600}
+  .q.lo{color:#b42318}.q.mid{color:#9a6700}.q.hi{color:#1f6b35}
+  .lib{width:100%;border-collapse:collapse;font-size:13px}
+  .lib th{text-align:left;font-size:11.5px;font-weight:600;color:var(--muted);padding:6px 8px;border-bottom:1px solid var(--line)}
+  .lib td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  .lib tr.doc{cursor:pointer}
+  .lib tr.doc:hover td{background:var(--surface)}
+  .lib .t{font-weight:600;color:var(--ink)}
+  .lib .sub{font-size:11.5px;color:var(--muted)}
+  .lib .iss{font-size:11.5px;color:#9a6700;margin-top:2px}
+  .det td{background:var(--surface)}
+  .det .box{display:grid;grid-template-columns:1fr 1fr;gap:14px;font-size:12.5px;line-height:1.5}
+  @media (max-width:760px){.det .box{grid-template-columns:1fr}.lib .hide-s{display:none}}
+  .det h4{margin:0 0 4px;font-size:12px;color:var(--muted);font-weight:600}
+  .det ul{margin:0;padding-left:16px}
+  .rev{display:flex;flex-direction:column;gap:6px}
+  .rev .row{display:flex;gap:6px;flex-wrap:wrap}
+  .rev input,.rev select{font:inherit;font-size:12px;padding:4px 6px;border:1px solid var(--line-strong);border-radius:6px;background:var(--bg);color:var(--ink);min-width:0}
+  .rev .btns{display:flex;gap:6px;flex-wrap:wrap}
+  .filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 8px;font-size:12.5px}
+  .filters select,.filters input{font:inherit;font-size:12.5px;padding:4px 6px;border:1px solid var(--line-strong);border-radius:6px;background:var(--bg);color:var(--ink)}
   .how ol{margin:6px 0 0;padding-left:18px;font-size:13px;color:var(--ink-2);line-height:1.6}
+  .mm-orgpick{font:inherit;font-size:13px;padding:3px 6px;border-radius:6px;border:1px solid var(--line-strong);background:var(--bg);color:var(--ink)}
 </style>
 </head>
 <body>
@@ -37,42 +71,265 @@
 </header>
 <main class="data">
   <div class="rag">
-    <div class="rag-h"><h2>Document library</h2><span class="mm-chip">Placeholder</span></div>
-    <p class="rag-p">Upload manuals, vendor reports, drawings, procedures and reference charts here. Each document will be split into passages and indexed, so MM LLM can find the right page and cite it when it answers. This page is a placeholder: uploading isn’t switched on yet.</p>
+    <div class="rag-h"><h2>Document library</h2><span id="org"></span><span class="sp"></span><span class="counts" id="counts"></span></div>
+    <p class="rag-p" id="intro">Drop PDFs here: manuals, vendor reports, procedures, drawings and reference charts. Each one is read (scanned pages by Claude), checked for quality, and indexed, so MM LLM and agents using the Machine Manager MCP server can find the right page and cite it.</p>
 
-    <div class="drop" aria-disabled="true">
+    <div class="drop off" id="drop">
       <span class="ic" data-ic="upload"></span>
-      <b>Drop documents here</b>
-      <span>or</span>
-      <button class="btn" type="button" disabled title="Uploading isn’t switched on yet">Choose files</button>
-      <span class="types">PDF, Word, Excel, CSV, text and images · uploading is coming soon</span>
+      <b id="dropT">Drop PDFs here</b>
+      <span id="dropOr">or</span>
+      <button class="btn" type="button" id="pick" disabled>Choose files</button>
+      <input type="file" id="file" accept="application/pdf,.pdf" multiple hidden>
+      <div class="meta" id="meta" hidden>
+        <select id="mKind" aria-label="Kind"><option value="">Kind: detect</option></select>
+        <input id="mVendor" placeholder="Vendor (optional)" aria-label="Vendor" size="16">
+        <input id="mDate" type="date" aria-label="Document date (optional)" title="Document date (optional)">
+      </div>
+      <span class="types" id="types">PDF · up to 30 MB each · 100 MB a day per organization</span>
+      <div class="ups" id="ups"></div>
     </div>
 
-    <section class="panel docs">
+    <section class="panel" style="margin-top:16px">
       <h2>Documents</h2>
-      <p class="ps">What’s been uploaded, with its status (indexed, waiting, failed) and who added it.</p>
-      <p class="dt-empty">No documents yet.</p>
+      <p class="ps">Newest first. Click a row for the summary, quality checks and history. Editors decide on documents that need review.</p>
+      <div class="filters">
+        <label>Status <select id="fStatus"><option value="">All</option></select></label>
+        <label>Kind <select id="fKind"><option value="">All</option></select></label>
+        <input id="fText" placeholder="Search title, vendor, file" aria-label="Filter">
+        <span class="dt-empty" id="count"></span>
+      </div>
+      <div id="body"><div class="dmsg">Loading…</div></div>
     </section>
 
     <section class="panel how">
-      <h2>How it will work</h2>
+      <h2>How it works</h2>
       <ol>
-        <li>Upload a file. The original is kept in your organization’s storage.</li>
-        <li>Text is pulled out (scans are read with OCR) and tagged with machine positions and equipment.</li>
-        <li>The passages are indexed for search, so MM LLM can quote and link the source when it answers.</li>
+        <li><b>Upload.</b> The PDF goes to your organization’s private storage. An identical file already in the library is recognised and not added twice.</li>
+        <li><b>Read.</b> Text comes from the PDF itself; scanned, rotated or garbled pages and tables are read by Claude.</li>
+        <li><b>Check.</b> Each document gets a quality score (readable text, date, vendor, machine positions, whether it’s about the mill, near-duplicates). 75 or more is indexed straight away; 40–74, or anything flagged, waits for an editor; below 40 is rejected.</li>
+        <li><b>Index.</b> Passages are tagged with the document, date and machine positions and made searchable by words and by meaning. MM LLM and MCP agents cite them as [DOC id p.page].</li>
       </ol>
     </section>
   </div>
   <div id="ver"></div>
 </main>
-<script src="vendor/supabase-2.119.0.js?v=2026-11-09.1700"></script>
-<script src="mm-config.js?v=2026-11-09.1700"></script>
-<script src="mm-cloud.js?v=2026-11-09.1700"></script>
+<script src="vendor/supabase-2.119.0.js?v=2026-11-10.0023"></script>
+<script src="mm-config.js?v=2026-11-10.0023"></script>
+<script src="mm-cloud.js?v=2026-11-10.0023"></script>
+<script src="mm-llm-org.js?v=2026-11-10.0023"></script>
 <script>
-  const VERSION = 'v0.1.0';
+  const VERSION = 'v0.2.0';
   document.getElementById('ver').textContent = 'RAG ' + VERSION;
   if (window.MMCloud && MMCloud.enabled) MMCloud.mountAccount(document.getElementById('acct'), { compact: true, demo: true });
+
+  const $ = id => document.getElementById(id), esc = MMLLMOrg.esc, day = MMLLMOrg.day;
+  const KINDS = { vendor_report: 'Vendor report', manual: 'Manual', procedure: 'Procedure', drawing: 'Drawing', reference_chart: 'Reference chart',
+                  rcfa: 'RCFA', inspection: 'Inspection', other: 'Other' };
+  const STATUS = { uploaded: 'Uploaded', parsed: 'Reading', assessed: 'Checking', accepted: 'Indexing', needs_review: 'Needs review',
+                   indexed: 'Indexed', rejected: 'Rejected', failed: 'Failed' };
+  const BUSY = ['uploaded', 'parsed', 'assessed', 'accepted'];
+  const MAX_MB = 30, KEY = 'mm-rag-org';
+  let db = null, orgs = [], org = null, docs = [], open = null, poll = null, lastKick = 0;
+
+  // Your private orgs take uploads; public demo orgs are read-only. Signed out: the public demo libraries.
+  async function resolve(){
+    if (!window.MMCloud || !MMCloud.enabled) throw new Error('The library lives in Supabase, which isn’t set up for this copy of the site.');
+    db = MMCloud.client;
+    const s = await MMCloud.session().catch(() => null);
+    const list = [];
+    if (s && s.user) {
+      const { data, error } = await db.rpc('mm_my_orgs');
+      if (error) throw error;
+      for (const o of data || []) list.push({ id: o.id, name: o.name, role: o.role, upload: !o.is_public, editor: o.role !== 'viewer' && !o.is_public });
+    }
+    const { data: pub } = await db.rpc('mm_llm_public_org');
+    for (const p of pub || []) if (!list.some(o => o.id === p.id)) list.push({ id: p.id, name: p.name, role: null, upload: false, editor: false });
+    orgs = list;
+    const want = new URLSearchParams(location.search).get('org') || (() => { try { return localStorage.getItem(KEY); } catch (e) { return null; } })();
+    org = orgs.find(o => o.id === want || o.name === want) || orgs.find(o => o.upload) || orgs[0] || null;
+  }
+  function picker(){
+    const el = $('org'); el.textContent = '';
+    if (!org) return;
+    if (orgs.length < 2) { el.innerHTML = `<b>${esc(org.name)}</b>`; return; }
+    const sel = document.createElement('select'); sel.className = 'mm-orgpick'; sel.setAttribute('aria-label', 'Organization');
+    orgs.forEach(o => { const op = document.createElement('option'); op.value = o.id; op.textContent = o.name + (o.upload ? '' : ' (read only)'); op.selected = o.id === org.id; sel.appendChild(op); });
+    sel.addEventListener('change', () => { org = orgs.find(o => o.id === sel.value); try { localStorage.setItem(KEY, org.id); } catch (e) {}
+      const u = new URL(location.href); u.searchParams.set('org', org.name); history.replaceState(null, '', u); setDrop(); load(); });
+    el.appendChild(sel);
+  }
+  function setDrop(){
+    const on = !!(org && org.upload);
+    $('drop').classList.toggle('off', !on); $('pick').disabled = !on; $('meta').hidden = !on;
+    $('dropT').textContent = on ? `Drop PDFs into ${org.name}’s library` : 'Uploading is off here';
+    $('dropOr').hidden = !on;
+    $('types').textContent = on ? `PDF · up to ${MAX_MB} MB each · 100 MB a day per organization`
+      : org ? `${org.name} is a public demo library: anyone can read it, so nothing can be uploaded. Sign in to an organization of your own to add documents.`
+            : 'Sign in to add documents.';
+  }
+
+  // ---------- upload ----------
+  const hex = buf => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  // Page count without a PDF library: count page objects. Good enough for the daily limit; the reader counts exactly.
+  function pageCount(bytes){
+    const s = new TextDecoder('latin1').decode(bytes);
+    const n = (s.match(/\/Type\s*\/Page(?![s\w])/g) || []).length;
+    const m = [...s.matchAll(/\/Type\s*\/Pages\b[^>]*?\/Count\s+(\d+)/g)].map(x => +x[1]);
+    return Math.max(n, m.length ? Math.max(...m) : 0, 1);
+  }
+  function line(name){
+    const d = document.createElement('div');
+    d.innerHTML = `<span class="nm">${esc(name)}</span><span class="st uploaded">Waiting</span>`;
+    $('ups').prepend(d);
+    return (cls, text) => { const s = d.querySelector('.st'); s.className = 'st ' + cls; s.textContent = text; };
+  }
+  async function uploadOne(file){
+    const set = line(file.name);
+    try {
+      if (file.size > MAX_MB * 1048576) throw new Error(`over ${MAX_MB} MB`);
+      const bytes = new Uint8Array(await file.arrayBuffer());
+      if (!(bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46)) throw new Error('not a PDF');
+      set('uploaded', 'Uploading…');
+      const sha = hex(await crypto.subtle.digest('SHA-256', bytes));
+      const id = crypto.randomUUID(), path = `${org.id}/rag/inbox/${id}.pdf`;
+      const up = await db.storage.from('mm-files').upload(path, file, { contentType: 'application/pdf', upsert: false });
+      if (up.error) throw up.error;
+      const { data, error } = await db.rpc('mm_rag_register', { p_org: org.id, p_path: path, p_file_name: file.name, p_sha256: sha,
+        p_size: file.size, p_pages: pageCount(bytes), p_kind: $('mKind').value || null, p_vendor: $('mVendor').value.trim() || null,
+        p_doc_date: $('mDate').value || null, p_positions: [] });
+      if (error) { await db.storage.from('mm-files').remove([path]).catch(() => {}); throw error; }
+      if (data.duplicate) { await db.storage.from('mm-files').remove([path]).catch(() => {}); set('needs_review', 'Already in the library'); open = data.doc_id; }
+      else set('uploaded', 'Uploaded · reading');
+    } catch (e) { set('failed', 'Not added: ' + (e.message || e)); }
+  }
+  async function uploadAll(files){
+    const pdfs = [...files];
+    if (!pdfs.length || !org || !org.upload) return;
+    for (const f of pdfs) await uploadOne(f);
+    kick(true); load();
+  }
+  const drop = $('drop');
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { if (!org || !org.upload) return; e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => uploadAll(e.dataTransfer.files));
+  $('pick').addEventListener('click', () => $('file').click());
+  $('file').addEventListener('change', e => { uploadAll(e.target.files); e.target.value = ''; });
+
+  // Nudge the worker (pg_cron also runs it every 15 s); each call does one step of one document.
+  function kick(now){
+    if (!now && Date.now() - lastKick < 4000) return;
+    lastKick = Date.now();
+    db.functions.invoke('mm-rag-process', { body: {} }).catch(() => {});
+  }
+
+  // ---------- library ----------
+  async function load(){
+    if (!org) { $('body').innerHTML = '<div class="dmsg">No library to show. Sign in to an organization.</div>'; return; }
+    try {
+      const [{ data, error }, { data: counts }] = await Promise.all([db.rpc('mm_rag_library', { p_org: org.id, p_limit: 500 }), db.rpc('mm_rag_status', { p_org: org.id })]);
+      if (error) throw error;
+      docs = data || [];
+      $('counts').innerHTML = (counts || []).map(c => `<span class="st ${esc(c.status)}">${esc(STATUS[c.status] || c.status)} ${c.docs}</span>`).join('');
+    } catch (e) { $('body').innerHTML = `<div class="dmsg">${esc(e.message || e)}</div>`; return; }
+    const st = $('fStatus').value, kd = $('fKind').value;
+    $('fStatus').innerHTML = '<option value="">All</option>' + Object.keys(STATUS).filter(k => docs.some(d => d.status === k)).map(k => `<option value="${k}">${STATUS[k]}</option>`).join('');
+    $('fKind').innerHTML = '<option value="">All</option>' + [...new Set(docs.map(d => d.kind).filter(Boolean))].sort().map(k => `<option value="${esc(k)}">${esc(KINDS[k] || k)}</option>`).join('');
+    $('fStatus').value = st; $('fKind').value = kd;
+    render();
+    clearTimeout(poll);
+    if (docs.some(d => BUSY.includes(d.status))) { kick(); poll = setTimeout(load, 5000); }
+  }
+  const qual = s => s == null ? '<span class="dt-empty">—</span>' : `<span class="q ${s < 40 ? 'lo' : s < 75 ? 'mid' : 'hi'}">${s}</span>`;
+  function render(){
+    const st = $('fStatus').value, kd = $('fKind').value, q = $('fText').value.trim().toLowerCase();
+    const list = docs.filter(d => (!st || d.status === st) && (!kd || d.kind === kd) &&
+      (!q || [d.title, d.vendor, d.file_name, d.doc_id].join(' ').toLowerCase().includes(q)));
+    $('count').textContent = `${list.length} of ${docs.length}`;
+    if (!list.length) { $('body').innerHTML = `<p class="dt-empty">${docs.length ? 'No documents match.' : org.upload ? 'No documents yet. Drop a PDF above to start the library.' : 'No documents in this library.'}</p>`; return; }
+    const t = document.createElement('table'); t.className = 'lib';
+    t.innerHTML = '<thead><tr><th>Document</th><th class="hide-s">Kind</th><th class="hide-s">Date</th><th>Status</th><th>Quality</th></tr></thead>';
+    const tb = document.createElement('tbody');
+    for (const d of list) {
+      const tr = document.createElement('tr'); tr.className = 'doc'; tr.dataset.id = d.doc_id;
+      const iss = (d.issues || []).slice(0, 2).join(' · ');
+      tr.innerHTML = `<td><div class="t">${esc(d.title || d.file_name || d.doc_id)}</div>
+          <div class="sub">${esc([d.vendor, d.pages ? d.pages + ' p' : null, d.source === 'upload' ? 'uploaded ' + day(String(d.imported_at).slice(0, 10)) : null].filter(Boolean).join(' · '))}</div>
+          ${iss && d.status !== 'indexed' ? `<div class="iss">${esc(iss)}</div>` : ''}${d.error ? `<div class="iss">${esc(d.error)}</div>` : ''}</td>
+        <td class="hide-s">${esc(KINDS[d.kind] || d.kind || '—')}</td><td class="hide-s">${d.doc_date ? day(d.doc_date) : '—'}</td>
+        <td><span class="st ${esc(d.status)}">${esc(STATUS[d.status] || d.status)}</span>${d.superseded_by ? '<div class="sub">older version</div>' : ''}</td><td>${qual(d.quality_score)}</td>`;
+      tb.appendChild(tr);
+      if (open === d.doc_id) { const det = document.createElement('tr'); det.className = 'det'; det.innerHTML = `<td colspan="5"><div class="dmsg">Loading…</div></td>`; tb.appendChild(det); detail(d, det.firstChild); }
+    }
+    t.appendChild(tb); $('body').textContent = ''; $('body').appendChild(t);
+  }
+  $('body').addEventListener('click', e => {
+    const tr = e.target.closest('tr.doc'); if (!tr) return;
+    open = open === tr.dataset.id ? null : tr.dataset.id; render();
+  });
+  ['fStatus', 'fKind'].forEach(id => $(id).addEventListener('change', render));
+  $('fText').addEventListener('input', render);
+
+  const filePath = p => p.startsWith(org.id + '/') ? p : `${org.id}/llm/${p}`;
+  async function detail(d, cell){
+    let info;
+    try { const { data, error } = await db.rpc('mm_rag_document', { p_org: org.id, p_doc: d.doc_id }); if (error) throw error; info = data; }
+    catch (e) { cell.innerHTML = `<div class="dmsg">${esc(e.message || e)}</div>`; return; }
+    const doc = info.document || {}, q = doc.quality || {}, sig = q.signals || {};
+    const checks = [...(q.reasons || []), ...(q.review || [])];
+    const sigs = sig.pages != null ? [`${sig.pages} pages read`, sig.model_pages ? `${sig.model_pages} read by Claude` : 'all from the PDF’s text',
+      `${sig.avg_chars} characters a page`, `garble ${(100 * (sig.avg_garble || 0)).toFixed(1)}%`] : [];
+    const canReview = org.editor && ['needs_review', 'rejected', 'indexed', 'failed'].includes(doc.status);
+    cell.innerHTML = `<div class="box">
+      <div>
+        <h4>Summary</h4><p style="margin:0 0 8px">${esc(doc.summary || 'No summary yet.')}</p>
+        <h4>Quality ${doc.quality_score != null ? doc.quality_score + '/100' : ''}</h4>
+        <ul>${checks.map(c => `<li>${esc(c)}</li>`).join('') || '<li>No problems found.</li>'}${(q.model && q.model.issues || []).map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+        ${sigs.length ? `<div class="sub" style="margin-top:4px">${esc(sigs.join(' · '))}</div>` : ''}
+        <h4 style="margin-top:8px">Details</h4>
+        <div class="sub">${esc([doc.file_name, doc.doc_id, (doc.positions || []).length ? 'positions: ' + doc.positions.join(', ') : null,
+          info.chunks ? info.chunks + ' passages indexed' : null, doc.supersedes ? 'replaces ' + doc.supersedes : null, doc.superseded_by ? 'replaced by ' + doc.superseded_by : null].filter(Boolean).join(' · '))}</div>
+        ${doc.file_path ? `<p style="margin:8px 0 0"><a href="#" class="open" data-path="${esc(doc.file_path)}">Open the PDF</a></p>` : ''}
+      </div>
+      <div>
+        <h4>History</h4>
+        <ul>${(info.events || []).map(e => `<li>${esc(STATUS[e.to] || e.to)} · ${esc(MMLLMOrg.time ? MMLLMOrg.time(e.at) : e.at)}${e.detail && e.detail.note ? ' — ' + esc(e.detail.note) : ''}${e.detail && e.detail.error ? ' — ' + esc(e.detail.error) : ''}</li>`).join('')}</ul>
+        ${canReview ? `<div class="rev" style="margin-top:10px"><h4>Review</h4>
+          <div class="row"><select data-f="kind">${Object.entries(KINDS).map(([k, v]) => `<option value="${k}"${doc.kind === k ? ' selected' : ''}>${v}</option>`).join('')}</select>
+            <input data-f="vendor" placeholder="Vendor" value="${esc(doc.vendor || '')}" size="14"><input data-f="doc_date" type="date" value="${esc(doc.doc_date || '')}"></div>
+          <div class="row"><input data-f="title" placeholder="Title" value="${esc(doc.title || '')}" style="flex:1"></div>
+          <div class="row"><input data-f="positions" placeholder="Positions (ids, comma separated)" value="${esc((doc.positions || []).join(', '))}" style="flex:1">
+            <input data-f="supersedes" placeholder="Replaces doc id (optional)" value="" size="18"></div>
+          <div class="row"><input data-f="note" placeholder="Note (optional)" style="flex:1"></div>
+          <div class="btns">${doc.status === 'failed' ? '<button class="btn" data-a="retry">Try again</button>' :
+            `<button class="btn" data-a="accept">${doc.status === 'indexed' ? 'Save details' : 'Accept and index'}</button>${doc.status !== 'rejected' ? '<button class="btn" data-a="reject">Reject</button>' : ''}`}</div>
+          <span class="sub" data-msg></span></div>` : doc.status === 'needs_review' ? '<p class="sub">An editor of this organization decides whether it goes into the library.</p>' : ''}
+      </div></div>`;
+    cell.querySelectorAll('button[data-a]').forEach(b => b.addEventListener('click', async ev => {
+      ev.stopPropagation();
+      const f = k => cell.querySelector(`[data-f="${k}"]`), v = k => (f(k) && f(k).value.trim()) || null;
+      const meta = { kind: v('kind'), vendor: v('vendor'), doc_date: v('doc_date'), title: v('title'),
+        positions: (v('positions') || '').split(',').map(s => s.trim()).filter(Boolean), ...(v('supersedes') ? { supersedes: v('supersedes') } : {}) };
+      Object.keys(meta).forEach(k => meta[k] == null && delete meta[k]);
+      b.disabled = true;
+      const { error } = await db.rpc('mm_rag_review', { p_org: org.id, p_doc: doc.doc_id, p_action: b.dataset.a, p_meta: meta, p_note: v('note') });
+      if (error) { cell.querySelector('[data-msg]').textContent = error.message; b.disabled = false; return; }
+      kick(true); load();
+    }));
+    cell.querySelectorAll('[data-f]').forEach(i => i.addEventListener('click', e => e.stopPropagation()));
+    const a = cell.querySelector('a.open');
+    if (a) a.addEventListener('click', async e => {
+      e.preventDefault(); e.stopPropagation();
+      const { data, error } = await db.storage.from('mm-files').createSignedUrl(filePath(a.dataset.path), 3600);
+      if (error) alert('Couldn’t open the PDF: ' + error.message); else window.open(data.signedUrl, '_blank', 'noopener');
+    });
+  }
+
+  $('mKind').innerHTML = '<option value="">Kind: detect</option>' + Object.entries(KINDS).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+  (async () => {
+    try { await resolve(); } catch (e) { $('body').innerHTML = `<div class="dmsg">${esc(e.message || e)}</div>`; setDrop(); return; }
+    picker(); setDrop(); load();
+  })();
 </script>
-<script src="mm-nav.js?v=2026-11-09.1700"></script>
+<script src="mm-nav.js?v=2026-11-10.0023"></script>
 </body>
 </html>

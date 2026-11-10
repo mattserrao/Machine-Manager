@@ -77,6 +77,7 @@ jobs:
       - run: node tests/unit/outage_export.test.js
       - run: node tests/unit/cloud_states.test.js
       - run: node tests/unit/mcp.test.mjs
+      - run: node tests/unit/rag.test.mjs
       - run: node tests/sync/sync_sim.js
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
@@ -102,6 +103,7 @@ jobs:
       - run: python tests/browser/smoke.py http://localhost:8000/
       - run: python tests/browser/boards.py http://localhost:8000/
       - run: python tests/browser/signed_in.py http://localhost:8000/
+      - run: python tests/browser/rag.py http://localhost:8000/
       - run: python tests/browser/theme.py http://localhost:8000/
       - run: python tests/browser/outages_demo.py http://localhost:8000/
       - run: python tests/browser/consumables_organizer.py http://localhost:8000/

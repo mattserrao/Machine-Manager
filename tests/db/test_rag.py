@@ -134,5 +134,26 @@ r3 = register(v, P, path(P), sha(1))
 check("a rejected file can be uploaded again", not r3["duplicate"])
 check("status counts", dict(v.execute("select status, docs from public.mm_rag_status(%s)", (P,)).fetchall()).get("rejected") == 1)
 
+# ---- step 11: the worker's helpers and the user's own orgs ----
+check("mm_my_orgs lists the user's orgs with role and public flag",
+      sorted((str(r[0]), r[2], r[3]) for r in v.execute("select * from public.mm_my_orgs()").fetchall()) == sorted([(str(P), "viewer", False), (str(Q), "viewer", True)]))
+check("anon can't call mm_my_orgs", raises(lambda: conn().execute("select * from public.mm_my_orgs()").fetchall()) is not None)
+d3 = str(uuid.uuid4()); register(v, P, path(P, d3), sha(9), name="Manual.pdf", pages=25)
+j = svc.execute("select id from public.mm_rag_claim(5) where doc_id = %s", (d3,)).fetchone()[0]
+ctx = svc.execute("select public.mm_rag_job_context(%s, %s, true)", (P, d3)).fetchone()[0]
+check("job context has the doc, the org's settings and its pages", ctx["doc"]["file_name"] == "Manual.pdf" and ctx["settings"]["daily_mb"] == 100 and ctx["pages"] == [])
+svc.execute("select public.mm_rag_add_pages(%s, %s, %s::jsonb)", (P, d3, json.dumps([{"page": p, "text": f"page {p}", "text_source": "layer"} for p in range(1, 11)])))
+svc.execute("select public.mm_rag_requeue(%s, %s::jsonb)", (j, json.dumps({"next_page": 11, "pages": 25})))
+row = admin.execute("select state, attempts, usage->>'next_page' from llm.rag_jobs where id = %s", (j,)).fetchone()
+check("a parse batch requeues the job with its progress, without using an attempt", row == ("queued", 0, "11"), row)
+j2 = svc.execute("select id, usage from public.mm_rag_claim(5) where doc_id = %s", (d3,)).fetchone()
+svc.execute("select public.mm_rag_add_pages(%s, %s, %s::jsonb)", (P, d3, json.dumps([{"page": 10, "text": "page 10 again", "text_source": "model"}, {"page": 11, "text": "page 11", "text_source": "layer"}])))
+check("the next batch picks up where it left off and pages are upserted", j2[0] == j and j2[1]["next_page"] == 11 and
+      admin.execute("select count(*), max(text) filter (where page = 10) from llm.doc_pages where doc_id = %s", (d3,)).fetchone() == (11, "page 10 again"))
+svc.execute("select public.mm_rag_give_up(%s)", (j,))
+check("give up: the next failure fails the document at once", svc.execute("select public.mm_rag_finish(%s, false, null, '{}', 'The PDF is password-protected.')", (j,)).fetchone()[0] == "failed")
+check("members can't call the worker helpers", raises(lambda: v.execute("select public.mm_rag_job_context(%s, %s)", (P, d3)).fetchone()) is not None
+      and raises(lambda: v.execute("select public.mm_rag_requeue(1, '{}')").fetchone()) is not None)
+
 print(f"\n{len(failures)} failed" if failures else "\nall passed")
 sys.exit(1 if failures else 0)
