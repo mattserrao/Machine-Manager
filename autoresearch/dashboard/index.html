@@ -25,6 +25,7 @@
   .ar-table td.ar-num, .ar-table th.ar-num { text-align: right; white-space: nowrap; }
   .ar-table td.ar-wide { min-width: 16rem; }
   .ar-table td.ar-note { min-width: 18rem; color: var(--color-fg-muted); }
+  .ar-chart-short { min-height: 170px; }
   .ar-two { display: grid; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); gap: var(--cds-gap-md); }
   [data-dash-source-state=refreshing] { opacity: .5; }
   details.ar-card summary { cursor: pointer; font-weight: var(--cds-font-weight-medium); }
@@ -76,9 +77,18 @@
     </div>
   </section>
 
+  <section class="ar-card" id="library">
+    <h2 class="ar-h2">What the document library adds</h2>
+    <p class="ar-muted">Train score with the library and document search available, against the latest comparison run with them switched off. Same prompt, same questions.</p>
+    <p class="ar-lede">Without the library the train score is <b data-draw="val" data-source="ablation" data-where="label=All%20train" data-field="without_library" data-fmt="score">—</b> against <b data-draw="val" data-source="ablation" data-where="label=All%20train" data-field="with_library" data-fmt="score">—</b> with it.</p>
+    <div class="ar-chart ar-chart-short" data-draw="ragChart" data-source="ablation"></div>
+    <div class="ar-legend"><span><i class="ar-sw" data-draw="sw" data-i="0"></i>With library</span><span><i class="ar-sw" data-draw="sw" data-i="1"></i>Without library</span></div>
+    <p class="ar-muted">The judge was not told the library was off, so "no source" answers lose citation points as well as content points.</p>
+  </section>
+
   <section class="ar-card" id="run-log">
     <h2 class="ar-h2">Run log</h2>
-    <p class="ar-muted">One row per scored run. Held-out is run on the baseline, every third round and the final round.</p>
+    <p class="ar-muted">One row per scored run. Held-out is run on the baseline, every third round and the final round. Comparison runs test one thing switched off and are kept out of the trend.</p>
     <div class="ar-scroll">
       <table class="ar-table" data-source="runs" data-row-key="run_id">
         <thead><tr>
@@ -140,15 +150,22 @@
     return JSON.parse(m[1]);
   } });
 
+  dash.loader('ablation', { description: 'Takes the JSON rows out of the execute_sql answer text.', fn: ({ answer }) => {
+    const text = typeof answer === 'string' ? answer : JSON.stringify(answer);
+    const m = text.match(/<untrusted-data-[0-9a-f-]+>\s*(\[[\s\S]*\])\s*<\/untrusted-data-/);
+    if (!m) throw new Error(text.slice(0, 300));
+    return JSON.parse(m[1]);
+  } });
+
   dash.calc('progress', {
     inputs: ['runs'],
     title: 'Latest round vs baseline',
-    description: 'Baseline is the first scored run; latest is the last run with train questions; held-out is the last run that included them.',
+    description: 'Baseline is the first scored run; latest is the last improvement run with train questions; held-out is the last improvement run that included them. Comparison runs (no library) are left out.',
     fn: (runs) => {
-      const train = runs.filter((r) => r.train_score != null);
+      const train = runs.filter((r) => r.train_score != null && !r.is_ablation);
       if (!train.length) return [];
       const base = train[0], last = train[train.length - 1];
-      const held = runs.filter((r) => r.heldout_score != null);
+      const held = runs.filter((r) => r.heldout_score != null && !r.is_ablation);
       const h = held[held.length - 1];
       return [{ baseline_train: base.train_score, latest_train: last.train_score,
         change: Math.round((last.train_score - base.train_score) * 10) / 10,
@@ -176,7 +193,12 @@
 
   dash.draw('val', (el) => {
     const d = dash.data(el.dataset.source);
-    const row = d.status === 'ok' && Array.isArray(d.data) ? d.data[0] : null;
+    let row = null;
+    if (d.status === 'ok' && Array.isArray(d.data)) {
+      const w = el.dataset.where;
+      if (w) { const [k, v] = w.split('=').map(decodeURIComponent); row = d.data.find((x) => String(x[k]) === v) || null; }
+      else row = d.data[0] || null;
+    }
     const v = row ? row[el.dataset.field] : null;
     el.classList.remove('ar-good', 'ar-bad');
     if (v == null) { el.textContent = '—'; return; }
@@ -192,7 +214,7 @@
     el.replaceChildren();
     if (d.status === 'error') { el.textContent = 'Failed to load'; return; }
     if (d.status !== 'ok') { el.textContent = '—'; return; }
-    const rows = d.data.filter((r) => series.some((s) => r[s.key] != null));
+    const rows = d.data.filter((r) => !r.is_ablation && series.some((s) => r[s.key] != null));
     if (!rows.length) { el.textContent = 'No scored runs yet'; return; }
     const W = Math.max(260, el.clientWidth), H = 240;
     const labels = rows.map((r) => 'R' + r.round);
@@ -245,6 +267,32 @@
     { key: 'complete', name: 'Complete' }, { key: 'concise', name: 'Concise' },
   ], [0, 3], (v) => d3.format('.2f')(v)));
 
+  // Paired horizontal bars: with vs without the library, by section.
+  dash.draw('ragChart', (el) => {
+    const d = dash.data('ablation');
+    el.replaceChildren();
+    if (d.status === 'error') { el.textContent = 'Failed to load'; return; }
+    if (d.status !== 'ok') { el.textContent = '—'; return; }
+    if (!d.data.length) { el.textContent = 'No comparison run yet'; return; }
+    const rows = d.data, W = Math.max(260, el.clientWidth), bh = 11, gap = 10, H = rows.length * (2 * bh + gap) + 24;
+    const svg = d3.select(el).append('svg').attr('width', '100%').attr('height', H).attr('viewBox', `0 0 ${W} ${H}`)
+      .attr('role', 'img').attr('aria-label', 'Train score with and without the document library, by section');
+    const probe = svg.append('text').text(rows.reduce((a, r) => (r.label.length > a.length ? r.label : a), ''));
+    const left = probe.node().getComputedTextLength() + 12; probe.remove();
+    const x = d3.scaleLinear().domain([0, 100]).range([left, W - 44]);
+    svg.append('g').attr('transform', `translate(0,${H - 20})`).call(d3.axisBottom(x).ticks(5).tickSize(-(H - 24)))
+      .call((g) => { g.select('.domain').remove(); g.selectAll('line').style('stroke', 'var(--cds-chart-grid)'); });
+    rows.forEach((r, i) => {
+      const y = i * (2 * bh + gap) + 2;
+      svg.append('text').attr('x', left - 8).attr('y', y + bh + 4).attr('text-anchor', 'end').text(r.label);
+      [['with_library', 0], ['without_library', 1]].forEach(([k, j]) => {
+        if (r[k] == null) return;
+        svg.append('rect').attr('x', x(0)).attr('y', y + j * bh).attr('height', bh - 1).attr('width', Math.max(0, x(r[k]) - x(0))).style('fill', dash.colors[j]);
+        svg.append('text').attr('x', x(r[k]) + 4).attr('y', y + j * bh + bh - 2).attr('class', 'ar-end').text(d3.format('.1f')(r[k]));
+      });
+    });
+  });
+
   const num = (v, f) => (v == null ? '—' : f(v));
   dash.draw('runRows', (tb) => {
     const d = dash.data('runs');
@@ -252,7 +300,7 @@
     if (d.status !== 'ok') return;
     d.data.slice().reverse().forEach((r) => {
       const tr = tb.insertRow();
-      const cells = [[r.round, 'ar-num'], [r.label], [r.change, 'ar-wide'], [r.split],
+      const cells = [[r.round, 'ar-num'], [r.is_ablation ? r.label + ' (comparison)' : r.label], [r.change, 'ar-wide'], [r.split],
         [num(r.train_score, fmt.score), 'ar-num'], [num(r.heldout_score, fmt.score), 'ar-num'],
         [num(r.pm_train, fmt.score), 'ar-num'], [num(r.ce_train, fmt.score), 'ar-num'], [num(r.sm_train, fmt.score), 'ar-num'],
         [r.unsupported_cites, 'ar-num'], [fmt.usd(r.cost), 'ar-num'], [r.started]];

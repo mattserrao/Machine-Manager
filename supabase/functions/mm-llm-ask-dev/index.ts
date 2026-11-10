@@ -1,5 +1,6 @@
 // MM LLM orchestrator, DEV copy for autoresearch (branch autoresearch). Same as mm-llm-ask plus eval mode:
 //   ingest token + { eval: true }  ->  not saved to llm.answers, no daily cap, response adds usage and tool-result previews.
+//   + { no_rag: true } (eval only): the document tools are withheld for that answer, to measure what the library adds.
 // Experiments are deployed here first; the live mm-llm-ask changes only when a change is kept.
 //
 // MM LLM orchestrator (Supabase Edge Function): answers a question about one organization's PM1 data.
@@ -36,6 +37,9 @@ const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers
 const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...cors, 'Content-Type': 'application/json' } });
 const svc = createClient(URL_, SERVICE, { auth: { persistSession: false } });
 setTools(TOOLS);
+// The document library (RAG) and document search: withheld when an eval run asks for no_rag.
+const DOC_TOOLS = new Set(['search_library', 'get_document', 'get_document_page', 'list_documents', 'library_status', 'search_documents']);
+const NO_RAG_NOTE = '\n- The document library is unavailable for this answer: there are no document tools. Use the data tools; for technical knowledge say "The library has no source for this; from general engineering knowledge:" and give it uncited.';
 
 // Eval only: is every [citation] in the answer backed by what the tools returned in this run?
 //  [DOC <id> p.N] / p.N-M: the doc (id or its first 8+ characters) with that page in a returned row (search passage or page read);
@@ -108,9 +112,11 @@ Deno.serve(async (req) => {
   let answer = '', status = 'ok', inT = 0, outT = 0, cacheR = 0, cacheW = 0, steps = 0, model = '', provider = '';
   try {
     const m = makeModel(body.model === 'opus' ? 'opus' : 'default'); model = m.model; provider = m.provider;
+    const noRag = evalMode && body.no_rag === true;
+    if (noRag) (m as any).tools = TOOLS.filter((t) => !DOC_TOOLS.has(t.name));
     const { data: ctx, error: e } = await db.rpc('mm_llm_context', { p_org: org });
     if (e) throw new Error(e.message);
-    m.start(systemPrompt(orgName, ctx ?? {}), question);
+    m.start(systemPrompt(orgName, ctx ?? {}) + (noRag ? NO_RAG_NOTE : ''), question);
     for (let step = 0; step < MAX_STEPS; step++) {
       const final = step === MAX_STEPS - 1;              // last step: answer from what the tools have returned so far
       const turn = await m.next(final); inT += turn.inTokens; outT += turn.outTokens; cacheR += turn.cacheRead ?? 0; cacheW += turn.cacheWrite ?? 0; steps++;
@@ -125,7 +131,7 @@ Deno.serve(async (req) => {
           results.push({ id: c.id, content: JSON.stringify(chart ? { ok: true, note: 'The page draws this chart under your answer and offers a PNG download. Do not redraw it in text. To fix it, call make_chart again with the same title: that replaces it, so don\'t mention the redraw.' } : { error }) });
           continue;
         }
-        const r = await runTool(db, org, c.name, c.args, { embed });
+        const r = (evalMode && body.no_rag === true && DOC_TOOLS.has(c.name)) ? { error: 'document tools are unavailable in this run' } : await runTool(db, org, c.name, c.args, { embed });
         const content = forModel(r);
         if (evalMode) seen.push(JSON.stringify(c.name === 'get_document_page' && Array.isArray((r as any).rows)   // page rows carry no doc id
           ? { rows: (r as any).rows.map((x: any) => ({ doc_id: String(c.args.doc_id ?? ''), ...x })) } : r));

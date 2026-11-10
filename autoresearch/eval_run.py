@@ -32,6 +32,7 @@ def main():
     ap.add_argument('--only', nargs='*', default=[]); ap.add_argument('--workers', type=int, default=3)
     ap.add_argument('--round-cap', type=float, default=9.0)
     ap.add_argument('--run-id', type=int, default=None, help='add to (or redo questions in) an existing run instead of starting one')
+    ap.add_argument('--no-rag', action='store_true', help='withhold the document tools (library ablation); label it ablation-...')
     ap.add_argument('--rejudge-from', default=None, help='a runs/*.json file: re-judge its saved answers (judge cost only, no new answers)')
     a = ap.parse_args()
     tokens = {'Sim Mill': os.environ['MM_TOKEN_SIM'], 'Demodemo RAG': os.environ['MM_TOKEN_RAG']}
@@ -56,7 +57,7 @@ def main():
             if q['id'] not in saved: return
             r = dict(saved[q['id']]['result']); r['usage'] = {}          # answer already paid for: judge cost only
         else:
-            r = post(f'{url}/functions/v1/mm-llm-ask-dev', key, t, {'question': q['question'], 'eval': True})
+            r = post(f'{url}/functions/v1/mm-llm-ask-dev', key, t, {'question': q['question'], 'eval': True, **({'no_rag': True} if a.no_rag else {})})
         if r.get('error') and 'answer' not in r: r = {'status': 'error', 'answer': r['error']}
         auto = grade(demo[q['ref']], r) if q.get('ref') and r.get('status') == 'ok' else []
         g = post(f'{url}/functions/v1/mm-llm-eval', key, t, {'action': 'judge', 'run_id': run_id, 'q': q, 'result': r, 'auto': auto})

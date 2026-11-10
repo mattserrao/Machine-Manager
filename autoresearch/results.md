@@ -13,7 +13,8 @@ Answer model Sonnet 5.5 via `mm-llm-ask-dev` v1 (= live `mm-llm-ask`); judge Opu
 | 3 | judge v2 check (3 questions) | $0.33 |
 | 4 | **baseline v2, all 54** (paused for API credit at 31, then finished; incl. $0.06 re-run overlap in run 1 ledger) | **$5.10** |
 | 5 | **round 1, train (36)**: prompt change | **$3.60** |
-| | **Total so far** | **$14.68 of $50** |
+| 6 | **comparison: no library** (train 36, round-1 prompt, document tools withheld) | **$2.49** |
+| | **Total so far** | **$17.17 of $50** |
 
 ## Judge v2 (Nov 10, user direction)
 Technical answers: wrong or missing citations are penalised heavily; short, fully cited, accurate answers score highest.
@@ -25,6 +26,24 @@ Technical answers: wrong or missing citations are penalised heavily; short, full
 - Question ids hidden from the judge; the runner keeps full responses so answers can be re-judged without paying for them again.
 - Check run 3 (3 questions, $0.33): pm02 90 (all 5 citations supported, docked for 323 words), pm04 78.3, sm13 48.3 (contradicted itself on action counts).
 - The v1 baseline below is **not comparable** with v2.
+
+## Comparison — no document library (run 6, train only, Nov 10)
+Same as round 1, but `mm-llm-ask-dev` v4 withholds the document tools (`search_library`, `get_document`, `get_document_page`,
+`list_documents`, `library_status`, `search_documents`) and tells the model the library is unavailable. Not an improvement
+round: kept out of the trend on the dashboard and compared with round 1.
+
+| Train (12 each) | With library (R1) | Without | Change |
+|---|---|---|---|
+| Papermaking | 88.1 | 27.3 | −60.8 |
+| Industrial / chem eng | 89.8 | 39.5 | −50.4 |
+| Sim Mill | 68.5 | 67.4 | −1.1 |
+| **All train** | **82.1** | **44.7** | **−37.4** |
+
+By kind: library questions 90.0 → 23.0 (complete 2.69 → 0.68), calc 89.2 → 42.1, gap 82.2 → 93.3, data 64.2 → 65.2.
+Correct fell 2.83 → 1.69: without sources the model gives wrong settings and ranges (press felt shower pressures, syphon
+differential 0.3-0.7 bar vs 0.1-0.2, screen-to-headbox velocity), not just uncited ones. The judge wasn't told the library
+was off, so "the library has no source" also cost citation points; the content drop (correct, complete) stands on its own.
+Sim Mill is unchanged: its answers come from the data tools. Gap questions did slightly better without the library.
 
 ## Round 1 — prompt: citations + length (run 5, train only, Nov 10)
 Change (`mm-llm-ask-dev` v3, prompt.ts only): cite every number / setting / step / id inline right after it; cite only records,

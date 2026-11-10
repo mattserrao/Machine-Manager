@@ -49,7 +49,7 @@ class Anthropic implements Model {
       method: 'POST',
       headers: { 'x-api-key': this.key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({ model: this.model, max_tokens: 4096, system: this.system, messages: this.messages,
-        tools: TOOLS.map((t) => ({ name: t.name, description: t.description, input_schema: t.parameters })),
+        tools: ((this as any).tools ?? TOOLS).map((t: Tool) => ({ name: t.name, description: t.description, input_schema: t.parameters })),
         ...(final ? { tool_choice: { type: 'none' } } : {}) }),
     });
     const j = await r.json();
