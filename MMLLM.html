@@ -404,6 +404,7 @@
           <tr><td>Training questions, with wiki and memory (test agents)</td><td class="n">91.2</td><td class="n">81.6</td><td class="n">75.1</td><td class="n">—</td><td class="n">82.7</td></tr>
           <tr><td>Final API run, unseen questions (30), no wiki or memory</td><td class="n">81.6</td><td class="n">86.7</td><td class="n">67.2</td><td class="n">83.0</td><td class="n">80.3</td></tr>
           <tr><td>Final API run, unseen questions (30), with wiki and memory</td><td class="n">89.4</td><td class="n">90.3</td><td class="n">54.7</td><td class="n">78.0</td><td class="n">78.1</td></tr>
+          <tr><td>Final API, memory in the prompt, wiki as a tool (v3; Sim Mill and new only)</td><td class="n">—</td><td class="n">—</td><td class="n">62.5</td><td class="n">85.9</td><td class="n">—</td></tr>
         </tbody>
       </table></div>
       <p class="wg-lead">Final runs: 6 held-out questions per section plus 12 new questions written for this test and never seen during training. Scores are 0–100 (judge v2); single runs vary by about ±4 overall and ±10 on Sim Mill.</p>
@@ -411,7 +412,7 @@
       <ul>
         <li>The wiki helps the knowledge questions: on unseen papermaking and chem questions the API scored 89.4 and 90.3 with it, against 81.6 and 86.7 without. The topic pages point it to the right document page, so it reads less and cites better.</li>
         <li>It hurt the Sim Mill data questions (54.7 against 67.2 held-out; 78.0 against 83.0 on the new set). With the wiki on, the API model read only the memory index and one wiki page, then made fewer data calls and twice cited a tool call or an unreturned fact, which the citation check caps at 50.</li>
-        <li>Next step: put the short memory lessons straight into the system prompt rather than behind a tool, and keep the wiki for the knowledge sections, then rerun the Sim Mill set.</li>
+        <li>Fix (v3): the memory lessons now go straight into the system prompt and the wiki stays a tool. On the same unseen questions Sim Mill went from 54.7 to 62.5 and the new set from 78.0 to 85.9, back level with no wiki on Sim Mill (67.2, within noise) and ahead on the new set (83.0).</li>
       </ul>
       <h3 class="rules-h">Wiki connections</h3>
       <p class="wg-lead">Each circle is a wiki page; its area is the page's size. Lines are the links between pages. Dashed circles are pages the wiki links to but hasn't written yet; a ring marks a page with a recorded conflict between sources.</p>

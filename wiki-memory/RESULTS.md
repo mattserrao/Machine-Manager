@@ -1,6 +1,6 @@
 # MM LLM — Wiki + Memory Results
 
-Status: **done** (Nov 10 2026). Branch `wiki-memory`, PR #55. Deployed: migration 16, `mm-mcp-dev`, `mm-llm-ask-dev` v7 (wiki/memory tools on; `no_wiki` eval flag). Live `mm-llm-ask` and `mm-mcp` unchanged. Eval spend $42.74 of the $50 cap.
+Status: **done** (Nov 10 2026). Branch `wiki-memory`, PR #55. Deployed: migration 16, `mm-mcp-dev`, `mm-llm-ask-dev` v8 (v3: memory in prompt, wiki tools; `no_wiki` eval flag). Live `mm-llm-ask` and `mm-mcp` unchanged. Eval spend $44.89 of the $50 cap.
 
 ## Where things are
 - **Supabase** (live build per org, readable by org members incl. demodemo and serrao.matt): `llm.wiki_pages` / `wiki_links` / `wiki_builds`, `llm.memory`. Sim Mill build 1: 137 pages, 1,947 links. Demodemo RAG build 2: 190 pages, 1,194 links.
@@ -13,7 +13,8 @@ Status: **done** (Nov 10 2026). Branch `wiki-memory`, PR #55. Deployed: migratio
 | Training set, no wiki (mean of 2) | 90.5 | 92.0 | 68.5 | — | 83.7 |
 | Training set, test agents with wiki + memory (ck1 B) | 91.2 | 81.6 | 75.1 | — | 82.7 |
 | Final API, unseen, no wiki | 81.6 | 86.7 | 67.2 | 83.0 | 80.3 |
-| Final API, unseen, wiki + memory | 89.4 | 90.3 | 54.7 | 78.0 | 78.1 |
+| Final API, unseen, wiki + memory (v2: memory as a tool) | 89.4 | 90.3 | 54.7 | 78.0 | 78.1 |
+| Final API, unseen, v3: memory in the prompt, wiki as a tool (Sim Mill + new only) | — | — | 62.5 | 85.9 | — |
 
 Noise: about ±4 overall, ±10 on Sim Mill.
 
@@ -22,8 +23,13 @@ Noise: about ±4 overall, ±10 on Sim Mill.
 2. It hurts Sim Mill data questions on the API (−12.5 held-out, −5 new). The API model called `memory_index` and one wiki page, then made fewer data calls; two answers cited a tool call or an unreturned fact (capped at 50).
 3. The test agents (Sonnet subagents over MCP) gained on Sim Mill (+6.6) with the same wiki, because they followed the rules and read the memory topics.
 
-## Next step (not done)
-Inject the memory lessons straight into the system prompt (they are ~3 KB per org) instead of behind a tool, keep the wiki tools for the knowledge sections, rerun Sim Mill held-out + new (~$2).
+## v3 (done, `mm-llm-ask-dev` v8)
+Memory lessons go straight into the system prompt (~5 KB Sim Mill, ~2.4 KB library); memory tools removed; wiki stays a tool with rules that say data questions still need the data tools. Sim Mill held-out 54.7 → 62.5 (no wiki 67.2, within ±10 noise); new set 78.0 → 85.9 (no wiki 83.0). Run cost $2.15; eval spend now $44.89 of $50.
+
+**Recommendation:** v3 is ready to promote to the live `mm-llm-ask` after one papermaking/chem rerun confirms the v2 knowledge gains hold (~$1.50).
+
+## App
+MMLLM.html → About → "Memory and wiki": graph of both wikis; click a page, "Read page" shows its text, [[links]] jump to the linked page, Enter in "Find a page" opens the best match. Page text comes from `mm_wiki_page` under RLS: Sim Mill is public; the library wiki needs Demodemo RAG membership (demodemo and serrao.matt both have it). The page is on branch `wiki-memory` (PR #55) until merged.
 
 ## Memory (as uploaded)
 

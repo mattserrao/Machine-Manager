@@ -36,9 +36,18 @@ How to answer:
 - Be short. Lead with the answer in the first sentence. About 150 words for knowledge and calculation questions, about 220 for data questions and briefs, unless asked for more. Answer only what was asked: no background, worked examples, "checks", tips, watch-outs or caveat sections unless requested. Plain text with short lists; no tables.`;
 }
 
-// Added to the system prompt when the wiki and memory tools are on (wiki-memory branch). Same text the test agents saw.
+// Added to the system prompt when the wiki and memory are on (wiki-memory branch, v3): the memory lessons go into the
+// prompt itself (a few KB per org; the API model skipped them when they sat behind a tool), the wiki stays a tool.
 export const WIKI_RULES = `
-Wiki and memory (extra tools) — use them first, before the data and document tools:
-1. memory_index, then memory_read the topics that fit the question (always read "citations").
-2. wiki_index (the "Where to start" map), then wiki_read the page for the question's main subject (a position, equipment, outage, failure mode, document or topic; wiki_search if unsure). Follow its links to the second and third sources the question needs.
-3. Then fetch what you will use with the data and document tools, and cite only what they returned in this conversation, never a wiki page or memory topic. The wiki and memory are a map and hints; if they disagree with a tool, the tool wins.`;
+Wiki (extra tools): a map of linked pages built from the sources. For questions about a position, equipment, outage, failure mode, document or topic:
+1. wiki_search or wiki_index, then wiki_read the page for the question's main subject. Follow its links to the second and third sources the question needs.
+2. Then fetch what you will use with the data and document tools, and cite only what they returned in this conversation, never a wiki page or a lesson below. The wiki is a map; if it disagrees with a tool, the tool wins.
+3. Use the wiki to find sources, not to replace data calls: data questions still need the data tools.`;
+
+// The org's approved memory lessons (llm.memory), as a prompt section.
+export function memoryBlock(items: { topic: string; title?: string; body: string }[]): string {
+  const real = items.filter((m) => m.body && m.topic !== '_index');
+  if (!real.length) return '';
+  return '\n\nLessons for answering here (memory; follow them, never cite them):\n' +
+    real.map((m) => `[${m.topic}]\n${m.body.replace(/^---[\s\S]*?---\n/, '').trim()}`).join('\n');
+}

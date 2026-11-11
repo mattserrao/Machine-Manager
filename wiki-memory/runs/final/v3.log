@@ -1,0 +1,20 @@
+eval run 16: 18 questions; spent so far $42.74
+sm15  heldout  26.7  $0.067  calls 1 (wiki/mem 0)  Invented '2026-09-30 outage start' (not in trace). Gives saleable tons instead of total tons (21,163/20,311/20
+sm14  heldout  76.7  $0.082  calls 3 (wiki/mem 0)  All figures match. Linking driveshaft snaps to the 2nd press drive is speculative, and bearing failures (13.7 
+sm13  heldout    95  $0.159  calls 6 (wiki/mem 0)  All points are covered and every citation is supported. The answer runs slightly over length (237 words) with 
+sm17  heldout    50  $0.068  calls 2 (wiki/mem 0)  Figures match the trace, but the citation 'downtime feed, 2026-10-01 to 2026-10-31' is flagged unsupported by 
+sm16  heldout  66.7  $0.073  calls 1 (wiki/mem 0)  First list wrongly gave 2026-07-08 as the install date for the Sep 30 removal, then self-corrected. The duplic
+sm18  heldout    60  $0.072  calls 1 (wiki/mem 0)  Says 'nine outages' but lists only eight (Dec 10 to Sep 30 is eight); wrong count. The 20 h every 6 weeks sche
+n03   new        85  $0.121  calls 4 (wiki/mem 0)  Misses that the current felt was installed 2026-08-19 and is due at the Nov 11 outage (WO 26109296). At 253 wo
+n02   new      86.5  $0.149  calls 6 (wiki/mem 1)  Never states that RCFA-016 and -024 are still open; only -014/-015 statuses given. At 417 words, nearly double
+n01   new      83.3  $0.303  calls 17 (wiki/mem 0)  Accurate and complete. Claims that six RCFAs are fully complete, and that 26-013 and 26-026 have their route a
+n04   new      83.3  $0.133  calls 4 (wiki/mem 0)  All MUST points correct. RCFA-SM-26-013 overdue claim lacks an inline citation. Shift-report citation (Bonvoy 
+n05   new      71.7  $0.097  calls 2 (wiki/mem 0)  Values match the tool output. The 51 breaks follow the trace, not the key's 50. The first citation, 'Productio
+n06   new      83.3  $0.198  calls 9 (wiki/mem 1)  Accurate and well sourced. The '6-week cycle' outage cadence is uncited. At 250 words it runs slightly over th
+n07   new      83.3  $0.162  calls 6 (wiki/mem 0)  The Bonvoy no-exceptions finding has no citation. The answer runs to 247 words with unrequested lube-route WO 
+n09   new        90  $0.076  calls 2 (wiki/mem 0)  Accurate and fully cited, with the worked example included. At 257 words it is well over the 150-word limit; t
+n08   new      79.8  $0.128  calls 5 (wiki/mem 0)  Gives area 'Press section', not the 2nd press top felt location. Omits the Nov 11 outage scope (WOs 26108953, 
+n10   new        95  $0.063  calls 2 (wiki/mem 1)  Accurate and fully cited. The seal-water paragraph was not asked for. The capacity-ratio definition is only im
+n12   new        95  $0.071  calls 2 (wiki/mem 0)  All points correct and cited. At 202 words it runs over the ~150-word target, with an unrequested uhle-box siz
+n11   new        95  $0.128  calls 3 (wiki/mem 0)  All MUST points covered and every citation is supported. At 201 words it runs over the ~150 target, with unreq
+{"eval_run": 16, "label": "final-wiki-v3", "by": {"sm": 62.5, "new": 85.9}, "mean": 78.1, "cost": 2.151}
