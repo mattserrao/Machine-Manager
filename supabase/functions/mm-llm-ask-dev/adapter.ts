@@ -77,7 +77,7 @@ class OpenAI implements Model {
     const r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST', headers: { authorization: `Bearer ${this.key}`, 'content-type': 'application/json' },
       body: JSON.stringify({ model: this.model, messages: this.messages,
-        tools: TOOLS.map((t) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.parameters } })),
+        tools: ((this as any).tools ?? TOOLS).map((t: Tool) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.parameters } })),
         ...(final ? { tool_choice: 'none' } : {}) }),
     });
     const j = await r.json();

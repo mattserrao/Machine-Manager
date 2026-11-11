@@ -1,0 +1,718 @@
+{
+ "summary": {
+  "eval_run": 14,
+  "label": "final-wiki",
+  "by": {
+   "pm": 89.4,
+   "ce": 90.3,
+   "sm": 54.7,
+   "new": 75.6
+  },
+  "mean": 77.2,
+  "cost": 3.254
+ },
+ "results": {
+  "pm13": {
+   "q": "pm13",
+   "section": "pm",
+   "split": "heldout",
+   "score": 90,
+   "notes": "Accurate and fully cited. Padded with unrequested bullets on flared needle jets, plugging and scaling, roughly doubling the needed length.",
+   "cost": 0.063524,
+   "knowledge_calls": 1,
+   "calls": 2,
+   "usage": {
+    "in": 21045,
+    "out": 655,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 2
+   },
+   "answer": "Look at the stream. If the jet breaks up and disperses right at the nozzle, the nozzle is worn and should be replaced. A good nozzle gives a laminar (solid) zone before the water breaks up, and a worn one has a very short laminar zone [DOC a1b709c1-b90f-4687-ad80-b9fb21515901 p.3].\n\n- **Self-purging nozzles:** These are the exception. Their two-piece orifice means the flow starts breaking up as it leaves the nozzle even when new, so this test doesn't apply to them [DOC a1b709c1-b90f-4687-ad80-b9fb21515901 p.3].\n- **Flared needle jets:** A flaring needle jet is another sign of a worn or damaged nozzle. It shows up in felt moisture and permeability scans, damages the felt cap, and doesn't clean contaminants off the surface [DOC 39e95278-beb1-4937-867a-db98ca39f611 p.19].\n- **Plugged nozzles:** A plugged fan nozzle looks different from a worn one. Check fan nozzles daily for plugging, and check the spray quality of hard-to-see nozzles at each shutdown [DOC a1b709c1-b90f-4687-ad80-b9fb21515901 p.12].\n- **Scaling:** Scaling from hard water also plugs nozzles, so watch the spray pattern [DOC a1b709c1-b90f-4687-ad80-b9fb21515901 p.12].",
+   "citations": {
+    "total": 5,
+    "supported": 5,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "pm15": {
+   "q": "pm15",
+   "section": "pm",
+   "split": "heldout",
+   "score": 90,
+   "notes": "Misses internal starch for stiffness and light calender sizing of the top liner. The pulping-lines section is unrequested and the answer runs ~179 words, over the limit. The ratio estimate is properly labelled as general knowledge.",
+   "cost": 0.095364,
+   "knowledge_calls": 1,
+   "calls": 3,
+   "usage": {
+    "in": 36081,
+    "out": 675,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 3
+   },
+   "answer": "The library doesn't give a base-to-top weight split for two-ply kraft linerboard, so I can't quote a ratio from a source.\n\nWhat it does say is how the two plies differ:\n- **Base (bottom) liner:** high-yield kraft pulp, cooked to 55\u201360% yield. It is refined out of the blow tank, washed, then given an extra \"de-shive\" refining step [DOC 30d870b7-8b32-475a-9f65-e8f3bd87bd7b p.1].\n- **Top liner:** a lower-yield, well-refined unbleached kraft, cooked to about 48\u201350% yield. The top liner is chosen for appearance and printability. Some mills use bleached kraft when a cleaner, brighter look is specified [DOC 30d870b7-8b32-475a-9f65-e8f3bd87bd7b p.1].\n- **Separate pulping lines:** the most common system uses two complete kraft lines, one for each ply. Top-liner screen rejects usually go to the base line so the top liner stays exceptionally clean [DOC 30d870b7-8b32-475a-9f65-e8f3bd87bd7b p.1].\n\nThe library has no source for the ratio itself. From general engineering knowledge: the top liner is usually the thinner ply, roughly 15\u201330% of total basis weight, with the base ply making up the rest. Check this against your own mill's furnish and grade specs.",
+   "citations": {
+    "total": 3,
+    "supported": 3,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "pm14": {
+   "q": "pm14",
+   "section": "pm",
+   "split": "heldout",
+   "score": 90,
+   "notes": "All points correct and cited. 207 words against about 150, with unrequested floating-disc, fibre-development and capacity-limit paragraphs. These sections pad the answer.",
+   "cost": 0.063298,
+   "knowledge_calls": 1,
+   "calls": 2,
+   "usage": {
+    "in": 20129,
+    "out": 672,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 2
+   },
+   "answer": "Most mills choose disc refiners because they cost less to buy and run. Smook lists these advantages over conical refiners [DOC 01a335fe-bfba-4f11-b32c-df2de03d8521 p.1]:\n\n- **Lower no-load energy use.** The benefit grows as energy costs rise.\n- **Higher consistency.** They can run at higher stock consistency.\n- **Higher loading and speed.** They can take both.\n- **More versatile plate design.**\n- **Self-correcting wear.** High and low spots mate evenly. In conical refiners they don't.\n- **Smaller footprint.**\n- **Lower capital cost per ton of production.**\n\nThe two-sided floating-disc design adds two more. Pressure is equal on both faces, so the disc centres itself and the refining energy splits equally between the two sides. The axial thrust forces balance, so no thrust bearing is needed [DOC 01a335fe-bfba-4f11-b32c-df2de03d8521 p.1].\n\nFibre development is not the reason. At the same operating conditions, conical and disc refiners develop fibres in a similar way [DOC 01a335fe-bfba-4f11-b32c-df2de03d8521 p.1]. Smook also describes disc refiners as the more recent type, with many designs, and says they offer significant advantages over the older conical refiners [DOC d9815fa5-40a2-474b-9932-eaf665991fc0 p.30].\n\nDiscs have one limit. Maximum rotation speed depends on disc diameter, which limits capacity. Sunds added a conical section at the disc periphery to get around this [DOC 01a335fe-bfba-4f11-b32c-df2de03d8521 p.3].",
+   "citations": {
+    "total": 5,
+    "supported": 5,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "pm16": {
+   "q": "pm16",
+   "section": "pm",
+   "split": "heldout",
+   "score": 90,
+   "notes": "Does not distinguish SEL (intensity) from specific energy (amount of refining, kWh/t). The final result comes after the definition, and the closing manual-example line repeats the result.",
+   "cost": 0.062626,
+   "knowledge_calls": 1,
+   "calls": 2,
+   "usage": {
+    "in": 20591,
+    "out": 722,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 2
+   },
+   "answer": "Specific edge load (SEL), also called refining intensity, is the net refining power divided by the length of bar edge crossings per second. It is expressed in watt-seconds per metre (Ws/m). Higher SEL gives more fibre cutting and shortening. Lower SEL gives more fibrillation. [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.23] [DOC 856ff3f6-9be4-42e7-b4dc-fee63dfd3cfd p.34]\n\nYour refiner works out to about 1.2 Ws/m.\n\nThe formula is SEL = Net kW / (Bar Edge Length \u00d7 Motor Speed \u00d7 1 min / 60 s). [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.41]\n\nNet power is the motor load minus the no-load power. [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.23]\n\nCalculation:\n- Speed: 600 rpm \u00f7 60 = 10 rev/s.\n- Edge crossings: 30 km/rev \u00d7 10 rev/s = 300 km/s = 300,000 m/s.\n- SEL = 363,000 W \u00f7 300,000 m/s = 1.21 Ws/m, which rounds to 1.2 Ws/m.\n\nThe AFT manual works the same example (363 kW, 30 km/rev, 600 rpm) and also gets 1.2 Ws/m. [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.41]",
+   "citations": {
+    "total": 5,
+    "supported": 5,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "pm17": {
+   "q": "pm17",
+   "section": "pm",
+   "split": "heldout",
+   "score": 86.5,
+   "notes": "Misses the reduced-diameter plate savings (30-150 hp, e.g. 46 to 40 in saves about 150 hp). At 280 words it is padded with the full NL formula and the intensity formula, which were not asked for.",
+   "cost": 0.067914,
+   "knowledge_calls": 1,
+   "calls": 2,
+   "usage": {
+    "in": 20535,
+    "out": 982,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 2
+   },
+   "answer": "Rotor speed and plate diameter drive refiner no-load power most. Plate pattern and wear also matter. It matters because only the power above no-load changes the fibre.\n\n**What drives it**\n- No-load is the power used to pump and viscously shear the fluid. It is mostly set by rotor diameter and rotational speed, and the bar and groove pattern can also affect it significantly [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.32].\n- Speed: it scales with the cube of rotational speed. Active plate diameter enters at the power 4.3 [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.33].\n- Pattern: groove depth and the hydraulic section ratio (groove width over bar plus groove width) have a dramatic effect [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.33]. The calculation is NL = 102 \u00d7 (RPM/100)\u00b3 \u00d7 (Da/100)^4.3 \u00d7 (2Gw/(Bw+Gw)) \u00d7 (Gd/4), with NL in horsepower [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.33].\n- Wear: no-load is highest with new plates and can be 60\u201380% lower when they are fully worn [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.32].\n- Flow rate, consistency and plate gap have only a minor influence. Rotating mass has no effect on no-load. It only affects start-up acceleration and torsional loads [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.32].\n\n**Why it matters**\n- Net power applied to the fibre is total motor power minus no-load [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.32].\n- Refining intensity is calculated from that net power: I = (Applied Motor Power \u2013 No-Load) / [RPM \u00d7 Bar Edge Length \u00d7 (min/60s)] [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.23]. If no-load is wrong, specific energy and intensity are wrong.\n- No-load energy produces no measurable change in the pulp [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.32]. It is pure energy loss, mostly at the disc periphery where speed is highest [DOC 01a335fe-bfba-4f11-b32c-df2de03d8521 p.3].\n\nI did not check PM1's own refiner data for this answer.",
+   "citations": {
+    "total": 11,
+    "supported": 11,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "ce13": {
+   "q": "ce13",
+   "section": "ce",
+   "split": "heldout",
+   "score": 100,
+   "notes": "clean",
+   "cost": 0.09409200000000001,
+   "knowledge_calls": 1,
+   "calls": 3,
+   "usage": {
+    "in": 36581,
+    "out": 723,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 3
+   },
+   "answer": "The flow is about 2.24 ft\u00b3/s.\n\nThe TAPPI formula for a rectangular weir with end contractions is Q = 3.33 \u00d7 (L \u2013 0.2 \u00d7 H) \u00d7 H^1.5, with Q in ft\u00b3/s and L and H in ft [DOC 2324ca0e-e2cb-4ac4-8f6c-1c90e2a03701 p.4].\n\nQ = 3.33 \u00d7 (2 \u2013 0.2 \u00d7 0.5) \u00d7 0.5^1.5 = 3.33 \u00d7 1.9 \u00d7 0.3536 \u2248 2.24 ft\u00b3/s\n\nThe ft\u00b3/s to gpm conversion isn't in the library. From general engineering knowledge, 2.24 ft\u00b3/s is about 1,000 gpm.\n\nThe source says L should be 4\u20138 times H [DOC 2324ca0e-e2cb-4ac4-8f6c-1c90e2a03701 p.4]. Here L/H = 4, so you are at the low edge of the valid range.",
+   "citations": {
+    "total": 2,
+    "supported": 2,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "pm18": {
+   "q": "pm18",
+   "section": "pm",
+   "split": "heldout",
+   "score": 90,
+   "notes": "320 words, about double the ~150 limit; the long library-quote section pads the answer. General knowledge is clearly labelled. RCT caliper and operator sensitivity are not explicitly mentioned. McKee is not named.",
+   "cost": 0.14835800000000002,
+   "knowledge_calls": 1,
+   "calls": 4,
+   "usage": {
+    "in": 56893,
+    "out": 1192,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 4
+   },
+   "answer": "**Short answer:** Both tests measure edgewise compression. SCT/STFI is generally the better predictor of box performance. The library has no source that directly ranks the two on box prediction. That ranking comes from general engineering knowledge, given below.\n\n**What the library says**\n- Ring crush (RCT) is the traditional method. A \u00bd\" \u00d7 6\" strip is rolled into a cylinder about 2\" in diameter and compressed axially between two plates. The maximum load is the result. [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.18]\n- Short-span compression (STFI) has become more widely used in recent years. [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.18]\n- The compression measurement is made over a very small region to prevent buckling. Failure occurs when the fiber wall collapses. [DOC 6e312421-09ec-48b8-97ec-a68bbff246e8 p.23]\n- Edgewise compression is hard to measure properly because of bowing, buckling and crushing of the loaded edges. Results differ from method to method, and conversion factors are often lacking. [DOC 168553e0-baa3-4e06-827d-54415678796a p.57]\n- One empirical cross-direction relationship over a wide range of linerboard weights is STFI = 1.436 \u00d7 ring compression. [DOC 168553e0-baa3-4e06-827d-54415678796a p.57]\n- RCT is considered to relate to the eventual compression strength of the combined board. [DOC c93229dc-2711-42b6-9211-821d0e0902e1 p.7]\n- In one study, top-load box results were about 9% lower, which \"apparently reflects\" lower ring crush. [DOC 168553e0-baa3-4e06-827d-54415678796a p.36]\n\n**General engineering knowledge (no library source)**\n- In ring crush, the curved, unsupported strip can buckle or fail in a mixed mode. This is worse on heavier or lower-stiffness sheets, so RCT partly reflects bending stiffness and not just compressive strength.\n- STFI clamps a very short span, about 0.7 mm. It therefore measures true in-plane compressive strength and avoids buckling.\n- Box stacking strength follows edge crush (ECT) of the combined board. ECT depends on the liners' compressive strength, and STFI tracks that more directly.\n- RCT is still useful as a cheap mill control test, but it is less reliable when furnish, basis weight or refining change.",
+   "citations": {
+    "total": 7,
+    "supported": 7,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "ce14": {
+   "q": "ce14",
+   "section": "ce",
+   "split": "heldout",
+   "score": 95,
+   "notes": "Accurate, with the slot width and vacuum factor cited to p5. The unrequested paragraph that rescales the source's 250-inch example adds length without changing the answer.",
+   "cost": 0.09017,
+   "knowledge_calls": 1,
+   "calls": 3,
+   "usage": {
+    "in": 33578,
+    "out": 853,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 3
+   },
+   "answer": "About 4,500\u20136,000 cfm per Uhle box. I assumed the 300\" is the slot length across the machine, which the source doesn't state outright.\n\nThe source says slot area depends only on machine speed, and 2,500 fpm needs 1\" of total slot width [DOC 56ec08f5-d829-4786-b810-b1a7de9c7f74 p.5]. It then multiplies that slot area by a vacuum factor of 15\u201320 cfm per in\u00b2 [DOC 56ec08f5-d829-4786-b810-b1a7de9c7f74 p.5].\n\n- Slot area = 300 in \u00d7 1 in = 300 in\u00b2.\n- Airflow = 300 in\u00b2 \u00d7 15\u201320 cfm/in\u00b2 = 4,500\u20136,000 cfm.\n\nThe source's own example is a 250\" machine at 2,500 fpm, which it gives as 4,000\u20135,000 cfm per box [DOC 56ec08f5-d829-4786-b810-b1a7de9c7f74 p.5]. That range matches 16\u201320 cfm/in\u00b2 rather than 15\u201320, since 250 \u00d7 15 would be 3,750. Scaling that example to 300\" gives about 4,800\u20136,000 cfm. Use roughly 4,500\u20136,000 cfm to size the box, piping, separator and vacuum source [DOC 56ec08f5-d829-4786-b810-b1a7de9c7f74 p.5].",
+   "citations": {
+    "total": 4,
+    "supported": 4,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "ce15": {
+   "q": "ce15",
+   "section": "ce",
+   "split": "heldout",
+   "score": 100,
+   "notes": "clean",
+   "cost": 0.059872,
+   "knowledge_calls": 1,
+   "calls": 2,
+   "usage": {
+    "in": 21591,
+    "out": 511,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 2
+   },
+   "answer": "The pump needs about 52.5 hp of hydraulic power, or about 39 kW.\n\nThe TAPPI formula is hydraulic power (hp) = Q \u00d7 H / 1714. Q is flow in gpm and H is the pump's differential pressure in psi [DOC 2324ca0e-e2cb-4ac4-8f6c-1c90e2a03701 p.3].\n\nCalculation: 1,500 \u00d7 60 / 1714 = 90,000 / 1714 \u2248 52.5 hp.\n\nUsing 1 hp = 746 W [DOC 2324ca0e-e2cb-4ac4-8f6c-1c90e2a03701 p.18], that is 52.5 \u00d7 0.746 \u2248 39.2 kW.\n\nThis is the power delivered to the fluid. The shaft (brake) power the motor must supply is higher, because it also covers pump efficiency. For example, at 75% efficiency it would be about 70 hp. That efficiency is my own assumption, and the library gave no pump efficiency to use.",
+   "citations": {
+    "total": 2,
+    "supported": 2,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "ce16": {
+   "q": "ce16",
+   "section": "ce",
+   "split": "heldout",
+   "score": 95,
+   "notes": "Accurate and fully cited. At 175 words it runs over the 150-word limit, padded by the second-source formula, the geometry-term explanation and the plate-wear aside, none of which were asked for.",
+   "cost": 0.06074,
+   "knowledge_calls": 1,
+   "calls": 2,
+   "usage": {
+    "in": 20328,
+    "out": 582,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 2
+   },
+   "answer": "No-load power falls to about 51% of its current value, a drop of about 49%.\n\nNo-load power scales with the cube of rotational speed [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.33]. The AFT formula has NL = 102 \u00d7 (RPM/100)\u00b3 \u00d7 other terms [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.33]. The other terms are plate diameter and bar and groove geometry. The diameter term is Da^4.3, and the geometry terms are groove width, bar width and groove depth. These stay the same if you don't change the plates. A second source gives the same cubic dependence: No Load (kW) = (2.299\u00d710\u207b\u00b9\u00b3)(Diam^4.249)(RPM\u00b3) [DOC 856ff3f6-9be4-42e7-b4dc-fee63dfd3cfd p.30].\n\nCalculation: NL\u2082/NL\u2081 = (720/900)\u00b3 = 0.8\u00b3 = 0.512\n\nThe change is 1 \u2212 0.512 = 0.488, which is a 48.8% reduction.\n\nI have no absolute figure for this refiner. If you give me its current no-load kW, multiply it by 0.512 to get the new value.\n\nThe no-load figure also falls as plates wear, by as much as 60\u201380% from new to fully worn [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.32]. The actual number therefore depends on plate condition as well as speed.",
+   "citations": {
+    "total": 4,
+    "supported": 4,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "ce18": {
+   "q": "ce18",
+   "section": "ce",
+   "split": "heldout",
+   "score": 78.3,
+   "notes": "Calls the thermocompressor part of 'the cascade' rather than an alternative to it, so MUST 3 is missed. Citations are supported despite the key listing no source. At 231 words, the 'why mills use it' and memory notes are unrequested.",
+   "cost": 0.108174,
+   "knowledge_calls": 1,
+   "calls": 3,
+   "usage": {
+    "in": 37303,
+    "out": 902,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 3
+   },
+   "answer": "A thermocompressor is a steam-jet ejector. It uses high-pressure motive steam to pull in low-pressure blow-through and flash steam from a dryer group. It discharges the mixture at an intermediate pressure, and that steam goes back to heat the same group.\n\nHow it works:\n- The cross-section has a body, a suction port for low-pressure steam, a high-pressure steam inlet, a spindle, a nozzle and a diffuser. The discharge is intermediate-pressure steam [DOC 212d6dd4-0711-4fdc-8e33-735d3a13d5de p.12].\n- In the cascade, blow-through steam from the dryers is boosted by mixing with motive steam and reused, usually in the same section [DOC 212d6dd4-0711-4fdc-8e33-735d3a13d5de p.12].\n- It also holds the differential pressure the dryer siphons need for drainage. The steam side must sit above the condensate side [DOC f2d6b892-8f3a-49f6-bfb1-8f6beada12e7 p.2]. Berlin says the group is \"bathing in its own juice\" [DOC f2d6b892-8f3a-49f6-bfb1-8f6beada12e7 p.29].\n\nWhy mills use it:\n- Each section gets independent pressure control, and sections can be grouped freely [DOC 212d6dd4-0711-4fdc-8e33-735d3a13d5de p.12].\n- It avoids the loss of electrical generation that would occur if the motive steam were used elsewhere [DOC 212d6dd4-0711-4fdc-8e33-735d3a13d5de p.12].\n\nLimit: it only works if enough motive steam is available. Otherwise the amount of mixed steam is too big [DOC f2d6b892-8f3a-49f6-bfb1-8f6beada12e7 p.29].\n\nThe memory tool returned a permission error, so I answered from the library only. I did not check whether PM1 has a thermocompressor, or which dryer groups it serves.",
+   "citations": {
+    "total": 7,
+    "supported": 7,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "ce17": {
+   "q": "ce17",
+   "section": "ce",
+   "split": "heldout",
+   "score": 73.3,
+   "notes": "Gives the laminar limit as ~2,000 instead of ~2,300. The cited 'pumps like water up to 6%' passage sits awkwardly with the non-Newtonian plug-flow explanation. At 293 words it is about twice the needed length.",
+   "cost": 0.117762,
+   "knowledge_calls": 1,
+   "calls": 4,
+   "usage": {
+    "in": 40010,
+    "out": 1101,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 3
+   },
+   "answer": "The library has no source for the Reynolds-number criterion itself, so the first part comes from general engineering knowledge. Two library passages cover pulp stock.\n\n**Laminar or turbulent (general engineering knowledge, uncited):**\n- Calculate the Reynolds number, Re = \u03c1vD/\u03bc = vD/\u03bd. Here v is the mean velocity, D is the pipe diameter and \u03bc is the viscosity.\n- Below about 2,000 the flow is laminar. Above about 4,000 it is turbulent. Between the two it is transitional, and you should design as if it were turbulent.\n- Laminar flow has a parabolic velocity profile, and friction loss rises linearly with velocity. Turbulent flow has a flatter profile, and friction loss rises roughly with velocity squared and depends on pipe roughness.\n\n**How pulp stock differs:**\n- The AFT refiner manual says stock at 2\u20136% consistency can be treated as an incompressible fluid with water-like properties. Pumping characteristics up to about 6% are essentially the same as water. [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.34]\n- The same page says friction loss in pipe flow differs slightly with consistency and pulp type. [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.34]\n- Smook says medium-consistency technology fluidizes suspensions up to 12% consistency so they behave like Newtonian fluids. [DOC 5964733d-306e-4207-a72d-c3ebb900a35e p.17] That implies stock above roughly 6% does not behave like water without fluidizing.\n\n**More general knowledge, uncited:**\n- Fibres form a network at higher consistency. Flow then runs as a plug, with a water annulus at the wall.\n- Friction loss falls as velocity rises (shear-thinning behaviour) until the plug breaks up and the flow becomes turbulent. A plain Reynolds number based on water viscosity does not predict this.\n- Stock-specific friction-loss charts or the vendor's method are therefore used instead.\n- At low consistency, below about 1\u20132%, stock behaves close to water.",
+   "citations": {
+    "total": 3,
+    "supported": 3,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "sm13": {
+   "q": "sm13",
+   "section": "sm",
+   "split": "heldout",
+   "score": 60,
+   "notes": "Says 'two of the three' actions are done, then lists three done plus one open, so the count is wrong somewhere. The SM-0053 entry is vague. '184 days late' is uncited. Fabric-life detail was not asked for.",
+   "cost": 0.188254,
+   "knowledge_calls": 2,
+   "calls": 8,
+   "usage": {
+    "in": 74411,
+    "out": 1070,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 5
+   },
+   "answer": "No, the follow-up isn't done. Two of the three RCFA actions are complete, and the wad detector camera is still open and 184 days late.\n\n**What happened**\n- On Feb 9 a 5-inch hole opened in the forming fabric at the TS. A wad of stock off the headbox approach piping caused it [RCFA-SM-26-006].\n- It was 9.5 h of unplanned downtime (570 min), and the crew fitted the spare fabric off the floor [DT-260209-0163] [WO 26102842].\n- That fabric came off after 60 days against an 84-day target, flagged as an early removal for damage [position_life form-bottom, run installed 2025-12-10].\n\n**Follow-up status (RCFA-SM-26-006, status \"Open - actions pending\")**\n- Done: the Feb 9 follow-up action [Action: SM-0053].\n- Done: adding the approach piping to the outage clean list [Action: SM-0056].\n- Done: cleaning the approach piping at the Mar 4 outage [Action: SM-0057].\n- Not done: install a wad detector camera at the breast roll [Action: SM-0059]. It is assigned to Fenna Gallagher, was due 2026-04-30, and is still \"In progress\" and late.\n\nThe clean-list action and the Mar 4 cleaning are marked complete. I found no work order or note confirming what was actually found or cleaned on Mar 4.",
+   "citations": {
+    "total": 8,
+    "supported": 8,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "sm14": {
+   "q": "sm14",
+   "section": "sm",
+   "split": "heldout",
+   "score": 50,
+   "notes": "The CITATION CHECK lists the 'downtime feed, 2026-08-01 to 10-31' citation as unsupported, so it counts as fabricated; it backs the headline break figures. Dryer and reel break counts are omitted. The answer adds asides such as the per-break average.",
+   "cost": 0.111566,
+   "knowledge_calls": 1,
+   "calls": 4,
+   "usage": {
+    "in": 38873,
+    "out": 1106,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 3
+   },
+   "answer": "**Sheet breaks have cost the most downtime since August 1: 106.1 h in total.** Of that, 67.6 h were press-section breaks, all logged to the 2nd press top felt. Dryer breaks were 30.9 h and reel breaks 9.6 h [downtime feed, 2026-08-01 to 10-31]. Breaks are logged as their own kind, separate from unplanned stops. The 56 press breaks averaged 1.21 h each.\n\nExcluding planned outages, the rest of the time lost is unplanned equipment failures. These total about 24.5 h, and bearing failures are the biggest cause:\n- **Bearing failures: 13.7 h across two events.**\n  - 2nd dryer section drive lineup, 408 min on 2026-08-26 [WO 26107735] [RCFA-SM-26-026].\n  - 2nd press drive, 412 min on 2026-09-20 [WO 26108393] [RCFA-SM-26-028].\n  - Both showed Bonvoy vibration rising for 18 to 20 days beforehand.\n- **Dryer driveshaft snaps: 4.8 h on 2026-10-15** [WO 26108981] [RCFA-SM-26-029].\n- **1st press bottom felt plugged (emergency wash): 3.4 h on 2026-08-14** [WO 26107469] [RCFA-SM-26-025].\n- **Pulper rotor, MCC DC bus rectifier fault: 3.4 h on 2026-09-07** [WO 26108148] [RCFA-SM-26-027].\n- **1st press top felt HP shower nozzles plugged: 2.8 h on 2026-08-05** [WO 26107287] [RCFA-SM-26-024].\n- **3rd section rotary joint leak: 2.4 h on 2026-10-02** [WO 26108638]. This one has no RCFA.\n\nBy equipment, the dryer drive lineup is the largest unplanned item at 11.6 h across two stops.",
+   "citations": {
+    "total": 14,
+    "supported": 13,
+    "unsupported": [
+     "downtime feed, 2026-08-01 to 10-31"
+    ],
+    "unchecked": 0
+   }
+  },
+  "sm15": {
+   "q": "sm15",
+   "section": "sm",
+   "split": "heldout",
+   "score": 43.3,
+   "notes": "Omits break counts (37/49/50). The 2026-09-30 planned outage and the 'averages of daily OME' claim appear in no retrieved result, so they look invented and are uncited. Monthly figures are attributed in prose only, not cited inline.",
+   "cost": 0.099316,
+   "knowledge_calls": 1,
+   "calls": 3,
+   "usage": {
+    "in": 33812,
+    "out": 878,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 3
+   },
+   "answer": "October had the best OME of the three months, at 81.0%. September was lowest at 79.3%, and August was 79.9%. The gaps are small, between 0.6 and 1.7 points.\n\n| Month | OME | Time | Production | Quality |\n|---|---|---|---|---|\n| August | 79.9% | 91.5% | 90.0% | 97.3% |\n| September | 79.3% | 90.3% | 90.2% | 97.6% |\n| October | 81.0% | 92.5% | 89.8% | 97.5% |\n\nTime (uptime) drove the differences. It was lowest in September at 90.3% and highest in October at 92.5%. The production rate stayed between 89.8% and 90.2%, and quality between 97.3% and 97.6%. OME is time \u00d7 production \u00d7 quality, as the report states [Production Report PM1-PROD-2026-10-30].\n\nOutput by month, from the monthly efficiency figures:\n- **August:** 21,163 t reel and 20,767 t saleable, with 394 t cull and 11 off-spec hours.\n- **September:** 20,311 t reel and 19,940 t saleable, with 367.5 t cull and 10 off-spec hours.\n- **October:** 20,683 t reel and 20,358 t saleable, with 326.3 t cull and 6 off-spec hours.\n\nCull and off-spec hours fell each month. October's figures cover 30 days, so the last day or so may be missing from the data. The monthly figures are averages of the daily OME values.\n\nI did not look at what caused the September dip. The mill's own planned outage on 2026-09-30 is not separated out here.",
+   "citations": {
+    "total": 1,
+    "supported": 1,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "sm16": {
+   "q": "sm16",
+   "section": "sm",
+   "split": "heldout",
+   "score": 48.3,
+   "notes": "All run lengths, target and current day 30 are correct. The garbled bracket names wrong WO 26105953, which is a citation the check flags as unsupported. Completed runs are uncited. The RCFA paragraph about the earlier felt was not requested.",
+   "cost": 0.13331,
+   "knowledge_calls": 1,
+   "calls": 4,
+   "usage": {
+    "in": 51600,
+    "out": 969,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 4
+   },
+   "answer": "The last three completed 2nd press top felts ran 98%, 98% and 119% of the 42-day target. The current felt is on day 30, which is 71% of target.\n\nCompleted runs (Marlow Press Fabrics seamed felt, 1400 gsm, target 42 days, from the position run history):\n- 2026-05-19 to 2026-07-08: 50 days, 119% of target, planned change.\n- 2026-07-08 to 2026-08-19: 41 days, 98%, planned change, normal wear.\n- 2026-08-19 to 2026-09-30: 41 days, 98%, planned change, normal wear.\n\nCurrent felt: installed 2026-09-30 and running, at 30 days of 42 [Run MPF-40764]. The change is scheduled for the 2026-11-11 outage [WO 26105953 is not the right id; the WO is 26108953, status 40 Scheduled]. That outage falls on day 42 of the run.\n\nThe 50-day felt followed an early removal. The 2026-04-15 to 2026-05-19 felt came out at 33 days, 79% of target. It filled at about 3 weeks, and 22% of the HP shower nozzles were plugged [RCFA-SM-26-016]. That RCFA is still open, with action SM-0138 (Uhle vacuum rate-of-rise on the Bonvoy watch list) in progress [RCFA-SM-26-016].\n\nI did not check this felt's Uhle vacuum or press solids trend. Tell me if you want that.",
+   "citations": {
+    "total": 5,
+    "supported": 4,
+    "unsupported": [
+     "WO 26105953 is not the right id"
+    ],
+    "unchecked": 0
+   }
+  },
+  "sm18": {
+   "q": "sm18",
+   "section": "sm",
+   "split": "heldout",
+   "score": 60,
+   "notes": "Premise correctly rejected. 'Nine outages' Dec 10\u2013Sep 30 looks wrong: a 6-week cadence gives eight. The 6-week schedule claim is uncited. The fan-pump stop is unrequested padding.",
+   "cost": 0.111028,
+   "knowledge_calls": 1,
+   "calls": 3,
+   "usage": {
+    "in": 38879,
+    "out": 685,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 3
+   },
+   "answer": "There was no annual outage this year, and no outage ran long.\n\nPM1 has no annual outage. It has a 20 h outage every 6 weeks. All nine outages from OUT-2025-12-10 through OUT-2026-09-30 are logged at exactly 1200 min (20 h), which matches the plan. Examples:\n- [DT-251210-0058] for OUT-2025-12-10\n- [DT-260527-0352] for OUT-2026-05-27\n- [DT-260930-0573] for OUT-2026-09-30\n\nThe most recent outage, OUT-2026-09-30, shows no overrun. The next stop on the sheets was a 62 min press sheet break on Oct 1 [DT-261001-0574]. That is a break, not outage time.\n\nThe next outage, OUT-2026-11-11, hasn't happened yet.\n\nIf you mean a specific outage, tell me which one and I'll check its scope and the stops around it. You may also be thinking of one of the shorter planned stops, such as the 216 min fan pump impeller change on Oct 29 [DT-261029-0626].",
+   "citations": {
+    "total": 5,
+    "supported": 5,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "sm17": {
+   "q": "sm17",
+   "section": "sm",
+   "split": "heldout",
+   "score": 66.7,
+   "notes": "Both MUST points are met. The 'Oct 14\u201329 give 12 breaks' claim contradicts its own list, which totals 10. Area figures are attributed only loosely to 'the downtime feed'. At 302 words, with unrequested bottom-felt and dryer-can sections.",
+   "cost": 0.15788400000000002,
+   "knowledge_calls": 2,
+   "calls": 5,
+   "usage": {
+    "in": 56863,
+    "out": 1453,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 4
+   },
+   "answer": "**Most October breaks were in the press section, and the 2nd press top felt looks like the main spot.** The 2nd press top felt is the equipment named on every press-section break I read in the shift reports.\n\nOctober had 51 sheet breaks, from the downtime feed. By area:\n- **Press section:** 19 breaks (37%), 23.0 h down, which is 58.7% of break downtime.\n- **Dryer sections:** 20 breaks in total, 13.2 h, which is 33.6% of break downtime.\n  - 2nd section: 7\n  - 4th section: 5\n  - 1st section: 4\n  - 3rd section: 4\n- **Reel:** 12 breaks, 3.1 h, 7.8% of break downtime.\n\nPress breaks were also the longest. They averaged about 73 minutes each, against about 40 for dryer breaks and about 15 for reel breaks.\n\nThe 2nd press top felt is named in the shift reports on these days:\n- Oct 29: a 92 min break [Shift Report PM1-SHIFT-2026-10-29-D]\n- Oct 27: 93 min [Shift Report PM1-SHIFT-2026-10-27-D]\n- Oct 26: 75 min [Shift Report PM1-SHIFT-2026-10-26-D]\n- Oct 24: 62 min [Shift Report PM1-SHIFT-2026-10-24-D]\n- Oct 23: 55 min [Shift Report PM1-SHIFT-2026-10-23-D]\n- Oct 19: 82 min and 61 min [Shift Report PM1-SHIFT-2026-10-19-D]\n- Oct 16: 77 min and 81 min [Shift Report PM1-SHIFT-2026-10-16-N]\n- Oct 14: 80 min [Shift Report PM1-SHIFT-2026-10-14-N]\n\nThe search returned only part of the month, so this list is not complete. The Oct 14 to 29 dates alone give 12 breaks on that felt.\n\nThe same shift reports show 2nd press bottom felt guide hunting in the handovers, on Oct 17 [Shift Report PM1-SHIFT-2026-10-17-D] and Oct 28 [Shift Report PM1-SHIFT-2026-10-28-N]. I haven't checked whether it relates to the top-felt breaks.\n\nDryer breaks were spread across cans. Dryer can 11 and can 16 appear more than once, for example on Oct 17 [Shift Report PM1-SHIFT-2026-10-17-N].",
+   "citations": {
+    "total": 11,
+    "supported": 11,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "n02": {
+   "q": "n02",
+   "section": "new",
+   "split": "new",
+   "score": 66.7,
+   "notes": "Headline claims 5 open overdue actions but lists only 4, a wrong count. RCFA-016 and -024 open status is only implied through their open actions. At 424 words it is about twice the needed length. NICE Nov 11 scope missed.",
+   "cost": 0.17407999999999998,
+   "knowledge_calls": 2,
+   "calls": 7,
+   "usage": {
+    "in": 63717,
+    "out": 1723,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 4
+   },
+   "answer": "**Open corrective actions: 4 across the press felt plugging RCFAs, plus 1 on a related shower RCFA. All 5 are overdue as of today.**\n\n**RCFAs on mid-life press felt plugging**\n- Four RCFAs cover plugged press felts that needed an emergency wash. All four give the same root cause: \"Press felt plugged mid-life; conditioning could not keep it open, so the sheet would not hold.\"\n  - RCFA-SM-26-014, 2nd press bottom felt, May 12, 5.3 h. Still open.\n  - RCFA-SM-26-015, 1st press bottom felt, May 13, 3.6 h. Still open.\n  - RCFA-SM-26-023, 1st press top felt, Jul 21, 5.8 h. Closed.\n  - RCFA-SM-26-025, 1st press bottom felt, Aug 14, 3.4 h. Closed. [RCFA-SM-26-014] [RCFA-SM-26-015] [RCFA-SM-26-023] [RCFA-SM-26-025]\n- Two related RCFAs trace the problem to the HP showers:\n  - RCFA-SM-26-016, 2nd press top felt, May 19. Its root cause is that the felt \"filled early: HP shower nozzles plugged (22%) so the felt wasn't conditioned\". [RCFA-SM-26-016]\n  - RCFA-SM-26-024, 1st press top felt HP shower, Aug 5. Its root cause is a blinded strainer on the shower supply. [RCFA-SM-26-024]\n\n**Common cause**\n- Felts are not being conditioned, because the HP shower nozzles and their strainers plug, and the early warning is not acted on.\n- The four felt RCFAs record \"Uhle vacuum trend not acted on; shower nozzle checks overdue\". The trend was visible in Pi (Uhle vacuum and PM1:PRESS_SOLIDS) for about 8 to 13 days before each stop. [RCFA-SM-26-014] [RCFA-SM-26-015] [RCFA-SM-26-023] [RCFA-SM-26-025]\n- RCFA-SM-26-016 adds that nozzles had not been checked since the February audit and the shower strainer had not been cleaned. [RCFA-SM-26-016]\n\n**Open actions (all late)**\n- SM-0135: add Uhle vacuum rate-of-rise to shift checks for the 1st press bottom felt (RCFA-015). Owner Tobias Renner, due Jun 4, 149 days late. [Action: SM-0135]\n- SM-0133: review felt design with the felt vendor (RCFA-014). Owner Sunniva Brooks, due Jun 24, 129 days late. [Action: SM-0133]\n- SM-0138: add Uhle vacuum rate-of-rise to the Bonvoy watch list (RCFA-016). Owner Mei Fairbanks, due Jul 15, 108 days late. [Action: SM-0138]\n- SM-0195: add the shower strainer to every outage clean list (RCFA-024). Owner Tobias Renner, due Aug 27, 65 days late. [Action: SM-0195]\n\nThe other actions on these RCFAs show as completed. That includes SM-0139 (clean the strainer each outage) and SM-0141 (weekly nozzle check). [Action: SM-0139] [Action: SM-0141]\n\nThe same rate-of-rise check was closed on RCFA-023 and RCFA-025 but is still open on RCFA-015. The Bonvoy watch-list action (SM-0138) has not been done either. As a result, the early warning is still not formally in place.",
+   "citations": {
+    "total": 17,
+    "supported": 17,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "n03": {
+   "q": "n03",
+   "section": "new",
+   "split": "new",
+   "score": 78.3,
+   "notes": "Misses that the current felt is due at the Nov 11 outage (WO 26109296); outage scope was never queried. The opening life figures from position_life are uncited. The July 20 WO speculation is unrequested and the answer runs long.",
+   "cost": 0.14586,
+   "knowledge_calls": 1,
+   "calls": 5,
+   "usage": {
+    "in": 54737,
+    "out": 1115,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 4
+   },
+   "answer": "The 1st press bottom felt wasn't pulled early in August. It was changed at the planned outage on 2026-08-19, after 83 days against an 84-day target (99%), with the reason recorded as \"planned\" and the condition as \"worn\" (Halden Felt Co., style: endless felt, 1500 gsm). [WO 26106706] says it was removed after 83 days with normal wear at removal. Halden's survey agrees: 12 weeks against a 12-week target, caliper 2.53 mm, air perm 19 cfm, \"End of life. Change at this outage as planned\" [DOC HF-SV-260819 p.1].\n\nYou may be thinking of the emergency felt wash on 2026-08-14. The felt stayed on the machine, but the stop cost 3.4 h [BUS 2026-08-14].\n- The felt plugged mid-life. Uhle vacuum had been climbing and press solids falling for 19 days before. [WO 26107469]\n- The root cause was that conditioning couldn't keep the felt open, so the sheet would not hold. [RCFA-SM-26-025]\n- Both RCFA actions are done. One adds an Uhle vacuum rate-of-rise check to the shift checks [Action: SM-0199]. The other is a felt design review with the vendor [Action: SM-0200].\n\nA 2026-07-20 work order, \"Press felt blows\", also names this felt (crew pulling a new felt) [WO 26106944]. The run history shows no change to the felt that day. I can't tell from the data whether a felt was actually swapped then.",
+   "citations": {
+    "total": 8,
+    "supported": 8,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "n04": {
+   "q": "n04",
+   "section": "new",
+   "split": "new",
+   "score": 83.3,
+   "notes": "Accurate and complete. The sentence giving Forming +4.0 h, 2nd dryer +1.8 h and press 24\u219221.5 h has no inline citation. Slightly over length (237 words) with an unrequested Q2 RCFA-SM-26-013 paragraph.",
+   "cost": 0.12589,
+   "knowledge_calls": 1,
+   "calls": 5,
+   "usage": {
+    "in": 43608,
+    "out": 1281,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 3
+   },
+   "answer": "**Stock prep grew the most.** Its unplanned downtime went from 4.5 h in Q2 to 17.8 h in Q3, up 13.3 h. Events went from 1 to 4 [downtime_summary Q2] [downtime_summary Q3]. The next largest increases were Forming (+4.0 h) and the 2nd dryer section (+1.8 h). The Press section fell from 24 h to 21.5 h.\n\nAll four Q3 stock prep stops were on the pulper rotor, and all four RCFAs are closed:\n- **2026-07-06, 235 min:** rectifier fault, MCC-1 DC bus down [WO 26106545]. This is [RCFA-SM-26-019], Closed, 1 of 1 action done [RCFA-SM-26-019].\n- **2026-07-18, 278 min:** drive trip [WO 26106867]. The root cause was an overcurrent trip with a failed IGBT module [RCFA-SM-26-021]. Closed, 2 of 2 actions done [RCFA-SM-26-021].\n- **2026-07-20, 356 min:** bearing failure [WO 26106916]. The root cause was a bearing failing between monthly vibration routes. The comment says Bonvoy showed rising vibration for 35 days beforehand [RCFA-SM-26-022]. Closed, 3 of 3 actions done [RCFA-SM-26-022].\n- **2026-09-07, 201 min:** the same rectifier fault again [WO 26108148]. This is [RCFA-SM-26-027], Closed, 1 of 1 action done [RCFA-SM-26-027].\n\nThe rectifier fault happened twice in Q3 (July and September). Its RCFA-SM-26-019 is closed, but the same fault recurred two months later.\n\nThe Q2 stock prep stop was also a pulper bearing failure, on 2026-04-28 [RCFA-SM-26-013]. That RCFA is still open, with 2 of 3 actions done and 1 overdue (next due 2026-07-01) [RCFA-SM-26-013].",
+   "citations": {
+    "total": 14,
+    "supported": 14,
+    "unsupported": [],
+    "unchecked": 2
+   }
+  },
+  "n05": {
+   "q": "n05",
+   "section": "new",
+   "split": "new",
+   "score": 36.7,
+   "notes": "The OME and factor values are right. Invented facts: the '20 h outage on 09-30 to 10-01' and the '11-11 next outage' appear in no tool output. The downtime figures from downtime_summary are uncited. The outage speculation is unrequested.",
+   "cost": 0.095376,
+   "knowledge_calls": 1,
+   "calls": 4,
+   "usage": {
+    "in": 33655,
+    "out": 867,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 3
+   },
+   "answer": "October OME was 81.0%, up 1.7 points from September's 79.3%. The time factor drove the gain. [Production Report: monthly efficiency, 2026-09 and 2026-10]\n\n- **Time (availability):** 92.5% in October against 90.3% in September, up 2.2 points. This is the only factor that improved by much.\n- **Production (rate):** 89.8% against 90.2%, down 0.4 points.\n- **Quality:** 97.5% against 97.6%, essentially flat. Cull fell from 367.5 t to 326.3 t, and off-spec hours from 10 to 6.\n- **Tons:** 20,683 t against 20,311 t.\n\nDowntime explains the time gain:\n- **Planned downtime:** 8.6 h in October against 23 h in September. September included the 20 h outage on 09-30 to 10-01, which was split between the two months. October's planned time was the part of that outage that fell on 10-01.\n- **Unplanned stops:** 7.2 h (2 events) against 10.2 h (2 events).\n- **Sheet breaks:** 39.3 h (51 breaks) against 37.1 h (49 breaks). Breaks got slightly worse, so they did not drive the gain.\n\nThe October figures cover 30 days, so 10-31 may not be in them. The next outage, 11-11, will pull November's planned time back up.",
+   "citations": {
+    "total": 1,
+    "supported": 1,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "n06": {
+   "q": "n06",
+   "section": "new",
+   "split": "new",
+   "score": 36.7,
+   "notes": "The CITATION CHECK marks [outage_scope OUT-2026-11-11] unsupported, so the felt and shower WO numbers 26108953/26108743 look fabricated. Life dates and timing are correct. Slightly over length, with an extra 'other records' section.",
+   "cost": 0.139996,
+   "knowledge_calls": 2,
+   "calls": 7,
+   "usage": {
+    "in": 51337,
+    "out": 1401,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 4
+   },
+   "answer": "The 2nd press top roll reaches its 728-day (104-week) target on about 2026-12-09, and no change is planned. It is now at 688 days, 95% of target. It has been in since 2024-12-11 [position_life p2-roll-top; DOC SM-REF-02 p.1].\n\n- **Scope:** The OUT-2026-11-11 scope has 22 work orders. None is a 2nd press top roll change or regrind. It does include the 2nd press top felt change, WO 26108953, and the HP shower nozzles, WO 26108743 [outage_scope OUT-2026-11-11].\n- **Other records:** A search for \"2nd press top roll\" in the BUS, work-order, action and RCFA records returned nothing. I found no separate roll work order or action.\n- **Timing:** Day 728 falls 28 days after the Nov 11\u201312 outage. Outages run every 6 weeks, so the next would be about 2026-12-23, which is my calculation and not a listed outage. That is about 2 weeks past target.\n- **Previous roll:** The last cover ran 685 days (94% of target). It was removed as a planned change because hardness had risen 2 P&J, and it was recovered and reground [position_life p2-roll-top].\n\nDecision for you: either add the roll change to the Nov 11 outage, or accept about 2 weeks past target and plan it for the next outage. If you choose Nov 11, Pellham Roll Service needs to be booked now. The records don't show a spare cover or a vendor booking.",
+   "citations": {
+    "total": 4,
+    "supported": 3,
+    "unsupported": [
+     "outage_scope OUT-2026-11-11"
+    ],
+    "unchecked": 0
+   }
+  },
+  "n07": {
+   "q": "n07",
+   "section": "new",
+   "split": "new",
+   "score": 95,
+   "notes": "Accurate and fully cited. It never states night shift or crew D outright, only through the report id. At 259 words it runs over the ~220 data limit, padded by the WO-discrepancy aside and the related RCFA section.",
+   "cost": 0.178058,
+   "knowledge_calls": 2,
+   "calls": 10,
+   "usage": {
+    "in": 66023,
+    "out": 1660,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 5
+   },
+   "answer": "The dryer driveshaft snapped at 20:06 on Oct 14, the 2nd dryer section's drive lineup was down 4.8 h, and one follow-up action is open.\n\n**What happened**\n- The crew logged \"driveshaft snaps\" at 20:06 as an unplanned stop of 287 min on the dryer drive lineup, under WO 26108981. The area was barricaded while maintenance worked. [Shift Report PM1-SHIFT-2026-10-14-N]\n- The downtime feed puts it in the 2nd dryer section, grade 24#, with millwrights called in. [DT-261014-0589]\n- The RCFA records 148 t of lost production and the machine running again at 00:53 on Oct 15. [RCFA-SM-26-029]\n- Root cause: the dryer driveshaft universal joint failed. The contributing factor was a missed joint grease interval. [RCFA-SM-26-029]\n- Bonvoy had no exceptions on PM1:DRYER_DRIVE_VIB since Oct 1, so there was no vibration warning. This was not a bearing failure like the earlier ones. [Bonvoy PM1:DRYER_DRIVE_VIB]\n\n**Follow-up**\n- RCFA-SM-26-029 is open with 1 action and 0 done. Nothing is overdue. [RCFA-SM-26-029]\n- The action is SM-0239, \"Add driveshaft u-joints to the weekly lube route\". Gloria Nakamura owns it, it is in progress, and it is due Nov 5. [Action: SM-0239]\n- The action text cites WO 26100833, but the emergency WO is 26108981. I'd confirm which is right. [Action: SM-0239] [WO 26108981]\n- No other action covers this failure. The RCFA has no inspection or replacement action for the other u-joints.\n\n**Related**\n- A separate dryer drive lineup RCFA from Aug 26 has an overdue action: SM-0207, review grease type and interval, due Oct 29 and still in progress. [RCFA-SM-26-026]",
+   "citations": {
+    "total": 10,
+    "supported": 10,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "n08": {
+   "q": "n08",
+   "section": "new",
+   "split": "new",
+   "score": 75.8,
+   "notes": "Missed the Nov 11 outage scope WOs (26108953 felt change, 26108743 HP shower nozzles). Compared press only to aggregated dryer and reel causes, not to dryer cans 16 and 6. Per-felt event range claim lacks a direct citation.",
+   "cost": 0.22717800000000002,
+   "knowledge_calls": 2,
+   "calls": 8,
+   "usage": {
+    "in": 88499,
+    "out": 1354,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 5
+   },
+   "answer": "**Press section lost the most sheet-break time in October, and that is normal for us.** The press section had 19 breaks and 23.0 h, which is 58.7% of break time [downtime_summary area, Oct]. Dryer breaks added 13.2 h across 20 events, and reel breaks added 3.1 h across 12 events [downtime_summary cause, Oct].\n\n- **Where in the press section:** Every one of the 19 press breaks is logged against the 2nd press top felt (p2-felt-top). They ran 55 to 93 min each, for example 93 min on Oct 27 [DT-261027-0622] and 92 min on Oct 29 [DT-261029-0628]. None has a WO or RCFA attached.\n- **Compared with Jan\u2013Sep:** The press section had 168 breaks and 203.9 h, or 59.5% of break time [downtime_summary area, Jan\u2013Sep]. That averages about 22.7 h and 18.7 events a month over nine months, so October's 23.0 h and 19 events are in line.\n- **Whole machine:** October's 39.3 h of break time is mid-range for the year. May was the worst month at 52.2 h, and February the lowest at 27.9 h [downtime_summary month].\n- **Felt age:** The current 2nd press top felt went on at the Sep 30 outage and is at 30 of 42 target days [position_life p2-felt-top]. So the breaks are not coming from an old felt.\n\nPress breaks are a steady, chronic loss at this felt position, not an October spike. I haven't normalised by hours run per grade.",
+   "citations": {
+    "total": 3,
+    "supported": 3,
+    "unsupported": [],
+    "unchecked": 4
+   }
+  },
+  "n09": {
+   "q": "n09",
+   "section": "new",
+   "split": "new",
+   "score": 90,
+   "notes": "Accurate and fully cited, and the general-knowledge reasoning is clearly labelled. At 289 words it is nearly twice the knowledge limit, padded with C-factor, intensity-range, too-low-SEL and extra drainage bullets.",
+   "cost": 0.10153000000000001,
+   "knowledge_calls": 1,
+   "calls": 3,
+   "usage": {
+    "in": 35534,
+    "out": 1253,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 3
+   },
+   "answer": "**Specific edge load (SEL)** is the energy spent per unit length of bar crossing. It describes how hard each refining impact is, and is also called refining intensity [DOC 856ff3f6-9be4-42e7-b4dc-fee63dfd3cfd p.34]. It is usually expressed in watt-seconds per metre (Ws/m) [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.23].\n\n**Calculation**\n- Use net power, not motor power. Hydraulic losses (no-load power) heat the fluid without refining the fibre, so subtract them from the motor load [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.23].\n- Formula: I = (Applied Motor Power \u2013 No-Load) / [RPM \u00d7 Bar Edge Length \u00d7 (min/60 s)] [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.23].\n- Worked example: Net 363 kW \u00f7 (30 km/rev \u00d7 600 rpm \u00f7 60 s) gives 1.2 Ws/m [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.41].\n- SEL ignores fibre characteristics, so it is a benchmark. C-Factor analysis adds plate geometry [DOC 573e2f9c-afca-42a5-b4a6-10980694ab2e p.24].\n\n**Why recycled fibre needs a lower SEL**\n- The library states \"Recycling requires lower SEL\" but gives no recycled-fibre-specific reason [DOC 856ff3f6-9be4-42e7-b4dc-fee63dfd3cfd p.34].\n- Higher SEL gives more shortened and cut fibres. Lower SEL gives more pronounced fibrillation [DOC 856ff3f6-9be4-42e7-b4dc-fee63dfd3cfd p.34].\n- Intensity above the recommended range causes severe fibre cutting, plate clashing, short plate life and poor strength development [DOC 856ff3f6-9be4-42e7-b4dc-fee63dfd3cfd p.36].\n- Fibre cutting slows drainage and lowers strength [DOC d9815fa5-40a2-474b-9932-eaf665991fc0 p.27]. Low-intensity refining gives more fibrillation, less cutting and better fibre development [DOC d9815fa5-40a2-474b-9932-eaf665991fc0 p.29].\n\nThe library has no source for this part; from general engineering knowledge: recycled fibre has already been dried and refined at least once, so it is shorter and more fragile. It has little length left to lose, and gentle, fibrillating refining is how you recover bonding strength without cutting it further.\n\nGoing too low has its own cost: poor fibre development and an inefficient freeness drop [DOC 856ff3f6-9be4-42e7-b4dc-fee63dfd3cfd p.36].",
+   "citations": {
+    "total": 13,
+    "supported": 13,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "n10": {
+   "q": "n10",
+   "section": "new",
+   "split": "new",
+   "score": 90,
+   "notes": "Never defines % original capacity as tested \u00f7 original capacity at the same speed and vacuum. The unrequested seal-water section and the extra TIP example add padding. Claims are accurate and all cited.",
+   "cost": 0.06445000000000001,
+   "knowledge_calls": 1,
+   "calls": 2,
+   "usage": {
+    "in": 21461,
+    "out": 614,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 2
+   },
+   "answer": "About $18,000 a year is wasted.\n\nEquation 3 gives the wasted energy cost as annual energy cost \u00d7 (1 \u2212 % original capacity) [DOC a92ccac2-eca7-4b0a-a2cc-bd07d3da9fa5 p.4].\n\nCalculation: $60,000 \u00d7 (1 \u2212 0.70) = $18,000 per year.\n\nThe reason is that a pump worn by erosion or corrosion keeps drawing the same horsepower and seal water as a new one [DOC a92ccac2-eca7-4b0a-a2cc-bd07d3da9fa5 p.3]. At 70% of original capacity, 30% of the energy buys no vacuum. The TIP's own example works the same way: an 86% pump wastes 14% of its power [DOC a92ccac2-eca7-4b0a-a2cc-bd07d3da9fa5 p.3].\n\nThe same formula applies to seal water cost (Equation 4), so the pump is also wasting about 30% of its seal water spend [DOC a92ccac2-eca7-4b0a-a2cc-bd07d3da9fa5 p.4].\n\nThe 70% figure should come from a test at the pump's optimum vacuum level, compared with the manufacturer's curve [DOC a92ccac2-eca7-4b0a-a2cc-bd07d3da9fa5 p.3].",
+   "citations": {
+    "total": 5,
+    "supported": 5,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "n11": {
+   "q": "n11",
+   "section": "new",
+   "split": "new",
+   "score": 89,
+   "notes": "Covers density and bonding, and all claims are cited. Misses three key points: fibre modulus and strength limit well-bonded sheets; stiff, thick hardwood fibres help and yield matters little at constant density; CD compressive need and orientation/drying-strain effects.",
+   "cost": 0.100338,
+   "knowledge_calls": 1,
+   "calls": 3,
+   "usage": {
+    "in": 36844,
+    "out": 697,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 3
+   },
+   "answer": "Density mainly controls it. The library says linerboard compressive strength is set mainly by the factors that raise sheet density, which are wet pressing and refining (freeness).\n\n- Compressive strength is \"primarily affected by factors influencing density, such as pressing and refining.\" Tensile strength and modulus also depend on wood yield and species [DOC 168553e0-baa3-4e06-827d-54415678796a p.19].\n- The same report's Table I ranks wet pressing first and freeness second for compressive strength [DOC 168553e0-baa3-4e06-827d-54415678796a p.20].\n- Higher density increases compressive strength [DOC 168553e0-baa3-4e06-827d-54415678796a p.41].\n- Compressive strength rises quickly with z-direction bond strength up to a critical level, then more slowly. High-consistency forming raises internal bond and compressive strength but lowers tensile strength [DOC 168553e0-baa3-4e06-827d-54415678796a p.20].\n- The authors speculate that compressive strength is limited by bending and buckling of weakly bonded fibre layers [DOC 168553e0-baa3-4e06-827d-54415678796a p.20].\n\nThis is a 1982 Institute of Paper Chemistry survey [DOC 168553e0-baa3-4e06-827d-54415678796a p.35].",
+   "citations": {
+    "total": 6,
+    "supported": 6,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  },
+  "n12": {
+   "q": "n12",
+   "section": "new",
+   "split": "new",
+   "score": 90,
+   "notes": "Accurate and fully cited, but padded at 219 words against a ~150 limit. Unrequested extras: the uhle box dwell-time paragraph (self-admittedly off-topic), the couch vacuum limit, and the PM1 disclaimer.",
+   "cost": 0.067696,
+   "knowledge_calls": 1,
+   "calls": 2,
+   "usage": {
+    "in": 21596,
+    "out": 724,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 2
+   },
+   "answer": "A flatbox near the couch generally needs no more than five or six slots. The Doug Sweet paper says slot widths are usually reduced as the sheet approaches the couch [DOC 56ec08f5-d829-4786-b810-b1a7de9c7f74 p.4].\n\nOther ways to reduce table drive load, from the same page:\n- **Fewer flatboxes and less slot area.** Many tables have too many of both. Remove unneeded flatboxes and those with excessive slot area, and use higher vacuum near the wet/dry line, after formation is complete [DOC 56ec08f5-d829-4786-b810-b1a7de9c7f74 p.4].\n- **Low-drag ceramic covers.** Rework flatbox covers with a material such as silicon nitride. Together with the changes above, this can easily save 10\u201320% of power across the couch, wire turning roll and other former drives [DOC 56ec08f5-d829-4786-b810-b1a7de9c7f74 p.4].\n- **Accurate vacuum measurement and control on every element.** Also stay within the physical maximum vacuum limits of each element [DOC 56ec08f5-d829-4786-b810-b1a7de9c7f74 p.4].\n\nThe same paper says more dwell time (slot area) than the machine speed needs only adds vacuum pump capacity and power, with no benefit [DOC 56ec08f5-d829-4786-b810-b1a7de9c7f74 p.5]. It makes that point for uhle boxes, not flatboxes.\n\nThe couch has a limit on vacuum. Too much vacuum can mark the sheet, which is avoided by keeping solids high enough after the flatboxes [DOC 7d704e0a-0ca7-4284-8fb9-dc6721c03b8a p.12].\n\nI did not check PM1's own flatbox configuration or drive loads.",
+   "citations": {
+    "total": 6,
+    "supported": 6,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  }
+ }
+}

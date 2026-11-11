@@ -19,8 +19,8 @@
 // Charts (make_chart) are kept in the trace (tool 'make_chart', args = the chart), so saved answers can redraw them.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { makeModel, setTools, ModelError } from './adapter.ts';
-import { TOOLS, runTool, forModel, checkChart } from './tools.ts';
-import { systemPrompt } from './prompt.ts';
+import { TOOLS, runTool, forModel, checkChart, KNOWLEDGE_TOOLS } from './tools.ts';
+import { systemPrompt, WIKI_RULES, memoryBlock } from './prompt.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!, ANON = Deno.env.get('SUPABASE_ANON_KEY')!, SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const DAILY_CAP = Number(Deno.env.get('MM_LLM_DAILY_CAP') ?? 300);   // all askers together, protects the model bill
@@ -113,10 +113,20 @@ Deno.serve(async (req) => {
   try {
     const m = makeModel(body.model === 'opus' ? 'opus' : 'default'); model = m.model; provider = m.provider;
     const noRag = evalMode && body.no_rag === true;
-    if (noRag) (m as any).tools = TOOLS.filter((t) => !DOC_TOOLS.has(t.name));
+    // wiki + memory: on unless an eval run asks for no_wiki (the comparison run)
+    const noWiki = evalMode && body.no_wiki === true;
+    // memory goes into the prompt (v3), so the memory tools are not offered; the wiki tools stay
+    (m as any).tools = TOOLS.filter((t) => !(noRag && DOC_TOOLS.has(t.name)) && !(noWiki && KNOWLEDGE_TOOLS.has(t.name)) && !t.name.startsWith('memory_'));
     const { data: ctx, error: e } = await db.rpc('mm_llm_context', { p_org: org });
     if (e) throw new Error(e.message);
-    m.start(systemPrompt(orgName, ctx ?? {}) + (noRag ? NO_RAG_NOTE : ''), question);
+    let mem = '';
+    if (!noWiki) {
+      const { data: idx } = await db.rpc('mm_memory_index', { p_org: org });
+      const reads = await Promise.all((idx ?? []).filter((x: any) => x.topic !== '_index')
+        .map((x: any) => db.rpc('mm_memory_read', { p_org: org, p_topic: x.topic })));
+      mem = memoryBlock(reads.flatMap((r: any) => r.data ?? []));
+    }
+    m.start(systemPrompt(orgName, ctx ?? {}) + (noWiki ? '' : WIKI_RULES + mem) + (noRag ? NO_RAG_NOTE : ''), question);
     for (let step = 0; step < MAX_STEPS; step++) {
       const final = step === MAX_STEPS - 1;              // last step: answer from what the tools have returned so far
       const turn = await m.next(final); inT += turn.inTokens; outT += turn.outTokens; cacheR += turn.cacheRead ?? 0; cacheW += turn.cacheWrite ?? 0; steps++;
@@ -131,9 +141,11 @@ Deno.serve(async (req) => {
           results.push({ id: c.id, content: JSON.stringify(chart ? { ok: true, note: 'The page draws this chart under your answer and offers a PNG download. Do not redraw it in text. To fix it, call make_chart again with the same title: that replaces it, so don\'t mention the redraw.' } : { error }) });
           continue;
         }
-        const r = (evalMode && body.no_rag === true && DOC_TOOLS.has(c.name)) ? { error: 'document tools are unavailable in this run' } : await runTool(db, org, c.name, c.args, { embed });
+        const r = (evalMode && body.no_rag === true && DOC_TOOLS.has(c.name)) ? { error: 'document tools are unavailable in this run' }
+          : (evalMode && body.no_wiki === true && KNOWLEDGE_TOOLS.has(c.name)) ? { error: 'wiki and memory are unavailable in this run' }
+          : await runTool(db, org, c.name, c.args, { embed });
         const content = forModel(r);
-        if (evalMode) seen.push(JSON.stringify(c.name === 'get_document_page' && Array.isArray((r as any).rows)   // page rows carry no doc id
+        if (evalMode && !KNOWLEDGE_TOOLS.has(c.name)) seen.push(JSON.stringify(c.name === 'get_document_page' && Array.isArray((r as any).rows)   // page rows carry no doc id
           ? { rows: (r as any).rows.map((x: any) => ({ doc_id: String(c.args.doc_id ?? ''), ...x })) } : r));
         trace.push({ tool: c.name, args: c.args, rows: (r as any).total ?? 0, error: (r as any).error ?? undefined,
                      ...(evalMode ? { preview: content.slice(0, 700) } : {}) });

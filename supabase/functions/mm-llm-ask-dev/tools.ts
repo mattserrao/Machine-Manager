@@ -118,7 +118,28 @@ export const DEFS: Def[] = [
     description: 'Document library counts by status (indexed, needs_review, failed …) with pages and the oldest waiting: what needs a person.',
     parameters: { type: 'object', properties: {} },
     map: () => ({}) },
+  // ---- wiki + memory (branch wiki-memory): maps and process lessons; never cited, the data/document tools are the source ----
+  { name: 'memory_index', rpc: 'mm_memory_index', maxRows: 40,
+    description: 'Memory: the topics of short process lessons for answering well here (which tool holds what, how to cite so every citation checks out, what a brief must include). Read it first; then memory_read a topic that fits the question. Never cite memory.',
+    parameters: { type: 'object', properties: {} }, map: () => ({}) },
+  { name: 'memory_read', rpc: 'mm_memory_read', maxRows: 1,
+    description: 'Memory: one topic of process lessons (from memory_index).',
+    parameters: { type: 'object', properties: { topic: { type: 'string' } }, required: ['topic'] }, map: (a) => ({ p_topic: a.topic }) },
+  { name: 'wiki_index', rpc: 'mm_wiki_index', maxRows: 200,
+    description: 'Wiki: the "Where to start" map and catalog of linked pages built from the sources (positions, equipment, outages, failure modes, documents, topics). kind = a page type to list. The wiki is a map: use it to find records, ids and document pages, then fetch and cite those with the data/document tools. Never cite the wiki.',
+    parameters: { type: 'object', properties: { kind: { type: 'string' } } }, map: (a) => ({ p_kind: a.kind ?? null }) },
+  { name: 'wiki_read', rpc: 'mm_wiki_read', maxRows: 1,
+    description: 'Wiki: one page by slug (e.g. p2-felt-top, reel-drum, out-2026-11-11, press-felt-plugging, doc-voith-press-felt-start-up), or one ## section of it. Lines carry the source to re-fetch and cite.',
+    parameters: { type: 'object', properties: { slug: { type: 'string' }, section: { type: 'string' } }, required: ['slug'] },
+    map: (a) => ({ p_slug: a.slug, p_section: a.section ?? null }) },
+  { name: 'wiki_search', rpc: 'mm_wiki_search', maxRows: 10,
+    description: 'Wiki: pages that match words, with the matching lines.',
+    parameters: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] }, map: (a) => ({ p_query: a.query, p_limit: 8 }) },
+  { name: 'wiki_neighbors', rpc: 'mm_wiki_neighbors', maxRows: 80,
+    description: 'Wiki: pages linked from and to a page (to find the second and third sources a question needs).',
+    parameters: { type: 'object', properties: { slug: { type: 'string' } }, required: ['slug'] }, map: (a) => ({ p_slug: a.slug }) },
 ];
+export const KNOWLEDGE_TOOLS = new Set(['memory_index', 'memory_read', 'wiki_index', 'wiki_read', 'wiki_search', 'wiki_neighbors']);
 
 // Not a database tool: the model hands over the numbers and the page draws the chart (with a PNG download).
 export const CHART: Tool = { name: 'make_chart',

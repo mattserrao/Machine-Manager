@@ -105,6 +105,30 @@
   .ar-t tr.cmp td{color:var(--muted)}
   .ar-wrap{overflow-x:auto}
 
+  /* ---- Memory and wiki tab: wiki graph (mm-wiki-graph.js) ---- */
+  .wg-lead{font-size:13px;color:var(--muted);margin:4px 0 10px;line-height:1.5}
+  .wg-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin:0 0 8px}
+  .wg-seg{display:flex;gap:4px} .wg-seg .btn[aria-pressed="true"]{border-color:var(--accent);color:var(--ink)}
+  .wg-f{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px}
+  .wg-f select,.wg-q{font:inherit;font-size:12px;background:var(--surface);color:var(--ink);border:1px solid var(--line-strong);border-radius:var(--r-sm,6px);padding:4px 6px}
+  .wg-health{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:12px;color:var(--muted);margin:0 0 8px}
+  .wg-health b{color:var(--ink);font-weight:600;margin-right:5px;font-variant-numeric:tabular-nums}
+  .wg-main{display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:12px}
+  .wg-canvas{position:relative;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);overflow:hidden}
+  .wg-canvas canvas{display:block;width:100%;cursor:pointer}
+  .wg-tip{position:absolute;max-width:240px;pointer-events:none;background:var(--overlay,var(--surface));border:1px solid var(--line-strong);border-radius:6px;padding:6px 8px;font-size:12px;line-height:1.4}
+  .wg-tip b,.wg-info b{display:block;color:var(--ink)} .wg-tip span,.wg-info span{color:var(--muted)}
+  .wg-side{font-size:12.5px;line-height:1.45;max-height:720px;overflow:auto}
+  .wg-hint,.wg-desc{color:var(--muted);margin:0 0 8px} .wg-sub{margin:10px 0 4px;font-weight:600;color:var(--ink-2)}
+  .wg-side ul{list-style:none;margin:0;padding:0} .wg-side li button{font:inherit;font-size:12px;background:none;border:0;color:var(--accent-ink);padding:2px 0;cursor:pointer;text-align:left}
+  .wg-key{display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;margin:8px 0 0;font-size:12px;color:var(--muted)}
+  .wg-key i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
+  .wg-key i.ghost{border:1px dashed var(--muted)} .wg-key i.root{border:1.5px solid var(--ink)}
+  .wg-scale{display:inline-flex;align-items:center;gap:4px;color:var(--muted)} .wg-scale em{font-style:normal;margin-right:8px}
+  .wg-body{border-top:1px solid var(--line,#ddd);margin-top:6px;padding-top:6px} .wg-body p{margin:0 0 6px} .wg-h{font-weight:600;color:var(--ink-2)}
+  .wg-ul{list-style:disc;padding-left:16px!important;margin:0 0 6px!important} .wg-link{font:inherit;background:none;border:0;padding:0;color:var(--accent-ink);text-decoration:underline;cursor:pointer} .wg-red{color:var(--muted);border-bottom:1px dashed}
+  @media (max-width:820px){ .wg-main{grid-template-columns:1fr} .wg-side{max-height:none} }
+
   /* ---- Narrower screens: columns stack, wires hide, a down-arrow joins each stage ---- */
   @media (max-width:980px){
     .flow{grid-template-columns:1fr;gap:28px}
@@ -263,6 +287,7 @@
       <button type="button" role="tab" id="tabSimBtn" aria-controls="tabSim" aria-selected="false" tabindex="-1">Sim Mill: data from The Paper Mill</button>
       <button type="button" role="tab" id="tabMcpBtn" aria-controls="tabMcp" aria-selected="false" tabindex="-1">Use it from Claude (MCP)</button>
       <button type="button" role="tab" id="tabTestBtn" aria-controls="tabTest" aria-selected="false" tabindex="-1">Testing and tuning</button>
+      <button type="button" role="tab" id="tabWikiBtn" aria-controls="tabWiki" aria-selected="false" tabindex="-1">Memory and wiki</button>
     </div>
     <div class="sheet-b">
     <div id="tabFlow" role="tabpanel" aria-labelledby="tabFlowBtn">
@@ -341,7 +366,7 @@
       </ol>
       <h3 class="rules-h">Results: mean score on the 36 training questions</h3>
       <div class="ar-wrap"><table class="ar-t">
-        <thead><tr><th>Run</th><th class="n">Papermaking</th><th class="n">Chem / industrial</th><th class="n">Sim Mill data</th><th class="n">All</th></tr></thead>
+        <thead><tr><th>Run</th><th class="n">Papermaking</th><th class="n">Chem / industrial</th><th class="n">Sim Mill data</th><th class="n">New (mixed)</th><th class="n">All</th></tr></thead>
         <tbody>
           <tr><td>Baseline</td><td class="n">81.1</td><td class="n">78.7</td><td class="n">58.5</td><td class="n">72.8</td></tr>
           <tr class="kept"><td>Round 1: cite every claim, stay short (kept)</td><td class="n">88.1</td><td class="n">89.8</td><td class="n">68.5</td><td class="n">82.1</td></tr>
@@ -361,6 +386,40 @@
       </div>
     </div>
 
+    <div id="tabWiki" role="tabpanel" aria-labelledby="tabWikiBtn" hidden>
+      <section class="intro">
+        <h3 class="sub-h">Memory and wiki (Nov 2026, test)</h3>
+        <p>Two layers sit between the question and the tools. The <b>wiki</b> is a set of linked, cited pages built from the sources: one page per position, piece of equipment, outage, failure mode and library document, plus topic pages that join them. The <b>memory</b> is a short set of lessons on how to answer well here: which tool holds what, how to cite so every citation checks out, what a brief must include. Both are maps, not sources: the assistant uses them to find the right records and pages, then fetches and cites those with the tools. If the wiki and a tool disagree, the tool wins.</p>
+      </section>
+      <ol class="sm-steps">
+        <li><b>Built from the sources.</b> The mill records (work orders, BUS sheets, RCFAs and actions, downtime, shift and production reports, Bonvoy, vendor reports) and the document library were split into batches. One agent per batch wrote or extended the pages, citing every line to the record id or document page it came from; a final pass merged duplicates, wrote the "Where to start" map and the watch list.</li>
+        <li><b>Memory from mistakes, not answers.</b> After the baseline, the training answers that lost points were read and turned into general lessons (for example: daily Pi rows don't carry the tag, so cite Bonvoy rows; look up owners and spare parts before saying there are none). No answer, key or held-back question went into memory or the wiki.</li>
+        <li><b>Tested through the same tools.</b> Fresh Claude Sonnet 5.5 sessions answered the 36 training questions through the MCP server's tools, with and without the wiki and memory, graded by the same Opus judge. The final check used the API assistant itself on the held-back and new questions.</li>
+      </ol>
+      <h3 class="rules-h">Results</h3>
+      <div class="ar-wrap"><table class="ar-t" id="wikiResults">
+        <thead><tr><th>Run</th><th class="n">Papermaking</th><th class="n">Chem / industrial</th><th class="n">Sim Mill data</th><th class="n">New (mixed)</th><th class="n">All</th></tr></thead>
+        <tbody>
+          <tr><td>Training questions, no wiki or memory (mean of 2 runs)</td><td class="n">90.5</td><td class="n">92.0</td><td class="n">68.5</td><td class="n">—</td><td class="n">83.7</td></tr>
+          <tr><td>Training questions, with wiki and memory (test agents)</td><td class="n">91.2</td><td class="n">81.6</td><td class="n">75.1</td><td class="n">—</td><td class="n">82.7</td></tr>
+          <tr><td>Final API run, unseen questions (30), no wiki or memory</td><td class="n">81.6</td><td class="n">86.7</td><td class="n">67.2</td><td class="n">83.0</td><td class="n">80.3</td></tr>
+          <tr><td>Final API run, unseen questions (30), with wiki and memory</td><td class="n">89.4</td><td class="n">90.3</td><td class="n">54.7</td><td class="n">78.0</td><td class="n">78.1</td></tr>
+          <tr><td>Final API, memory in the prompt, wiki as a tool (v3; Sim Mill and new only)</td><td class="n">—</td><td class="n">—</td><td class="n">62.5</td><td class="n">85.9</td><td class="n">—</td></tr>
+        </tbody>
+      </table></div>
+      <p class="wg-lead">Final runs: 6 held-out questions per section plus 12 new questions written for this test and never seen during training. Scores are 0–100 (judge v2); single runs vary by about ±4 overall and ±10 on Sim Mill.</p>
+      <h3 class="rules-h">What it showed</h3>
+      <ul>
+        <li>The wiki helps the knowledge questions: on unseen papermaking and chem questions the API scored 89.4 and 90.3 with it, against 81.6 and 86.7 without. The topic pages point it to the right document page, so it reads less and cites better.</li>
+        <li>It hurt the Sim Mill data questions (54.7 against 67.2 held-out; 78.0 against 83.0 on the new set). With the wiki on, the API model read only the memory index and one wiki page, then made fewer data calls and twice cited a tool call or an unreturned fact, which the citation check caps at 50.</li>
+        <li>Fix (v3): the memory lessons now go straight into the system prompt and the wiki stays a tool. On the same unseen questions Sim Mill went from 54.7 to 62.5 and the new set from 78.0 to 85.9, back level with no wiki on Sim Mill (67.2, within noise) and ahead on the new set (83.0).</li>
+      </ul>
+      <h3 class="rules-h">Wiki connections</h3>
+      <p class="wg-lead">Each circle is a wiki page; its area is the page's size. Lines are the links between pages. Dashed circles are pages the wiki links to but hasn't written yet; a ring marks a page with a recorded conflict between sources.</p>
+      <div id="wikiGraph"></div>
+    </div>
+
+
     </div>
   </div>
 </div>
@@ -368,6 +427,7 @@
 <script src="mm-config.js?v=2026-11-10.1128"></script>
 <script src="mm-cloud.js?v=2026-11-10.1128"></script>
 <script src="mm-llm-org.js?v=2026-11-10.1128"></script>
+<script src="mm-wiki-graph.js?v=2026-11-10.2310"></script>
 <script>
   const VERSION = 'v0.12.0';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
@@ -861,18 +921,36 @@
     }
   })();
   // ---------- About: tabs ----------
-  const tabBtns = ['tabFlowBtn', 'tabSimBtn', 'tabMcpBtn', 'tabTestBtn'].map(id => document.getElementById(id));
+  const tabBtns = ['tabFlowBtn', 'tabSimBtn', 'tabMcpBtn', 'tabTestBtn', 'tabWikiBtn'].map(id => document.getElementById(id));
   function showTab(i, focus){
     tabBtns.forEach((b, k) => { b.setAttribute('aria-selected', String(k === i)); b.tabIndex = k === i ? 0 : -1;
       document.getElementById(b.getAttribute('aria-controls')).hidden = k !== i; });
     if (focus) tabBtns[i].focus();
     document.querySelector('#about .sheet-b').scrollTop = 0;
-    if (i === 0) requestAnimationFrame(draw); else if (i === 1) drawSim();
+    if (i === 0) requestAnimationFrame(draw); else if (i === 1) drawSim(); else if (i === 4) requestAnimationFrame(drawWiki);
   }
   tabBtns.forEach((b, i) => {
     b.addEventListener('click', () => showTab(i));
     b.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowLeft'){ e.preventDefault(); showTab((i + (e.key === 'ArrowRight' ? 1 : tabBtns.length - 1)) % tabBtns.length, true); } });
   });
+
+  // ---------- About: wiki connections graph (mm-wiki-graph.js) ----------
+  let wikiGraph = null;
+  function drawWiki(){
+    if (wikiGraph) { wikiGraph.redraw(); return; }
+    // Page text comes from Supabase (mm_wiki_page), so row-level security applies: Sim Mill is public;
+    // the document-library wiki is readable by Demodemo RAG members only.
+    let wikiSt = null;
+    wikiGraph = MMWikiGraph.mount(document.getElementById('wikiGraph'), { sources: [
+      { label: 'Sim Mill records', url: 'demo-data/wiki/sim-mill.json', org: '68150431-54fe-4561-a3f1-578ea63fdbaa' },
+      { label: 'Document library', url: 'demo-data/wiki/demodemo-rag.json', org: 'fc3efa3c-8e84-482e-baf5-746eb4e63612',
+        locked: 'Sign in with an account that belongs to Demodemo RAG to read the library wiki pages.' }],
+      readPage: async (src, slug) => {
+        wikiSt ??= await MMLLMOrg.resolve();
+        const { data, error } = await wikiSt.db.rpc('mm_wiki_page', { p_org: src.org, p_slug: slug });
+        return error || !data ? null : data.body;
+      } });
+  }
 
   // ---------- About: Sim Mill flowchart (fixed layout, SVG; scrolls sideways on small screens) ----------
   let simDrawn = false;

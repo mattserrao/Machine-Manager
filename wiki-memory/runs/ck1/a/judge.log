@@ -1,0 +1,14 @@
+eval run 11; spent so far $35.34 of $50
+sm04    100  calls 2+0  cites 6/6  Counts, chart and all five not-ready WOs are covered and cited to tool data. Omits the detail that only one re
+sm01   56.7  calls 10+1  cites 17/17  Leads with the couch roll, not the reel drum. It wrongly says Bonvoy doesn't flag the reel drum. It omits the 
+sm03   56.7  calls 6+1  cites 8/8  Projection of ~90 kWh/t sits just below the 92–95 range. Never says both plate sets are due Nov 11 or that the
+sm02   71.7  calls 3+0  cites 12/12  Felt life given as 33 days. Key and Marlow analysis say 34 days (04/15–05/19), so this is a wrong value. Other
+sm06   73.3  calls 2+0  cites 3/3  Misses Bonvoy's syphon-differential precursor, the >60-day spacing, Brightwater's Oct 14 misalignment finding 
+sm05   61.7  calls 7+2  cites 6/6  Omits the ~1.4%/day climb, Tobias Renner as current BUS owner, and the REF 1 Nov 11 plate WO. The sand carry-o
+sm07   73.3  calls 6+0  cites 6/6  Misses the Keel Aug 12 outer race defect finding. Jul 21-22 vibration values and the outage-dip claim lack for
+sm09     95  calls 3+0  cites 0/0  Rates of 7.06 vs 5.23 per 100 h match the trace and fall within tolerance of the key. It omits the explicit ~4
+sm08     80  calls 5+1  cites 9/9  Correctly says Danger was crossed around Oct 22 (0.43 on Oct 31, rising). Misses the bearing ETA of Nov 5, the
+sm11   88.3  calls 7+0  cites 3/3  Correctly rejects the premise: PM1 has no calender. The press roll grind details are cited and supported. The 
+sm10     45  calls 5+2  cites 2/2  Counts (B151/C135/D130/A118) and chi-square p≈0.24 differ from key (B164/C147/D145/A122, p≈0.1). The B-vs-A ~2
+sm12   66.7  calls 2+0  cites 10/10  All 11 actions are listed and cited, but the answer says 8 are RCFA follow-ups when nine are (-026 dryer drive
+{"eval_run": 11, "label": "wiki-memory ck1 A sim only (wiki+memory, rules v1)", "mean": 72.4, "n": 12, "by_section": {"sm": 72.4}, "judge_cost": 0.335}

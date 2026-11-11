@@ -1,0 +1,38 @@
+eval run 9; spent so far $33.85 of $50
+pm02     95  calls 4+0  cites 11/11  All MUST points are present and every claim is cited and supported. At 177 words it runs over the 150-word tar
+pm01     95  calls 2+0  cites 8/8  All six steps are accurate and properly cited to the Voith procedure. At 195 words it runs over the ~150-word 
+pm04     95  calls 2+0  cites 4/4  Both points covered and cited. Slightly over length (174 words) with an unrequested look-alike section and a r
+pm03     95  calls 6+0  cites 9/9  Accurate and fully cited, but omits the polyamide friction point and the slotted-cover fix. At 231 words it is
+pm05     95  calls 7+0  cites 11/11  All points covered and cited to the supported checklist. At 283 words it runs long, with extra detail (flashli
+pm06   78.3  calls 4+0  cites 12/12  All MUST points covered. The ruby-nozzle claim appears only in the uncited intro. At 284 words it is nearly do
+pm07     90  calls 3+0  cites 11/11  Accurate and fully cited. At 279 words it is nearly twice the ~150-word limit, and it adds an unrequested lab 
+pm08     85  calls 3+0  cites 8/8  Misses that two boxes per felt are justified only for cleaning needs, not for extra dewatering. Long (223 word
+pm11     95  calls 4+0  cites 5/5  All MUST points are correct and cited. The TAPPI nozzle type and settings bullet was not asked for and adds an
+pm09   87.5  calls 2+0  cites 8/8  Misses that wide-open valves put full header vacuum on early elements. Misses the rule that water must stay at
+ce01     95  calls 3+0  cites 7/7  Both points are correct and cited to TIP 0502-17 p3, with the general-knowledge example labelled. At 176 words
+pm12   86.5  calls 3+0  cites 14/14  Misses the instruction to measure near a support on slack webs. At 273 words it is nearly twice the target. Th
+pm10     90  calls 4+0  cites 6/6  Causes are incomplete: no mention of low ingoing or couch solids, or of Uhle box vacuum. Citations are real an
+ce02     95  calls 2+0  cites 2/2  Correct and fully cited. The pipeline velocity formula paragraph is an unrequested extra section.
+ce04    100  calls 1+0  cites 4/4  clean
+ce03     95  calls 1+0  cites 8/8  Accurate and fully cited. At 198 words it runs over the ~150-word target, adding unrequested vena contracta an
+ce05     85  calls 2+0  cites 7/7  Flooding is covered, but it misses that a cascade reuses the blow-through and flash steam. At 219 words it is 
+ce08     95  calls 2+0  cites 5/5  All MUST points covered and cited. At 188 words it runs over the ~150 limit, and the heat-up-curve bullet is m
+ce07     85  calls 1+0  cites 7/7  Misses that above about 350 m/min condensate moves with the shell; only the below-350 pit is stated. Misses sc
+ce06     95  calls 3+0  cites 7/7  All MUST points made and fully cited. At 192 words it runs over the ~150 target, with extra PdCV2 detail and a
+ce10    100  calls 1+0  cites 5/5  clean
+ce09   91.5  calls 2+0  cites 7/7  Misses water quality: clean once-through water is best, and recirculated cooling-tower water means frequent re
+ce12   61.7  calls 4+0  cites 1/1  Lists 'air in the white water' as a cavitation sign, conflating entrained air with cavitation instead of disti
+ce11     95  calls 2+0  cites 2/2  Both points are correct, the library gap is clearly flagged and the values are labelled as general knowledge. 
+sm01     45  calls 8+0  cites 18/18  Leads with the couch roll bearing, not the reel drum. Omits the Brightwater 3rd section DS rotary joint, the J
+sm03   33.3  calls 7+0  cites 4/7  Three PI citations are tagged 'Bonvoy' but the data came from Sim Mill, so they count as fabricated. Misses th
+sm02     95  calls 4+0  cites 16/16  Accurate and fully cited; it correctly notes the change was May 19, not early May. Slightly over length (244 w
+sm04   76.7  calls 2+0  cites 5/5  Misses that only one set of refiner plates is on hand for the two REF changes. It also wrongly claims the othe
+sm05   26.7  calls 7+0  cites 6/6  Missing the 1.4%/day climb and the REF 1 comparison (62 kWh/t). Omits that Tobias Renner owns the current BUS 
+sm07     50  calls 6+0  cites 4/5  The CITATION CHECK marks [Bonvoy PM1:REEL_DRUM_DS_TEMP 2026-10-31] as unsupported, so it is treated as fabrica
+sm08   33.3  calls 7+0  cites 5/6  Correctly says Danger already crossed (Oct 22, ~0.43 Oct 31). Omits overdue expedite action, closer bearing ch
+sm06   73.3  calls 2+0  cites 0/0  Correctly identifies the 3rd section DS joint (3 leaks, 8 h, below threshold). Omits Bonvoy syphon differentia
+sm12     95  calls 1+0  cites 11/11  All 11 overdue actions are correct and cited. At 366 words it runs well past the ~220-word guide for data ques
+sm09   88.3  calls 3+0  cites 0/0  Figures match the tool data and fall within ~5% of the key (395 vs 402 breaks; 7.06 vs 7.2/100 h). The 31# and
+sm11   88.3  calls 6+0  cites 4/4  Rejects the calender premise correctly. It says the roll list shows only press and dryer felt rolls, which omi
+sm10   56.7  calls 4+0  cites 0/0  Counts (151/118/135/130) cover a shorter window than the key (164/122/147/145). Misses B-vs-A ~2.5 SD and chi-
+{"eval_run": 9, "label": "wiki-memory ck0 baseline A (MCP subagent, no wiki/memory)", "mean": 81.7, "n": 36, "by_section": {"pm": 90.6, "ce": 91.1, "sm": 63.5}, "judge_cost": 0.736}

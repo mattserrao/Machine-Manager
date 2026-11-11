@@ -1,0 +1,350 @@
+{
+ "summary": {
+  "eval_run": 11,
+  "label": "wiki-memory ck1 A sim only (wiki+memory, rules v1)",
+  "mean": 72.4,
+  "n": 12,
+  "by_section": {
+   "sm": 72.4
+  },
+  "judge_cost": 0.335
+ },
+ "results": {
+  "sm04": {
+   "score": 100,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 3,
+    "citations": {
+     "total": 6,
+     "supported": 6,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Counts, chart and all five not-ready WOs are covered and cited to tool data. Omits the detail that only one refiner plate set is on hand for the two REF changes.",
+   "cost": 0.01748,
+   "tool_calls": 2,
+   "wiki_memory_calls": 0,
+   "words": 139,
+   "citations": {
+    "total": 6,
+    "supported": 6,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "sm01": {
+   "score": 56.7,
+   "criteria": {
+    "correct": 1,
+    "cited": 3,
+    "complete": 0,
+    "concise": 2,
+    "citations": {
+     "total": 17,
+     "supported": 17,
+     "unsupported": 0,
+     "unchecked": 1,
+     "list": []
+    }
+   },
+   "notes": "Leads with the couch roll, not the reel drum. It wrongly says Bonvoy doesn't flag the reel drum. It omits the Aug 12 outer race defect, the missed Aug 19 outage, the Oct 14 0.39 reading and the 3rd section rotary joint. Somewhat over length.",
+   "cost": 0.036652,
+   "tool_calls": 10,
+   "wiki_memory_calls": 1,
+   "words": 332,
+   "citations": {
+    "total": 17,
+    "supported": 17,
+    "unsupported": [],
+    "unchecked": 1
+   },
+   "auto": []
+  },
+  "sm03": {
+   "score": 56.7,
+   "criteria": {
+    "correct": 2,
+    "cited": 2,
+    "complete": 0,
+    "concise": 2,
+    "citations": {
+     "total": 8,
+     "supported": 8,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Projection of ~90 kWh/t sits just below the 92\u201395 range. Never says both plate sets are due Nov 11 or that the second Ridgeway set must be ordered now. Chart marks Nov 11, not the Sep 30 outage. Unrequested cause section.",
+   "cost": 0.029824,
+   "tool_calls": 6,
+   "wiki_memory_calls": 1,
+   "words": 216,
+   "citations": {
+    "total": 8,
+    "supported": 8,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "sm02": {
+   "score": 71.7,
+   "criteria": {
+    "correct": 1,
+    "cited": 3,
+    "complete": 3,
+    "concise": 2,
+    "citations": {
+     "total": 12,
+     "supported": 12,
+     "unsupported": 0,
+     "unchecked": 1,
+     "list": []
+    }
+   },
+   "notes": "Felt life given as 33 days. Key and Marlow analysis say 34 days (04/15\u201305/19), so this is a wrong value. Otherwise complete and cited. Slightly over length, with unrequested detail on the replacement felt.",
+   "cost": 0.033336,
+   "tool_calls": 3,
+   "wiki_memory_calls": 0,
+   "words": 246,
+   "citations": {
+    "total": 12,
+    "supported": 12,
+    "unsupported": [],
+    "unchecked": 1
+   },
+   "auto": []
+  },
+  "sm06": {
+   "score": 73.3,
+   "criteria": {
+    "correct": 3,
+    "cited": 2,
+    "complete": 0,
+    "concise": 3,
+    "citations": {
+     "total": 3,
+     "supported": 3,
+     "unsupported": 0,
+     "unchecked": 1,
+     "list": []
+    }
+   },
+   "notes": "Misses Bonvoy's syphon-differential precursor, the >60-day spacing, Brightwater's Oct 14 misalignment finding and the replace/re-align recommendation. Claim that the other eight groups have RCFAs is uncited.",
+   "cost": 0.020372,
+   "tool_calls": 2,
+   "wiki_memory_calls": 0,
+   "words": 96,
+   "citations": {
+    "total": 3,
+    "supported": 3,
+    "unsupported": [],
+    "unchecked": 1
+   },
+   "auto": []
+  },
+  "sm05": {
+   "score": 61.7,
+   "criteria": {
+    "correct": 2,
+    "cited": 2,
+    "complete": 0,
+    "concise": 3,
+    "citations": {
+     "total": 6,
+     "supported": 6,
+     "unsupported": 0,
+     "unchecked": 3,
+     "list": []
+    }
+   },
+   "notes": "Omits the ~1.4%/day climb, Tobias Renner as current BUS owner, and the REF 1 Nov 11 plate WO. The sand carry-over cause is uncited. '3 days late' may be off by a day against Nov 1.",
+   "cost": 0.037252,
+   "tool_calls": 7,
+   "wiki_memory_calls": 2,
+   "words": 201,
+   "citations": {
+    "total": 6,
+    "supported": 6,
+    "unsupported": [],
+    "unchecked": 3
+   },
+   "auto": []
+  },
+  "sm07": {
+   "score": 73.3,
+   "criteria": {
+    "correct": 3,
+    "cited": 2,
+    "complete": 0,
+    "concise": 3,
+    "citations": {
+     "total": 6,
+     "supported": 6,
+     "unsupported": 0,
+     "unchecked": 1,
+     "list": []
+    }
+   },
+   "notes": "Misses the Keel Aug 12 outer race defect finding. Jul 21-22 vibration values and the outage-dip claim lack formal citations; Pi data is attributed only in prose. Chart puts vibration on the right axis.",
+   "cost": 0.033096,
+   "tool_calls": 6,
+   "wiki_memory_calls": 0,
+   "words": 183,
+   "citations": {
+    "total": 6,
+    "supported": 6,
+    "unsupported": [],
+    "unchecked": 1
+   },
+   "auto": []
+  },
+  "sm09": {
+   "score": 95,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 2,
+    "citations": {
+     "total": 0,
+     "supported": 0,
+     "unsupported": 0,
+     "unchecked": 4,
+     "list": []
+    }
+   },
+   "notes": "Rates of 7.06 vs 5.23 per 100 h match the trace and fall within tolerance of the key. It omits the explicit ~40% figure and the other grades. The break-time and unplanned-stop paragraphs were not requested.",
+   "cost": 0.022784,
+   "tool_calls": 3,
+   "wiki_memory_calls": 0,
+   "words": 175,
+   "citations": {
+    "total": 0,
+    "supported": 0,
+    "unsupported": [],
+    "unchecked": 4
+   },
+   "auto": []
+  },
+  "sm08": {
+   "score": 80,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 0,
+    "concise": 2,
+    "citations": {
+     "total": 9,
+     "supported": 9,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Correctly says Danger was crossed around Oct 22 (0.43 on Oct 31, rising). Misses the bearing ETA of Nov 5, the overdue expedite action, and the interim plan (closer checks, ready for an unplanned change). Slightly long and repeats the Danger limit.",
+   "cost": 0.032388,
+   "tool_calls": 5,
+   "wiki_memory_calls": 1,
+   "words": 238,
+   "citations": {
+    "total": 9,
+    "supported": 9,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "sm11": {
+   "score": 88.3,
+   "criteria": {
+    "correct": 3,
+    "cited": 2,
+    "complete": 3,
+    "concise": 3,
+    "citations": {
+     "total": 3,
+     "supported": 3,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Correctly rejects the premise: PM1 has no calender. The press roll grind details are cited and supported. The PM1 section layout and the position-list claim are uncited.",
+   "cost": 0.019996,
+   "tool_calls": 7,
+   "wiki_memory_calls": 0,
+   "words": 140,
+   "citations": {
+    "total": 3,
+    "supported": 3,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "sm10": {
+   "score": 45,
+   "criteria": {
+    "correct": 1,
+    "cited": 2,
+    "complete": 0,
+    "concise": 2,
+    "citations": {
+     "total": 2,
+     "supported": 2,
+     "unsupported": 0,
+     "unchecked": 2,
+     "list": []
+    }
+   },
+   "notes": "Counts (B151/C135/D130/A118) and chi-square p\u22480.24 differ from key (B164/C147/D145/A122, p\u22480.1). The B-vs-A ~2.5 SD gap is missing, and 'No' is too firm versus 'worth watching'. The unplanned-stops section was not requested.",
+   "cost": 0.026228,
+   "tool_calls": 5,
+   "wiki_memory_calls": 2,
+   "words": 224,
+   "citations": {
+    "total": 2,
+    "supported": 2,
+    "unsupported": [],
+    "unchecked": 2
+   },
+   "auto": []
+  },
+  "sm12": {
+   "score": 66.7,
+   "criteria": {
+    "correct": 1,
+    "cited": 3,
+    "complete": 3,
+    "concise": 1,
+    "citations": {
+     "total": 10,
+     "supported": 10,
+     "unsupported": 0,
+     "unchecked": 1,
+     "list": []
+    }
+   },
+   "notes": "All 11 actions are listed and cited, but the answer says 8 are RCFA follow-ups when nine are (-026 dryer drive grease is RCFA) and places -026 out of date order. At 362 words it is padded.",
+   "cost": 0.025492,
+   "tool_calls": 2,
+   "wiki_memory_calls": 0,
+   "words": 362,
+   "citations": {
+    "total": 10,
+    "supported": 10,
+    "unsupported": [],
+    "unchecked": 1
+   },
+   "auto": []
+  }
+ }
+}

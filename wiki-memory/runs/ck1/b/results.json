@@ -1,0 +1,1024 @@
+{
+ "summary": {
+  "eval_run": 12,
+  "label": "wiki-memory ck1 B (wiki+memory, rules v2)",
+  "mean": 82.7,
+  "n": 36,
+  "by_section": {
+   "pm": 91.2,
+   "ce": 81.6,
+   "sm": 75.1
+  },
+  "judge_cost": 0.786
+ },
+ "results": {
+  "pm04": {
+   "score": 95,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 2,
+    "citations": {
+     "total": 4,
+     "supported": 4,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Both points are correct and cited. The extra section on centre or both-ends wear and the closing offer were not requested and push the answer slightly over length.",
+   "cost": 0.01348,
+   "tool_calls": 3,
+   "wiki_memory_calls": 3,
+   "words": 156,
+   "citations": {
+    "total": 4,
+    "supported": 4,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "pm01": {
+   "score": 95,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 2,
+    "citations": {
+     "total": 13,
+     "supported": 13,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "All points correct and cited. At 249 words the answer runs long for a knowledge question, mainly because of the unrequested p.4 shower-settings section and the closing caveat.",
+   "cost": 0.017856,
+   "tool_calls": 2,
+   "wiki_memory_calls": 0,
+   "words": 249,
+   "citations": {
+    "total": 13,
+    "supported": 13,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "pm03": {
+   "score": 90,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 1,
+    "citations": {
+     "total": 16,
+     "supported": 16,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Accurate and fully cited. At 302 words it is about twice the knowledge-question length, with a preamble about the data tools. Omits the polyamide ~30% lower friction and the slotted-cover fix.",
+   "cost": 0.02292,
+   "tool_calls": 6,
+   "wiki_memory_calls": 5,
+   "words": 302,
+   "citations": {
+    "total": 16,
+    "supported": 16,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "pm02": {
+   "score": 90,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 2,
+    "concise": 2,
+    "citations": {
+     "total": 12,
+     "supported": 12,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Omits the shower oscillation rate formula (felt speed \u00d7 nozzle size / felt length) from p.4. The TAPPI section and start-up note were not asked for and push it slightly long.",
+   "cost": 0.020412,
+   "tool_calls": 4,
+   "wiki_memory_calls": 0,
+   "words": 165,
+   "citations": {
+    "total": 12,
+    "supported": 12,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "pm05": {
+   "score": 90,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 1,
+    "citations": {
+     "total": 13,
+     "supported": 13,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "All points covered and fully cited to the retrieved doc. At 334 words it is over twice the target, padded with pressure-washing and flashlight tips and a records-history aside.",
+   "cost": 0.019896,
+   "tool_calls": 4,
+   "wiki_memory_calls": 5,
+   "words": 334,
+   "citations": {
+    "total": 13,
+    "supported": 13,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "pm07": {
+   "score": 95,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 2,
+    "citations": {
+     "total": 10,
+     "supported": 10,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "All MUST points covered and cited. At 257 words it is well over the ~150 target; the lab drying and calculation section goes beyond how to take the sample, and the opening summary repeats the steps.",
+   "cost": 0.017596,
+   "tool_calls": 2,
+   "wiki_memory_calls": 0,
+   "words": 257,
+   "citations": {
+    "total": 10,
+    "supported": 10,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "pm08": {
+   "score": 90,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 2,
+    "concise": 2,
+    "citations": {
+     "total": 8,
+     "supported": 8,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Misses that two boxes per felt are justified only for cleaning, not extra dewatering. At 214 words it is over the ~150 limit, partly from the unrequested excess-slot-area finding. Citations all supported.",
+   "cost": 0.017212,
+   "tool_calls": 2,
+   "wiki_memory_calls": 3,
+   "words": 214,
+   "citations": {
+    "total": 8,
+    "supported": 8,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "pm09": {
+   "score": 87.5,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 1.5,
+    "concise": 2,
+    "citations": {
+     "total": 7,
+     "supported": 7,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Omits that valves left wide open put full header vacuum on early elements. Omits the 2-in-below-outlet whitewater limit and the tape-measure check. At 199 words it runs over the ~150-word target, with an extra 'why it matters' section.",
+   "cost": 0.020336,
+   "tool_calls": 2,
+   "wiki_memory_calls": 3,
+   "words": 199,
+   "citations": {
+    "total": 7,
+    "supported": 7,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "pm11": {
+   "score": 95,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 2,
+    "citations": {
+     "total": 4,
+     "supported": 4,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Accurate and fully cited. The table-setup line (nozzle spacing, psi, gpm/in.) and the PM1 note were not asked for: one unrequested section.",
+   "cost": 0.013872,
+   "tool_calls": 3,
+   "wiki_memory_calls": 3,
+   "words": 99,
+   "citations": {
+    "total": 4,
+    "supported": 4,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "pm06": {
+   "score": 87,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 2.4,
+    "concise": 1,
+    "citations": {
+     "total": 13,
+     "supported": 13,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Ruby nozzles not mentioned. Tilt is given, but not its purpose of cutting bounce-back and fibre mist. At 349 words it is over twice the target, padded with position, mounting and offset details.",
+   "cost": 0.023412,
+   "tool_calls": 2,
+   "wiki_memory_calls": 3,
+   "words": 349,
+   "citations": {
+    "total": 13,
+    "supported": 13,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "pm10": {
+   "score": 90,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 1,
+    "citations": {
+     "total": 9,
+     "supported": 9,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Accurate, and all citations are supported. It leaves out low Uhle vacuum as a cause. At 279 words it is nearly twice the limit, padded with shower psi and steam-box detail.",
+   "cost": 0.0263,
+   "tool_calls": 5,
+   "wiki_memory_calls": 2,
+   "words": 279,
+   "citations": {
+    "total": 9,
+    "supported": 9,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "pm12": {
+   "score": 90,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 1,
+    "citations": {
+     "total": 16,
+     "supported": 16,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Accurate and fully cited. At 282 words it runs nearly twice the ~150-word target, padded with unrequested range/accuracy, speed/moisture and drive/tending-side details. 'Never on top of a roll' is only implied by the nip warning.",
+   "cost": 0.018024,
+   "tool_calls": 2,
+   "wiki_memory_calls": 3,
+   "words": 282,
+   "citations": {
+    "total": 16,
+    "supported": 16,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "ce01": {
+   "score": 100,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 3,
+    "citations": {
+     "total": 4,
+     "supported": 4,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "clean",
+   "cost": 0.011648,
+   "tool_calls": 3,
+   "wiki_memory_calls": 0,
+   "words": 135,
+   "citations": {
+    "total": 4,
+    "supported": 4,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "ce02": {
+   "score": 45,
+   "criteria": {
+    "correct": 1,
+    "cited": 2,
+    "complete": 0,
+    "concise": 2,
+    "citations": {
+     "total": 2,
+     "supported": 2,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Missed the 7-14 ft/s (2.1-4.3 m/s) range. Wrongly claimed the library has no source, although the TAPPI TIP 0502-17 doc was retrieved (p5, not p3). Fallback gives no figure.",
+   "cost": 0.017584,
+   "tool_calls": 4,
+   "wiki_memory_calls": 0,
+   "words": 115,
+   "citations": {
+    "total": 2,
+    "supported": 2,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "ce05": {
+   "score": 90,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 2,
+    "concise": 2,
+    "citations": {
+     "total": 7,
+     "supported": 7,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Missing the cascade point: blow-through and flash steam are reused. At 216 words it runs over the ~150-word target, padded by the Smook nuance and the snow-shovel analogy. All claims are cited and the psi conversion is properly labelled.",
+   "cost": 0.018336,
+   "tool_calls": 2,
+   "wiki_memory_calls": 0,
+   "words": 216,
+   "citations": {
+    "total": 7,
+    "supported": 7,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "ce03": {
+   "score": 83.3,
+   "criteria": {
+    "correct": 3,
+    "cited": 2,
+    "complete": 3,
+    "concise": 2,
+    "citations": {
+     "total": 7,
+     "supported": 7,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Accurate and well cited. The '41% for doubled head' claim is uncited. At about 198 words it runs over the 150-word target, with unrequested worked example, vena contracta and manufacturer-curve bullets.",
+   "cost": 0.020444,
+   "tool_calls": 1,
+   "wiki_memory_calls": 3,
+   "words": 198,
+   "citations": {
+    "total": 7,
+    "supported": 7,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "ce06": {
+   "score": 90,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 1,
+    "citations": {
+     "total": 9,
+     "supported": 9,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Accurate and fully cited. At 240 words it is well over the ~150-word target, padded with the p.12 condensation explanation, syphon differential values and PdCV valve sequencing detail.",
+   "cost": 0.020888,
+   "tool_calls": 3,
+   "wiki_memory_calls": 5,
+   "words": 240,
+   "citations": {
+    "total": 9,
+    "supported": 9,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "ce04": {
+   "score": 83.3,
+   "criteria": {
+    "correct": 2,
+    "cited": 3,
+    "complete": 3,
+    "concise": 2,
+    "citations": {
+     "total": 3,
+     "supported": 3,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Formula and ~2,537 ft/min are correct and cited. The caveat that only velocity head is neglected conflicts slightly with the key (velocity and elevation). The extra second-source paragraph on K=731.0 was not requested.",
+   "cost": 0.020232,
+   "tool_calls": 2,
+   "wiki_memory_calls": 3,
+   "words": 101,
+   "citations": {
+    "total": 3,
+    "supported": 3,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "ce07": {
+   "score": 85,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 2,
+    "concise": 1,
+    "citations": {
+     "total": 8,
+     "supported": 8,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Misses that scoops are used below rimming speed and cannot flood. At 216 words it is over the ~150 limit, with unrequested sections on drainage pressure, blow-through and dryer bars.",
+   "cost": 0.018096,
+   "tool_calls": 1,
+   "wiki_memory_calls": 2,
+   "words": 216,
+   "citations": {
+    "total": 8,
+    "supported": 8,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "ce10": {
+   "score": 100,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 3,
+    "citations": {
+     "total": 6,
+     "supported": 6,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "clean",
+   "cost": 0.010636,
+   "tool_calls": 1,
+   "wiki_memory_calls": 3,
+   "words": 95,
+   "citations": {
+    "total": 6,
+    "supported": 6,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "ce08": {
+   "score": 95,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 2,
+    "citations": {
+     "total": 5,
+     "supported": 5,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Accurate and fully cited. At 182 words it runs over the ~150-word target, and the numeric example paragraph adds length.",
+   "cost": 0.016148,
+   "tool_calls": 2,
+   "wiki_memory_calls": 3,
+   "words": 182,
+   "citations": {
+    "total": 5,
+    "supported": 5,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "ce11": {
+   "score": 83.3,
+   "criteria": {
+    "correct": 2,
+    "cited": 3,
+    "complete": 3,
+    "concise": 2,
+    "citations": {
+     "total": 0,
+     "supported": 0,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Gap correctly labelled with no invented citations. Values are right. The unrequested superheat paragraph is inaccurate: superheat is also released in the dryer, not only latent heat. It also adds length.",
+   "cost": 0.021128,
+   "tool_calls": 3,
+   "wiki_memory_calls": 0,
+   "words": 106,
+   "citations": {
+    "total": 0,
+    "supported": 0,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "ce09": {
+   "score": 63.2,
+   "criteria": {
+    "correct": 1,
+    "cited": 3,
+    "complete": 2.3,
+    "concise": 1,
+    "citations": {
+     "total": 8,
+     "supported": 8,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Misses the water quality point: clean once-through water is best, and recirculated cooling-tower water means frequent rebuilds. Example unit error: 32 l/min \u2248 8.4 gpm, not 4. At 267 words it is padded with an unrequested setup procedure and example.",
+   "cost": 0.02304,
+   "tool_calls": 1,
+   "wiki_memory_calls": 2,
+   "words": 267,
+   "citations": {
+    "total": 8,
+    "supported": 8,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "ce12": {
+   "score": 61.7,
+   "criteria": {
+    "correct": 1,
+    "cited": 3,
+    "complete": 1,
+    "concise": 2,
+    "citations": {
+     "total": 0,
+     "supported": 0,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Lists entrained air as a cause of cavitation instead of distinguishing it as a look-alike. Omits the NPSHa-over-NPSHr safety margin. The gap is properly labelled. Slightly over length at 182 words.",
+   "cost": 0.023828,
+   "tool_calls": 4,
+   "wiki_memory_calls": 4,
+   "words": 182,
+   "citations": {
+    "total": 0,
+    "supported": 0,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "sm01": {
+   "score": 56.7,
+   "criteria": {
+    "correct": 1,
+    "cited": 3,
+    "complete": 0,
+    "concise": 2,
+    "citations": {
+     "total": 13,
+     "supported": 13,
+     "unsupported": 0,
+     "unchecked": 1,
+     "list": []
+    }
+   },
+   "notes": "Says Bonvoy isn't flagging the reel drum bearing, but Bonvoy lists it at Danger and has flagged it since Jul 21. Misses the Aug 19 deferral history and the 3rd section DS rotary joint replacement. Over length.",
+   "cost": 0.032028,
+   "tool_calls": 5,
+   "wiki_memory_calls": 6,
+   "words": 308,
+   "citations": {
+    "total": 13,
+    "supported": 13,
+    "unsupported": [],
+    "unchecked": 1
+   },
+   "auto": []
+  },
+  "sm02": {
+   "score": 50,
+   "criteria": {
+    "correct": 1,
+    "cited": 2,
+    "complete": 0,
+    "concise": 3,
+    "citations": {
+     "total": 11,
+     "supported": 11,
+     "unsupported": 0,
+     "unchecked": 1,
+     "list": []
+    }
+   },
+   "notes": "Felt ran 34 days, not 33, and that figure is uncited. Says BUS flagged filling May 4; key says May 10. Omits steam limit on 34 Super holding speed back. Otherwise accurate and well cited.",
+   "cost": 0.023308,
+   "tool_calls": 3,
+   "wiki_memory_calls": 2,
+   "words": 187,
+   "citations": {
+    "total": 11,
+    "supported": 11,
+    "unsupported": [],
+    "unchecked": 1
+   },
+   "auto": []
+  },
+  "sm03": {
+   "score": 73.3,
+   "criteria": {
+    "correct": 3,
+    "cited": 2,
+    "complete": 0,
+    "concise": 3,
+    "citations": {
+     "total": 3,
+     "supported": 3,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Misses the action: both plate sets are due Nov 11 with one Ridgeway set on hand, so the second set must be ordered now. Chart marks the Nov 11 outage, not the Sep 30 one. Fitted-rate line uncited.",
+   "cost": 0.02656,
+   "tool_calls": 5,
+   "wiki_memory_calls": 3,
+   "words": 193,
+   "citations": {
+    "total": 3,
+    "supported": 3,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "sm04": {
+   "score": 100,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 3,
+    "citations": {
+     "total": 6,
+     "supported": 6,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Counts, not-ready list, Nov 5 ETA and chart are all correct and cited. It omits that only one plate set is on hand for the two refiner plate changes.",
+   "cost": 0.016796,
+   "tool_calls": 3,
+   "wiki_memory_calls": 0,
+   "words": 186,
+   "citations": {
+    "total": 6,
+    "supported": 6,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "sm05": {
+   "score": 61.7,
+   "criteria": {
+    "correct": 1,
+    "cited": 3,
+    "complete": 0,
+    "concise": 3,
+    "citations": {
+     "total": 7,
+     "supported": 7,
+     "unsupported": 0,
+     "unchecked": 2,
+     "list": []
+    }
+   },
+   "notes": "Says the BUS item has no owner, but Tobias Renner owns it. Compares the 86.2 max to REF 1's 61.8 average instead of about 81 avg vs 62. Omits 1.4%/day, sand carry-over and the REF 1 plate-change WO.",
+   "cost": 0.03914,
+   "tool_calls": 14,
+   "wiki_memory_calls": 7,
+   "words": 173,
+   "citations": {
+    "total": 7,
+    "supported": 7,
+    "unsupported": [],
+    "unchecked": 2
+   },
+   "auto": []
+  },
+  "sm06": {
+   "score": 73.3,
+   "criteria": {
+    "correct": 3,
+    "cited": 2,
+    "complete": 0,
+    "concise": 3,
+    "citations": {
+     "total": 8,
+     "supported": 8,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Names the joint, dates and 8 h but misses why it never triggered an RCFA (under 3 h, over 60 days apart), Bonvoy's syphon warning, and Brightwater's misalignment finding and replace/re-align fix. The repeat_stops summary is uncited.",
+   "cost": 0.024684,
+   "tool_calls": 3,
+   "wiki_memory_calls": 2,
+   "words": 167,
+   "citations": {
+    "total": 8,
+    "supported": 8,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "sm07": {
+   "score": 85,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 0,
+    "concise": 3,
+    "citations": {
+     "total": 6,
+     "supported": 6,
+     "unsupported": 0,
+     "unchecked": 1,
+     "list": []
+    }
+   },
+   "notes": "Trend, values, the 0.40 Danger line, the Nov 11 bearing and the chart are all correct and cited. Misses linking the rise to the outer race defect the Keel route found on Aug 12.",
+   "cost": 0.026836,
+   "tool_calls": 5,
+   "wiki_memory_calls": 0,
+   "words": 182,
+   "citations": {
+    "total": 6,
+    "supported": 6,
+    "unsupported": [],
+    "unchecked": 1
+   },
+   "auto": []
+  },
+  "sm08": {
+   "score": 95,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 2,
+    "citations": {
+     "total": 6,
+     "supported": 6,
+     "unsupported": 0,
+     "unchecked": 1,
+     "list": []
+    }
+   },
+   "notes": "Catches the false premise and cites well. It omits the crossing date (~Oct 22) and gives no explicit plan for closer monitoring or an unplanned change. At 232 words it is slightly long, with an extrapolation to 0.50 in/s nobody asked for.",
+   "cost": 0.033304,
+   "tool_calls": 7,
+   "wiki_memory_calls": 3,
+   "words": 232,
+   "citations": {
+    "total": 6,
+    "supported": 6,
+    "unsupported": [],
+    "unchecked": 1
+   },
+   "auto": []
+  },
+  "sm10": {
+   "score": 56.7,
+   "criteria": {
+    "correct": 2,
+    "cited": 2,
+    "complete": 0,
+    "concise": 2,
+    "citations": {
+     "total": 0,
+     "supported": 0,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Counts match the tool within tolerance (B 161, A 122). Misses that DuPont 12 gives equal crew hours, the real-looking B-vs-A gap (~2.5 SD), and grade mix as the next check. Equipment-stops section is unrequested.",
+   "cost": 0.030872,
+   "tool_calls": 8,
+   "wiki_memory_calls": 4,
+   "words": 190,
+   "citations": {
+    "total": 0,
+    "supported": 0,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "sm11": {
+   "score": 88.3,
+   "criteria": {
+    "correct": 2,
+    "cited": 3,
+    "complete": 3,
+    "concise": 3,
+    "citations": {
+     "total": 2,
+     "supported": 2,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Correctly rejects the premise, but never says PM1 has no calender (dryers straight to reel). Offers only the press rolls, omitting the couch roll and reel/winder drums. The 'roll list holds only' claim is overstated.",
+   "cost": 0.028412,
+   "tool_calls": 8,
+   "wiki_memory_calls": 3,
+   "words": 132,
+   "citations": {
+    "total": 2,
+    "supported": 2,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "sm09": {
+   "score": 95,
+   "criteria": {
+    "correct": 3,
+    "cited": 3,
+    "complete": 3,
+    "concise": 2,
+    "citations": {
+     "total": 3,
+     "supported": 3,
+     "unsupported": 0,
+     "unchecked": 0,
+     "list": []
+    }
+   },
+   "notes": "Accurate normalisation from the tool data: 24# 7.06 vs 34 Super 5.23 per 100 h, about 35% higher, within tolerance of the key. The 2nd press felt examples and break-minutes figures are unrequested padding.",
+   "cost": 0.026,
+   "tool_calls": 5,
+   "wiki_memory_calls": 3,
+   "words": 193,
+   "citations": {
+    "total": 3,
+    "supported": 3,
+    "unsupported": [],
+    "unchecked": 0
+   },
+   "auto": []
+  },
+  "sm12": {
+   "score": 66.7,
+   "criteria": {
+    "correct": 1,
+    "cited": 3,
+    "complete": 3,
+    "concise": 1,
+    "citations": {
+     "total": 10,
+     "supported": 10,
+     "unsupported": 0,
+     "unchecked": 1,
+     "list": []
+    }
+   },
+   "notes": "Wrongly groups the dryer drive lineup grease review (RCFA-SM-26-026) as one of three Nov 11 outage actions; the key has only two. The list is not strictly oldest first. At 364 words it is padded with extra detail.",
+   "cost": 0.02514,
+   "tool_calls": 1,
+   "wiki_memory_calls": 0,
+   "words": 364,
+   "citations": {
+    "total": 10,
+    "supported": 10,
+    "unsupported": [],
+    "unchecked": 1
+   },
+   "auto": []
+  }
+ }
+}
