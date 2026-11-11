@@ -1,0 +1,38 @@
+eval run 10; spent so far $34.59 of $50
+pm04     95  calls 2+0  cites 3/3  Accurate and fully cited. At 183 words it runs over the ~150 limit, with an unrequested center/both-ends wear 
+pm02     95  calls 3+0  cites 9/9  All settings and the oscillation formula are correct and cited. The startup limit and the TAPPI comparison wer
+pm01     95  calls 2+0  cites 10/10  All points are covered and cited. The answer is somewhat long at 205 words against about 150, and adds unreque
+pm03     95  calls 6+0  cites 11/11  Accurate and fully cited. At 223 words it runs over the ~150-word target, and the machine-data disclaimer adds
+pm05     90  calls 7+0  cites 11/11  Accurate and fully cited, but at 342 words it is more than twice the target. It adds pressure-washing procedur
+pm07     90  calls 2+0  cites 10/10  Accurate and fully cited. At 266 words it is well over the ~150 limit, and the unrequested lab/drying section 
+pm06   78.3  calls 4+0  cites 13/13  All MUST points covered and accurately cited. Ruby-tip recommendation in the lead is uncited. At 295 words it 
+pm08     90  calls 2+0  cites 6/6  Misses that a second Uhle box per felt is only for cleaning needs, not extra dewatering. At 198 words it runs 
+pm11     95  calls 2+0  cites 4/4  All points correct and cited. The TAPPI nozzle spacing, pressure and flow bullet and the closing PM1 note were
+pm09   91.5  calls 2+0  cites 8/8  Misses the elevation rule that whitewater must stay at least 2 in below the vacuum outlet; it gives the outlet
+ce01    100  calls 3+0  cites 4/4  clean
+pm12   91.5  calls 3+0  cites 14/14  Missing the point to measure near a support on slack webs. Over the 150-word target at 236 words; the Limits s
+pm10   78.3  calls 7+0  cites 9/9  No explicit fix of more nip void volume (grooved or blind-drilled covers). The key lists no library source, ye
+ce03     95  calls 2+0  cites 7/7  Accurate, and all citations are supported. At 188 words it runs over the ~150-word target; the worked example 
+ce02     95  calls 2+0  cites 3/3  Correct 7-14 ft/s (2.1-4.3 m/s), properly cited. The velocity-formula paragraph is unrequested padding.
+ce04    100  calls 1+0  cites 5/5  clean
+ce06     95  calls 3+0  cites 7/7  All MUST points covered and cited. At 173 words it runs over the 150-word target, and the PdCV1/PdCV2 valve-se
+ce05     90  calls 2+0  cites 6/6  Misses that cascade systems reuse blow-through and flash steam. At 170 words it runs a bit long, including an 
+ce08     95  calls 2+0  cites 6/6  Accurate and fully cited. Slightly over length (161 words), and the bullets on dryer pressure steps and the he
+ce07     85  calls 3+0  cites 7/7  Misses that below rimming speed scoops are used and cannot flood. Ring given as 6-8 mm, not 6-10 mm, though th
+ce10    100  calls 1+0  cites 4/4  clean
+ce09   91.5  calls 2+0  cites 4/4  Misses the water-quality point: clean once-through water is best, and recirculated cooling-tower water means f
+ce11   83.3  calls 3+0  cites 1/1  Correct, labelled general knowledge. The extra library example implies 165 °C is saturation at 5 barg (actual 
+ce12     85  calls 4+0  cites 0/0  Properly labelled as general knowledge. It never says NPSHa must exceed NPSHr with margin and omits telling ca
+sm01   68.3  calls 10+0  cites 17/17  Leads with the couch roll bearing, not the reel drum bearing, which is at Danger. Omits the 3rd section DS rot
+sm02   56.7  calls 3+0  cites 10/10  Says 33 days, but the felt ran 34 (Marlow analysis). Omits that Bonvoy flagged it from May 10 and that speed w
+sm04     85  calls 2+0  cites 6/6  Counts, chart and all five not-ready jobs are correct and cited. It omits that only one refiner plate set is o
+sm05     50  calls 11+0  cites 5/5  Says the Oct 13 BUS item has no owner; Tobias Renner owns it. Omits the ~81 vs 62 kWh/t REF 1 comparison and t
+sm06     80  calls 1+0  cites 15/15  Correctly flags the 3rd section DS rotary joint (3 leaks, 8 h). Misses why no RCFA was triggered (each stop un
+sm07     50  calls 6+0  cites 4/5  The Pi TEMP citation is flagged unsupported, so it is treated as fabricated. The answer misses the Keel route 
+sm03     95  calls 6+0  cites 3/3  The 90.5 kWh/t linear projection is just under the key's 92–95 range but within about 5%. It does not say the 
+sm08     85  calls 6+0  cites 9/9  Correctly says Danger was already crossed (Oct 22, 0.426 on Oct 31) and that the change waits on parts (ETA No
+sm09   83.3  calls 3+0  cites 0/0  Rates match the trace and are within tolerance of the key (7.06 vs 7.2, 35% vs 40%). The noise estimate (~0.6/
+sm10     45  calls 4+0  cites 0/0  Counts match the tools and are close to the key. On DuPont 12 the crews work equal hours, but the answer claim
+sm11   88.3  calls 6+0  cites 1/1  Premise correctly rejected. The machine configuration (fourdrinier, 2-nip press, four dryer sections) is uncit
+sm12     95  calls 1+0  cites 11/11  All eleven overdue actions listed with due dates and IDs, oldest first, and every claim is cited. At 365 words
+{"eval_run": 10, "label": "wiki-memory ck0 baseline B (MCP subagent, no wiki/memory)", "mean": 85.6, "n": 36, "by_section": {"pm": 90.4, "ce": 92.9, "sm": 73.5}, "judge_cost": 0.752}

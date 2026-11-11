@@ -1,0 +1,260 @@
+{
+ "about": "New multi-source questions for the wiki + memory training run, written Nov 10 2026 BEFORE any wiki or memory existed, then locked. Used only in the final API run (never shown to build agents, never used to write memory). Keys from the frozen Sim Mill data (year through 2026-10-31) and the Demodemo RAG library.",
+ "questions": [
+  {
+   "id": "n01",
+   "section": "new",
+   "split": "new",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "How many RCFAs blamed a bearing that failed between vibration routes, on which equipment, and what has been done about it?",
+   "must": [
+    "9 RCFAs with that root cause in the data (Nov 2025 to Oct 2026)",
+    "equipment: pulper rotor (3), dryer drive lineup (3), 2nd press drive (2), couch roll (1)",
+    "two-weekly vibration routes added for pulper rotor, dryer drive lineup and 2nd press drive (actions completed)",
+    "online vibration sensors installed on pulper rotor and dryer drive lineup; 2nd press drive sensor still in progress",
+    "grease type/interval reviews still open (pulper rotor, dryer drive lineup, 2nd press drive)"
+   ],
+   "nice": [
+    "pulper rotor failed again (RCFA-SM-26-022, Jul 20) after its two-weekly route was added in May"
+   ],
+   "sources": [
+    "rcfa_status / RCFA-SM-25-001, -25-002, -26-005, -26-010, -26-013, -26-018, -26-022, -26-026, -26-028",
+    "actions SM-0121, SM-0123, SM-0124, SM-0205, SM-0206, SM-0207, SM-0225, SM-0226, SM-0227"
+   ],
+   "tolerance": null
+  },
+  {
+   "id": "n02",
+   "section": "new",
+   "split": "new",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "Press felts keep plugging mid-life. Which RCFAs cover this, what is the common cause, and which corrective actions are still open?",
+   "must": [
+    "RCFAs on press felt plugging / conditioning: RCFA-SM-26-014 (2nd press bottom), -015 (1st press bottom), -016 (2nd press top, HP nozzles 22% plugged), -023 (1st press top), -024 (1st press top HP shower nozzles, strainer blinded), -025 (1st press bottom)",
+    "common cause: felt conditioning failed (HP shower nozzles plugged / supply strainer blinded), so felts filled and the sheet would not hold",
+    "still open RCFAs: -014, -015, -016, -024",
+    "open actions include: felt design review with vendor (SM-0133), Uhle rate-of-rise shift check for 1st press bottom felt (SM-0135), Uhle rate-of-rise on the Bonvoy watch list (SM-0138), shower strainer on every outage clean list (SM-0195)"
+   ],
+   "nice": [
+    "HP shower nozzle change is in the Nov 11 scope (WO 26108743)"
+   ],
+   "sources": [
+    "rcfa_status",
+    "overdue_actions / search_records",
+    "outage_scope OUT-2026-11-11"
+   ],
+   "tolerance": null
+  },
+  {
+   "id": "n03",
+   "section": "new",
+   "split": "new",
+   "kind": "premise",
+   "org": "Sim Mill",
+   "question": "Why was the 1st press bottom felt pulled early in August?",
+   "must": [
+    "premise is wrong: the felt removed 2026-08-19 was a planned change at 83 days against an 84-day target, not an early pull",
+    "it did have a plugging event: RCFA-SM-26-025 on 2026-08-14 (emergency felt wash, 3.4 h), since closed",
+    "the current felt was installed 2026-08-19 and is due at the Nov 11 outage (WO 26109296)"
+   ],
+   "nice": [],
+   "sources": [
+    "position_life p1-felt-bottom",
+    "rcfa_status",
+    "outage_scope OUT-2026-11-11"
+   ],
+   "tolerance": "days within 1"
+  },
+  {
+   "id": "n04",
+   "section": "new",
+   "split": "new",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "Which area's unplanned downtime grew the most from Q2 to Q3 2026, what caused it, and are those RCFAs closed?",
+   "must": [
+    "Stock prep: about 4.5 h in Q2 to about 17.8 h in Q3 (4 events)",
+    "causes: two rectifier faults (MCC DC bus down), a drive trip (IGBT module failed) and a pulper rotor bearing failure",
+    "RCFAs RCFA-SM-26-019, -021, -022 (and -027 in September) are all closed"
+   ],
+   "nice": [
+    "press section was still the largest area in both quarters (about 24.0 h and 21.5 h)"
+   ],
+   "sources": [
+    "downtime_summary by area Q2 and Q3",
+    "downtime_events",
+    "rcfa_status"
+   ],
+   "tolerance": "hours within 0.5"
+  },
+  {
+   "id": "n05",
+   "section": "new",
+   "split": "new",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "How did OME in October compare with September, and which factor drove the change?",
+   "must": [
+    "OME about 81.0% in October vs about 79.3% in September",
+    "time efficiency drove it: about 90.3% to 92.5%",
+    "rate (production) efficiency slightly down (about 90.2% to 89.8%) and quality about flat (about 97.5%)"
+   ],
+   "nice": [
+    "October breaks 50 vs 49 in September"
+   ],
+   "sources": [
+    "efficiency by month"
+   ],
+   "tolerance": "within 0.3 percentage points"
+  },
+  {
+   "id": "n06",
+   "section": "new",
+   "split": "new",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "The 2nd press top roll is getting old. When does it reach its target life, and is a change planned?",
+   "must": [
+    "installed 2024-12-11; target 728 days, so it reaches target about 2026-12-09 (about 689 days / 95% today)",
+    "no roll change WO for it in the Nov 11 outage scope",
+    "the outage after Nov 11 (about Dec 23) would put it past target (about 742 days), so the change needs planning now"
+   ],
+   "nice": [
+    "previous roll ran 685 days (2023-01-25 to 2024-12-11)"
+   ],
+   "sources": [
+    "position_life p2-roll-top",
+    "outage_scope OUT-2026-11-11"
+   ],
+   "tolerance": "days within 3"
+  },
+  {
+   "id": "n07",
+   "section": "new",
+   "split": "new",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "What happened with the dryer drive lineup on Oct 14, and what follow-up is in place?",
+   "must": [
+    "driveshaft snapped at 20:06 on the Oct 14 night shift (crew D), about 287 min / 4.8 h down, WO 26108981",
+    "RCFA-SM-26-029: dryer driveshaft universal joint failed; still open",
+    "action SM-0239: add driveshaft u-joints to the weekly lube route, due 2026-11-05, in progress (Gloria Nakamura)"
+   ],
+   "nice": [
+    "the dryer drive lineup also had bearing RCFAs (RCFA-SM-25-002, -26-018, -26-026)"
+   ],
+   "sources": [
+    "shift_reports PM1-SHIFT-2026-10-14-N",
+    "rcfa_status",
+    "actions"
+   ],
+   "tolerance": null
+  },
+  {
+   "id": "n08",
+   "section": "new",
+   "split": "new",
+   "kind": "data",
+   "org": "Sim Mill",
+   "question": "Where did we lose the most sheet-break time in October, and is that unusual for us?",
+   "must": [
+    "2nd press top felt: 19 breaks, about 1,382 min (about 23 h) in October",
+    "far ahead of the next break location (dryer can 16 about 234 min, dryer can 6 about 230 min)",
+    "not unusual: the 2nd press top felt is the top break location every month (e.g. September 21 breaks / about 1,488 min; peak June 26 / about 1,815 min)",
+    "the 2nd press top felt change (WO 26108953) and press HP shower nozzle change (WO 26108743) are in the Nov 11 scope"
+   ],
+   "nice": [
+    "links to the felt-conditioning RCFA history (RCFA-SM-26-016)"
+   ],
+   "sources": [
+    "downtime_summary / downtime_events kind=break Oct 2026 and earlier months",
+    "outage_scope OUT-2026-11-11"
+   ],
+   "tolerance": "minutes within 5%"
+  },
+  {
+   "id": "n09",
+   "section": "new",
+   "split": "new",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "What is specific edge load, how is it calculated, and why should recycled fiber be refined at a lower SEL?",
+   "must": [
+    "SEL is refining intensity: energy per unit length of bar crossings (bar edge length)",
+    "SEL = net power / (bar edge length x speed), e.g. Ws/m",
+    "higher SEL cuts/shortens fibers; lower SEL gives more fibrillation",
+    "recycled fiber needs lower SEL (better strength properties)"
+   ],
+   "nice": [
+    "worked example: 363 kW net, 30 km/rev, 600 rpm gives about 1.2 Ws/m"
+   ],
+   "sources": [
+    "573e2f9c-afca-42a5-b4a6-10980694ab2e p23-24, p41",
+    "856ff3f6-9be4-42e7-b4dc-fee63dfd3cfd p34-35"
+   ],
+   "tolerance": null
+  },
+  {
+   "id": "n10",
+   "section": "new",
+   "split": "new",
+   "kind": "calc",
+   "org": "Demodemo RAG",
+   "question": "Our liquid ring vacuum pump tests at 70% of its original capacity and its energy costs $60,000 a year. Roughly how much of that is wasted?",
+   "must": [
+    "% of original capacity = tested capacity / original capacity at the same speed and vacuum",
+    "wasted energy cost = annual energy cost x (1 - %OC)",
+    "about $18,000 a year"
+   ],
+   "nice": [
+    "a worn pump draws about the same power but moves less air"
+   ],
+   "sources": [
+    "a92ccac2-eca7-4b0a-a2cc-bd07d3da9fa5 p3-4"
+   ],
+   "tolerance": "within $500"
+  },
+  {
+   "id": "n11",
+   "section": "new",
+   "split": "new",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "What mainly controls linerboard compressive strength, according to the library?",
+   "must": [
+    "density / fiber bonding is a major factor",
+    "for well-bonded sheets, fiber modulus and strength limit the ultimate edgewise compressive strength",
+    "favored by well-bonded, stiff, thick fibers (e.g. hardwoods); relatively insensitive to pulping yield at constant density",
+    "linerboard needs high CD compressive strength; fiber orientation and MD drying strain affect MD and CD in opposite ways"
+   ],
+   "nice": [
+    "opportunity to use more high-yield hardwood and recycled fiber if pressing/drying densify the sheet"
+   ],
+   "sources": [
+    "168553e0-baa3-4e06-827d-54415678796a p4-5"
+   ],
+   "tolerance": null
+  },
+  {
+   "id": "n12",
+   "section": "new",
+   "split": "new",
+   "kind": "library",
+   "org": "Demodemo RAG",
+   "question": "How many slots does a flatbox need near the couch, and what else reduces table drive load?",
+   "must": [
+    "flatboxes generally need no more than five or six slots; slot widths usually decrease toward the couch",
+    "fewer flatboxes, less slot area and higher vacuum dewater better",
+    "low-drag ceramic covers (e.g. silicon nitride)",
+    "can save about 10-20% of power across couch, wire turning roll and other former drives"
+   ],
+   "nice": [],
+   "sources": [
+    "56ec08f5-d829-4786-b810-b1a7de9c7f74 p4"
+   ],
+   "tolerance": null
+  }
+ ]
+}

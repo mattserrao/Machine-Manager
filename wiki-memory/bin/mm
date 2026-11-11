@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+"""mm — the MM LLM tools for test and build agents, through the mm-mcp-dev MCP server.
+
+Environment (set by whoever starts the agent):
+  MM_ORG    the organization the question is about: "Sim Mill" or "Demodemo RAG" (tool calls always use it)
+  MM_RUN    run id: every MCP tool call is logged under it (the judge's citation check reads that log)
+  MM_STAGE  ck0 = baseline (no wiki, no memory); anything else = wiki + memory tools are on
+
+Commands:
+  mm rules                         the answering rules (the API harness's system prompt) — read first
+  mm tools                         list the data/document tools and their arguments
+  mm call TOOL '{"arg": ...}'      call one tool; prints the JSON result exactly as the API model sees it
+  mm wiki index [TYPE]             the wiki's "Where to start" map (or the pages of one type)
+  mm wiki read SLUG [SECTION]      one wiki page (or one ## section of it)
+  mm wiki search WORDS             pages that match, with the matching lines
+  mm wiki neighbors SLUG           pages linked from / to a page
+  mm memory index                  the memory topics (process lessons for answering)
+  mm memory read TOPIC             one memory topic
+"""
+import json, os, re, sys, time, urllib.request, urllib.error
+from pathlib import Path
+
+HOME = Path(__file__).resolve().parents[1]
+CFG = json.loads((HOME / '.secrets/config.json').read_text())
+ORG = os.environ.get('MM_ORG', 'Sim Mill')
+RUN = os.environ.get('MM_RUN', '')
+STAGE = os.environ.get('MM_STAGE', 'ck0')
+SLUG_ORG = {'Sim Mill': 'sim-mill', 'Demodemo RAG': 'demodemo-rag'}
+WIKI = HOME / 'wiki' / SLUG_ORG.get(ORG, 'sim-mill')
+MEM = HOME / 'memory' / SLUG_ORG.get(ORG, 'sim-mill')
+KNOWLEDGE = STAGE != 'ck0'
+
+WIKI_RULES = """
+Wiki and memory (extra tools) — use them first, before the data and document tools:
+1. memory index, then read the topics that fit the question (always read "citations").
+2. wiki index (the "Where to start" map), then wiki read the page for the question's main subject (a position, equipment, outage, failure mode, document or topic; wiki search if unsure). Follow its links to the second and third sources the question needs.
+3. Then fetch what you will use with the data and document tools, and cite only what they returned in this conversation, never a wiki page or memory topic. The wiki and memory are a map and hints; if they disagree with a tool, the tool wins."""
+
+
+def log_local(kind, args, out):
+    if not RUN: return
+    d = HOME / 'runs' / 'calls'; d.mkdir(parents=True, exist_ok=True)
+    with open(d / f'{RUN}.jsonl', 'a') as f:
+        f.write(json.dumps({'t': time.time(), 'kind': kind, 'args': args, 'chars': len(out)}) + '\n')
+
+
+def rpc(method, params):
+    body = json.dumps({'jsonrpc': '2.0', 'id': 1, 'method': method, 'params': params}).encode()
+    hdr = {'content-type': 'application/json', 'x-mm-ingest-token': CFG['tokens'][ORG]}
+    if RUN: hdr['x-mm-run-id'] = RUN
+    for attempt in range(3):
+        try:
+            r = json.load(urllib.request.urlopen(urllib.request.Request(CFG['url'], data=body, headers=hdr, method='POST'), timeout=120))
+            if 'error' in r: return None, r['error'].get('message', str(r['error']))
+            return r['result'], None
+        except urllib.error.HTTPError as e:
+            msg = e.read().decode()[:300]
+            if e.code >= 500 and attempt < 2: time.sleep(2 * (attempt + 1)); continue
+            return None, f'HTTP {e.code}: {msg}'
+        except Exception as e:
+            if attempt < 2: time.sleep(2 * (attempt + 1)); continue
+            return None, str(e)
+
+
+# ---------- wiki / memory (local files during training; same behaviour as the server tools after upload) ----------
+def front(text):
+    m = re.match(r'^---\n(.*?)\n---\n?', text, re.S)
+    meta = {}
+    if m:
+        for line in m.group(1).splitlines():
+            k, _, v = line.partition(':')
+            if v: meta[k.strip()] = v.strip()
+    return meta, text[m.end():] if m else text
+
+
+def pages():
+    for p in sorted(WIKI.rglob('*.md')):
+        t = p.read_text(errors='replace')
+        meta, body = front(t)
+        if body.strip().startswith('MOVED TO'): continue
+        yield p.stem, meta, t
+
+
+def find_page(slug):
+    s = slug.lower().strip().strip('[]')
+    for stem, meta, t in pages():
+        if stem == s: return stem, t
+    for stem, meta, t in pages():
+        al = meta.get('aliases', '').lower()
+        if f'"{s}"' in al or re.search(r'[\[,]\s*' + re.escape(s) + r'\s*[,\]]', al): return stem, t
+    return None, None
+
+
+def wiki(argv):
+    if not KNOWLEDGE: return 'The wiki is not available in this run.'
+    if not WIKI.exists() or not any(WIKI.rglob('*.md')): return 'The wiki is empty.'
+    cmd = argv[0] if argv else 'index'
+    if cmd == 'index':
+        if len(argv) > 1:
+            kind = argv[1].lower()
+            rows = [f'[[{s}]] — {m.get("description", "")}' for s, m, t in pages() if kind in m.get('type', '').lower() or f'type: {kind}' in t[:600].lower()]
+            return '\n'.join(rows) or f'No pages of type {kind}.'
+        p = WIKI / '_index.md'
+        return p.read_text() if p.exists() else '\n'.join(f'[[{s}]] — {m.get("description", "")}' for s, m, t in pages())
+    if cmd == 'read' and len(argv) > 1:
+        stem, t = find_page(argv[1])
+        if not t: return f'No page "{argv[1]}". Try: mm wiki search {argv[1]}'
+        if len(argv) > 2:
+            sec = ' '.join(argv[2:]).lower()
+            parts = re.split(r'\n(?=## )', t)
+            hit = [x for x in parts if x.startswith('## ') and sec in x.splitlines()[0].lower()]
+            return '\n'.join(hit) if hit else f'No section "{sec}". Sections: ' + ' | '.join(x.splitlines()[0] for x in parts if x.startswith('## '))
+        return t
+    if cmd == 'search' and len(argv) > 1:
+        words = [w for w in re.split(r'\W+', ' '.join(argv[1:]).lower()) if len(w) > 2]
+        scored = []
+        for stem, meta, t in pages():
+            low = t.lower(); head = (stem + ' ' + meta.get('description', '') + ' ' + meta.get('aliases', '')).lower()
+            sc = sum(low.count(w) for w in words) + 5 * sum(w in head for w in words)
+            if sc: scored.append((sc, stem, meta, t))
+        scored.sort(key=lambda x: -x[0])
+        out = []
+        for sc, stem, meta, t in scored[:8]:
+            lines = [l for l in t.splitlines() if any(w in l.lower() for w in words) and not l.startswith(('name:', 'description:', 'aliases:'))][:4]
+            out.append(f'[[{stem}]] — {meta.get("description", "")}\n  ' + '\n  '.join(l[:300] for l in lines))
+        return '\n'.join(out) or 'No wiki pages match.'
+    if cmd == 'neighbors' and len(argv) > 1:
+        stem, t = find_page(argv[1])
+        if not t: return f'No page "{argv[1]}".'
+        outl = sorted(set(re.findall(r'\[\[([^\]|#]+)', t)))
+        inl = sorted(s for s, m, tt in pages() if f'[[{stem}]]' in tt and s != stem)
+        return f'Links out of [[{stem}]]: ' + ', '.join(outl) + f'\nLinks into [[{stem}]]: ' + ', '.join(inl)
+    return __doc__
+
+
+def memory(argv):
+    if not KNOWLEDGE: return 'Memory is not available in this run.'
+    files = sorted(p for p in MEM.glob('*.md') if p.name != '_index.md') if MEM.exists() else []
+    if not files: return 'Memory is empty.'
+    if not argv or argv[0] == 'index':
+        idx = MEM / '_index.md'
+        return idx.read_text() if idx.exists() else '\n'.join(f'{p.stem} — {front(p.read_text())[0].get("description", "")}' for p in files)
+    if argv[0] == 'read' and len(argv) > 1:
+        p = MEM / (argv[1].lower().removesuffix('.md') + '.md')
+        return p.read_text() if p.exists() else f'No topic "{argv[1]}". Topics: ' + ', '.join(f.stem for f in files)
+    return __doc__
+
+
+def main():
+    a = sys.argv[1:]
+    if not a or a[0] in ('-h', '--help', 'help'): print(__doc__); return
+    cmd = a[0]
+    if cmd == 'rules':
+        r, err = rpc('prompts/get', {'name': 'mm_answer_rules', 'arguments': {'org': ORG}})
+        print(err or r['messages'][0]['content']['text'] + (WIKI_RULES if KNOWLEDGE else ''))
+    elif cmd == 'tools':
+        r, err = rpc('tools/list', {})
+        if err: print(err); return
+        for t in r['tools']:
+            if t['name'] in ('list_orgs',): continue
+            props = {k: v.get('type', '') for k, v in t['inputSchema'].get('properties', {}).items() if k != 'org'}
+            req = t['inputSchema'].get('required', [])
+            print(f"- {t['name']}({', '.join(k + ('*' if k in req else '') for k in props)}): {t['description']}")
+        if KNOWLEDGE: print('- wiki index|read|search|neighbors, memory index|read: see `mm --help` (local; not citable)')
+    elif cmd == 'call' and len(a) >= 2:
+        try: args = json.loads(a[2]) if len(a) > 2 else {}
+        except json.JSONDecodeError as e: print(f'arguments must be JSON: {e}'); return
+        args['org'] = ORG
+        r, err = rpc('tools/call', {'name': a[1], 'arguments': args})
+        print(err or r['content'][0]['text'])
+    elif cmd == 'wiki':
+        out = wiki(a[1:]); log_local('wiki', a[1:], out); print(out)
+    elif cmd == 'memory':
+        out = memory(a[1:]); log_local('memory', a[1:], out); print(out)
+    else:
+        print(__doc__)
+
+
+if __name__ == '__main__':
+    main()

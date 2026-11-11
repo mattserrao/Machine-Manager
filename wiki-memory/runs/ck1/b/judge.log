@@ -1,0 +1,38 @@
+eval run 12; spent so far $35.67 of $50
+pm04     95  calls 3+3  cites 4/4  Both points are correct and cited. The extra section on centre or both-ends wear and the closing offer were no
+pm01     95  calls 2+0  cites 13/13  All points correct and cited. At 249 words the answer runs long for a knowledge question, mainly because of th
+pm03     90  calls 6+5  cites 16/16  Accurate and fully cited. At 302 words it is about twice the knowledge-question length, with a preamble about 
+pm02     90  calls 4+0  cites 12/12  Omits the shower oscillation rate formula (felt speed × nozzle size / felt length) from p.4. The TAPPI section
+pm05     90  calls 4+5  cites 13/13  All points covered and fully cited to the retrieved doc. At 334 words it is over twice the target, padded with
+pm07     95  calls 2+0  cites 10/10  All MUST points covered and cited. At 257 words it is well over the ~150 target; the lab drying and calculatio
+pm08     90  calls 2+3  cites 8/8  Misses that two boxes per felt are justified only for cleaning, not extra dewatering. At 214 words it is over 
+pm09   87.5  calls 2+3  cites 7/7  Omits that valves left wide open put full header vacuum on early elements. Omits the 2-in-below-outlet whitewa
+pm11     95  calls 3+3  cites 4/4  Accurate and fully cited. The table-setup line (nozzle spacing, psi, gpm/in.) and the PM1 note were not asked 
+pm06     87  calls 2+3  cites 13/13  Ruby nozzles not mentioned. Tilt is given, but not its purpose of cutting bounce-back and fibre mist. At 349 w
+pm10     90  calls 5+2  cites 9/9  Accurate, and all citations are supported. It leaves out low Uhle vacuum as a cause. At 279 words it is nearly
+pm12     90  calls 2+3  cites 16/16  Accurate and fully cited. At 282 words it runs nearly twice the ~150-word target, padded with unrequested rang
+ce01    100  calls 3+0  cites 4/4  clean
+ce02     45  calls 4+0  cites 2/2  Missed the 7-14 ft/s (2.1-4.3 m/s) range. Wrongly claimed the library has no source, although the TAPPI TIP 05
+ce05     90  calls 2+0  cites 7/7  Missing the cascade point: blow-through and flash steam are reused. At 216 words it runs over the ~150-word ta
+ce03   83.3  calls 1+3  cites 7/7  Accurate and well cited. The '41% for doubled head' claim is uncited. At about 198 words it runs over the 150-
+ce06     90  calls 3+5  cites 9/9  Accurate and fully cited. At 240 words it is well over the ~150-word target, padded with the p.12 condensation
+ce04   83.3  calls 2+3  cites 3/3  Formula and ~2,537 ft/min are correct and cited. The caveat that only velocity head is neglected conflicts sli
+ce07     85  calls 1+2  cites 8/8  Misses that scoops are used below rimming speed and cannot flood. At 216 words it is over the ~150 limit, with
+ce10    100  calls 1+3  cites 6/6  clean
+ce08     95  calls 2+3  cites 5/5  Accurate and fully cited. At 182 words it runs over the ~150-word target, and the numeric example paragraph ad
+ce11   83.3  calls 3+0  cites 0/0  Gap correctly labelled with no invented citations. Values are right. The unrequested superheat paragraph is in
+ce09   63.2  calls 1+2  cites 8/8  Misses the water quality point: clean once-through water is best, and recirculated cooling-tower water means f
+ce12   61.7  calls 4+4  cites 0/0  Lists entrained air as a cause of cavitation instead of distinguishing it as a look-alike. Omits the NPSHa-ove
+sm01   56.7  calls 5+6  cites 13/13  Says Bonvoy isn't flagging the reel drum bearing, but Bonvoy lists it at Danger and has flagged it since Jul 2
+sm02     50  calls 3+2  cites 11/11  Felt ran 34 days, not 33, and that figure is uncited. Says BUS flagged filling May 4; key says May 10. Omits s
+sm03   73.3  calls 5+3  cites 3/3  Misses the action: both plate sets are due Nov 11 with one Ridgeway set on hand, so the second set must be ord
+sm04    100  calls 3+0  cites 6/6  Counts, not-ready list, Nov 5 ETA and chart are all correct and cited. It omits that only one plate set is on 
+sm05   61.7  calls 14+7  cites 7/7  Says the BUS item has no owner, but Tobias Renner owns it. Compares the 86.2 max to REF 1's 61.8 average inste
+sm06   73.3  calls 3+2  cites 8/8  Names the joint, dates and 8 h but misses why it never triggered an RCFA (under 3 h, over 60 days apart), Bonv
+sm07     85  calls 5+0  cites 6/6  Trend, values, the 0.40 Danger line, the Nov 11 bearing and the chart are all correct and cited. Misses linkin
+sm08     95  calls 7+3  cites 6/6  Catches the false premise and cites well. It omits the crossing date (~Oct 22) and gives no explicit plan for 
+sm10   56.7  calls 8+4  cites 0/0  Counts match the tool within tolerance (B 161, A 122). Misses that DuPont 12 gives equal crew hours, the real-
+sm11   88.3  calls 8+3  cites 2/2  Correctly rejects the premise, but never says PM1 has no calender (dryers straight to reel). Offers only the p
+sm09     95  calls 5+3  cites 3/3  Accurate normalisation from the tool data: 24# 7.06 vs 34 Super 5.23 per 100 h, about 35% higher, within toler
+sm12   66.7  calls 1+0  cites 10/10  Wrongly groups the dryer drive lineup grease review (RCFA-SM-26-026) as one of three Nov 11 outage actions; th
+{"eval_run": 12, "label": "wiki-memory ck1 B (wiki+memory, rules v2)", "mean": 82.7, "n": 36, "by_section": {"pm": 91.2, "ce": 81.6, "sm": 75.1}, "judge_cost": 0.786}

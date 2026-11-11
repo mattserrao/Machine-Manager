@@ -1,0 +1,32 @@
+eval run 15: 30 questions; spent so far $39.98
+pm14  heldout    90  $0.057  calls 1 (wiki/mem 0)  All points correct and cited. Padded at 212 words: the floating-disc, fibre-development and disc-limit section
+pm13  heldout    95  $0.098  calls 3 (wiki/mem 0)  Accurate and fully cited. It only implies, rather than states, that a good nozzle has a laminar zone. The plug
+pm15  heldout  33.3  $0.086  calls 2 (wiki/mem 0)  Misreads the question as a weight split and wrongly says the library has no source. Misses the high-yield hot-
+pm16  heldout    95  $0.057  calls 1 (wiki/mem 0)  Does not distinguish SEL (intensity) from specific energy (amount of refining, net kWh/t). Otherwise accurate,
+pm17  heldout  86.5  $0.062  calls 1 (wiki/mem 0)  Misses the key 'why it matters' point: reduced-diameter plates save 30–150 hp (e.g. 46→40 in ≈150 hp). At 289 
+pm18  heldout    90  $0.104  calls 2 (wiki/mem 0)  Accurate, and the general-knowledge ranking is labelled. Omits RCT's caliper and operator sensitivity, McKee a
+ce14  heldout    95  $0.068  calls 2 (wiki/mem 0)  Accurate and fully cited. The closing paragraph on the source's 250-inch example and its rounding, plus the sl
+ce13  heldout   100  $0.098  calls 3 (wiki/mem 0)  clean
+ce16  heldout    95  $0.063  calls 2 (wiki/mem 0)  Accurate and fully cited, and the answer comes first. The plate-wear note, formula-term explanation and second
+ce15  heldout    95  $0.056  calls 1 (wiki/mem 0)  Accurate, and the formula is cited to the TAPPI source. The kW conversion, the 75% efficiency example and the 
+ce17  heldout  61.7  $0.078  calls 2 (wiki/mem 0)  Gives the laminar limit as about 2,000; the key says about 2,300. Mentions plug flow but omits the plug→mixed→
+ce18  heldout  73.3  $0.068  calls 1 (wiki/mem 0)  The answer presents the thermocompressor as part of a cascade, not as an alternative to one. 246 words is well
+sm13  heldout  71.7  $0.127  calls 5 (wiki/mem 0)  The answer says two of three actions are complete, then lists four (SM-0053, 0056, 0057, 0059). SM-0053 cannot
+sm15  heldout  66.7  $0.063  calls 1 (wiki/mem 0)  Breaks per month (about 37/49/50) are missing. The only attribution is a general tool source at the end, with 
+sm14  heldout  83.3  $0.081  calls 3 (wiki/mem 0)  All figures match the downtime feed. Attribution is one general line at the end, not inline per figure. At 255
+sm16  heldout  48.3  $0.064  calls 1 (wiki/mem 0)  Run figures are correct and cited. But next outage 'OUT-2026-11-11' is invented: no outage tool was called, an
+sm18  heldout  83.3  $0.070  calls 1 (wiki/mem 0)  Premise correctly rejected. The next outage date (OUT-2026-11-11) and the 121–216 min stop range are not direc
+sm17  heldout    50  $0.067  calls 2 (wiki/mem 0)  Figures match the trace. All four citations ('Downtime feed, Oct 2026, area/cause summary') are flagged unsupp
+n01   new        95  $0.168  calls 12 (wiki/mem 0)  Accurate and fully cited. At 294 words it runs over the 220-word target, padded by the trend-days sentence and
+n03   new        90  $0.143  calls 6 (wiki/mem 0)  Misses that the current felt is due at the Nov 11 outage (WO 26109296). At 208 words it runs long for a premis
+n02   new        55  $0.159  calls 6 (wiki/mem 0)  Says the Pi trend showed 8–13 days before each stop; retrieved WOs show 19 and 21 days, RCFA-024 about 14. BUS
+n04   new      83.3  $0.134  calls 5 (wiki/mem 0)  Accurate and complete. The Forming, 2nd dryer and press-section hour changes carry no inline citation. Unreque
+n05   new      83.3  $0.060  calls 1 (wiki/mem 0)  All values are accurate. One citation covers the opening line, but the bullet figures carry no inline citation
+n06   new        50  $0.104  calls 5 (wiki/mem 0)  The CITATION CHECK flags the [outage_scope OUT-2026-11-11] citation as unsupported, which forces cited to 0. F
+n07   new       100  $0.205  calls 8 (wiki/mem 0)  Clean. All three must points are present and cited. Minor gap: the answer omits the SM-0239 owner, Gloria Naka
+n08   new      75.8  $0.135  calls 7 (wiki/mem 0)  Stays at area level ('press section') and never names the 2nd press top felt. Omits the Nov 11 scope WOs 26108
+n09   new        90  $0.074  calls 2 (wiki/mem 0)  Accurate, and all four MUST points are fully cited, plus the worked example. At 293 words it is about twice th
+n10   new        95  $0.063  calls 2 (wiki/mem 0)  Accurate and fully cited. The answer leads with $18,000. The seal-water note and the 86% document example were
+n11   new        84  $0.075  calls 2 (wiki/mem 0)  Omits that fibre modulus and strength limit ultimate strength in well-bonded sheets, insensitivity to pulping 
+n12   new        95  $0.075  calls 2 (wiki/mem 0)  All points covered and cited. At 195 words it runs over the 150-word target, with extra items from a second do
+{"eval_run": 15, "label": "final-nowiki", "by": {"pm": 81.6, "ce": 86.7, "sm": 67.2, "new": 83.0}, "mean": 80.3, "cost": 2.764}

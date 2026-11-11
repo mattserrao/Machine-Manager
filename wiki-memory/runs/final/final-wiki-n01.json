@@ -1,0 +1,37 @@
+{
+ "summary": {
+  "eval_run": 13,
+  "label": "final-wiki",
+  "by": {
+   "new": 95.0
+  },
+  "mean": 95.0,
+  "cost": 0.267
+ },
+ "results": {
+  "n01": {
+   "q": "n01",
+   "section": "new",
+   "split": "new",
+   "score": 95,
+   "notes": "Accurate and fully cited, and it covers the NICE point on repeat pulper failure after the May route was added. At 334 words it is over the 220 limit, and the recurrence paragraph is partly extra.",
+   "cost": 0.26671,
+   "knowledge_calls": 2,
+   "calls": 16,
+   "usage": {
+    "in": 100759,
+    "out": 2328,
+    "cache_read": 0,
+    "cache_write": 0,
+    "steps": 6
+   },
+   "answer": "Nine RCFAs gave \"bearing failed between vibration routes (P-F interval shorter than the monthly route)\" as the root cause. Four pieces of equipment are involved.\n\n- **Pulper rotor, 3 RCFAs:** [RCFA-SM-26-005] (Jan 22), [RCFA-SM-26-013] (Apr 28) and [RCFA-SM-26-022] (Jul 20). The last two cite Pi trends of about 22 and 18 days before the stop [RCFA-SM-26-013][RCFA-SM-26-022].\n- **Dryer drive lineup, 3 RCFAs:** [RCFA-SM-25-002] (Dec 24), [RCFA-SM-26-018] (Jun 24) and [RCFA-SM-26-026] (Aug 26).\n- **2nd press drive, 2 RCFAs:** [RCFA-SM-26-010] (Mar 18) and [RCFA-SM-26-028] (Sep 20).\n- **Couch roll, 1 RCFA:** [RCFA-SM-25-001] (Nov 19).\n\nEach RCFA raised the same three actions: add the equipment to a two-weekly route, install an online vibration sensor, and review the grease type and interval.\n\n- **Fully completed (5 RCFAs):** the couch roll [RCFA-SM-25-001], the Dec 24 dryer drive [RCFA-SM-25-002], the Jan 22 pulper rotor [RCFA-SM-26-005], the Mar 18 2nd press drive [RCFA-SM-26-010] and the Jun 24 dryer drive [RCFA-SM-26-018]. The Jul 20 pulper rotor RCFA [RCFA-SM-26-022] also has all three actions completed, which makes six with every action done.\n- **Dryer drive, Aug 26:** the route [SM-0205] and the online sensor [SM-0206] are completed. The grease review [SM-0207] is late (due Oct 29).\n- **Pulper rotor, Apr 28:** the route [SM-0121] and the sensor [SM-0123] are completed. The grease review [SM-0124] is late (due Jul 1).\n- **2nd press drive, Sep 20:** the route [SM-0225] is completed. The online sensor [SM-0226] is in progress, due Nov 2. The grease review [SM-0227] has not started, due Nov 23.\n\nThe same equipment keeps coming back after its actions were closed. The pulper rotor failed again on Apr 28 and Jul 20 after the Jan 22 actions. The dryer drive failed again on Jun 24 and Aug 26 after the Dec 24 actions. The 2nd press drive failed again on Sep 20 after the Mar 18 actions. The tools gave me due dates for the completed actions, not completion dates. I can't tell whether the sensors were live before each repeat failure.",
+   "citations": {
+    "total": 26,
+    "supported": 26,
+    "unsupported": [],
+    "unchecked": 0
+   }
+  }
+ }
+}

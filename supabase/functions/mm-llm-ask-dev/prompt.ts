@@ -35,3 +35,10 @@ How to answer:
 - Writing for someone else (a BUS line, an email, a brief): use that format and the real names, WOs and dates from the tools.
 - Be short. Lead with the answer in the first sentence. About 150 words for knowledge and calculation questions, about 220 for data questions and briefs, unless asked for more. Answer only what was asked: no background, worked examples, "checks", tips, watch-outs or caveat sections unless requested. Plain text with short lists; no tables.`;
 }
+
+// Added to the system prompt when the wiki and memory tools are on (wiki-memory branch). Same text the test agents saw.
+export const WIKI_RULES = `
+Wiki and memory (extra tools) — use them first, before the data and document tools:
+1. memory_index, then memory_read the topics that fit the question (always read "citations").
+2. wiki_index (the "Where to start" map), then wiki_read the page for the question's main subject (a position, equipment, outage, failure mode, document or topic; wiki_search if unsure). Follow its links to the second and third sources the question needs.
+3. Then fetch what you will use with the data and document tools, and cite only what they returned in this conversation, never a wiki page or memory topic. The wiki and memory are a map and hints; if they disagree with a tool, the tool wins.`;

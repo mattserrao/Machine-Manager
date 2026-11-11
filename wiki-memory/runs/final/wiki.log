@@ -1,0 +1,31 @@
+eval run 14: 29 questions; spent so far $36.73
+pm13  heldout    90  $0.064  calls 2 (wiki/mem 1)  Accurate and fully cited. Padded with unrequested bullets on flared needle jets, plugging and scaling, roughly
+pm15  heldout    90  $0.095  calls 3 (wiki/mem 1)  Misses internal starch for stiffness and light calender sizing of the top liner. The pulping-lines section is 
+pm14  heldout    90  $0.063  calls 2 (wiki/mem 1)  All points correct and cited. 207 words against about 150, with unrequested floating-disc, fibre-development a
+pm16  heldout    90  $0.063  calls 2 (wiki/mem 1)  Does not distinguish SEL (intensity) from specific energy (amount of refining, kWh/t). The final result comes 
+pm17  heldout  86.5  $0.068  calls 2 (wiki/mem 1)  Misses the reduced-diameter plate savings (30-150 hp, e.g. 46 to 40 in saves about 150 hp). At 280 words it is
+ce13  heldout   100  $0.094  calls 3 (wiki/mem 1)  clean
+pm18  heldout    90  $0.148  calls 4 (wiki/mem 1)  320 words, about double the ~150 limit; the long library-quote section pads the answer. General knowledge is c
+ce14  heldout    95  $0.090  calls 3 (wiki/mem 1)  Accurate, with the slot width and vacuum factor cited to p5. The unrequested paragraph that rescales the sourc
+ce15  heldout   100  $0.060  calls 2 (wiki/mem 1)  clean
+ce16  heldout    95  $0.061  calls 2 (wiki/mem 1)  Accurate and fully cited. At 175 words it runs over the 150-word limit, padded by the second-source formula, t
+ce18  heldout  78.3  $0.108  calls 3 (wiki/mem 1)  Calls the thermocompressor part of 'the cascade' rather than an alternative to it, so MUST 3 is missed. Citati
+ce17  heldout  73.3  $0.118  calls 4 (wiki/mem 1)  Gives the laminar limit as ~2,000 instead of ~2,300. The cited 'pumps like water up to 6%' passage sits awkwar
+sm13  heldout    60  $0.188  calls 8 (wiki/mem 2)  Says 'two of the three' actions are done, then lists three done plus one open, so the count is wrong somewhere
+sm14  heldout    50  $0.112  calls 4 (wiki/mem 1)  The CITATION CHECK lists the 'downtime feed, 2026-08-01 to 10-31' citation as unsupported, so it counts as fab
+sm15  heldout  43.3  $0.099  calls 3 (wiki/mem 1)  Omits break counts (37/49/50). The 2026-09-30 planned outage and the 'averages of daily OME' claim appear in n
+sm16  heldout  48.3  $0.133  calls 4 (wiki/mem 1)  All run lengths, target and current day 30 are correct. The garbled bracket names wrong WO 26105953, which is 
+sm18  heldout    60  $0.111  calls 3 (wiki/mem 1)  Premise correctly rejected. 'Nine outages' Dec 10–Sep 30 looks wrong: a 6-week cadence gives eight. The 6-week
+sm17  heldout  66.7  $0.158  calls 5 (wiki/mem 2)  Both MUST points are met. The 'Oct 14–29 give 12 breaks' claim contradicts its own list, which totals 10. Area
+n02   new      66.7  $0.174  calls 7 (wiki/mem 2)  Headline claims 5 open overdue actions but lists only 4, a wrong count. RCFA-016 and -024 open status is only 
+n03   new      78.3  $0.146  calls 5 (wiki/mem 1)  Misses that the current felt is due at the Nov 11 outage (WO 26109296); outage scope was never queried. The op
+n04   new      83.3  $0.126  calls 5 (wiki/mem 1)  Accurate and complete. The sentence giving Forming +4.0 h, 2nd dryer +1.8 h and press 24→21.5 h has no inline 
+n05   new      36.7  $0.095  calls 4 (wiki/mem 1)  The OME and factor values are right. Invented facts: the '20 h outage on 09-30 to 10-01' and the '11-11 next o
+n06   new      36.7  $0.140  calls 7 (wiki/mem 2)  The CITATION CHECK marks [outage_scope OUT-2026-11-11] unsupported, so the felt and shower WO numbers 26108953
+n07   new        95  $0.178  calls 10 (wiki/mem 2)  Accurate and fully cited. It never states night shift or crew D outright, only through the report id. At 259 w
+n08   new      75.8  $0.227  calls 8 (wiki/mem 2)  Missed the Nov 11 outage scope WOs (26108953 felt change, 26108743 HP shower nozzles). Compared press only to 
+n09   new        90  $0.102  calls 3 (wiki/mem 1)  Accurate and fully cited, and the general-knowledge reasoning is clearly labelled. At 289 words it is nearly t
+n10   new        90  $0.064  calls 2 (wiki/mem 1)  Never defines % original capacity as tested ÷ original capacity at the same speed and vacuum. The unrequested 
+n11   new        89  $0.100  calls 3 (wiki/mem 1)  Covers density and bonding, and all claims are cited. Misses three key points: fibre modulus and strength limi
+n12   new        90  $0.068  calls 2 (wiki/mem 1)  Accurate and fully cited, but padded at 219 words against a ~150 limit. Unrequested extras: the uhle box dwell
+{"eval_run": 14, "label": "final-wiki", "by": {"pm": 89.4, "ce": 90.3, "sm": 54.7, "new": 75.6}, "mean": 77.2, "cost": 3.254}
