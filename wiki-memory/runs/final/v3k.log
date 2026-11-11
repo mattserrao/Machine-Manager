@@ -1,0 +1,14 @@
+eval run 17: 12 questions; spent so far $44.90
+pm13  heldout    95  $0.064  calls 2 (wiki/mem 0)  All points correct and cited. The plugging and water-hardness paragraph was not asked for and pushes the answe
+pm14  heldout    95  $0.060  calls 2 (wiki/mem 1)  All five points are correct and cited. At 189 words it runs over the ~150-word target, mainly because of the u
+pm15  heldout    90  $0.088  calls 2 (wiki/mem 0)  Misses internal starch for stiffness and light calender sizing of the top liner. Slightly over length; the two
+pm16  heldout    95  $0.059  calls 1 (wiki/mem 0)  Misses MUST 2: never separates SEL (intensity) from specific energy (the amount of refining, net kWh/t). Formu
+pm17  heldout  86.5  $0.070  calls 1 (wiki/mem 0)  Misses the practical payoff: reduced-diameter plates save 30-150 hp (46→40 in ≈150 hp). At 285 words it is nea
+pm18  heldout    85  $0.145  calls 3 (wiki/mem 0)  Says RCT can buckle but misses the caliper effect and operator sensitivity. General knowledge is correctly lab
+ce13  heldout   100  $0.091  calls 2 (wiki/mem 0)  clean
+ce14  heldout    95  $0.073  calls 2 (wiki/mem 0)  Correct and fully cited to the Sweet p.5 source. At 193 words it runs past the ~150-word target, mainly from t
+ce15  heldout   100  $0.057  calls 2 (wiki/mem 1)  clean
+ce16  heldout    95  $0.058  calls 2 (wiki/mem 1)  Accurate and fully cited. Slightly over length, with unrequested material: the plate-wear note, the second-sou
+ce18  heldout    90  $0.062  calls 1 (wiki/mem 0)  Never says the differential is for condensate removal, or that it is an alternative to a cascade. At 221 words
+ce17  heldout  73.3  $0.113  calls 3 (wiki/mem 0)  Gives the laminar limit as about 2,000 rather than about 2,300, outside tolerance. The gap is correctly labell
+{"eval_run": 17, "label": "final-wiki-v3-knowledge", "by": {"pm": 91.1, "ce": 92.2}, "mean": 91.6, "cost": 0.941}
