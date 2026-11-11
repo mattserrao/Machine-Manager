@@ -2,7 +2,7 @@
 // Switching provider is configuration (MM_LLM_PROVIDER, MM_LLM_MODEL); prompts and tools stay the same.
 export type Tool = { name: string; description: string; parameters: Record<string, unknown> };
 export type ToolCall = { id: string; name: string; args: Record<string, unknown> };
-export type Turn = { text: string; calls: ToolCall[]; inTokens: number; outTokens: number };
+export type Turn = { text: string; calls: ToolCall[]; inTokens: number; outTokens: number; cacheRead?: number; cacheWrite?: number };
 
 export interface Model {
   provider: string; model: string;
@@ -49,7 +49,7 @@ class Anthropic implements Model {
       method: 'POST',
       headers: { 'x-api-key': this.key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' },
       body: JSON.stringify({ model: this.model, max_tokens: 4096, system: this.system, messages: this.messages,
-        tools: TOOLS.map((t) => ({ name: t.name, description: t.description, input_schema: t.parameters })),
+        tools: ((this as any).tools ?? TOOLS).map((t: Tool) => ({ name: t.name, description: t.description, input_schema: t.parameters })),
         ...(final ? { tool_choice: { type: 'none' } } : {}) }),
     });
     const j = await r.json();
@@ -57,7 +57,8 @@ class Anthropic implements Model {
     this.messages.push({ role: 'assistant', content: j.content });
     const text = j.content.filter((b: any) => b.type === 'text').map((b: any) => b.text).join('\n');
     const calls = j.content.filter((b: any) => b.type === 'tool_use').map((b: any) => ({ id: b.id, name: b.name, args: b.input ?? {} }));
-    return { text, calls, inTokens: j.usage?.input_tokens ?? 0, outTokens: j.usage?.output_tokens ?? 0 };
+    return { text, calls, inTokens: j.usage?.input_tokens ?? 0, outTokens: j.usage?.output_tokens ?? 0,
+             cacheRead: j.usage?.cache_read_input_tokens ?? 0, cacheWrite: j.usage?.cache_creation_input_tokens ?? 0 };
   }
   results(rs: { id: string; content: string }[]) {
     this.messages.push({ role: 'user', content: rs.map((r) => ({ type: 'tool_result', tool_use_id: r.id, content: r.content })) });
@@ -76,7 +77,7 @@ class OpenAI implements Model {
     const r = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST', headers: { authorization: `Bearer ${this.key}`, 'content-type': 'application/json' },
       body: JSON.stringify({ model: this.model, messages: this.messages,
-        tools: TOOLS.map((t) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.parameters } })),
+        tools: ((this as any).tools ?? TOOLS).map((t: Tool) => ({ type: 'function', function: { name: t.name, description: t.description, parameters: t.parameters } })),
         ...(final ? { tool_choice: 'none' } : {}) }),
     });
     const j = await r.json();

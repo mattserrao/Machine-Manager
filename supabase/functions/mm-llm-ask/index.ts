@@ -14,8 +14,8 @@
 // Charts (make_chart) are kept in the trace (tool 'make_chart', args = the chart), so saved answers can redraw them.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { makeModel, setTools, ModelError } from './adapter.ts';
-import { TOOLS, runTool, forModel, checkChart } from './tools.ts';
-import { systemPrompt } from './prompt.ts';
+import { TOOLS, runTool, forModel, checkChart, WIKI_TOOLS } from './tools.ts';
+import { systemPrompt, WIKI_RULES, memoryBlock } from './prompt.ts';
 
 const URL_ = Deno.env.get('SUPABASE_URL')!, ANON = Deno.env.get('SUPABASE_ANON_KEY')!, SERVICE = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const DAILY_CAP = Number(Deno.env.get('MM_LLM_DAILY_CAP') ?? 300);   // all askers together, protects the model bill
@@ -71,7 +71,16 @@ Deno.serve(async (req) => {
     const m = makeModel(body.model === 'opus' ? 'opus' : 'default'); model = m.model; provider = m.provider;
     const { data: ctx, error: e } = await db.rpc('mm_llm_context', { p_org: org });
     if (e) throw new Error(e.message);
-    m.start(systemPrompt(orgName, ctx ?? {}), question);
+    // Wiki + memory (v3): the org's memory lessons go into the prompt; the wiki tools are offered only when the org
+    // has a live wiki build. Both are read with the asker's own session, so row-level security applies.
+    const [{ data: wiki }, { data: idx }] = await Promise.all([db.rpc('mm_wiki_index', { p_org: org, p_kind: 'root' }),
+      db.rpc('mm_memory_index', { p_org: org })]);
+    const hasWiki = (wiki ?? []).length > 0;
+    const reads = await Promise.all((idx ?? []).filter((x: any) => x.topic !== '_index')
+      .map((x: any) => db.rpc('mm_memory_read', { p_org: org, p_topic: x.topic })));
+    const mem = memoryBlock(reads.flatMap((r: any) => r.data ?? []));
+    if (!hasWiki) (m as any).tools = TOOLS.filter((t) => !WIKI_TOOLS.has(t.name));
+    m.start(systemPrompt(orgName, ctx ?? {}) + (hasWiki ? WIKI_RULES : '') + mem, question);
     for (let step = 0; step < MAX_STEPS; step++) {
       const final = step === MAX_STEPS - 1;              // last step: answer from what the tools have returned so far
       const turn = await m.next(final); inT += turn.inTokens; outT += turn.outTokens;
