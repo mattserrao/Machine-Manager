@@ -35,3 +35,19 @@ How to answer:
 - Writing for someone else (a BUS line, an email, a brief): use that format and the real names, WOs and dates from the tools.
 - Be short. Lead with the answer in the first sentence. About 150 words for knowledge and calculation questions, about 220 for data questions and briefs, unless asked for more. Answer only what was asked: no background, worked examples, "checks", tips, watch-outs or caveat sections unless requested. Plain text with short lists; no tables.`;
 }
+
+// Added to the system prompt when the wiki and memory are on (wiki-memory branch, v3): the memory lessons go into the
+// prompt itself (a few KB per org; the API model skipped them when they sat behind a tool), the wiki stays a tool.
+export const WIKI_RULES = `
+Wiki (extra tools): a map of linked pages built from the sources. For questions about a position, equipment, outage, failure mode, document or topic:
+1. wiki_search or wiki_index, then wiki_read the page for the question's main subject. Follow its links to the second and third sources the question needs.
+2. Then fetch what you will use with the data and document tools, and cite only what they returned in this conversation, never a wiki page or a lesson below. The wiki is a map; if it disagrees with a tool, the tool wins.
+3. Use the wiki to find sources, not to replace data calls: data questions still need the data tools.`;
+
+// The org's approved memory lessons (llm.memory), as a prompt section.
+export function memoryBlock(items: { topic: string; title?: string; body: string }[]): string {
+  const real = items.filter((m) => m.body && m.topic !== '_index');
+  if (!real.length) return '';
+  return '\n\nLessons for answering here (memory; follow them, never cite them):\n' +
+    real.map((m) => `[${m.topic}]\n${m.body.replace(/^---[\s\S]*?---\n/, '').trim()}`).join('\n');
+}
