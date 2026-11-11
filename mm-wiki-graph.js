@@ -54,12 +54,12 @@
         <label class="wg-f">Size <select class="wg-size">
           <option value="bytes">Page size</option><option value="in">Links in</option><option value="cites">Citations</option></select></label>
         <label class="wg-f">Show <select class="wg-type"><option value="">All types</option></select></label>
-        <input class="wg-q" type="search" placeholder="Find a page" aria-label="Find a page">
+        <input class="wg-q" type="search" placeholder="Find a page (Enter opens it)" aria-label="Find a page">
       </div>
       <div class="wg-health" aria-live="polite"></div>
       <div class="wg-main">
         <div class="wg-canvas"><canvas role="img" aria-label="Wiki pages and their links"></canvas><div class="wg-tip" hidden></div></div>
-        <aside class="wg-side"><p class="wg-hint">Hover a circle for its page; click to focus it and its neighbours. Circle area = page size.</p></aside>
+        <aside class="wg-side"><p class="wg-hint">Hover a circle for its page; click to focus it, then Read page to open it and follow its links. Circle area = page size.</p></aside>
       </div>
       <div class="wg-key"></div>`;
     const $ = (s) => el.querySelector(s);
@@ -75,8 +75,15 @@
     $('.wg-size').onchange = (e) => { sizeBy = e.target.value; build(); };
     $('.wg-type').onchange = (e) => { typeF = e.target.value; draw(); };
     $('.wg-q').oninput = (e) => { q = e.target.value.trim().toLowerCase(); draw(); };
+    // Enter opens the best match: exact slug, then slug or title starting with the text, then containing it.
+    $('.wg-q').onkeydown = (e) => { if (e.key !== 'Enter' || !q) return; e.preventDefault();
+      const real = nodes.filter((x) => !x.ghost), t = (x) => (x.title || '').toLowerCase();
+      const m = real.find((x) => x.slug === q) || real.find((x) => x.slug.startsWith(q) || t(x).startsWith(q)) || real.find((x) => x.slug.includes(q) || t(x).includes(q));
+      if (m) go(m.slug, true); };
 
+    let src = null;
     async function load(s) {
+      src = s;
       side.innerHTML = '<p class="wg-hint">Loading…</p>';
       try { data = cache[s.url] ??= await (await fetch(s.url, { cache: 'no-cache' })).json(); }
       catch { side.innerHTML = '<p class="wg-hint">Could not load the wiki map.</p>'; return; }
@@ -145,11 +152,46 @@
         : `<b>${n.title || n.slug}</b><span>${TYPE_LABEL[n.type] || n.type} · ${kb(n.bytes)} (${Math.round(100 * n.bytes / largest)}% of the largest) · ${n.citations} citations · links ${inn} in / ${out} out${n.conflicts ? ' · ' + n.conflicts + ' CONFLICT' : ''}</span>`;
     }
     function showSide(n) {
-      if (!n) { side.innerHTML = '<p class="wg-hint">Hover a circle for its page; click to focus it and its neighbours. Circle area = page size.</p>'; return; }
+      if (!n) { side.innerHTML = '<p class="wg-hint">Hover a circle for its page; click to focus it, then Read page to open it and follow its links. Circle area = page size.</p>'; return; }
       const linked = [...nb(n.slug)].filter((s) => s !== n.slug).slice(0, 30);
       side.innerHTML = `<div class="wg-info">${info(n)}</div>${n.description ? `<p class="wg-desc">${n.description.replace(/[<>&]/g, '')}</p>` : ''}
+        ${!n.ghost && opts.readPage ? '<p><button type="button" class="btn sm wg-read">Read page</button></p><div class="wg-body"></div>' : ''}
         <p class="wg-sub">Linked pages (${linked.length})</p><ul>${linked.map((s) => `<li><button type="button" data-s="${s}">${s}</button></li>`).join('')}</ul>`;
-      side.querySelectorAll('button[data-s]').forEach((b) => b.onclick = () => { sel = nodes.find((m) => m.slug === b.dataset.s) || sel; showSide(sel); draw(); });
+      side.querySelectorAll('button[data-s]').forEach((b) => b.onclick = () => go(b.dataset.s));
+      const rb = side.querySelector('.wg-read'); if (rb) rb.onclick = () => readInto(n, side.querySelector('.wg-body'), rb);
+    }
+    // Move the focus to another page (from a linked-page button or a [[link]] in a page body) and open it for reading.
+    function go(slug, read) {
+      const m = nodes.find((x) => x.slug === slug); if (!m) return;
+      sel = m; showSide(sel); draw();
+      if (read) { const rb = side.querySelector('.wg-read'); if (rb) rb.click(); }
+    }
+    // Read a page's text (opts.readPage(source, slug) -> markdown or null) and render it; [[links]] navigate.
+    async function readInto(n, box, btn) {
+      btn.disabled = true; box.innerHTML = '<p class="wg-hint">Loading…</p>';
+      let md = null; try { md = await opts.readPage(src, n.slug); } catch { md = null; }
+      btn.remove();
+      if (md == null) { box.innerHTML = `<p class="wg-hint">${src.locked || 'This page could not be loaded.'}</p>`; return; }
+      box.innerHTML = renderMd(md);
+      box.querySelectorAll('button[data-go]').forEach((b) => b.onclick = () => go(b.dataset.go, true));
+      side.scrollTop = 0;
+    }
+    function renderMd(md) {
+      const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const inline = (t) => esc(t)
+        .replace(/\[\[([^\]|]+)(?:\|([^\]]+))?\]\]/g, (_, a, b) => { const slug = a.trim().split('/').pop().replace(/\.md$/, '');
+          return nodes.some((x) => x.slug === slug && !x.ghost) ? `<button type="button" class="wg-link" data-go="${slug}">${b || a}</button>` : `<span class="wg-red">${b || a}</span>`; })
+        .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/`([^`]+)`/g, '<code>$1</code>');
+      const body = md.replace(/^---\n[\s\S]*?\n---\n/, '');
+      let html = '', list = false;
+      for (const line of body.split('\n')) {
+        const h = line.match(/^(#{1,4})\s+(.*)/), li = line.match(/^\s*[-*]\s+(.*)/);
+        if (!li && list) { html += '</ul>'; list = false; }
+        if (h) html += `<p class="wg-h">${inline(h[2])}</p>`;
+        else if (li) { if (!list) { html += '<ul class="wg-ul">'; list = true; } html += `<li>${inline(li[1])}</li>`; }
+        else if (line.trim()) html += `<p>${inline(line)}</p>`;
+      }
+      return html + (list ? '</ul>' : '');
     }
     cv.addEventListener('mousemove', (ev) => { const [n, x, y] = at(ev); if (n !== hover) { hover = n; draw(); }
       if (n) { tip.hidden = false; tip.innerHTML = info(n); tip.style.left = Math.min(x + 12, W - 240) + 'px'; tip.style.top = (y + 12) + 'px'; } else tip.hidden = true; });

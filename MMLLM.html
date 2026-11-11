@@ -125,6 +125,8 @@
   .wg-key i{display:inline-block;width:11px;height:11px;border-radius:50%;margin-right:5px;vertical-align:-1px}
   .wg-key i.ghost{border:1px dashed var(--muted)} .wg-key i.root{border:1.5px solid var(--ink)}
   .wg-scale{display:inline-flex;align-items:center;gap:4px;color:var(--muted)} .wg-scale em{font-style:normal;margin-right:8px}
+  .wg-body{border-top:1px solid var(--line,#ddd);margin-top:6px;padding-top:6px} .wg-body p{margin:0 0 6px} .wg-h{font-weight:600;color:var(--ink-2)}
+  .wg-ul{list-style:disc;padding-left:16px!important;margin:0 0 6px!important} .wg-link{font:inherit;background:none;border:0;padding:0;color:var(--accent-ink);text-decoration:underline;cursor:pointer} .wg-red{color:var(--muted);border-bottom:1px dashed}
   @media (max-width:820px){ .wg-main{grid-template-columns:1fr} .wg-side{max-height:none} }
 
   /* ---- Narrower screens: columns stack, wires hide, a down-arrow joins each stage ---- */
@@ -424,7 +426,7 @@
 <script src="mm-config.js?v=2026-11-10.1128"></script>
 <script src="mm-cloud.js?v=2026-11-10.1128"></script>
 <script src="mm-llm-org.js?v=2026-11-10.1128"></script>
-<script src="mm-wiki-graph.js?v=2026-11-10.2200"></script>
+<script src="mm-wiki-graph.js?v=2026-11-10.2310"></script>
 <script>
   const VERSION = 'v0.12.0';
   document.getElementById('ver').textContent = 'MM LLM ' + VERSION;
@@ -935,8 +937,18 @@
   let wikiGraph = null;
   function drawWiki(){
     if (wikiGraph) { wikiGraph.redraw(); return; }
+    // Page text comes from Supabase (mm_wiki_page), so row-level security applies: Sim Mill is public;
+    // the document-library wiki is readable by Demodemo RAG members only.
+    let wikiSt = null;
     wikiGraph = MMWikiGraph.mount(document.getElementById('wikiGraph'), { sources: [
-      { label: 'Sim Mill records', url: 'demo-data/wiki/sim-mill.json' }, { label: 'Document library', url: 'demo-data/wiki/demodemo-rag.json' }] });
+      { label: 'Sim Mill records', url: 'demo-data/wiki/sim-mill.json', org: '68150431-54fe-4561-a3f1-578ea63fdbaa' },
+      { label: 'Document library', url: 'demo-data/wiki/demodemo-rag.json', org: 'fc3efa3c-8e84-482e-baf5-746eb4e63612',
+        locked: 'Sign in with an account that belongs to Demodemo RAG to read the library wiki pages.' }],
+      readPage: async (src, slug) => {
+        wikiSt ??= await MMLLMOrg.resolve();
+        const { data, error } = await wikiSt.db.rpc('mm_wiki_page', { p_org: src.org, p_slug: slug });
+        return error || !data ? null : data.body;
+      } });
   }
 
   // ---------- About: Sim Mill flowchart (fixed layout, SVG; scrolls sideways on small screens) ----------
