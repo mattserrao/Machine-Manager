@@ -240,6 +240,22 @@
   #picker .af label{font-size:12px;color:var(--muted);font-weight:500}
   #picker .af select,#picker .af input{border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:0 8px;height:32px;font-size:13px;background:var(--surface-2);width:100%}
   #picker .ahint{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.4}
+  #picker .af textarea{border:1px solid var(--line-strong);border-radius:var(--r-sm);padding:6px 8px;font:inherit;font-size:13px;background:var(--surface-2);width:100%;resize:vertical;min-height:52px}
+  #picker .af label[for=cu-notes]{align-self:start;padding-top:7px}
+  #picker .afb{display:flex;justify-content:flex-end;gap:6px;margin-top:10px}
+  #picker .afb .btn{display:inline-flex;width:auto;border:1px solid var(--line);padding:0 10px}
+  #picker .afb .btn.primary{background:var(--primary);color:var(--on-primary);border-color:var(--primary)}
+  #picker .afb .btn.primary:hover{background:var(--primary-hover)}
+  .pk-tools{margin:8px 0 2px}
+  .pk-tools .tmeta{border:0;background:rgb(var(--fg-rgb) / .06);color:var(--ink-2);border-radius:var(--r-sm);font-size:11px;font-weight:500;padding:2px 7px;cursor:pointer}
+  .pk-tools .tmeta:hover{background:rgb(var(--fg-rgb) / .12);color:var(--ink)}
+  .st .x{border:0;background:transparent;border-radius:var(--r-sm);padding:2px 5px;color:var(--ink-3);flex:none;opacity:0}
+  .st:hover .x,.st .x:focus-visible{opacity:1}
+  .st .x:hover{background:var(--hover);color:var(--bad)}
+  @media (hover:none){ .st .x{opacity:.7} }
+  .st .tt[contenteditable=true]{cursor:text;outline:none;border-radius:3px}
+  .st .tt[contenteditable=true]:focus{box-shadow:0 0 0 2px var(--accent-line)}
+  .addstep{margin-top:6px}
   /* crews editor */
   .sheet.wide{width:min(760px,100%)}
   .crews{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:6px 20px 12px;overflow:auto}
@@ -411,7 +427,7 @@
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.6.1';
+  const VERSION = 'v0.7.0';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'Operations Outage Planning ' + VERSION;
 
@@ -1131,16 +1147,23 @@
     if (canEdit()){
       const b = el('button', 'btn sm', 'Add package'); b.prepend(MMIcons.el('plus', 'sm')); b.title = 'Add a package from the Ops Task Library';
       b.addEventListener('click', e => { e.stopPropagation(); openPicker(b, o); });
-      sh.appendChild(b);
+      const cb = el('button', 'btn sm', 'Custom task'); cb.prepend(MMIcons.el('pencil', 'sm')); cb.title = 'Make a one-off task with its own steps, just for this outage';
+      cb.addEventListener('click', e => { e.stopPropagation(); openCustom(cb, o); });
+      sh.append(cb, b);
     }
     sec.appendChild(sh);
-    if (!list.length) sec.appendChild(el('div', 'none', canEdit() ? 'Drag a package here from the Packages panel, or use Add package.' : 'No packages yet.'));
+    if (!list.length) sec.appendChild(el('div', 'none', canEdit() ? 'Drag a package here from the Packages panel, use Add package, or make a Custom task.' : 'No packages yet.'));
     for (const [id, k] of list){
-      const box = el('div', 'pk' + (openPk.has(id) ? ' open' : '')), h = el('div', 'pk-h');
+      const box = el('div', 'pk' + (openPk.has(id) ? ' open' : '') + (k.custom ? ' custom' : '')), h = el('div', 'pk-h');
+      box.dataset.id = id;
       h.setAttribute('role', 'button'); h.tabIndex = 0; h.setAttribute('aria-expanded', String(openPk.has(id)));
       const total = pkgSteps(k), done = pkgDone(id, k);
       const nm = el('div', 'nm', k.name);
-      nm.appendChild(el('small', '', [k.area, `${done}/${total} steps done`, k.hours && `${k.hours} h window`, k.crew && `${k.crew} crew`].filter(Boolean).join(' · ')));
+      if (k.custom){ const cp = el('span', 'pill', 'Custom'); cp.style.setProperty('--sc', 'var(--accent)'); cp.style.marginLeft = '6px'; nm.appendChild(cp); }
+      const info = k.custom
+        ? [phaseName(k.phase), k.areaCode, k.team && `Crew ${k.team}`, k.who, total ? `${done}/${total} steps done` : (O.pdone[`${id}:task`] ? 'Done' : 'No steps')]
+        : [k.area, `${done}/${total} steps done`, k.hours && `${k.hours} h window`, k.crew && `${k.crew} crew`];
+      nm.appendChild(el('small', '', info.filter(Boolean).join(' · ')));
       const tw = el('span', 'tw'); tw.appendChild(MMIcons.el('right', 'sm')); h.append(tw, nm);
       if (canEdit()){
         const x = el('button', 'x'); x.appendChild(MMIcons.el('x', 'xs')); x.title = 'Remove from this outage'; x.setAttribute('aria-label', 'Remove ' + k.name);
@@ -1151,6 +1174,7 @@
       h.addEventListener('click', toggle);
       h.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggle(); } });
       box.appendChild(h);
+      if (openPk.has(id) && k.custom){ box.appendChild(customBody(id, k)); sec.appendChild(box); continue; }
       if (openPk.has(id)){
         const body = el('div', 'pk-b');
         if (k.desc) body.appendChild(el('div', 'pk-desc', k.desc));
@@ -1182,6 +1206,118 @@
       sec.appendChild(box);
     }
     return sec;
+  }
+
+  /* ---------- Custom tasks ----------
+     A one-off task made right on an outage: kept with the packages (same record, custom: true, no library
+     source), with a phase, area, crew and person, and its own steps added here. With no steps, the task
+     itself is ticked off (pdone <id>:task). */
+  const phaseName = k => (PHASES.find(p => p.k === k) || {}).l || '';
+  const areaName = k => (AREAS.find(a => a.k === k) || {}).l || '';
+  const outageOf = k => outages().find(x => x.id === k.outage);
+  function openCustom(btn, o){ customForm(btn, o, null); }
+  function customForm(btn, o, id){
+    const k0 = id ? O.pkgs[id] : { name: '', phase: lastPhase, areaCode: '', team: '', who: '', desc: '' };
+    if (!k0) return;
+    const pk = $('picker'); pk.textContent = ''; pk.classList.add('form');
+    pk.appendChild(el('div', 'ml', id ? 'Edit custom task' : `Custom task for ${fmtShort(o.date)}`));
+    const f = el('div', 'af');
+    const field = (label, node) => { const lb = el('label', '', label); node.id = 'cu-' + label.toLowerCase(); lb.htmlFor = node.id; f.append(lb, node); return node; };
+    const sel = (label, opts, val) => { const s = el('select'); opts.forEach(([v, l]) => { const op = el('option', '', l); op.value = v; s.appendChild(op); }); s.value = val || ''; return field(label, s); };
+    const nm = field('Name', el('input')); nm.value = k0.name || ''; nm.placeholder = 'e.g. Clean the saveall hood'; nm.autocomplete = 'off';
+    const ps = sel('Phase', PHASES.map(p => [p.k, p.l]), k0.phase || 'prep');
+    const as = sel('Area', [['', '—'], ...AREAS.map(a => [a.k, `${a.k} · ${a.l}`])], k0.areaCode);
+    const cs = sel('Crew', [['', '—'], ...CREWS.map(c => [c, `Crew ${c}` + (crewNames(c).length ? ` (${crewNames(c).length})` : '')])], k0.team);
+    const wi = field('Person', el('input')), dl = el('datalist');
+    dl.id = 'custom-names'; wi.setAttribute('list', dl.id); wi.value = k0.who || ''; wi.autocomplete = 'off'; wi.placeholder = 'Name';
+    const fill = () => { dl.textContent = ''; (cs.value ? crewNames(cs.value) : CREWS.flatMap(crewNames)).forEach(n => { const op = el('option'); op.value = n; dl.appendChild(op); }); };
+    fill(); f.appendChild(dl);
+    cs.addEventListener('change', () => { if (wi.value && cs.value && crewOf(wi.value) && !crewNames(cs.value).includes(wi.value)) wi.value = ''; fill(); });
+    wi.addEventListener('change', () => { const c = crewOf(wi.value.trim()); if (c) cs.value = c; fill(); });   // someone on another crew moves it to that crew
+    const ds = field('Notes', el('textarea')); ds.rows = 2; ds.value = k0.desc || ''; ds.placeholder = 'Optional';
+    pk.appendChild(f);
+    const err = el('div', 'ahint'); pk.appendChild(err);
+    const bar = el('div', 'afb');
+    const cancel = el('button', 'btn sm', 'Cancel'); cancel.type = 'button'; cancel.addEventListener('click', closePicker);
+    const ok = el('button', 'btn sm primary', id ? 'Save' : 'Add task'); ok.type = 'button';
+    bar.append(cancel, ok); pk.appendChild(bar);
+    const submit = () => {
+      const name = nm.value.trim();
+      if (!name){ err.textContent = 'Give the task a name.'; nm.focus(); return; }
+      const v = { name, phase: ps.value, areaCode: as.value || null, area: areaName(as.value) || null, team: cs.value || null, who: wi.value.trim() || null, desc: ds.value.trim() || null };
+      if (id){
+        const k = O.pkgs[id]; if (!k){ closePicker(); return; }
+        const steps = k.phases.flatMap(ph => ph.steps);
+        O.pkgs[id] = { ...k, ...v, phases: [{ title: phaseName(v.phase), phase: v.phase, steps }] };
+        saveO(); closePicker(); render(); return;
+      }
+      const nid = uid();
+      O.pkgs[nid] = { outage: o.id, source: null, custom: true, ...v, at: Date.now(), phases: [{ title: phaseName(v.phase), phase: v.phase, steps: [] }] };
+      openPk.add(nid); saveO(); closePicker(); render();
+      const si = document.querySelector(`.pk[data-id="${nid}"] .addstep input`); if (si) si.focus({ preventScroll: false });
+      toast(`Added ${name} to ${fmtShort(o.date)}`, { label: 'Undo', fn: () => removePackage(nid, true) });
+    };
+    ok.addEventListener('click', submit);
+    [nm, wi].forEach(i => i.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); submit(); } }));
+    placePicker(pk, btn);
+    nm.focus();
+  }
+  function setSteps(id, fn){
+    const k = O.pkgs[id]; if (!k) return;
+    const ph = k.phases[0] || { title: phaseName(k.phase), phase: k.phase, steps: [] };
+    O.pkgs[id] = { ...k, phases: [{ ...ph, steps: fn(ph.steps.slice()) }] };
+    saveO();
+  }
+  function customBody(id, k){
+    const body = el('div', 'pk-b');
+    if (k.desc) body.appendChild(el('div', 'pk-desc', k.desc));
+    if (canEdit()){
+      const tools = el('div', 'pk-tools');
+      const eb = el('button', 'tmeta', 'Edit details'); eb.type = 'button'; eb.title = 'Name, phase, area, crew, person and notes';
+      eb.addEventListener('click', e => { e.stopPropagation(); const o = outageOf(k); if (o) customForm(eb, o, id); });
+      tools.appendChild(eb); body.appendChild(tools);
+    }
+    const steps = k.phases.flatMap(ph => ph.steps);
+    const pw = el('div', 'ph'), pt = el('div', 'ph-t'); pt.append(el('i'), phaseName(k.phase) || 'Steps'); pw.appendChild(pt);
+    const row = (key, title, onEdit, onDel) => {
+      const on = !!O.pdone[key], r = el('div', 'st' + (on ? ' done' : ''));
+      const cb = el('input'); cb.type = 'checkbox'; cb.checked = on; cb.disabled = !canEdit(); cb.setAttribute('aria-label', 'Done: ' + title);
+      cb.addEventListener('change', () => { if (cb.checked) O.pdone[key] = { done: true, at: Date.now() }; else delete O.pdone[key]; saveO(); requestAnimationFrame(render); });
+      const bd = el('div', 'bd'), tt = el('div', 'tt', title); bd.appendChild(tt);
+      r.append(cb, bd);
+      if (canEdit() && onEdit){
+        tt.contentEditable = 'true'; tt.spellcheck = true;
+        tt.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); tt.blur(); } if (e.key === 'Escape'){ tt.textContent = title; tt.blur(); } });
+        tt.addEventListener('blur', () => { const v = tt.innerText.trim(); if (!v){ onDel(); return; } if (v !== title) onEdit(v); });
+        const x = el('button', 'x'); x.type = 'button'; x.appendChild(MMIcons.el('x', 'xs')); x.title = 'Delete step'; x.setAttribute('aria-label', 'Delete step ' + title);
+        x.addEventListener('click', onDel); r.appendChild(x);
+      }
+      return r;
+    };
+    if (!steps.length) pw.appendChild(row(`${id}:task`, k.name));
+    for (const st of steps){
+      pw.appendChild(row(`${id}:${st.id}`, st.title,
+        v => setSteps(id, ss => ss.map(s => s.id === st.id ? { ...s, title: v } : s)),
+        () => {
+          const key = `${id}:${st.id}`, was = O.pdone[key];
+          setSteps(id, ss => ss.filter(s => s.id !== st.id)); delete O.pdone[key]; saveO(); setTimeout(render, 0);
+          toast('Step deleted', { label: 'Undo', fn: () => { setSteps(id, ss => { const i = steps.indexOf(st); ss.splice(Math.min(i, ss.length), 0, st); return ss; }); if (was) O.pdone[key] = was; saveO(); render(); } });
+        }));
+    }
+    body.appendChild(pw);
+    if (canEdit()){
+      const add = el('div', 'addtask addstep'), inp = el('input');
+      inp.placeholder = steps.length ? 'Add a step…' : 'Add a step (optional)…'; inp.setAttribute('aria-label', 'New step for ' + k.name);
+      inp.addEventListener('keydown', e => {
+        if (e.key !== 'Enter' || !inp.value.trim()) return;
+        const t = inp.value.trim();
+        setSteps(id, ss => ss.concat({ id: uid(), title: t, lines: [], who: null, hrs: null, subs: [] }));
+        render();
+        const again = document.querySelector(`.pk[data-id="${id}"] .addstep input`); if (again) again.focus();
+      });
+      add.appendChild(inp); body.appendChild(add);
+    }
+    return body;
   }
 
   // Side panel to drag packages from
@@ -1397,7 +1533,8 @@
     const tasks = Object.values(O.tasks).filter(t => t.outage === o.id).sort((a, b) => (a.at || 0) - (b.at || 0))
       .map(t => ({ text: t.text, done: !!t.done, phase: t.phase || '', area: t.area || '', crew: t.crew || '', who: t.who || '' }));
     const packages = Object.entries(O.pkgs).filter(([, k]) => k.outage === o.id).sort((a, b) => (a[1].at || 0) - (b[1].at || 0))
-      .map(([id, k]) => ({ name: k.name, area: k.area, phases: k.phases.map(ph => ({ title: ph.title,
+      .map(([id, k]) => ({ name: k.name, area: k.area, areaCode: k.areaCode || null, custom: !!k.custom, phase: k.phase || null, crew: k.team || '', who: k.who || '',
+        done: !!O.pdone[`${id}:task`], desc: k.desc || null, phases: k.phases.map(ph => ({ title: ph.title, phase: ph.phase || null,
         steps: ph.steps.map(st => ({ title: st.title, who: st.who, hrs: st.hrs, lines: st.lines, subs: st.subs, done: !!O.pdone[`${id}:${st.id}`] })) })) }));
     const manning = Object.fromEntries(SHIFTS.map(sh => [sh.k, Object.fromEntries(POS.map(pos => [pos, seat(o, sh.k, pos)]))]));
     return {

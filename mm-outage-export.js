@@ -56,10 +56,13 @@
     }
     for (const k of m.packages || []){
       const area = k.areaCode || areaOf(k.area || k.name);
+      const steps = (k.phases || []).reduce((t, ph) => t + (ph.steps || []).length, 0);
+      // A custom task with no steps is one piece of work on its own.
+      if (k.custom && !steps) work.push({ kind: 'task', phase: k.phase || '', area, text: k.name, crew: k.crew || '', who: k.who || '', done: !!k.done, hrs: null, lines: k.desc ? [k.desc] : [] });
       for (const ph of k.phases || []){
-        const phase = phaseOfTitle(ph.title);
+        const phase = ph.phase || phaseOfTitle(ph.title);
         for (const st of ph.steps || []){
-          work.push({ kind: 'step', phase, area, pkg: k.name, text: `${k.name}: ${st.title}`, crew: '', who: st.who || '', done: !!st.done, hrs: st.hrs || null,
+          work.push({ kind: 'step', phase, area, pkg: k.name, text: `${k.name}: ${st.title}`, crew: k.crew && typeof k.crew === 'string' ? k.crew : '', who: st.who || k.who || '', done: !!st.done, hrs: st.hrs || null,
             lines: [...cleanLines(st.lines), ...(st.subs || [])] });
         }
       }
