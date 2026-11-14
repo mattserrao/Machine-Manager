@@ -75,7 +75,12 @@
   }
   const text = max => v => str(v, max);
   const oneOf = (list, dflt) => v => list.includes(v) ? v : dflt;
-  const RUN = { installed: day, removed: day, vendor: text(200), style: text(200), serial: text(200), reason: oneOf(REASON_IDS, 'other'),
+  // Refiner plates taken from the Consumables Tracker for a run (mm-plates.js): { key, vendor, model, part }, or none.
+  const plate = v => {
+    if (!v || typeof v !== 'object' || Array.isArray(v) || !/^[\w-]{1,80}:[\w-]{1,80}:[\w-]{1,80}$/.test(String(v.key || ''))) return undefined;
+    return { key: String(v.key), vendor: str(v.vendor, 200), model: str(v.model, 200), part: str(v.part, 200) };
+  };
+  const RUN = { installed: day, removed: day, vendor: text(200), style: text(200), serial: text(200), plate, reason: oneOf(REASON_IDS, 'other'),
     condition: oneOf(COND_IDS, 'good'), note: text(), runNote: text(), conditionNote: text(500), conditionDate: day,
     days: v => Number.isFinite(v) && v >= 0 ? v : undefined };
   function cleanRun(h){
@@ -84,7 +89,7 @@
     if (r.days === undefined){ const n = daysBetween(r.installed, r.removed); r.days = Number.isFinite(n) ? Math.max(0, n) : 0; }
     return r;
   }
-  const ITEM = { installed: day, note: text(), vendor: text(200), style: text(200), serial: text(200), condition: oneOf(COND_IDS, 'good'),
+  const ITEM = { installed: day, note: text(), vendor: text(200), style: text(200), serial: text(200), plate, condition: oneOf(COND_IDS, 'good'),
     conditionNote: text(500), conditionDate: day, target: v => { const n = Number(v); return Number.isFinite(n) && n >= 0 && n < 10000 ? n : undefined; },
     targetUnit: oneOf(['weeks', 'days'], 'weeks'), history: v => (Array.isArray(v) ? v : []).slice(0, 500).map(cleanRun) };
   function cleanItem(it){
@@ -178,8 +183,8 @@
   const defaultReason = it => !flagged(it) ? 'planned' : it.condition === 'damaged' ? 'damaged' : 'worn';
 
   // A new run starting on `date`: the current run moves into history (same as "Log change-out" in My Machine).
-  // History entry: { installed, removed, days, vendor, style, serial, reason, condition, note }.
-  // `extra` can override the logged entry (reason, condition, note) and the new run (vendor, style, serial).
+  // History entry: { installed, removed, days, vendor, style, serial, plate?, reason, condition, note }.
+  // `extra` can override the logged entry (reason, condition, note) and the new run (vendor, style, serial, plate).
   function replaced(it, date, extra = {}){
     it = Object.assign({ installed: '', note: '', history: [] }, it || {});
     if (!isDay(date)) throw new RangeError('Not a valid date.');
@@ -187,7 +192,7 @@
     const history = (it.history || []).slice();
     if (it.installed) history.push({
       installed: it.installed, removed: date, days: Math.max(0, daysBetween(it.installed, date)),
-      vendor: it.vendor || '', style: it.style || '', serial: it.serial || '',
+      vendor: it.vendor || '', style: it.style || '', serial: it.serial || '', ...(it.plate ? { plate: it.plate } : {}),
       reason: extra.reason || defaultReason(it),
       condition: extra.condition || it.condition || 'good',
       note: extra.note != null ? extra.note : [it.note, it.conditionNote].filter(Boolean).join(' — '),
@@ -200,6 +205,8 @@
       style: extra.style != null ? extra.style : (it.style || ''),
       serial: extra.serial || ''
     });
+    // Plates taken from stock for the new run; a change logged without one never inherits the old run's.
+    if (extra.plate) next.plate = extra.plate; else delete next.plate;
     return next;
   }
   // Undo the last change-out: the last history entry becomes the current run again.
@@ -208,6 +215,7 @@
     const last = (it.history || []).pop();
     if (!last) return it;
     const exact = last.runNote != null;       // logged by this version: restore the run as it was
+    delete it.plate; if (last.plate) it.plate = last.plate;
     return Object.assign(it, { installed: last.installed, vendor: last.vendor || '', style: last.style || '', serial: last.serial || '',
       condition: last.condition || 'good',
       conditionNote: exact ? last.conditionNote || '' : '', conditionDate: exact ? last.conditionDate || '' : '',
