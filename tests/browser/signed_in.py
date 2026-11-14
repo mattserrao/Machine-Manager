@@ -107,6 +107,62 @@ with sync_playwright() as p:
     check("OOP: no save on load", pg.evaluate("window.__rpcLog.length") == 0, json.dumps(pg.evaluate("window.__rpcLog"))[:300])
     check("OOP: no page errors", not pg.errors, "; ".join(pg.errors))
     ctx.close()
+
+    # ───────── Refiner plates: a plate change takes a set from the Consumables Tracker ─────────
+    PL_ROWS = MM_ROWS + [
+        {"tool": "mymachine", "id": "item:ref-bp1", "data": {"installed": "2026-08-20", "target": 12, "targetUnit": "weeks", "vendor": "Vendor A", "style": "LC pattern · RP-2210", "history": []}},
+        {"tool": "mymachine", "id": "item:ref-bp2", "data": {"installed": "2026-08-01", "target": 12, "targetUnit": "weeks", "vendor": "Vendor A", "style": "LC pattern", "history": []}},
+        {"tool": "outages", "id": "outage:o2", "data": {"date": "2027-01-06", "type": "normal"}},
+        {"tool": "consumables", "id": "p:cs1", "data": {"name": "PM1 Consumables", "meta": {}, "created": "2026-11-01T10:00:00Z"}},
+        {"tool": "consumables", "id": "n:cs1:c1", "data": {"text": "Refiner plates", "x": 0, "y": 0, "z": 1, "color": "#e9e0ff", "w": 268, "attachments": [], "children": [], "parent": None,
+            "cons": {"type": "plates", "kind": "inv", "unit": "sets", "cols": ["Manufacturer", "Pattern / part #"], "fits": {"mode": "all", "list": ""},
+                     "rows": [{"id": "r1", "a": "Vendor A", "b": "LC pattern", "c": "RP-2210", "q": 1}, {"id": "r2", "a": "Vendor B", "b": "HC pattern", "q": 0}]}}},
+    ]
+    def sent_of(pg, tool=None):
+        return [c for call in pg.evaluate("window.__rpcLog") for c in call["p_changes"] if tool is None or call.get("p_tool") == tool]
+    ctx, pg = open_page("MyMachine.html", PL_ROWS)
+    pg.locator("#refRows tr[data-id='ref-bp1']").click(); pg.wait_for_timeout(300)
+    pg.locator("#drawer [data-act='replace']").click(); pg.wait_for_timeout(300)
+    opts = pg.locator("#chPlate option").all_inner_texts()
+    check("MM plates: plate change lists the plate types with sets on hand", len(opts) == 3 and "Vendor A — LC pattern · RP-2210 (1 on hand)" in opts[1], str(opts))
+    check("MM plates: the plates in now are picked, Vendor and Style filled and locked",
+          pg.input_value("#chPlate") == "cs1:c1:r1" and pg.input_value("#chVendor") == "Vendor A" and pg.locator("#chStyle").get_attribute("readonly") is not None)
+    pg.locator("#drawer [data-act='chsave']").click(); pg.wait_for_timeout(1500)
+    cs = [c for c in sent_of(pg) if c["id"] == "n:cs1:c1"]; it = [c for c in sent_of(pg) if c["id"] == "item:ref-bp1"]
+    check("MM plates: logging it takes one set", cs and cs[-1]["data"]["cons"]["rows"][0]["q"] == 0 and cs[-1]["data"]["cons"]["rows"][1]["q"] == 0, json.dumps(cs)[:300])
+    check("MM plates: the run records the plates taken", it and it[-1]["data"].get("plate", {}).get("key") == "cs1:c1:r1", json.dumps(it)[-300:])
+    pg.locator("#toast button", has_text="Undo").click(); pg.wait_for_timeout(1500)
+    cs = [c for c in sent_of(pg) if c["id"] == "n:cs1:c1"]
+    check("MM plates: undo gives the set back", cs[-1]["data"]["cons"]["rows"][0]["q"] == 1, json.dumps(cs[-1])[:200])
+    # Not from inventory: nothing taken
+    pg.locator("#drawer [data-act='replace']").click(); pg.wait_for_timeout(300)
+    pg.select_option("#chPlate", ""); pg.fill("#chVendor", "Other Co"); n0 = len(sent_of(pg))
+    pg.locator("#drawer [data-act='chsave']").click(); pg.wait_for_timeout(1500)
+    check("MM plates: Not from inventory takes nothing", not [c for c in sent_of(pg)[n0:] if c["id"].startswith("n:")] and not [c for c in sent_of(pg)[n0:] if c["id"] == "item:ref-bp1"][-1]["data"].get("plate"))
+    check("MM plates: no page errors", not pg.errors, "; ".join(pg.errors))
+    ctx.close()
+
+    ctx, pg = open_page("OperationsOutagePlanning.html", PL_ROWS)
+    pg.locator(".lane > .card").first.click(); pg.wait_for_timeout(500)
+    row = pg.locator(".card.big .due").filter(has_text="BP 2 refiner")
+    check("OOP plates: refiner row shows sets on hand", row.count() == 1 and "1 set on hand" in row.inner_text(), row.inner_text() if row.count() else "")
+    row.locator("button", has_text="Changed").first.click(); pg.wait_for_timeout(300)
+    items = pg.locator("#picker button").all_inner_texts()
+    check("OOP plates: Changed asks which plates went in", len(items) == 3 and "Not from inventory" in items[-1], str(items))
+    pg.locator("#picker button", has_text="Vendor B").click(); pg.wait_for_timeout(1500)
+    cs = [c for c in sent_of(pg) if c["id"] == "n:cs1:c1"]; it = [c for c in sent_of(pg) if c["id"] == "item:ref-bp2"]
+    check("OOP plates: picking plates takes a set (none on hand: goes negative)", cs and cs[-1]["data"]["cons"]["rows"][1]["q"] == -1, json.dumps(cs)[:300])
+    check("OOP plates: the new run records the plates", it and it[-1]["data"]["plate"]["key"] == "cs1:c1:r2" and it[-1]["data"]["vendor"] == "Vendor B", json.dumps(it)[-300:])
+    check("OOP plates: no page errors", not pg.errors, "; ".join(pg.errors))
+    ctx.close()
+
+    ctx, pg = open_page("ConsumablesTracker.html", PL_ROWS)
+    pg.wait_for_timeout(500)
+    if pg.locator(".pkg").filter(has_text="PM1 Consumables").count(): pg.locator(".pkg").filter(has_text="PM1 Consumables").first.click(); pg.wait_for_timeout(600)
+    txt = pg.locator("body").inner_text()
+    check("CT plates: old two-column plate card shows vendor, model and part #", "Vendor A" in txt and "LC pattern · Part # RP-2210" in txt, txt[:300].replace("\n", " | "))
+    check("CT plates: no page errors", not pg.errors, "; ".join(pg.errors))
+    ctx.close()
     # ───────── Mill data pages for a real org with no data of its own: placeholders, never the demo org ─────────
     for name in ["DailyJournal.html", "Downtime.html", "VendorReports.html", "BonvoyReport.html", "MMLLM.html"]:
         ctx, pg = open_page(name, [])

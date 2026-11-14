@@ -420,6 +420,7 @@
 <script src="mm-ui.js?v=2026-11-10.1128"></script>
 <script src="mm-records.js?v=2026-11-10.1128"></script>
 <script src="mm-machine.js?v=2026-11-10.1128"></script>
+<script src="mm-plates.js?v=2026-11-14.1"></script>
 <script src="mm-demo.js?v=2026-11-10.1128"></script>
 <script src="mm-task-examples.js?v=2026-11-10.1128"></script>
 <script src="mm-demo-outages.js?v=2026-11-10.1128"></script>
@@ -427,7 +428,7 @@
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.7.0';
+  const VERSION = 'v0.8.0';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'Operations Outage Planning ' + VERSION;
 
@@ -444,6 +445,7 @@
   const emptyO = () => ({ settings: null, outages: {}, tasks: {}, pkgs: {}, pdone: {}, man: {}, crews: {}, dec: {} });
   let O = emptyO();   // this tool's records
   let tpStore = null, tp = {};                                   // Ops Task Library records (read only here)
+  const plates = MMPlates.stock();                               // refiner plates on hand (Consumables Tracker): a plate change takes a set
   const openPk = new Set(), manClosed = new Set(), manTab = {};    // what's expanded / collapsed (this browser only; manning starts open)
   let showPast = false;
   let lastPhase = (() => { try { return localStorage.getItem('mm-op-phase') || 'prep'; } catch (e) { return 'prep'; } })();
@@ -807,7 +809,8 @@
     sh1.append(el('h3', '', 'Fabrics & rolls due'), el('span', 'n', String(open)));
     s1.appendChild(sh1);
     if (!due.length) s1.appendChild(el('div', 'none', 'Nothing due before the next outage.'));
-    for (const x of due) s1.appendChild(dueRow(o, x, today));
+    const refDue = due.filter(x => x.p.kind === 'refiner' && !x.changed && !x.declined).length;
+    for (const x of due) s1.appendChild(dueRow(o, x, today, refDue));
     body.appendChild(s1);
 
     body.appendChild(pkgSection(o));
@@ -877,7 +880,7 @@
     setBig([...bigCards][0], false);
   });
 
-  function dueRow(o, x, today){
+  function dueRow(o, x, today, refDue){
     const r = el('div', 'due' + (x.changed ? ' done' : '') + (x.declined ? ' declined' : ''));
     r.style.setProperty('--cc', CAT[x.p.cat] || '#78716c');
     const nm = el('div', 'nm'), a = el('a', '', x.p.name);
@@ -904,6 +907,15 @@
       else if (gap < 0){ pill.textContent = `${span(gap)} overdue by then`; pill.style.setProperty('--sc', 'var(--bad)'); }
       else { pill.textContent = gap === 0 ? 'due that day' : `${span(gap)} left at outage`; pill.style.setProperty('--sc', 'var(--warn)'); }
       pill.style.marginLeft = '6px'; sub.appendChild(pill);
+      // Refiner plates on hand that fit this refiner, against how many refiners are due at this outage.
+      const ts = x.p.kind === 'refiner' ? platesFor(x.p) : [];
+      if (ts.length){
+        const have = ts.reduce((t, k) => t + Math.max(0, k.onHand), 0), short = have < (refDue || 1);
+        const sp = el('span', 'pill', `${have} set${have === 1 ? '' : 's'} on hand` + (refDue > 1 ? ` · ${refDue} refiners due` : ''));
+        sp.style.setProperty('--sc', short ? 'var(--bad)' : 'var(--ok, var(--muted))'); sp.style.marginLeft = '6px';
+        sp.title = ts.map(k => `${MMPlates.label(k)}: ${k.onHand}`).join('\n') + '\n(Consumables Tracker)';
+        sub.appendChild(sp);
+      }
       if (x.flag && x.it.conditionNote) sub.appendChild(el('div', 'cnote', x.it.conditionNote));
     }
     nm.appendChild(sub); r.appendChild(nm);
@@ -920,7 +932,7 @@
       if (x.missed){     // it may have been changed at the missed outage after all
         const b = el('button', 'lnk', `Changed ${fmtShort(x.missed.date)}?`);
         b.title = `If it was changed at the ${fmtLong(x.missed.date)} outage, record that in My Machine`;
-        b.addEventListener('click', () => markChanged(x.p, x.missed));
+        b.addEventListener('click', () => markChangedAsk(b, x.p, x.missed));
         r.appendChild(b);
       }
       if (x.accepted){
@@ -945,12 +957,12 @@
     } else if (o.date <= today && !x.missed){
       const b = el('button', 'btn sm', 'Mark changed');
       b.title = `Record a new ${x.p.kind === 'refiner' ? 'plate set' : 'run'} starting ${fmtLong(o.date)} in My Machine`;
-      b.addEventListener('click', () => markChanged(x.p, o));
+      b.addEventListener('click', () => markChangedAsk(b, x.p, o));
       r.appendChild(b);
     } else if (x.missed){
       const b = el('button', 'btn sm', `Changed ${fmtShort(x.missed.date)}?`);
       b.title = `If it was changed at the ${fmtLong(x.missed.date)} outage, record that in My Machine`;
-      b.addEventListener('click', () => markChanged(x.p, x.missed));
+      b.addEventListener('click', () => markChangedAsk(b, x.p, x.missed));
       r.appendChild(b);
     }
     return r;
@@ -992,21 +1004,49 @@
     return null;
   }
 
+  // Refiner plates: which plate types fit this refiner, and how many sets of them are on hand.
+  const refinerName = p => p.name.replace(/ refiner$/, '');
+  const platesFor = p => plates.types(refinerName(p)).filter(t => t.fits);
+  // A refiner change first asks which plates went in (takes a set from the Consumables Tracker); other changes don't.
+  function markChangedAsk(btn, p, o){
+    const ts = p.kind === 'refiner' && plates.canEdit ? plates.types(refinerName(p)) : [];
+    if (!ts.length) return markChanged(p, o, null);
+    const pk = $('picker'); pk.textContent = ''; pk.classList.remove('form');
+    pk.appendChild(el('div', 'ml', `Plates in ${p.name} (${fmtShort(o.date)})`));
+    for (const t of ts){
+      const b = el('button', '', MMPlates.label(t)); b.setAttribute('role', 'menuitem');
+      const sm = el('small', '', `${t.onHand} ${t.onHand === 1 ? t.unit.replace(/s$/, '') : t.unit} on hand` + (t.onHand > 0 ? '' : ' · takes it below zero') + (t.fits ? '' : ' · not listed for this refiner'));
+      if (t.onHand <= 0) sm.style.color = 'var(--bad-ink)';
+      b.appendChild(sm);
+      b.addEventListener('click', () => { closePicker(); markChanged(p, o, t); });
+      pk.appendChild(b);
+    }
+    const nb = el('button', '', 'Not from inventory'); nb.setAttribute('role', 'menuitem');
+    nb.appendChild(el('small', '', 'Nothing taken from stock; same vendor and style as before'));
+    nb.addEventListener('click', () => { closePicker(); markChanged(p, o, null); });
+    pk.appendChild(nb);
+    placePicker(pk, btn);
+  }
   // "Changed at this outage" → new run in My Machine starting on the outage date (old run kept in history).
-  function markChanged(p, o){
+  function markChanged(p, o, t){
     const before = items[p.id] ? JSON.parse(JSON.stringify(items[p.id])) : undefined;
-    try { items[p.id] = MM.replaced(items[p.id], o.date); } catch (e) { return toast(e.message); }
+    const extra = t ? { vendor: t.vendor, style: t.model + (t.part ? ' · ' + t.part : ''), plate: MMPlates.runPlate(t) } : {};
+    try { items[p.id] = MM.replaced(items[p.id], o.date, extra); } catch (e) { return toast(e.message); }
     saveM(); render();
-    toast(`${p.name}: new ${p.kind === 'refiner' ? 'plate set' : 'run'} from ${fmtShort(o.date)} saved to My Machine`, { label: 'Undo', fn: () => {
+    const left = t && plates.take(t.key);
+    toast(`${p.name}: new ${p.kind === 'refiner' ? 'plate set' : 'run'} from ${fmtShort(o.date)} saved to My Machine` + (left ? ` · 1 set taken, ${left.onHand} left` : ''), { label: 'Undo', fn: () => {
       if (before) items[p.id] = before; else delete items[p.id];
+      if (left) plates.give(t.key);
       saveM(); render();
     } });
   }
   function undoChange(p, o){
     const last = (items[p.id].history || [])[items[p.id].history.length - 1];
     if (!last || last.removed !== o.date) return;
+    const took = items[p.id].plate;           // plates taken for the run being undone go back on the shelf
     items[p.id] = MM.unreplaced(items[p.id]);
-    saveM(); render(); toast(`${p.name}: restored install date ${fmtShort(last.installed)}`);
+    const back = took && plates.canEdit && plates.give(took.key);
+    saveM(); render(); toast(`${p.name}: restored install date ${fmtShort(last.installed)}` + (back ? ` · 1 set back in stock (${back.onHand})` : ''));
   }
 
   function taskNote(t){
@@ -1756,6 +1796,12 @@
     mStore = MMCloud.openStore('mymachine', { snapshot: mRecords, onChange: onM, onStatus: saveInd.handler(() => mStore) });
     // Read only here: snapshot hands back exactly what was loaded, and save() is never called on it.
     tpStore = MMCloud.openStore('task-packages', { snapshot: () => tp, onChange: onTP });
+    // Refiner plates on hand: shown on refiner rows, and a plate change takes a set (editors only). Loads in the background.
+    let csStore = null;
+    const csh = saveInd.handler(() => csStore);
+    csStore = MMCloud.openStore('consumables', { snapshot: () => plates.records, onChange: (id, d, info) => { plates.onChange(id, d, info); if (machine) softRender(); },
+      onStatus: (st, d) => { plates.onStatus(st); csh(st, d); } });
+    csStore.ready.then(d => { if (!d) return; for (const [k, v] of Object.entries(d)) plates.onChange(k, v); plates.attach(csStore); if (machine) softRender(); }).catch(() => {});
     let od, md, td;
     try { [od, md, td] = await Promise.all([oStore.ready, mStore.ready, tpStore.ready]); }
     catch (e) { return gate('alert', 'Couldn’t load', (e && e.message ? e.message + ' — ' : '') + 'reload to try again.', { label: 'Reload', fn: () => location.reload() }); }

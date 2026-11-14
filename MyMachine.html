@@ -305,17 +305,20 @@
 <script src="mm-ui.js?v=2026-11-10.1128"></script>
 <script src="mm-records.js?v=2026-11-10.1128"></script>
 <script src="mm-machine.js?v=2026-11-10.1128"></script>
+<script src="mm-plates.js?v=2026-11-14.1"></script>
 <script src="mm-demo.js?v=2026-11-10.1128"></script>
 <script>
 (() => {
   'use strict';
-  const VERSION = 'v0.4.3';
+  const VERSION = 'v0.5.0';
   const KEY = 'machine-manager-mymachine';
   const $ = id => document.getElementById(id);
   $('ver').textContent = 'My Machine ' + VERSION;
 
   const MM = window.MMMachine;                 // shared machine model (mm-machine.js)
   const RID = MMRecords.mymachine;             // record ids (mm-records.js)
+  // Refiner plates on hand (Consumables Tracker, mm-plates.js): a plate change takes one set. Signed in only.
+  const plates = MMPlates.stock();
   const { DEFAULT_MACHINE } = MM;
   const CAT_COLOR = { forming: 'var(--c-forming)', press: 'var(--c-press)', dryer: 'var(--c-dryer)', roll: 'var(--c-roll)', refiner: 'var(--c-refiner)' };
   const KIND_LABEL = { fabric: 'Fabric', roll: 'Roll', refiner: 'Refiner' };
@@ -742,6 +745,29 @@
     box.hidden = false;
   }
 
+  // Plates for a refiner change: a plate type from stock (takes a set) or "Not from inventory" (typed in).
+  const refinerName = p => p.name.replace(/ refiner$/, '');
+  function plateField(p, it){
+    const ts = plates.types(refinerName(p));
+    const fitting = ts.filter(t => t.fits);
+    const pre = (it.plate && ts.find(t => t.key === it.plate.key))
+      || ts.find(t => t.fits && t.vendor === (it.vendor || '') && [t.model, t.model + ' · ' + t.part].includes(it.style || ''))
+      || (fitting.length === 1 ? fitting[0] : null);
+    const opt = t => `<option value="${esc(t.key)}"${pre && pre.key === t.key ? ' selected' : ''}>${esc(MMPlates.label(t))} (${t.onHand} on hand)${t.fits ? '' : ' — not listed for this refiner'}</option>`;
+    return `<div class="fld full"><label for="chPlate">Plates from stock</label><select id="chPlate">
+        <option value=""${pre ? '' : ' selected'}>Not from inventory (type the vendor and style)</option>${ts.map(opt).join('')}</select>
+        <span class="hint" id="chPlateHint">${ts.length ? 'Takes one set from the Consumables Tracker.' : 'No refiner plates in the Consumables Tracker yet. Add a Refiner plates card there to pick from stock.'}</span></div>`;
+  }
+  // Fill and lock Vendor / Style from the picked plate type (or unlock them for typing).
+  function syncPlate(){
+    const sel = $('chPlate'); if (!sel) return;
+    const t = sel.value && plates.find(sel.value), v = $('chVendor'), st = $('chStyle'), h = $('chPlateHint');
+    if (t){ v.value = t.vendor; st.value = t.model + (t.part ? ' · ' + t.part : ''); }
+    v.readOnly = st.readOnly = !!t;
+    if (h && t) h.textContent = t.onHand > 0 ? `Takes one set: ${t.onHand - 1} left after this.` : `None counted on hand: this takes it to ${t.onHand - 1}. Recount in the Consumables Tracker.`;
+    else if (h && plates.types().length) h.textContent = 'Nothing is taken from stock.';
+  }
+
   function openItem(id){
     if (draft) return; // Setup is open
     const p = positions(S.machine).find(q => q.id === id);
@@ -785,6 +811,7 @@
         <div class="fld"><label for="chCond">Condition when removed</label><select id="chCond">${optList(MM.CONDITIONS, cond)}</select></div>
         <div class="fld full"><label for="chNote">Notes on the ${runWord} coming off</label><textarea id="chNote">${esc([it.note, it.conditionNote].filter(Boolean).join(' — '))}</textarea></div>
         <div class="fld full"><span class="lbl">New ${isRef ? 'plates' : p.kind}</span></div>
+        ${isRef && plates.canEdit ? plateField(p, it) : ''}
         <div class="fld"><label for="chVendor">Vendor</label><input id="chVendor" type="text" value="${esc(it.vendor)}"></div>
         <div class="fld"><label for="chStyle">Style</label><input id="chStyle" type="text" value="${esc(it.style)}"></div>
         <div class="fld full"><label for="chSerial">Serial #</label><input id="chSerial" type="text" placeholder="New serial number"></div>
@@ -848,6 +875,7 @@
     drawer.dataset.mode = 'item';
     drawer.dataset.id = id;
     piTags(id);
+    syncPlate();
   }
 
   function openSection(secId){
@@ -904,19 +932,23 @@
       openItem(id);
       if (c !== 'good') { const n = $('condNote'); if (n) n.focus(); }
     }
-    else if (act === 'replace') { chOpen = true; histEdit = null; openItem(id); drawer.querySelector('.chform').scrollIntoView({ block: 'start' }); $('chReason').focus({ preventScroll: true }); }
+    else if (act === 'replace') { chOpen = true; histEdit = null; openItem(id); syncPlate(); drawer.querySelector('.chform').scrollIntoView({ block: 'start' }); $('chReason').focus({ preventScroll: true }); }
     else if (act === 'chcancel') { chOpen = false; openItem(id); }
     else if (act === 'chsave') {
       const it = S.items[id], t = $('chDate').value || todayStr();
       if (t < it.installed) return toast('Change date can’t be before the install date');
       if (t > todayStr()) return toast('Change date can’t be in the future');
       const prev = clone(it);
+      const pk = $('chPlate') && $('chPlate').value, pt = pk ? plates.find(pk) : null;
+      if (pk && !pt) return toast('That plate type isn’t in the Consumables Tracker any more. Pick another.');
       try {
         S.items[id] = MM.replaced(it, t, { reason: $('chReason').value, condition: $('chCond').value, note: $('chNote').value.trim(),
-          vendor: $('chVendor').value.trim(), style: $('chStyle').value.trim(), serial: $('chSerial').value.trim() });
+          vendor: $('chVendor').value.trim(), style: $('chStyle').value.trim(), serial: $('chSerial').value.trim(), plate: MMPlates.runPlate(pt) });
       } catch (e) { return toast(e.message); }
       save(); chOpen = false; renderAll(); openItem(id);
-      toast(id.startsWith('ref-') ? 'Plate change logged' : 'Change-out logged', 'Undo', () => { S.items[id] = prev; save(); renderAll(); openItem(id); });
+      const left = pt && plates.take(pt.key);
+      const msg = id.startsWith('ref-') ? 'Plate change logged' + (left ? ` · 1 set of ${MMPlates.label(left)} taken, ${left.onHand} left` : '') : 'Change-out logged';
+      toast(msg, 'Undo', () => { S.items[id] = prev; save(); if (left) plates.give(pt.key); renderAll(); openItem(id); });
     }
     else if (act === 'hadd' || act === 'hedit') {
       histEdit = act === 'hadd' ? 'new' : +b.dataset.i; chOpen = false; openItem(id);
@@ -950,6 +982,7 @@
   });
   drawer.addEventListener('change', e => {
     if (drawer.dataset.mode === 'setup') return setupChange(e);
+    if (e.target.id === 'chPlate') return syncPlate();
     if (e.target.id === 'inst') {
       let v = e.target.value;
       if (v && v > todayStr()) { v = todayStr(); toast('Install date can’t be in the future'); }
@@ -1161,6 +1194,19 @@
           }
         }
         if (!S.machine && !cloud.edit) toast(`No machine has been set up for ${cloud.org.name} yet. Ask an editor to set it up.`);
+        // Editors: refiner plates on hand, so a plate change can take a set (loads in the background).
+        if (cloud.edit){
+          let csStore = null;
+          const ph = saveInd.handler(() => csStore);
+          csStore = MMCloud.openStore('consumables', { snapshot: () => plates.records, onChange: plates.onChange,
+            onStatus: (st, d) => { plates.onStatus(st); ph(st, d); } });
+          csStore.ready.then(d => {
+            if (!d) return;
+            for (const [k, v] of Object.entries(d)) plates.onChange(k, v);
+            plates.attach(csStore);
+            if (chOpen && !drawer.hidden && drawer.dataset.mode === 'item') openItem(drawer.dataset.id);
+          }).catch(() => {});
+        }
       } else cloud = null;            // signed out or no organization: demo mode
     }
     if (!cloud) load();

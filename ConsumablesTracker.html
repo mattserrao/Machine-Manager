@@ -22,6 +22,8 @@
   .qty{display:flex;align-items:center;gap:2px;flex:none}
   .qty .qn{min-width:28px;text-align:center;font-weight:600;font-size:16px;font-variant-numeric:tabular-nums}
   .qty .qn.zero{color:var(--bad-ink)}
+  .qty .qn.neg{color:var(--bad)}
+  .ce-grid.inv3{grid-template-columns:1fr 1fr .8fr 64px 26px;margin:0}
   .qb{width:24px;height:24px;border-radius:var(--r-sm);border:1px solid rgb(var(--fg-rgb) / .12);background:var(--surface);cursor:pointer;font:600 13px/1 inherit;color:var(--ink-2);display:grid;place-items:center;padding:0}
   .qb:hover{background:var(--hover)}
   .inv-foot{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);margin-top:4px;padding-top:6px;border-top:1px solid rgb(var(--fg-rgb) / .08)}
@@ -39,6 +41,7 @@
   .ce-h{font-size:12px;font-weight:600;color:var(--ink-2);margin-top:4px}
   .ce-grid{display:grid;gap:5px;align-items:center}
   .ce-grid.inv{grid-template-columns:1fr 1fr 64px 26px;margin:0}
+  .ce-grid .hd.fixed{padding:0 2px;font-weight:500}
   .ce-grid.kv2{grid-template-columns:140px 1fr 26px}
   .ce-grid input{width:100%;min-width:0;font:inherit;font-size:13px;padding:5px 7px;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:var(--surface)}
   .ce-grid .hd{font-size:11px;color:var(--muted)}
@@ -314,10 +317,11 @@
 <script src="vendor/html-to-image-1.11.11.js?v=2026-11-10.1128"></script>
 <script src="mm-ui.js?v=2026-11-10.1128"></script>
 <script src="mm-records.js?v=2026-11-10.1128"></script>
+<script src="mm-plates.js?v=2026-11-14.1"></script>
 <script src="mm-board.js?v=2026-11-10.1128"></script>
 <script>
 MMBoard.start({
-    version:'v0.4.0',
+    version:'v0.5.0',
     shell:'library', tool:'consumables', title:'Consumables Tracker', idb:'mm-consumables', idPrefix:'cs-', viewKey:'mm-cs-view',
     fileExt:'consumables', appTag:'machine-manager-consumables', urlParam:'board', statusMenu:false, noDrag:'.qb',
     organizer:true,                // a scrolling page of category sections, not a canvas (mm-board.js: ORG)
@@ -333,9 +337,11 @@ MMBoard.start({
     //   kind 'inv'  — inventory: rows of { a: what (vendor / colour / size), b: part or inventory #, q: count on hand },
     //                 and an optional reorder point min (the card's total): below it the card says so
     //   kind 'info' — reference: a position note plus label/value fields (what goes where)
-    // Refiner plates also carry fits: { mode:'all' } or { mode:'some', list:'BP 1, BP 2' }.
+    // Refiner plates also carry fits: { mode:'all' } or { mode:'some', list:'BP 1, BP 2' }, and each row is a plate
+    // type: a = vendor, b = model, c = part # (optional). Logging a plate change in My Machine or Outage Planning
+    // takes one set from the row picked there (mm-plates.js), so a count can go below zero.
     const CTYPES = {
-      plates: { label:'Refiner plates',   kind:'inv',  color:'#e9e0ff', unit:'sets',   cols:['Manufacturer', 'Pattern / part #'], fits:true, rows:[['', '']] },
+      plates: { label:'Refiner plates',   kind:'inv',  color:'#e9e0ff', unit:'sets',   cols:['Vendor', 'Model', 'Part #'], fits:true, rows:[['', '']] },
       blade:  { label:'Doctor blade',     kind:'info', color:'#ffe2c4', fields:['Blade type', 'Material', 'Thickness', 'Bevel', 'Length', 'Vendor', 'Part #'] },
       nozzle: { label:'Shower nozzle',    kind:'info', color:'#d4ecff', fields:['Shower', 'Nozzle type', 'Orifice', 'Spray angle', 'Spacing', 'Vendor', 'Part #'] },
       rope:   { label:'Dryer rope',       kind:'inv',  color:'#ffd8e1', unit:'spools', cols:['Colour', 'Size / part #'], rows:[['Red', ''], ['Blue', '']] },
@@ -365,7 +371,7 @@ MMBoard.start({
     // Plain text of a card's consumable details, for search and the written report.
     function consText(n){
       const c = n.cons; if (!c) return '';
-      if (c.kind === 'inv') return [c.unit, fitsLabel(c), ...(c.rows || []).map(r => `${r.a} ${r.b} ${r.q}`)].join(' ');
+      if (c.kind === 'inv') return [c.unit, fitsLabel(c), ...(c.rows || []).map(r => `${r.a} ${r.b} ${r.c || ''} ${r.q}`)].join(' ');
       return [c.pos, ...(c.fields || []).map(f => `${f.k} ${f.v}`)].join(' ');
     }
     function buildCons(n){
@@ -376,10 +382,13 @@ MMBoard.start({
           const row = el('div', 'ir');
           const w = el('div', 'iw');
           w.appendChild(el('div', 'ia', r.a || '—'));
-          if (r.b) w.appendChild(el('div', 'ib2', r.b));
+          const sub = [r.b, MMPlates.isPlates(c) && r.c && 'Part # ' + r.c].filter(Boolean).join(' · ');
+          if (sub) w.appendChild(el('div', 'ib2', sub));
           const q = el('div', 'qty');
           const mk = (d, t) => { const b = el('button', 'qb', t); b.type = 'button'; b.dataset.id = n.id; b.dataset.row = r.id; b.dataset.d = d; b.title = d > 0 ? 'One more on hand' : 'One fewer on hand'; return b; };
-          q.append(mk(-1, '−'), el('span', 'qn' + (Number(r.q) ? '' : ' zero'), String(Number(r.q) || 0)), mk(1, '+'));
+          const qv = Number(r.q) || 0, qn = el('span', 'qn' + (qv < 0 ? ' neg' : qv ? '' : ' zero'), String(qv));
+          if (qv < 0) qn.title = 'More sets logged as used than were counted on hand: recount';
+          q.append(mk(-1, '−'), qn, mk(1, '+'));
           row.append(w, q);
           box.appendChild(row);
         });
@@ -405,8 +414,9 @@ MMBoard.start({
     function bumpQty(id, rowId, d){
       const n = N(id); if (!n || !n.cons) return;
       const r = (n.cons.rows || []).find(x => x.id === rowId); if (!r) return;
-      const v = Math.max(0, (Number(r.q) || 0) + d);
-      if (v === (Number(r.q) || 0)) return;
+      const v = (Number(r.q) || 0) + d;
+      if (d < 0 && v < 0) return;                 // by hand it stops at 0; only logged plate changes go below
+
       checkpoint();
       r.q = v; n.cons.counted = todayYMD();
       render(); save();
@@ -465,7 +475,7 @@ MMBoard.start({
       const ch = () => { render(); save(); };
       const inp = (v, ph, on, type) => { const i = el('input'); i.type = type || 'text'; i.value = v == null ? '' : v; if (ph) i.placeholder = ph; i.addEventListener('input', () => { on(i.value); ch(); }); i.addEventListener('keydown', e => { if (e.key === 'Enter'){ e.preventDefault(); closeEditor(); } }); return i; };
       const xbtn = (fn, title) => { const b = el('button', 'ce-x'); b.appendChild(MMIcons.el('x', 'xs')); b.type = 'button'; b.title = title; b.addEventListener('click', () => { fn(); ch(); paintCons(n); }); return b; };
-      const addBtn = (label, fn) => { const b = el('button', 'btn', label); b.prepend(MMIcons.el('plus', 'sm')); b.type = 'button'; b.addEventListener('click', () => { fn(); ch(); paintCons(n); const ins = edCons.querySelectorAll('.ce-grid input'); if (ins.length) ins[ins.length - (c.kind === 'inv' ? 3 : 2)].focus(); }); return b; };
+      const addBtn = (label, fn) => { const b = el('button', 'btn', label); b.prepend(MMIcons.el('plus', 'sm')); b.type = 'button'; b.addEventListener('click', () => { fn(); ch(); paintCons(n); const ins = edCons.querySelectorAll('.ce-grid input'); if (ins.length) ins[ins.length - (c.kind === 'inv' ? (MMPlates.isPlates(c) ? 4 : 3) : 2)].focus(); }); return b; };
 
       if (c.kind === 'inv'){
         if (c.fits){
@@ -482,6 +492,18 @@ MMBoard.start({
           edCons.appendChild(r);
         }
         edCons.appendChild(el('div', 'ce-h', 'On hand'));
+        if (MMPlates.isPlates(c)){       // plate types: fixed columns (older cards had two), part # optional
+          c.cols = MMPlates.COLS.slice();
+          const g = el('div', 'ce-grid inv3');
+          const uw = el('div', 'hd'); uw.appendChild(inp(c.unit, 'unit', v => { c.unit = v; }));
+          g.append(el('div', 'hd fixed', 'Vendor'), el('div', 'hd fixed', 'Model'), el('div', 'hd fixed', 'Part # (optional)'), uw, el('span'));
+          (c.rows || []).forEach(r => {
+            g.append(inp(r.a, 'Vendor', v => { r.a = v; }), inp(r.b, 'Model', v => { r.b = v; }), inp(r.c, 'Part #', v => { r.c = v; }),
+              inp(r.q, '0', v => { const q = parseInt(v, 10); r.q = isFinite(q) ? q : 0; c.counted = todayYMD(); }, 'number'),
+              xbtn(() => { c.rows = c.rows.filter(x => x !== r); }, 'Remove row'));
+          });
+          edCons.appendChild(g);
+        } else {
         const g = el('div', 'ce-grid inv');
         const hd = (i) => { const w = el('div', 'hd'); w.appendChild(inp(c.cols[i], i ? 'Part #' : 'Item', v => { c.cols[i] = v; })); return w; };
         const uw = el('div', 'hd'); uw.appendChild(inp(c.unit, 'unit', v => { c.unit = v; }));
@@ -492,8 +514,9 @@ MMBoard.start({
             xbtn(() => { c.rows = c.rows.filter(x => x !== r); }, 'Remove row'));
         });
         edCons.appendChild(g);
+        }
         const r2 = el('div', 'ce-row');
-        r2.appendChild(addBtn('Add row', () => c.rows.push({ id:uid(), a:'', b:'', q:0 })));
+        r2.appendChild(addBtn('Add row', () => c.rows.push(MMPlates.isPlates(c) ? { id:uid(), a:'', b:'', c:'', q:0 } : { id:uid(), a:'', b:'', q:0 })));
         r2.appendChild(el('span', 'spacer'));
         r2.appendChild(el('span', 'kbd-hint', 'Reorder at'));
         const mi = inp(c.min || '', '—', v => { const q = parseInt(v, 10); if (isFinite(q) && q > 0) c.min = q; else delete c.min; }, 'number');
@@ -532,11 +555,11 @@ MMBoard.start({
       CATS.forEach((c, i) => { const p = framePos(i); b.frames.push({ id:(idp || uid()) + '-f-' + c.key, x:p.x, y:p.y, w:FW, h:FH, title:c.title, color:c.color }); });
     }
     // Demo cards (sample data, not real stock). card(type, title, fill) → note data.
-    const inv = (rows, extra) => c => { c.rows = rows.map(([a, b, q]) => ({ id:uid(), a, b, q })); c.counted = '2026-11-02'; Object.assign(c, extra || {}); };
+    const inv = (rows, extra) => c => { c.rows = rows.map(([a, b, q, pn]) => pn != null ? { id:uid(), a, b, c:pn, q } : { id:uid(), a, b, q }); c.counted = '2026-11-02'; Object.assign(c, extra || {}); };
     const info = (pos, vals) => c => { c.pos = pos; c.fields.forEach(f => { if (vals[f.k] != null) f.v = vals[f.k]; }); };
     const DEMO = {
       plates: [
-        ['Refiner plates', inv([['Vendor A', 'LC pattern · RP-2210', 4], ['Vendor B', 'HC pattern · 38-114', 2]]), 'Same plates fit all four refiners on PM1.'],
+        ['Refiner plates', inv([['Vendor A', 'LC pattern', 4, 'RP-2210'], ['Vendor B', 'HC pattern', 2, '38-114']]), 'Same plates fit all four refiners on PM1.'],
       ],
       blade: [
         ['1st press top roll', info('1st press top roll — cleaning doctor', { 'Blade type':'Cleaning', Material:'Composite', Thickness:'1.5 mm', Bevel:'30°', Length:'4.9 m', Vendor:'Vendor-managed', 'Part #':'DB-1PT-C15' })],
@@ -612,7 +635,7 @@ MMBoard.start({
             const c = n.cons;
             if (c.kind === 'inv'){
               if (c.fits) h += `<div class="rm">${esc(fitsLabel(c))}</div>`;
-              h += (c.rows || []).map(r => `<div class="rl">${esc(r.a || '—')}${r.b ? ` · <i>${esc(r.b)}</i>` : ''} — <b>${Number(r.q) || 0}</b> ${esc(c.unit || '')}</div>`).join('');
+              h += (c.rows || []).map(r => `<div class="rl">${esc(r.a || '—')}${r.b ? ` · <i>${esc(r.b)}</i>` : ''}${r.c ? ` · ${esc(r.c)}` : ''} — <b>${Number(r.q) || 0}</b> ${esc(c.unit || '')}</div>`).join('');
               h += `<div class="rm">Total ${invTotal(c)} ${esc(c.unit || '')}${Number(c.min) > 0 ? ` · min ${Number(c.min)}${invLow(c) ? ' (below)' : ''}` : ''}${c.counted ? ' · counted ' + esc(fmtDue(c.counted)) : ''}</div>`;
             } else {
               if (c.pos) h += `<div class="rl"><b>Position:</b> ${esc(c.pos)}</div>`;

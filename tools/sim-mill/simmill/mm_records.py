@@ -38,6 +38,15 @@ def change_plan(runs):
     return plan
 
 # ═════════════════════════ My Machine ═════════════════════════
+# The one plate type in the Consumables Tracker (first card, first row of the Sim Mill board): refiner runs with
+# these plates record it as taken from stock (mm-plates.js key "<board>:<card>:<row>").
+PLATE_ROW = {'key': 'sm-pm1-consumables:sm-pm1-consumables-c1:sm-pm1-consumables-c1-r1',
+             'vendor': 'Ridgeway Refining', 'model': '34" LC plate, 3.0/4.0 bar/groove', 'part': 'RR-34LC-30'}
+def _plate(r):
+    if r.get('kind') != 'refiner' and not str(r.get('position', '')).startswith('ref-'): return {}
+    if r['vendor'] != PLATE_ROW['vendor'] or r['style'] != PLATE_ROW['model']: return {}
+    return {'plate': {k: PLATE_ROW[k] for k in ('key', 'vendor', 'model', 'part')}}
+
 def mymachine(m):
     mc = CFG['machine']
     machine = {'name': mc['name'], 'former': mc['former'], 'press': mc['press'], 'dryers': mc['dryers'], 'calender': mc['calender'],
@@ -54,7 +63,7 @@ def mymachine(m):
         cur = next((r for r in runs if r['installed'] <= today and (not r['removed'] or r['removed'] > today)), runs[-1])
         hist = [{'installed': _day(r['installed']), 'removed': _day(r['removed']), 'days': (r['removed'] - r['installed']).days,
                  'vendor': r['vendor'], 'style': r['style'], 'serial': r['serial'], 'reason': r['reason'] or 'planned',
-                 'condition': r['condition'] if r['condition'] in ('good', 'wear', 'worn', 'damaged') else 'worn', 'note': r['note']} for r in past][-8:]
+                 'condition': r['condition'] if r['condition'] in ('good', 'wear', 'worn', 'damaged') else 'worn', 'note': r['note'], **_plate(r)} for r in past][-8:]
         c, note, ago = cond.get(pos, ('good', '', 0))
         age = (today - cur['installed']).days / cur['target_days']
         when = next((d for d, ps in plan.items() if pos in ps), None)
@@ -67,7 +76,7 @@ def mymachine(m):
             note = 'Cover hardness up on the last Pellham check' + (f'; recovery planned for the {md(when)} outage.' if when else '; plan the recovery within the next few outages.')
         item = {'installed': _day(cur['installed']), 'target': cur['target_days'] // 7, 'targetUnit': 'weeks', 'vendor': cur['vendor'],
                 'style': cur['style'], 'serial': cur['serial'], 'note': '', 'condition': c, 'conditionNote': note,
-                'conditionDate': (TODAY - DAY * ago).isoformat() if c != 'good' else '', 'history': hist}
+                'conditionDate': (TODAY - DAY * ago).isoformat() if c != 'good' else '', 'history': hist, **_plate(cur)}
         rec[f'item:{pos}'] = item
     return rec
 
@@ -225,8 +234,8 @@ def consumables():
         fid = f'{bid}-f-{k}'; x, y = (i % 3) * (FW + FG), (i // 3) * (FH + FG); frames[k] = (fid, x, y)
         r[f'f:{bid}:{fid}'] = {'x': x, 'y': y, 'w': FW, 'h': FH, 'title': t, 'color': c}
     cards = [
-        ('plates', 'Refiner plates', '#e9e0ff', 'sets', ['Manufacturer', 'Pattern / part #'],
-         [('Ridgeway Refining', '34" LC, 3.0/4.0 bar/groove · RR-34LC-30', 1)], 2,
+        ('plates', 'Refiner plates', '#e9e0ff', 'sets', ['Vendor', 'Model', 'Part #'],
+         [(PLATE_ROW['vendor'], PLATE_ROW['model'], 1, PLATE_ROW['part'])], 2,
          f'REF 1 and REF 2 both due {nxt} (REF 2 early: plates wearing fast). Second set on order.', {'mode': 'all', 'list': ''}),
         ('uhle', 'Uhle box covers', '#d9f3d3', 'each', ['Cover', 'Part #'],
          [('1st press top felt', 'UB-1PT', 2), ('1st press bottom felt', 'UB-1PB', 1), ('2nd press top felt', 'UB-2PT', 1), ('2nd press bottom felt', 'UB-2PB', 0)], 4, '', None),
@@ -241,7 +250,7 @@ def consumables():
     for n, (cat, title, color, unit, cols, rows, mn, note, fits) in enumerate(cards):
         fid, x, y = frames[cat]; cid = f'{bid}-c{n + 1}'
         cons = {'type': cat if cat != 'parts' else 'inv', 'kind': 'inv', 'unit': unit, 'cols': cols, 'counted': counted,
-                'rows': [{'id': f'{cid}-r{i + 1}', 'a': a, 'b': b, 'q': q} for i, (a, b, q) in enumerate(rows)], 'min': mn}
+                'rows': [{'id': f'{cid}-r{i + 1}', 'a': rw[0], 'b': rw[1], 'q': rw[2], **({'c': rw[3]} if len(rw) > 3 else {})} for i, rw in enumerate(rows)], 'min': mn}
         if fits: cons['fits'] = fits
         r[f'n:{bid}:{cid}'] = {'x': x + 24, 'y': y + 58, 'z': n + 1, 'color': color, 'w': 268, 'text': title + ('\n' + note if note else ''),
                               'cons': cons, 'attachments': [], 'children': [], 'parent': None, 'cat': fid}
